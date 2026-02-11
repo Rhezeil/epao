@@ -13,16 +13,6 @@ rules_version = '2';
  * - /users/{userId}/profile: Personal user information, isolated for privacy and streamlined updates.
  * - /roles_admin/{userId}: A control collection where document existence signifies administrative status.
  * - /access_control_rules/{ruleId}: System-wide permissions mapping roles to resources.
- *
- * Key Security Decisions:
- * 1. Admin Supremacy: Administrative status is determined by membership in the /roles_admin collection. 
- *    Admins generally have broad read access across the system.
- * 2. User Ownership: Standard users (Clients, Lawyers) are strictly confined to their own /users/{userId} 
- *    and /users/{userId}/profile paths.
- * 3. Denormalization for Authorization: Roles are stored directly on the User document to allow 
- *    future rules to check `resource.data.role` without extra reads.
- * 4. Structural Segregation: Administrative markers are kept in a separate top-level collection 
- *    to simplify the security posture of the main user directory.
  */
 
 service cloud.firestore {
@@ -30,56 +20,32 @@ service cloud.firestore {
 
     // --- Helper Functions ---
 
-    /** Checks if the request is from an authenticated user. */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /** Checks if the authenticated user's UID matches the provided userId. */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /** Checks if the document exists and the user is the owner. Used for update/delete. */
     function isExistingOwner(userId) {
       return resource != null && isOwner(userId);
     }
 
-    /** 
-     * Checks if the authenticated user is an administrator.
-     * Admin status is defined by the existence of a document in the roles_admin collection.
-     */
     function isAdmin() {
       return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
     // --- Rules ---
 
-    /**
-     * @description Rules for the User collection. Handles user metadata and role assignment.
-     * @path /users/{userId}
-     * @allow (get) If the user is the owner or an admin.
-     * @allow (list) If the user is an admin.
-     * @allow (create) If the user is creating their own record.
-     * @deny (write) If the user is attempting to modify another user's record without admin rights.
-     * @principle Path-based ownership for users and administrative override for management.
-     */
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if (isExistingOwner(userId) || isAdmin()) && request.resource.data.id == resource.data.id;
+      allow create: if isOwner(userId);
+      allow update: if (isExistingOwner(userId) || isAdmin());
       allow delete: if isAdmin();
     }
 
-    /**
-     * @description Rules for User Profiles. Contains sensitive PII.
-     * @path /users/{userId}/profile/profile (Note: structured as subcollection in IR)
-     * @allow (read) If the user is the owner or an admin.
-     * @allow (create) If the user is the owner of the parent user document.
-     * @deny (list) If the user is not the owner or an admin.
-     * @principle Strict structural segregation of PII with path-based authorization.
-     */
     match /users/{userId}/profile {
       allow get, list: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId);
@@ -87,27 +53,13 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    /**
-     * @description Control collection for administrative roles.
-     * @path /roles_admin/{userId}
-     * @allow (read) If the user is the owner (checking their own admin status) or an existing admin.
-     * @allow (write) Only existing admins can modify administrative privileges.
-     * @deny (create) Non-admins cannot promote themselves to admin.
-     * @principle Document existence check for role-based access control.
-     */
     match /roles_admin/{userId} {
       allow get, list: if isOwner(userId) || isAdmin();
-      allow create, update, delete: if isAdmin();
+      // Allow the bootstrap admin to create their own record
+      allow create: if isOwner(userId) && (request.auth.token.email == "Admin@ePAO.com" || userId == "fs4k8QifPHSmUdshxh1NLweHSj73");
+      allow update, delete: if isAdmin();
     }
 
-    /**
-     * @description System-wide access control rules defining role permissions.
-     * @path /access_control_rules/{ruleId}
-     * @allow (read) Any signed-in user can read rules to understand system permissions.
-     * @allow (write) Only admins can manage the access control rule definitions.
-     * @deny (write) Any non-admin attempt to modify system rules.
-     * @principle Centralized permission management restricted to administrators.
-     */
     match /access_control_rules/{ruleId} {
       allow get, list: if isSignedIn();
       allow create, update, delete: if isAdmin();

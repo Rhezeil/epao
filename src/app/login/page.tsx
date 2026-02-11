@@ -1,17 +1,16 @@
-
 "use client";
 
 import React, { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { useAuth, useFirestore } from "@/firebase";
+import { useAuth, useFirestore, setDocumentNonBlocking } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { ShieldCheck, User as UserIcon, Briefcase } from "lucide-react";
+import { ShieldCheck, User as UserIcon, Briefcase, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -29,14 +28,47 @@ export default function LoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      const userDoc = await getDoc(doc(db, "users", user.uid));
+      // Check if user exists in Firestore
+      const userDocRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userDocRef);
+      
+      let role = "client";
+
       if (userDoc.exists()) {
-        const role = userDoc.data().role;
-        toast({ title: "Login successful", description: `Welcome back, ${userDoc.data().email || 'User'}` });
-        router.push(`/dashboard/${role}`);
+        role = userDoc.data().role;
       } else {
-        throw new Error("User record not found in database.");
+        // Auto-repair for bootstrap admin if records are missing
+        const isBootstrapAdmin = 
+          email.toLowerCase() === "admin@epao.com" || 
+          user.uid === "fs4k8QifPHSmUdshxh1NLweHSj73";
+
+        if (isBootstrapAdmin) {
+          role = "admin";
+          // Create missing records
+          setDocumentNonBlocking(userDocRef, {
+            id: user.uid,
+            email: user.email,
+            role: "admin",
+            profileId: "profile",
+            createdAt: new Date().toISOString(),
+          }, { merge: true });
+
+          const adminDocRef = doc(db, "roles_admin", user.uid);
+          setDocumentNonBlocking(adminDocRef, {
+            id: user.uid,
+            role: "admin",
+            resource: "all",
+            permission: "read/write",
+          }, { merge: true });
+
+          toast({ title: "Admin Records Repaired", description: "Your administrative records have been initialized." });
+        } else {
+          throw new Error("Your account record was not found. Please contact support.");
+        }
       }
+
+      toast({ title: "Login successful", description: `Welcome back to the ${role} portal.` });
+      router.push(`/dashboard/${role}`);
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -58,44 +90,43 @@ export default function LoginPage() {
     setPassword(demoAccounts[role].password);
     toast({
       title: "Demo Credentials Loaded",
-      description: `Loaded credentials for ${role} role. Click sign in to continue.`,
+      description: `Credentials for ${role} loaded. Click Sign In to proceed.`,
     });
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 font-body">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center space-y-2">
-          <p className="text-muted-foreground">Professional Legal Access Simplified</p>
+          <h2 className="text-4xl font-bold font-headline text-primary">LexConnect</h2>
+          <p className="text-muted-foreground text-sm uppercase tracking-widest">Legal Portal Access</p>
         </div>
 
-        <Card className="border-none shadow-2xl bg-white/80 backdrop-blur-sm">
+        <Card className="border-none shadow-2xl bg-white/90 backdrop-blur-md">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center font-bold">Sign In</CardTitle>
             <CardDescription className="text-center">
-              Enter your credentials to access your secure portal
+              Enter your credentials to manage your legal workspace
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="name@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="focus-visible:ring-secondary"
-                  />
-                </div>
+                <Label htmlFor="email">Email Address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="admin@epao.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="bg-background/50"
+                />
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
-                  <Button variant="link" className="p-0 h-auto text-xs text-secondary hover:text-secondary/80">
+                  <Button variant="link" className="p-0 h-auto text-xs text-secondary">
                     Forgot password?
                   </Button>
                 </div>
@@ -105,55 +136,68 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="focus-visible:ring-secondary"
+                  className="bg-background/50"
                 />
               </div>
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 transition-all h-11" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Login to Portal"}
+              <Button type="submit" className="w-full h-11 text-base font-semibold transition-all" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Authenticating...
+                  </>
+                ) : (
+                  "Login to Portal"
+                )}
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4 border-t pt-6 bg-muted/20">
-            <p className="text-[10px] text-center uppercase tracking-widest text-muted-foreground font-semibold">
-              Select a role for quick access
+          <CardFooter className="flex flex-col space-y-4 border-t pt-6 bg-muted/10">
+            <p className="text-[10px] text-center uppercase tracking-widest text-muted-foreground font-bold">
+              Rapid Access Selectors
             </p>
-            <div className="grid grid-cols-3 gap-2 w-full text-[10px] text-center uppercase tracking-widest text-muted-foreground font-semibold">
+            <div className="grid grid-cols-3 gap-2 w-full">
               <button 
                 type="button"
                 onClick={() => handleQuickAccess('admin')}
-                className="flex flex-col items-center space-y-1 p-2 hover:bg-primary/5 rounded-lg transition-colors group"
+                className="flex flex-col items-center space-y-1 p-2 hover:bg-primary/5 rounded-xl transition-all group"
               >
-                <ShieldCheck className="h-4 w-4 group-hover:text-primary transition-colors" />
-                <span className="group-hover:text-primary transition-colors">Admin</span>
+                <div className="p-2 rounded-full bg-primary/10 group-hover:bg-primary group-hover:text-white transition-all">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+                <span className="text-[10px] font-bold text-muted-foreground">Admin</span>
               </button>
               <button 
                 type="button"
                 onClick={() => handleQuickAccess('lawyer')}
-                className="flex flex-col items-center space-y-1 p-2 hover:bg-secondary/5 rounded-lg transition-colors group"
+                className="flex flex-col items-center space-y-1 p-2 hover:bg-secondary/5 rounded-xl transition-all group"
               >
-                <Briefcase className="h-4 w-4 group-hover:text-secondary transition-colors" />
-                <span className="group-hover:text-secondary transition-colors">Lawyer</span>
+                <div className="p-2 rounded-full bg-secondary/10 group-hover:bg-secondary group-hover:text-white transition-all">
+                  <Briefcase className="h-5 w-5" />
+                </div>
+                <span className="text-[10px] font-bold text-muted-foreground">Lawyer</span>
               </button>
               <button 
                 type="button"
                 onClick={() => handleQuickAccess('client')}
-                className="flex flex-col items-center space-y-1 p-2 hover:bg-secondary/5 rounded-lg transition-colors group"
+                className="flex flex-col items-center space-y-1 p-2 hover:bg-accent/5 rounded-xl transition-all group"
               >
-                <UserIcon className="h-4 w-4 group-hover:text-secondary transition-colors" />
-                <span className="group-hover:text-secondary transition-colors">Client</span>
+                <div className="p-2 rounded-full bg-accent/10 group-hover:bg-accent group-hover:text-white transition-all">
+                  <UserIcon className="h-5 w-5" />
+                </div>
+                <span className="text-[10px] font-bold text-muted-foreground">Client</span>
               </button>
             </div>
           </CardFooter>
         </Card>
 
         <p className="text-center text-sm text-muted-foreground">
-          Don&apos;t have an account?{" "}
+          New to LexConnect?{" "}
           <Button 
             variant="link" 
-            className="p-0 h-auto text-secondary font-semibold"
+            className="p-0 h-auto text-secondary font-bold hover:no-underline"
             onClick={() => router.push("/register")}
           >
-            Register as Client
+            Create Client Account
           </Button>
         </p>
       </div>
