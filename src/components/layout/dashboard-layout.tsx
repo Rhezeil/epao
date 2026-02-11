@@ -82,8 +82,8 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
                 <Image 
                   src={logo.imageUrl} 
                   alt={logo.description} 
-                  width={140} 
-                  height={140} 
+                  width={180} 
+                  height={180} 
                   className="rounded-full object-contain"
                   data-ai-hint={logo.imageHint}
                 />

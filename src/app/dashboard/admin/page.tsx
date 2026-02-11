@@ -21,8 +21,8 @@ export default function AdminDashboard() {
                 <Image 
                   src={logo.imageUrl} 
                   alt={logo.description} 
-                  width={240} 
-                  height={240} 
+                  width={320} 
+                  height={320} 
                   className="object-contain"
                   data-ai-hint={logo.imageHint}
                 />

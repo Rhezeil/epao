@@ -21,8 +21,8 @@ export default function LawyerDashboard() {
                 <Image 
                   src={logo.imageUrl} 
                   alt={logo.description} 
-                  width={200} 
-                  height={200} 
+                  width={320} 
+                  height={320} 
                   className="object-contain"
                   data-ai-hint={logo.imageHint}
                 />
