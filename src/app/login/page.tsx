@@ -148,8 +148,12 @@ export default function LoginPage() {
 
         <p className="text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}
-          <Button variant="link" className="p-0 h-auto text-secondary font-semibold">
-            Contact your Administrator
+          <Button 
+            variant="link" 
+            className="p-0 h-auto text-secondary font-semibold"
+            onClick={() => router.push("/register")}
+          >
+            Register as Client
           </Button>
         </p>
       </div>
