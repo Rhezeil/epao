@@ -25,7 +25,7 @@ service cloud.firestore {
       return isSignedIn() && (
         request.auth.uid == "ygkXuNUWJrbffovhXBtr6r1o5vr2" || 
         (request.auth.token.email != null && (
-          request.auth.token.email.lower().matches('.*@lawyers\\.com$') ||
+          request.auth.token.email.lower().split('@')[1] == 'lawyers.com' ||
           exists(/databases/$(database)/documents/lawyersEmail/$(request.auth.token.email.lower()))
         ))
       );
@@ -56,7 +56,7 @@ service cloud.firestore {
     match /roleAdmin/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      // Allow creation/update if user is the designated system admin or matches admin email
+      // Allow creation/update if user is owner and matches admin criteria
       allow create, update: if isOwner(userId) && (isSystemAdmin() || isAdmin());
       allow delete: if isAdmin();
     }
@@ -64,13 +64,12 @@ service cloud.firestore {
     match /roleLawyer/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      // Allow creation/update if user matches lawyer criteria (UID, domain, or whitelist)
+      // Allow creation/update if user is owner and matches lawyer criteria
       allow create, update: if isOwner(userId) && (isAuthorizedLawyer() || isAdmin());
       allow delete: if isAdmin();
     }
 
     match /lawyersEmail/{emailId} {
-      // Allow public lookup for registration/login check
       allow get: if true;
       allow list, write: if isAdmin();
     }

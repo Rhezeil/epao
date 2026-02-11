@@ -30,13 +30,15 @@ export default function RegisterPage() {
     try {
       const normalizedEmail = email.toLowerCase();
       
-      // Authorization checks
+      // 1. Authorization checks (before user creation to be safe)
       const lawyerAuthDoc = await getDoc(doc(db, "lawyersEmail", normalizedEmail));
       const isAuthorizedLawyerByEmail = lawyerAuthDoc.exists();
 
+      // 2. Create the Authentication user
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      // 3. Determine role based on UID, email domain, or whitelist
       const isSystemAdmin = 
         normalizedEmail === "admin@epao.com" || 
         user.uid === "fs4k8QifPHSmUdshxh1NLweHSj73";
@@ -50,7 +52,7 @@ export default function RegisterPage() {
       if (isSystemAdmin) userRole = "admin";
       else if (isLawyer) userRole = "lawyer";
 
-      // 1. Create Profile in 'users' collection subpath (shared across roles)
+      // 4. Create common profile data
       const profileDocRef = doc(db, "users", user.uid, "profile", "profile");
       setDocumentNonBlocking(profileDocRef, {
         id: "profile",
@@ -59,17 +61,14 @@ export default function RegisterPage() {
         createdAt: new Date().toISOString(),
       }, { merge: true });
 
-      // 2. Create Role-specific records
+      // 5. Create role-specific records
       if (userRole === "admin") {
         const adminDocRef = doc(db, "roleAdmin", user.uid);
         setDocumentNonBlocking(adminDocRef, {
           id: user.uid,
           email: user.email,
           role: "admin",
-          firstName,
-          lastName,
-          permission: "read/write",
-          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         }, { merge: true });
       } else if (userRole === "lawyer") {
         const lawyerDocRef = doc(db, "roleLawyer", user.uid);
@@ -78,7 +77,7 @@ export default function RegisterPage() {
           email: user.email,
           role: "lawyer",
           profileId: "profile",
-          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         }, { merge: true });
       } else {
         const userDocRef = doc(db, "users", user.uid);
@@ -87,7 +86,7 @@ export default function RegisterPage() {
           email: user.email,
           role: "client",
           profileId: "profile",
-          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         }, { merge: true });
       }
 

@@ -68,7 +68,7 @@ export default function LoginPage() {
           updatedAt: new Date().toISOString(),
         }, { merge: true });
         
-        // Ensure profile exists
+        // Ensure shared profile exists
         setDocumentNonBlocking(doc(db, "users", user.uid, "profile", "profile"), {
           id: "profile",
           updatedAt: new Date().toISOString(),
@@ -93,14 +93,13 @@ export default function LoginPage() {
       }, { merge: true });
 
       router.push(`/dashboard/client`);
-      toast({ title: "Welcome back", description: "Your dashboard is ready." });
 
     } catch (error: any) {
       console.error("Initialization error", error);
       toast({ 
         variant: "destructive", 
         title: "Sync Error", 
-        description: "Failed to synchronize your role records. Please check your permissions." 
+        description: "Failed to synchronize your role records." 
       });
     } finally {
       setIsLoading(false);
