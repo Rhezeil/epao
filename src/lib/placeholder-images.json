@@ -1,3 +1,10 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "pao-logo",
+      "description": "Public Attorney's Office Logo",
+      "imageUrl": "https://i.postimg.cc/HxcSH58Z/logo-epao.jpg",
+      "imageHint": "pao logo"
+    }
+  ]
 }

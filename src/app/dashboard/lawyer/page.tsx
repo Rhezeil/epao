@@ -3,17 +3,30 @@
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent } from "@/components/ui/card";
-import { Scale, Shield, Globe, Zap, Lightbulb, Cpu } from "lucide-react";
+import { Shield, Globe, Zap, Lightbulb, Cpu } from "lucide-react";
+import Image from "next/image";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 export default function LawyerDashboard() {
+  const logo = PlaceHolderImages.find(img => img.id === 'pao-logo');
+
   return (
     <DashboardLayout role="lawyer">
       <div className="max-w-6xl mx-auto space-y-12 py-8 px-4 text-center">
         {/* Logo and Header */}
         <div className="space-y-4">
           <div className="flex justify-center">
-            <div className="p-4 bg-white rounded-full shadow-sm border">
-              <Scale className="h-12 w-12 text-[#2E5A99]" />
+            <div className="p-4 bg-white rounded-full shadow-sm border overflow-hidden">
+              {logo && (
+                <Image 
+                  src={logo.imageUrl} 
+                  alt={logo.description} 
+                  width={120} 
+                  height={120} 
+                  className="object-contain"
+                  data-ai-hint={logo.imageHint}
+                />
+              )}
             </div>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-primary tracking-tight">

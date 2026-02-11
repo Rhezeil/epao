@@ -28,6 +28,8 @@ import {
   CalendarCheck
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -37,6 +39,8 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   const { signOut, user } = useAuth();
   const router = useRouter();
+  
+  const logo = PlaceHolderImages.find(img => img.id === 'pao-logo');
 
   const getMenuItems = () => {
     if (role === "admin") {
@@ -73,9 +77,23 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   return (
     <SidebarProvider>
       <Sidebar className="border-r border-border bg-white">
-        <SidebarHeader className="p-6">
-          <div className="mt-0 px-2 py-1 bg-secondary/10 rounded-md inline-block">
-            <span className="text-[10px] uppercase tracking-wider font-bold text-secondary">{role} Portal</span>
+        <SidebarHeader className="p-6 pb-2 space-y-4">
+          <div className="flex items-center justify-center">
+            {logo && (
+              <Image 
+                src={logo.imageUrl} 
+                alt={logo.description} 
+                width={80} 
+                height={80} 
+                className="rounded-full shadow-sm border border-border/50"
+                data-ai-hint={logo.imageHint}
+              />
+            )}
+          </div>
+          <div className="flex justify-center">
+            <div className="px-2 py-1 bg-secondary/10 rounded-md inline-block">
+              <span className="text-[10px] uppercase tracking-wider font-bold text-secondary">{role} Portal</span>
+            </div>
           </div>
         </SidebarHeader>
         <SidebarContent className="px-3">
