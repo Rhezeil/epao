@@ -31,97 +31,86 @@ export default function LoginPage() {
   const checkAndInitializeUser = async (user: any) => {
     setIsLoading(true);
     try {
+      const normalizedEmail = user.email?.toLowerCase() || "";
       let resolvedRole: "admin" | "lawyer" | "client" | null = null;
 
-      // Check existing records in parallel for speed
-      const [adminDoc, lawyerDoc, userDoc] = await Promise.all([
-        getDoc(doc(db, "roleAdmin", user.uid)),
-        getDoc(doc(db, "roleLawyer", user.uid)),
-        getDoc(doc(db, "users", user.uid))
-      ]);
+      // 1. Check for Admin status (highest priority)
+      const isBootstrapAdmin = 
+        user.uid === "fs4k8QifPHSmUdshxh1NLweHSj73" || 
+        normalizedEmail === "admin@epao.com";
 
-      if (adminDoc.exists()) {
+      const adminDoc = await getDoc(doc(db, "roleAdmin", user.uid));
+      
+      if (isBootstrapAdmin || adminDoc.exists()) {
         resolvedRole = "admin";
-      } else if (lawyerDoc.exists()) {
+        setDocumentNonBlocking(doc(db, "roleAdmin", user.uid), {
+          id: user.uid,
+          email: user.email,
+          role: "admin",
+          firstName: adminDoc.exists() ? adminDoc.data()?.firstName : "System",
+          lastName: adminDoc.exists() ? adminDoc.data()?.lastName : "Administrator",
+          permission: "read/write",
+          updatedAt: new Date().toISOString(),
+        }, { merge: true });
+        router.push(`/dashboard/admin`);
+        return;
+      }
+
+      // 2. Check for Lawyer status (authorized email or domain)
+      const lawyerAuthDoc = await getDoc(doc(db, "lawyersEmail", normalizedEmail));
+      const isAuthorizedLawyer = 
+        lawyerAuthDoc.exists() || 
+        user.uid === "ygkXuNUWJrbffovhXBtr6r1o5vr2" ||
+        normalizedEmail.endsWith("@lawyers.com");
+
+      if (isAuthorizedLawyer) {
         resolvedRole = "lawyer";
-      } else if (userDoc.exists()) {
-        resolvedRole = "client";
-      }
-
-      // If no role record exists, perform auto-initialization based on authorization
-      if (!resolvedRole) {
-        const normalizedEmail = user.email?.toLowerCase() || "";
+        setDocumentNonBlocking(doc(db, "roleLawyer", user.uid), {
+          id: user.uid,
+          email: user.email,
+          role: "lawyer",
+          profileId: "profile",
+          updatedAt: new Date().toISOString(),
+        }, { merge: true });
         
-        // Admin Bootstrap check
-        const isBootstrapAdmin = 
-          user.uid === "fs4k8QifPHSmUdshxh1NLweHSj73" || 
-          normalizedEmail === "admin@epao.com";
+        // Ensure profile exists in users subcollection
+        setDocumentNonBlocking(doc(db, "users", user.uid, "profile", "profile"), {
+          id: "profile",
+          firstName: "Authorized",
+          lastName: "Practitioner",
+          updatedAt: new Date().toISOString(),
+        }, { merge: true });
 
-        if (isBootstrapAdmin) {
-          resolvedRole = "admin";
-          setDocumentNonBlocking(doc(db, "roleAdmin", user.uid), {
-            id: user.uid,
-            email: user.email,
-            role: "admin",
-            firstName: "System",
-            lastName: "Administrator",
-            permission: "read/write",
-            createdAt: new Date().toISOString(),
-          }, { merge: true });
-        } else {
-          // Lawyer Authorization check
-          const lawyerAuthDoc = await getDoc(doc(db, "lawyersEmail", normalizedEmail));
-          const isAuthorizedLawyer = 
-            lawyerAuthDoc.exists() || 
-            user.uid === "ygkXuNUWJrbffovhXBtr6r1o5vr2" ||
-            normalizedEmail.endsWith("@lawyers.com");
-
-          if (isAuthorizedLawyer) {
-            resolvedRole = "lawyer";
-            setDocumentNonBlocking(doc(db, "roleLawyer", user.uid), {
-              id: user.uid,
-              email: user.email,
-              role: "lawyer",
-              profileId: "profile",
-              createdAt: new Date().toISOString(),
-            }, { merge: true });
-            
-            // Create profile as well
-            setDocumentNonBlocking(doc(db, "users", user.uid, "profile", "profile"), {
-              id: "profile",
-              firstName: "Authorized",
-              lastName: "Practitioner",
-              createdAt: new Date().toISOString(),
-            }, { merge: true });
-          } else {
-            // Default to Client
-            resolvedRole = "client";
-            setDocumentNonBlocking(doc(db, "users", user.uid), {
-              id: user.uid,
-              email: user.email,
-              role: "client",
-              profileId: "profile",
-              createdAt: new Date().toISOString(),
-            }, { merge: true });
-
-            setDocumentNonBlocking(doc(db, "users", user.uid, "profile", "profile"), {
-              id: "profile",
-              firstName: "New",
-              lastName: "Client",
-              createdAt: new Date().toISOString(),
-            }, { merge: true });
-          }
-        }
-        toast({ title: "Account Initialized", description: `Access granted as ${resolvedRole}.` });
+        router.push(`/dashboard/lawyer`);
+        return;
       }
 
-      router.push(`/dashboard/${resolvedRole}`);
+      // 3. Default to Client
+      resolvedRole = "client";
+      setDocumentNonBlocking(doc(db, "users", user.uid), {
+        id: user.uid,
+        email: user.email,
+        role: "client",
+        profileId: "profile",
+        updatedAt: new Date().toISOString(),
+      }, { merge: true });
+
+      setDocumentNonBlocking(doc(db, "users", user.uid, "profile", "profile"), {
+        id: "profile",
+        firstName: "New",
+        lastName: "Client",
+        updatedAt: new Date().toISOString(),
+      }, { merge: true });
+
+      router.push(`/dashboard/client`);
+      toast({ title: "Account Synced", description: `Logged in as ${resolvedRole}.` });
+
     } catch (error: any) {
       console.error("Initialization error", error);
       toast({ 
         variant: "destructive", 
-        title: "Initialization Error", 
-        description: "Could not set up your profile records. Please contact support." 
+        title: "Sync Error", 
+        description: "Failed to synchronize your role records. Please try again." 
       });
     } finally {
       setIsLoading(false);

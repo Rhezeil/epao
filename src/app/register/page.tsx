@@ -29,24 +29,28 @@ export default function RegisterPage() {
 
     try {
       const normalizedEmail = email.toLowerCase();
-      const lawyerAuthRef = doc(db, "lawyersEmail", normalizedEmail);
-      const lawyerAuthDoc = await getDoc(lawyerAuthRef);
+      
+      // Authorization checks
+      const lawyerAuthDoc = await getDoc(doc(db, "lawyersEmail", normalizedEmail));
       const isAuthorizedLawyerByEmail = lawyerAuthDoc.exists();
 
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
       const isSystemAdmin = 
-        email.toLowerCase() === "admin@epao.com" || 
+        normalizedEmail === "admin@epao.com" || 
         user.uid === "fs4k8QifPHSmUdshxh1NLweHSj73";
       
-      const isLawyer = isAuthorizedLawyerByEmail || user.uid === "ygkXuNUWJrbffovhXBtr6r1o5vr2";
+      const isLawyer = 
+        isAuthorizedLawyerByEmail || 
+        user.uid === "ygkXuNUWJrbffovhXBtr6r1o5vr2" ||
+        normalizedEmail.endsWith("@lawyers.com");
 
       let userRole: "admin" | "lawyer" | "client" = "client";
       if (isSystemAdmin) userRole = "admin";
       else if (isLawyer) userRole = "lawyer";
 
-      // 1. Create Profile
+      // 1. Create Profile in 'users' collection subpath (shared across roles)
       const profileDocRef = doc(db, "users", user.uid, "profile", "profile");
       setDocumentNonBlocking(profileDocRef, {
         id: "profile",
