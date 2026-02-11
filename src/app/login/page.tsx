@@ -17,6 +17,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showRegister, setShowRegister] = useState(true);
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
@@ -132,6 +133,7 @@ export default function LoginPage() {
     };
     setEmail(demoAccounts[role].email);
     setPassword(demoAccounts[role].password);
+    setShowRegister(role === 'client');
   };
 
   return (
@@ -180,10 +182,12 @@ export default function LoginPage() {
                 <UserIcon className="mr-1 h-3 w-3" /> Client
               </Button>
             </div>
-            <div className="text-center text-sm pt-4">
-              <span className="text-muted-foreground">Don't have an account? </span>
-              <Button variant="link" className="p-0 h-auto text-secondary" onClick={() => router.push("/register")}>Register Now</Button>
-            </div>
+            {showRegister && (
+              <div className="text-center text-sm pt-4">
+                <span className="text-muted-foreground">Don't have an account? </span>
+                <Button variant="link" className="p-0 h-auto text-secondary" onClick={() => router.push("/register")}>Register Now</Button>
+              </div>
+            )}
           </CardFooter>
         </Card>
       </div>
