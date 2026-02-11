@@ -6,7 +6,7 @@ import { useAuth } from "@/components/auth-provider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Compass, CheckCircle, Calendar, ShieldCheck, HelpCircle, ArrowRight, Search } from "lucide-react";
+import { Compass, HelpCircle, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -106,62 +106,6 @@ export default function CaseNavigatorPage() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Action Cards */}
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card className="relative overflow-hidden border-2 border-secondary/10 hover:border-secondary/30 transition-all shadow-sm">
-            <CardHeader className="bg-secondary/5">
-              <CardTitle className="flex items-center gap-3">
-                <ShieldCheck className="h-6 w-6 text-secondary" />
-                Jurisdiction Assessment
-              </CardTitle>
-              <CardDescription>Verify if your legal matter qualifies for PAO assistance.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-6">
-              <ul className="space-y-4">
-                <li className="flex items-start gap-3 text-sm">
-                  <CheckCircle className="h-5 w-5 text-green-500 shrink-0" />
-                  <div>
-                    <p className="font-semibold">Indigency Test</p>
-                    <p className="text-muted-foreground">Income verification based on latest ITR or Certificate of Indigency.</p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3 text-sm">
-                  <CheckCircle className="h-5 w-5 text-green-500 shrink-0" />
-                  <div>
-                    <p className="font-semibold">Case Type Evaluation</p>
-                    <p className="text-muted-foreground">Criminal defense, civil litigation, or administrative matters.</p>
-                  </div>
-                </li>
-              </ul>
-              <Button className="w-full bg-secondary hover:bg-secondary/90 group">
-                Start Eligibility Check
-                <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="relative overflow-hidden border-2 border-primary/10 hover:border-primary/30 transition-all shadow-sm">
-            <CardHeader className="bg-primary/5">
-              <CardTitle className="flex items-center gap-3">
-                <Calendar className="h-6 w-6 text-primary" />
-                Appointment Booking
-              </CardTitle>
-              <CardDescription>Schedule a preliminary meeting with our legal experts.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-6">
-              <p className="text-sm text-muted-foreground">
-                Connect with an available attorney for initial document review and legal advice. Appointments are held at your local district office.
-              </p>
-              <div className="pt-4">
-                <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary/5 group">
-                  View Available Slots
-                  <Calendar className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
         <Card className="bg-muted/30 border-dashed border-2">
           <CardHeader>
