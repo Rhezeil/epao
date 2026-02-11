@@ -100,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Redirect Logic
   useEffect(() => {
-    const publicPaths = ["/login", "/register", "/"];
+    const publicPaths = ["/login", "/register", "/", "/case-navigator"];
     if (!loading) {
       if (!user && !publicPaths.includes(pathname)) {
         router.push("/login");
