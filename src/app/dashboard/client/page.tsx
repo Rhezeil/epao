@@ -4,31 +4,13 @@
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Shield, Globe, Zap, Lightbulb, Cpu } from "lucide-react";
-import Image from "next/image";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 export default function ClientDashboard() {
-  const logo = PlaceHolderImages.find(img => img.id === 'pao-logo');
-
   return (
     <DashboardLayout role="client">
       <div className="max-w-6xl mx-auto space-y-12 py-8 px-4 text-center">
-        {/* Logo and Header */}
+        {/* Header */}
         <div className="space-y-4">
-          <div className="flex justify-center">
-            <div className="p-4 bg-white rounded-full shadow-sm border overflow-hidden">
-              {logo && (
-                <Image 
-                  src={logo.imageUrl} 
-                  alt={logo.description} 
-                  width={400} 
-                  height={400} 
-                  className="object-contain"
-                  data-ai-hint={logo.imageHint}
-                />
-              )}
-            </div>
-          </div>
           <h1 className="text-3xl md:text-4xl font-bold text-primary tracking-tight">
             ePAO Case Requirements, Appointment, and Service Management System
           </h1>
