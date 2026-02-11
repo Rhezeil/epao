@@ -12,6 +12,8 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, ShieldCheck, Briefcase, User as UserIcon } from "lucide-react";
+import Image from "next/image";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -22,6 +24,8 @@ export default function LoginPage() {
   const { toast } = useToast();
   const auth = useAuth();
   const db = useFirestore();
+
+  const logo = PlaceHolderImages.find(img => img.id === 'pao-logo');
 
   useEffect(() => {
     if (auth.currentUser && !isLoading) {
@@ -34,7 +38,6 @@ export default function LoginPage() {
     try {
       const normalizedEmail = user.email?.toLowerCase() || "";
       
-      // 1. Check for Admin status (Bootstrap Admin)
       const isBootstrapAdmin = 
         user.uid === "fs4k8QifPHSmUdshxh1NLweHSj73" || 
         normalizedEmail === "admin@epao.com";
@@ -53,7 +56,6 @@ export default function LoginPage() {
         return;
       }
 
-      // 2. Check for Lawyer status
       const lawyerAuthDoc = await getDoc(doc(db, "lawyersEmail", normalizedEmail));
       const isAuthorizedLawyer = 
         lawyerAuthDoc.exists() || 
@@ -70,7 +72,6 @@ export default function LoginPage() {
           updatedAt: new Date().toISOString(),
         }, { merge: true });
         
-        // Ensure shared profile exists
         setDocumentNonBlocking(doc(db, "users", user.uid, "profile", "profile"), {
           id: "profile",
           updatedAt: new Date().toISOString(),
@@ -80,7 +81,6 @@ export default function LoginPage() {
         return;
       }
 
-      // 3. Default to Client (ensure record exists and is synced)
       const userDocRef = doc(db, "users", user.uid);
       setDocumentNonBlocking(userDocRef, {
         id: user.uid,
@@ -137,27 +137,39 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-transparent">
       <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <p className="text-muted-foreground mt-2">Legal Services Management Portal</p>
+        <div className="flex flex-col items-center space-y-4">
+          {logo && (
+            <div className="p-2 bg-white rounded-full shadow-lg border border-border/50">
+              <Image 
+                src={logo.imageUrl} 
+                alt={logo.description} 
+                width={160} 
+                height={160} 
+                className="rounded-full object-contain"
+                data-ai-hint={logo.imageHint}
+              />
+            </div>
+          )}
+          <p className="text-primary font-bold text-lg tracking-widest uppercase">Legal Portal</p>
         </div>
 
-        <Card className="shadow-lg border-primary/10">
+        <Card className="shadow-2xl border-primary/10 bg-white/95 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-2xl text-center">Sign In</CardTitle>
+            <CardTitle className="text-2xl text-center font-headline text-primary">Sign In</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="name@example.com" />
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="name@example.com" className="bg-white/50" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="bg-white/50" />
               </div>
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 shadow-md" disabled={isLoading}>
                 {isLoading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : "Login"}
               </Button>
             </form>
@@ -168,17 +180,17 @@ export default function LoginPage() {
                 <span className="w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">Quick Access</span>
+                <span className="bg-white px-2 text-muted-foreground">Quick Access</span>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-2 w-full">
-              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('admin')}>
+              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('admin')} className="bg-white/50 hover:bg-primary/5">
                 <ShieldCheck className="mr-1 h-3 w-3" /> Admin
               </Button>
-              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('lawyer')}>
+              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('lawyer')} className="bg-white/50 hover:bg-primary/5">
                 <Briefcase className="mr-1 h-3 w-3" /> Lawyer
               </Button>
-              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('client')}>
+              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('client')} className="bg-white/50 hover:bg-primary/5">
                 <UserIcon className="mr-1 h-3 w-3" /> Client
               </Button>
             </div>

@@ -5,6 +5,12 @@
       "description": "Public Attorney's Office Logo",
       "imageUrl": "https://i.postimg.cc/HxcSH58Z/logo-epao.jpg",
       "imageHint": "pao logo"
+    },
+    {
+      "id": "app-bg",
+      "description": "Legal Themed Background",
+      "imageUrl": "https://i.postimg.cc/9FTVB81h/360-F-607788897-v79y-S23PWXnwx4n-F6d-V415075ICLOZkn.jpg",
+      "imageHint": "legal background"
     }
   ]
 }

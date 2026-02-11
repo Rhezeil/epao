@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import Image from "next/image";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -23,6 +25,8 @@ export default function RegisterPage() {
   const auth = useAuth();
   const db = useFirestore();
 
+  const logo = PlaceHolderImages.find(img => img.id === 'pao-logo');
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -30,15 +34,12 @@ export default function RegisterPage() {
     try {
       const normalizedEmail = email.toLowerCase();
       
-      // 1. Authorization checks (before user creation to be safe)
       const lawyerAuthDoc = await getDoc(doc(db, "lawyersEmail", normalizedEmail));
       const isAuthorizedLawyerByEmail = lawyerAuthDoc.exists();
 
-      // 2. Create the Authentication user
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // 3. Determine role based on UID, email domain, or whitelist
       const isSystemAdmin = 
         normalizedEmail === "admin@epao.com" || 
         user.uid === "fs4k8QifPHSmUdshxh1NLweHSj73";
@@ -52,7 +53,6 @@ export default function RegisterPage() {
       if (isSystemAdmin) userRole = "admin";
       else if (isLawyer) userRole = "lawyer";
 
-      // 4. Create common profile data
       const profileDocRef = doc(db, "users", user.uid, "profile", "profile");
       setDocumentNonBlocking(profileDocRef, {
         id: "profile",
@@ -61,7 +61,6 @@ export default function RegisterPage() {
         createdAt: new Date().toISOString(),
       }, { merge: true });
 
-      // 5. Create role-specific records
       if (userRole === "admin") {
         const adminDocRef = doc(db, "roleAdmin", user.uid);
         setDocumentNonBlocking(adminDocRef, {
@@ -104,40 +103,56 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center">Register</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleRegister} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+    <div className="min-h-screen flex items-center justify-center p-4 bg-transparent">
+      <div className="w-full max-w-md space-y-8">
+        <div className="flex justify-center">
+          {logo && (
+            <div className="p-2 bg-white rounded-full shadow-lg border border-border/50">
+              <Image 
+                src={logo.imageUrl} 
+                alt={logo.description} 
+                width={120} 
+                height={120} 
+                className="rounded-full object-contain"
+                data-ai-hint={logo.imageHint}
+              />
+            </div>
+          )}
+        </div>
+        <Card className="w-full shadow-2xl border-primary/10 bg-white/95 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-center font-headline text-primary">Create Account</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleRegister} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required className="bg-white/50" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required className="bg-white/50" />
+                </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="bg-white/50" />
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Creating Account..." : "Register"}
-            </Button>
-          </form>
-        </CardContent>
-        <CardFooter>
-          <Button variant="ghost" className="w-full" onClick={() => router.push("/login")}>Back to Login</Button>
-        </CardFooter>
-      </Card>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="bg-white/50" />
+              </div>
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 shadow-md" disabled={isLoading}>
+                {isLoading ? "Creating Account..." : "Register"}
+              </Button>
+            </form>
+          </CardContent>
+          <CardFooter>
+            <Button variant="ghost" className="w-full text-primary" onClick={() => router.push("/login")}>Back to Login</Button>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   );
 }
