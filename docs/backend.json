@@ -5,7 +5,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "User",
       "type": "object",
-      "description": "Represents a user in the system (Admin, Client, or Lawyer).",
+      "description": "Represents a non-admin user (Client or Lawyer).",
       "properties": {
         "id": {
           "type": "string",
@@ -18,11 +18,16 @@
         },
         "role": {
           "type": "string",
-          "description": "The role of the user (admin, client, or lawyer)."
+          "description": "The role of the user (client or lawyer).",
+          "enum": ["client", "lawyer"]
         },
         "profileId": {
           "type": "string",
-          "description": "Reference to the user's profile. (Relationship: User 1:1 Profile)"
+          "description": "Reference to the user's profile."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
         }
       },
       "required": [
@@ -32,74 +37,74 @@
         "profileId"
       ]
     },
-    "Profile": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Profile",
-      "type": "object",
-      "description": "Represents a user profile, containing personal information.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Profile entity."
-        },
-        "firstName": {
-          "type": "string",
-          "description": "User's first name."
-        },
-        "lastName": {
-          "type": "string",
-          "description": "User's last name."
-        },
-        "phoneNumber": {
-          "type": "string",
-          "description": "User's phone number."
-        },
-        "address": {
-          "type": "string",
-          "description": "User's address."
-        }
-      },
-      "required": [
-        "id",
-        "firstName",
-        "lastName"
-      ]
-    },
     "AccessControlRule": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "AccessControlRule",
       "type": "object",
-      "description": "Represents an access control rule for a specific role.",
+      "description": "Represents an administrator's account and access rules.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the AccessControlRule entity."
+          "description": "The UID of the administrator."
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
         },
         "role": {
           "type": "string",
-          "description": "The role this rule applies to (admin, client, or lawyer)."
+          "enum": ["admin"]
         },
-        "resource": {
-          "type": "string",
-          "description": "The resource to which this rule applies (e.g., a specific UI element or data endpoint)."
+        "firstName": {
+          "type": "string"
+        },
+        "lastName": {
+          "type": "string"
         },
         "permission": {
           "type": "string",
-          "description": "The permission granted by this rule (e.g., 'read', 'write', 'execute')."
+          "description": "Access level (e.g., 'read/write')."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
         }
       },
       "required": [
         "id",
         "role",
-        "resource",
-        "permission"
+        "email"
       ]
+    },
+    "Profile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Profile",
+      "type": "object",
+      "description": "Personal details for a user.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "firstName": {
+          "type": "string"
+        },
+        "lastName": {
+          "type": "string"
+        },
+        "phoneNumber": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        }
+      },
+      "required": ["id", "firstName", "lastName"]
     },
     "LawyerAuthorization": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "LawyerAuthorization",
       "type": "object",
-      "description": "Represents an authorized email for a lawyer.",
+      "description": "Whitelist record for authorizing a lawyer email.",
       "properties": {
         "email": {
           "type": "string",
@@ -115,8 +120,7 @@
   },
   "auth": {
     "providers": [
-      "password",
-      "anonymous"
+      "password"
     ]
   },
   "firestore": {
@@ -128,29 +132,17 @@
           "schema": {
             "$ref": "#/backend/entities/User"
           },
-          "description": "Stores user authentication information.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            }
-          ]
+          "description": "Client and Lawyer account records."
         }
       },
       {
-        "path": "/users/{userId}/profile",
+        "path": "/users/{userId}/profile/profile",
         "definition": {
           "entityName": "Profile",
           "schema": {
             "$ref": "#/backend/entities/Profile"
           },
-          "description": "Stores user profile information.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            }
-          ]
+          "description": "User profile data."
         }
       },
       {
@@ -160,13 +152,7 @@
           "schema": {
             "$ref": "#/backend/entities/AccessControlRule"
           },
-          "description": "Admin role membership.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the admin user."
-            }
-          ]
+          "description": "Admin-only account records."
         }
       },
       {
@@ -176,13 +162,7 @@
           "schema": {
             "$ref": "#/backend/entities/LawyerAuthorization"
           },
-          "description": "Whitelist of authorized lawyer emails.",
-          "params": [
-            {
-              "name": "emailId",
-              "description": "Hashed or slugified email address."
-            }
-          ]
+          "description": "Authorized lawyer email whitelist."
         }
       }
     ]

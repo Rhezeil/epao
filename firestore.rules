@@ -28,34 +28,31 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isOwner(userId);
-      allow update: if (isExistingOwner(userId) || isAdmin());
+      allow update: if isExistingOwner(userId) || isAdmin();
       allow delete: if isAdmin();
     }
 
-    match /users/{userId}/profile {
-      allow get, list: if isOwner(userId) || isAdmin();
+    match /users/{userId}/profile/{profileId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId);
-      allow update: if (isExistingOwner(userId) || isAdmin());
+      allow update: if isExistingOwner(userId) || isAdmin();
       allow delete: if isAdmin();
     }
 
     match /roles_admin/{userId} {
-      allow get, list: if isOwner(userId) || isAdmin();
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      // Allow bootstrap admin to initialize their own record
       allow create: if isOwner(userId) && (request.auth.token.email == "Admin@ePAO.com" || userId == "fs4k8QifPHSmUdshxh1NLweHSj73");
       allow update, delete: if isAdmin();
-    }
-
-    match /access_control_rules/{ruleId} {
-      allow get, list: if isSignedIn();
-      allow create, update, delete: if isAdmin();
     }
 
     match /lawyersEmail/{emailId} {
       // Allow individual lookups for registration authorization check
       allow get: if true;
-      // Restrict list view and management to admins
-      allow list: if isAdmin();
-      allow write: if isAdmin();
+      // Restrict management to admins
+      allow list, write: if isAdmin();
     }
   }
 }
