@@ -56,6 +56,21 @@ const civilCaseCategories = [
   }
 ];
 
+const laborCaseCategories = [
+  {
+    title: "Labor Disputes",
+    items: ["Wrongful Termination", "Non-payment of Wages", "Illegal Dismissal / Wrongful Termination", "Contract Violations"]
+  },
+  {
+    title: "Workplace & Benefits",
+    items: ["Workplace Injuries / Compensation Claims", "Benefits Disputes (SSS, PhilHealth, Pag-IBIG)"]
+  },
+  {
+    title: "Union / Collective Bargaining",
+    items: ["Union / Collective Bargaining Disputes"]
+  }
+];
+
 export default function CaseNavigatorPage() {
   const { role, user } = useAuth();
   const router = useRouter();
@@ -205,6 +220,51 @@ export default function CaseNavigatorPage() {
     </div>
   );
 
+  const renderLaborView = () => (
+    <div className="space-y-6">
+      <div className="flex items-center gap-2">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => setSelectedCategory(null)}
+          className="p-0 h-8 w-8 text-primary hover:bg-primary/5"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <h2 className="text-xl font-bold text-primary font-headline">Labor Cases</h2>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-8">
+        <div className="space-y-2 col-span-1">
+          <h3 className="text-sm font-bold text-primary">Labor Disputes</h3>
+          <ul className="space-y-1">
+            {laborCaseCategories[0].items.map((item) => (
+              <li key={item} className="text-xs text-[#2E5A99] cursor-pointer hover:underline">{item}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="space-y-2 col-span-1">
+          <h3 className="text-sm font-bold text-primary">Workplace & Benefits</h3>
+          <ul className="space-y-1">
+            {laborCaseCategories[1].items.map((item) => (
+              <li key={item} className="text-xs text-[#2E5A99] cursor-pointer hover:underline">{item}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="space-y-2 col-span-1">
+          <h3 className="text-sm font-bold text-primary">Union / Collective Bargaining</h3>
+          <ul className="space-y-1">
+            {laborCaseCategories[2].items.map((item) => (
+              <li key={item} className="text-xs text-[#2E5A99] cursor-pointer hover:underline">{item}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <DashboardLayout role={role}>
       <div className="max-w-6xl mx-auto space-y-4 py-2 px-4">
@@ -242,6 +302,8 @@ export default function CaseNavigatorPage() {
               renderCriminalView()
             ) : selectedCategory === "Civil" ? (
               renderCivilView()
+            ) : selectedCategory === "Labor" ? (
+              renderLaborView()
             ) : (
               <>
                 {/* Search Bar */}
