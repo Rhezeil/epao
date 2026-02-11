@@ -2,25 +2,28 @@
 "use client";
 
 import { useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
+import { useAuth } from "@/components/auth-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/badge";
 import { collection, query, orderBy, doc } from "firebase/firestore";
-import { User, Shield, Briefcase, UserCircle, Loader2, MoreVertical, ShieldAlert, Trash2 } from "lucide-react";
+import { Shield, Briefcase, UserCircle, Loader2, MoreVertical, ShieldAlert, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import { Button as UIButton } from "@/components/ui/button";
 
 export default function AdminUsersPage() {
   const db = useFirestore();
   const { toast } = useToast();
+  const { user: currentUser, role: currentRole } = useAuth();
 
-  // Memoize the query to fetch all users
+  // Memoize the query to fetch all users, guarding with auth check
   const usersQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !currentUser || currentRole !== 'admin') return null;
     return query(collection(db, "users"), orderBy("email", "asc"));
-  }, [db]);
+  }, [db, currentUser, currentRole]);
 
   // Subscribe to real-time updates
   const { data: users, isLoading } = useCollection(usersQuery);
@@ -114,9 +117,9 @@ export default function AdminUsersPage() {
                         <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
+                              <UIButton variant="ghost" size="icon">
                                 <MoreVertical className="h-4 w-4" />
-                              </Button>
+                              </UIButton>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               {user.role !== 'admin' && (

@@ -51,7 +51,10 @@ service cloud.firestore {
     }
 
     match /lawyersEmail/{emailId} {
-      allow read: if isSignedIn();
+      // Allow individual lookups for registration authorization check
+      allow get: if true;
+      // Restrict list view and management to admins
+      allow list: if isAdmin();
       allow write: if isAdmin();
     }
   }

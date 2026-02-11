@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
+import { useAuth } from "@/components/auth-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -11,24 +12,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { collection, query, where, doc } from "firebase/firestore";
-import { Briefcase, Loader2, Plus, Trash2, Mail } from "lucide-react";
+import { Loader2, Plus, Trash2, Mail } from "lucide-react";
 
 export default function AdminLawyersPage() {
   const db = useFirestore();
   const { toast } = useToast();
+  const { user, role } = useAuth();
   const [newLawyerEmail, setNewLawyerEmail] = useState("");
 
-  // Memoize the query to fetch registered lawyers
+  // Memoize the query to fetch registered lawyers, guarding with auth check
   const registeredLawyersQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !user || role !== 'admin') return null;
     return query(collection(db, "users"), where("role", "==", "lawyer"));
-  }, [db]);
+  }, [db, user, role]);
 
-  // Memoize the query to fetch authorized emails
+  // Memoize the query to fetch authorized emails, guarding with auth check
   const authorizedEmailsQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !user || role !== 'admin') return null;
     return collection(db, "lawyersEmail");
-  }, [db]);
+  }, [db, user, role]);
 
   const { data: registeredLawyers, isLoading: isLawyersLoading } = useCollection(registeredLawyersQuery);
   const { data: authorizedEmails, isLoading: isEmailsLoading } = useCollection(authorizedEmailsQuery);
