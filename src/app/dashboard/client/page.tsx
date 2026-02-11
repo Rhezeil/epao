@@ -21,8 +21,8 @@ export default function ClientDashboard() {
                 <Image 
                   src={logo.imageUrl} 
                   alt={logo.description} 
-                  width={120} 
-                  height={120} 
+                  width={200} 
+                  height={200} 
                   className="object-contain"
                   data-ai-hint={logo.imageHint}
                 />
