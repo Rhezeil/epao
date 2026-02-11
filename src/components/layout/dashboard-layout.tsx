@@ -75,7 +75,6 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
         <SidebarHeader className="p-6">
           <div className="flex items-center space-x-2">
             <Scale className="h-6 w-6 text-primary" />
-            <span className="text-xl font-bold text-primary font-headline">LexConnect</span>
           </div>
           <div className="mt-4 px-2 py-1 bg-secondary/10 rounded-md inline-block">
             <span className="text-[10px] uppercase tracking-wider font-bold text-secondary">{role} Portal</span>
