@@ -74,7 +74,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
 
   return (
     <SidebarProvider>
-      <Sidebar className="border-r border-border bg-white">
+      <Sidebar className="border-r border-border bg-white/80 backdrop-blur-md">
         <SidebarHeader className="p-4 pb-2 space-y-4">
           <div className="flex items-center justify-center">
             {logo && (
@@ -128,8 +128,8 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
           </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
-      <SidebarInset className="bg-background">
-        <header className="flex h-16 items-center border-b bg-white px-6">
+      <SidebarInset className="bg-transparent">
+        <header className="flex h-16 items-center border-b bg-white/40 backdrop-blur-sm px-6">
           <SidebarTrigger />
           <div className="ml-auto flex items-center space-x-4">
           </div>

@@ -103,7 +103,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-transparent">
       <div className="w-full max-w-md space-y-8">
         <div className="flex justify-center">
           {logo && (
@@ -119,7 +119,7 @@ export default function RegisterPage() {
             </div>
           )}
         </div>
-        <Card className="w-full shadow-2xl border-primary/10 bg-white">
+        <Card className="w-full shadow-2xl border-primary/10 bg-white/80 backdrop-blur-md">
           <CardHeader>
             <CardTitle className="text-center font-headline text-primary">Create Account</CardTitle>
           </CardHeader>
