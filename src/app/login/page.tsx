@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from "react";
@@ -31,7 +32,7 @@ export default function LoginPage() {
       const userDoc = await getDoc(doc(db, "users", user.uid));
       if (userDoc.exists()) {
         const role = userDoc.data().role;
-        toast({ title: "Login successful", description: `Welcome back, ${userDoc.data().name || 'User'}` });
+        toast({ title: "Login successful", description: `Welcome back, ${userDoc.data().email || 'User'}` });
         router.push(`/dashboard/${role}`);
       } else {
         throw new Error("User record not found in database.");
