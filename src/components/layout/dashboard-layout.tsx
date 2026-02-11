@@ -38,7 +38,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
 
   const getMenuItems = () => {
     const common = [
-      { icon: LayoutDashboard, label: "Dashboard", path: `/dashboard/${role}` },
+      { icon: LayoutDashboard, label: "About", path: `/dashboard/${role}` },
       { icon: Compass, label: "Case Navigator", path: "/case-navigator" },
     ];
 
