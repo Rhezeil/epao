@@ -534,21 +534,6 @@ function CaseNavigatorContent() {
           )}
         </div>
 
-        {/* Mode Toggle Tabs */}
-        <div className="flex justify-center gap-4 mb-2">
-          <Button 
-            variant={mode === "manage" ? "default" : "ghost"}
-            onClick={() => {
-              setMode("manage");
-              router.push("/case-navigator?mode=manage");
-            }}
-            className={cn("h-9 rounded-full px-6 flex items-center gap-2", mode === "manage" ? "bg-primary" : "text-primary hover:bg-primary/5")}
-          >
-            <CalendarCheck className="h-4 w-4" />
-            Manage Appointment
-          </Button>
-        </div>
-
         {/* Main Content Area */}
         <Card className="border-none bg-[#EBF2FA] shadow-none rounded-xl overflow-hidden min-h-[450px]">
           <CardContent className="p-8">
