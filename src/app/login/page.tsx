@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from "react";
@@ -10,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { ShieldCheck, User as UserIcon, Briefcase, Loader2 } from "lucide-react";
+import { ShieldCheck, User as UserIcon, Briefcase, Loader2 } from "lucide-center";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -28,43 +29,45 @@ export default function LoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Check if user exists in Firestore
-      const userDocRef = doc(db, "users", user.uid);
-      const userDoc = await getDoc(userDocRef);
+      // Logic to determine role based on collection membership
+      let role = null;
+
+      // Check roles_admin first
+      const adminDocRef = doc(db, "roles_admin", user.uid);
+      const adminDoc = await getDoc(adminDocRef);
       
-      let role = "client";
-
-      if (userDoc.exists()) {
-        role = userDoc.data().role;
+      if (adminDoc.exists()) {
+        role = "admin";
       } else {
-        // Auto-repair for bootstrap admin if records are missing
-        const isBootstrapAdmin = 
-          email.toLowerCase() === "admin@epao.com" || 
-          user.uid === "fs4k8QifPHSmUdshxh1NLweHSj73";
-
-        if (isBootstrapAdmin) {
-          role = "admin";
-          // Create missing records
-          setDocumentNonBlocking(userDocRef, {
-            id: user.uid,
-            email: user.email,
-            role: "admin",
-            profileId: "profile",
-            createdAt: new Date().toISOString(),
-          }, { merge: true });
-
-          const adminDocRef = doc(db, "roles_admin", user.uid);
-          setDocumentNonBlocking(adminDocRef, {
-            id: user.uid,
-            role: "admin",
-            resource: "all",
-            permission: "read/write",
-          }, { merge: true });
-
-          toast({ title: "Admin Records Repaired", description: "Your administrative records have been initialized." });
-        } else {
-          throw new Error("Your account record was not found. Please contact support.");
+        // Check standard users collection
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          role = userDoc.data().role;
         }
+      }
+
+      // Auto-repair for bootstrap admin if records are missing
+      const isBootstrapAdmin = 
+        email.toLowerCase() === "admin@epao.com" || 
+        user.uid === "fs4k8QifPHSmUdshxh1NLweHSj73";
+
+      if (!role && isBootstrapAdmin) {
+        role = "admin";
+        const adminDocRef = doc(db, "roles_admin", user.uid);
+        setDocumentNonBlocking(adminDocRef, {
+          id: user.uid,
+          email: user.email,
+          role: "admin",
+          firstName: "System",
+          lastName: "Administrator",
+          permission: "read/write",
+          createdAt: new Date().toISOString(),
+        }, { merge: true });
+
+        toast({ title: "Admin Records Initialized", description: "Your administrative record has been created in roles_admin." });
+      } else if (!role) {
+        throw new Error("Your account record was not found.");
       }
 
       toast({ title: "Login successful", description: `Welcome back to the ${role} portal.` });

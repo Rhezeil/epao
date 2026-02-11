@@ -32,49 +32,55 @@ export default function RegisterPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Determine the role - grant admin to the specific requested email or the specific UID
       const isSystemAdmin = 
         email.toLowerCase() === "admin@epao.com" || 
         user.uid === "fs4k8QifPHSmUdshxh1NLweHSj73";
       
       const userRole = isSystemAdmin ? "admin" : "client";
 
-      // Initialize the user document in Firestore using the Auth UID as the key
-      const userDocRef = doc(db, "users", user.uid);
-      const profileDocRef = doc(db, "users", user.uid, "profile", "profile");
-      
-      setDocumentNonBlocking(userDocRef, {
-        id: user.uid,
-        email: user.email,
-        role: userRole,
-        profileId: "profile",
-        createdAt: new Date().toISOString(),
-      }, { merge: true });
-
-      setDocumentNonBlocking(profileDocRef, {
-        id: "profile",
-        firstName: firstName,
-        lastName: lastName,
-        createdAt: new Date().toISOString(),
-      }, { merge: true });
-
-      // If they are an admin, we also need to add them to the roles_admin collection with their UID
       if (isSystemAdmin) {
+        // SAVED ONLY ON roles_admin (Separate Collection)
         const adminDocRef = doc(db, "roles_admin", user.uid);
         setDocumentNonBlocking(adminDocRef, {
           id: user.uid,
+          email: user.email,
           role: "admin",
-          resource: "all",
+          firstName: firstName,
+          lastName: lastName,
           permission: "read/write",
+          createdAt: new Date().toISOString(),
         }, { merge: true });
+        
+        toast({ 
+          title: "Admin account created", 
+          description: "Welcome! Your administrative account is saved in the roles_admin collection." 
+        });
+      } else {
+        // Standard users collection for non-admins
+        const userDocRef = doc(db, "users", user.uid);
+        const profileDocRef = doc(db, "users", user.uid, "profile", "profile");
+        
+        setDocumentNonBlocking(userDocRef, {
+          id: user.uid,
+          email: user.email,
+          role: userRole,
+          profileId: "profile",
+          createdAt: new Date().toISOString(),
+        }, { merge: true });
+
+        setDocumentNonBlocking(profileDocRef, {
+          id: "profile",
+          firstName: firstName,
+          lastName: lastName,
+          createdAt: new Date().toISOString(),
+        }, { merge: true });
+
+        toast({ 
+          title: "Account created", 
+          description: `Welcome to LexConnect! Your account has been saved.` 
+        });
       }
 
-      toast({ 
-        title: userRole === "admin" ? "Admin account created" : "Account created", 
-        description: `Welcome to LexConnect! Your ${userRole} account has been saved with UID: ${user.uid}` 
-      });
-
-      // Redirect after a short delay to allow background writes to initiate
       setTimeout(() => {
         router.push(`/dashboard/${userRole}`);
       }, 1000);
