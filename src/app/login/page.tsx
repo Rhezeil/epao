@@ -22,37 +22,37 @@ export default function LoginPage() {
   const auth = useAuth();
   const db = useFirestore();
 
-  // Handle case where user arrives at login but is already authenticated without records
   useEffect(() => {
-    const firebaseAuth = auth;
-    if (firebaseAuth.currentUser && !isLoading) {
-      checkAndInitializeUser(firebaseAuth.currentUser);
+    if (auth.currentUser && !isLoading) {
+      checkAndInitializeUser(auth.currentUser);
     }
-  }, []);
+  }, [auth.currentUser]);
 
   const checkAndInitializeUser = async (user: any) => {
     setIsLoading(true);
     try {
       let resolvedRole: "admin" | "lawyer" | "client" | null = null;
 
-      // Check existing records
-      const adminDoc = await getDoc(doc(db, "roleAdmin", user.uid));
-      if (adminDoc.exists()) resolvedRole = "admin";
+      // Check existing records in parallel for speed
+      const [adminDoc, lawyerDoc, userDoc] = await Promise.all([
+        getDoc(doc(db, "roleAdmin", user.uid)),
+        getDoc(doc(db, "roleLawyer", user.uid)),
+        getDoc(doc(db, "users", user.uid))
+      ]);
 
-      if (!resolvedRole) {
-        const lawyerDoc = await getDoc(doc(db, "roleLawyer", user.uid));
-        if (lawyerDoc.exists()) resolvedRole = "lawyer";
+      if (adminDoc.exists()) {
+        resolvedRole = "admin";
+      } else if (lawyerDoc.exists()) {
+        resolvedRole = "lawyer";
+      } else if (userDoc.exists()) {
+        resolvedRole = "client";
       }
 
-      if (!resolvedRole) {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists()) resolvedRole = "client";
-      }
-
+      // If no role record exists, perform auto-initialization based on authorization
       if (!resolvedRole) {
         const normalizedEmail = user.email?.toLowerCase() || "";
         
-        // Admin Bootstrap
+        // Admin Bootstrap check
         const isBootstrapAdmin = 
           user.uid === "fs4k8QifPHSmUdshxh1NLweHSj73" || 
           normalizedEmail === "admin@epao.com";
@@ -69,7 +69,7 @@ export default function LoginPage() {
             createdAt: new Date().toISOString(),
           }, { merge: true });
         } else {
-          // Lawyer Authorization Check
+          // Lawyer Authorization check
           const lawyerAuthDoc = await getDoc(doc(db, "lawyersEmail", normalizedEmail));
           const isAuthorizedLawyer = 
             lawyerAuthDoc.exists() || 
@@ -86,6 +86,7 @@ export default function LoginPage() {
               createdAt: new Date().toISOString(),
             }, { merge: true });
             
+            // Create profile as well
             setDocumentNonBlocking(doc(db, "users", user.uid, "profile", "profile"), {
               id: "profile",
               firstName: "Authorized",
@@ -111,12 +112,17 @@ export default function LoginPage() {
             }, { merge: true });
           }
         }
-        toast({ title: "Account Initialized" });
+        toast({ title: "Account Initialized", description: `Access granted as ${resolvedRole}.` });
       }
 
       router.push(`/dashboard/${resolvedRole}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Initialization error", error);
+      toast({ 
+        variant: "destructive", 
+        title: "Initialization Error", 
+        description: "Could not set up your profile records. Please contact support." 
+      });
     } finally {
       setIsLoading(false);
     }
@@ -140,7 +146,7 @@ export default function LoginPage() {
 
   const handleQuickAccess = (role: 'admin' | 'lawyer' | 'client') => {
     const demoAccounts = {
-      admin: { email: "Admin@ePAO.com", password: "654321" },
+      admin: { email: "admin@epao.com", password: "password123" },
       lawyer: { email: "lawyer@lawyers.com", password: "password123" },
       client: { email: "client@lexconnect.com", password: "password123" }
     };
@@ -152,11 +158,11 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <h2 className="text-4xl font-bold text-primary">LexConnect</h2>
+          <h2 className="text-4xl font-bold text-primary font-headline">LexConnect</h2>
           <p className="text-muted-foreground mt-2">Legal Services Management Portal</p>
         </div>
 
-        <Card>
+        <Card className="shadow-lg border-primary/10">
           <CardHeader>
             <CardTitle className="text-2xl text-center">Sign In</CardTitle>
           </CardHeader>
@@ -195,9 +201,9 @@ export default function LoginPage() {
                 <UserIcon className="mr-1 h-3 w-3" /> Client
               </Button>
             </div>
-            <div className="text-center text-sm">
+            <div className="text-center text-sm pt-4">
               <span className="text-muted-foreground">Don't have an account? </span>
-              <Button variant="link" className="p-0 h-auto" onClick={() => router.push("/register")}>Register Now</Button>
+              <Button variant="link" className="p-0 h-auto text-secondary" onClick={() => router.push("/register")}>Register Now</Button>
             </div>
           </CardFooter>
         </Card>

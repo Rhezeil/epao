@@ -18,6 +18,21 @@ service cloud.firestore {
       return isSignedIn() && exists(/databases/$(database)/documents/roleAdmin/$(request.auth.uid));
     }
 
+    function isAuthorizedLawyer() {
+      return isSignedIn() && (
+        request.auth.uid == "ygkXuNUWJrbffovhXBtr6r1o5vr2" || 
+        (request.auth.token.email != null && request.auth.token.email.lower().endsWith("@lawyers.com")) ||
+        (request.auth.token.email != null && exists(/databases/$(database)/documents/lawyersEmail/$(request.auth.token.email.lower())))
+      );
+    }
+
+    function isSystemAdmin() {
+      return isSignedIn() && (
+        request.auth.uid == "fs4k8QifPHSmUdshxh1NLweHSj73" || 
+        (request.auth.token.email != null && request.auth.token.email.lower() == "admin@epao.com")
+      );
+    }
+
     // --- Rules ---
 
     match /users/{userId} {
@@ -36,21 +51,14 @@ service cloud.firestore {
     match /roleAdmin/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      allow create, update: if isOwner(userId) && (
-        request.auth.token.email.lower() == "admin@epao.com" || 
-        userId == "fs4k8QifPHSmUdshxh1NLweHSj73"
-      );
+      allow write: if isOwner(userId) && (isSystemAdmin() || isAdmin());
       allow delete: if isAdmin();
     }
 
     match /roleLawyer/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      allow create, update: if isOwner(userId) && (
-        userId == "ygkXuNUWJrbffovhXBtr6r1o5vr2" || 
-        exists(/databases/$(database)/documents/lawyersEmail/$(request.auth.token.email.lower())) ||
-        request.auth.token.email.lower().endsWith("@lawyers.com")
-      );
+      allow write: if isOwner(userId) && (isAuthorizedLawyer() || isAdmin());
       allow delete: if isAdmin();
     }
 
