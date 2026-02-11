@@ -1,3 +1,4 @@
+
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -6,8 +7,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Compass, HelpCircle, Search, ArrowLeft, CalendarCheck } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
 import { cn } from "@/lib/utils";
 
 const criminalCaseCategories = [
@@ -132,13 +133,23 @@ const notarizationCaseCategories = [
   }
 ];
 
-export default function CaseNavigatorPage() {
+function CaseNavigatorContent() {
   const { role, user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [mode, setMode] = useState<"explore" | "manage">("explore");
   const [refCode, setRefCode] = useState("");
+
+  useEffect(() => {
+    const modeParam = searchParams.get("mode");
+    if (modeParam === "manage") {
+      setMode("manage");
+    } else {
+      setMode("explore");
+    }
+  }, [searchParams]);
 
   const categories = [
     "Criminal",
@@ -527,14 +538,20 @@ export default function CaseNavigatorPage() {
         <div className="flex justify-center gap-4 mb-2">
           <Button 
             variant={mode === "explore" ? "default" : "ghost"}
-            onClick={() => setMode("explore")}
+            onClick={() => {
+              setMode("explore");
+              router.push("/case-navigator");
+            }}
             className={cn("h-9 rounded-full px-6", mode === "explore" ? "bg-primary" : "text-primary hover:bg-primary/5")}
           >
             Explore Cases
           </Button>
           <Button 
             variant={mode === "manage" ? "default" : "ghost"}
-            onClick={() => setMode("manage")}
+            onClick={() => {
+              setMode("manage");
+              router.push("/case-navigator?mode=manage");
+            }}
             className={cn("h-9 rounded-full px-6 flex items-center gap-2", mode === "manage" ? "bg-primary" : "text-primary hover:bg-primary/5")}
           >
             <CalendarCheck className="h-4 w-4" />
@@ -627,5 +644,13 @@ export default function CaseNavigatorPage() {
         </Card>
       </div>
     </DashboardLayout>
+  );
+}
+
+export default function CaseNavigatorPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CaseNavigatorContent />
+    </Suspense>
   );
 }

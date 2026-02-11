@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -23,7 +24,8 @@ import {
   Users, 
   FileText, 
   Settings,
-  Calendar
+  Calendar,
+  CalendarCheck
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -39,10 +41,10 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   const getMenuItems = () => {
     if (role === "admin") {
       return [
-        { icon: Compass, label: "Case Navigator", path: "/case-navigator" },
         { icon: Users, label: "Users Management", path: "/dashboard/admin/users" },
         { icon: Briefcase, label: "Lawyer List", path: "/dashboard/admin/lawyers" },
         { icon: LayoutDashboard, label: "About", path: `/dashboard/admin` },
+        { icon: Compass, label: "Case Navigator", path: "/case-navigator" },
       ];
     }
 
@@ -59,6 +61,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
       return [
         { icon: Compass, label: "Case Navigator", path: "/case-navigator" },
         { icon: Calendar, label: "Book Appointment", path: "/dashboard/client/book-appointment" },
+        { icon: CalendarCheck, label: "Manage Appointment", path: "/case-navigator?mode=manage" },
         { icon: FileText, label: "Case Updates", path: "/dashboard/client/cases" },
         { icon: LayoutDashboard, label: "About", path: `/dashboard/client` },
       ];
