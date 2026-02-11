@@ -12,13 +12,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { collection, query, doc, orderBy } from "firebase/firestore";
-import { Loader2, Plus, Trash2, Mail } from "lucide-react";
+import { Loader2, Plus, Trash2, Mail, Lock } from "lucide-react";
+import { initializeApp, deleteApp } from "firebase/app";
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { firebaseConfig } from "@/firebase/config";
 
 export default function AdminLawyersPage() {
   const db = useFirestore();
   const { toast } = useToast();
   const { user, role } = useAuth();
   const [newLawyerEmail, setNewLawyerEmail] = useState("");
+  const [newLawyerPassword, setNewLawyerPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch registered lawyers
   const registeredLawyersQuery = useMemoFirebase(() => {
@@ -35,21 +40,51 @@ export default function AdminLawyersPage() {
   const { data: registeredLawyers, isLoading: isLawyersLoading } = useCollection(registeredLawyersQuery);
   const { data: authorizedEmails, isLoading: isEmailsLoading } = useCollection(authorizedEmailsQuery);
 
-  const handleAuthorizeLawyer = (e: React.FormEvent) => {
+  const handleAuthorizeLawyer = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!db || !newLawyerEmail) return;
+    if (!db || !newLawyerEmail || !newLawyerPassword) return;
 
-    // Use email directly as ID for consistency with Security Rules
+    setIsSubmitting(true);
     const email = newLawyerEmail.toLowerCase();
-    const authRef = doc(db, "lawyersEmail", email);
+    const password = newLawyerPassword;
 
-    setDocumentNonBlocking(authRef, {
-      email: email,
-      authorizedAt: new Date().toISOString()
-    }, { merge: true });
+    try {
+      // 1. Create the Auth account using a secondary app instance
+      // This prevents the admin from being signed out on account creation
+      const secondaryApp = initializeApp(firebaseConfig, "secondary-registration");
+      const secondaryAuth = getAuth(secondaryApp);
+      
+      try {
+        await createUserWithEmailAndPassword(secondaryAuth, email, password);
+      } finally {
+        await deleteApp(secondaryApp);
+      }
 
-    toast({ title: "Lawyer Authorized", description: `${email} added to whitelist.` });
-    setNewLawyerEmail("");
+      // 2. Save the record in the Firestore whitelist
+      // Use email directly as ID for consistency with Security Rules
+      const authRef = doc(db, "lawyersEmail", email);
+      setDocumentNonBlocking(authRef, {
+        email: email,
+        password: password, // Storing for admin visibility, though usually handled via Auth
+        authorizedAt: new Date().toISOString()
+      }, { merge: true });
+
+      toast({ 
+        title: "Lawyer Registered", 
+        description: `Auth account and whitelist record created for ${email}.` 
+      });
+      
+      setNewLawyerEmail("");
+      setNewLawyerPassword("");
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Registration Failed",
+        description: error.message || "Could not create user account."
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleRemoveAuthorization = (id: string) => {
@@ -70,16 +105,41 @@ export default function AdminLawyersPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Mail className="h-5 w-5" />
-              Authorize Email
+              Register New Lawyer
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleAuthorizeLawyer} className="flex gap-4 items-end">
-              <div className="flex-1 space-y-2">
+            <form onSubmit={handleAuthorizeLawyer} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+              <div className="space-y-2">
                 <Label>Email Address</Label>
-                <Input type="email" value={newLawyerEmail} onChange={(e) => setNewLawyerEmail(e.target.value)} required placeholder="name@lawyers.com" />
+                <Input 
+                  type="email" 
+                  value={newLawyerEmail} 
+                  onChange={(e) => setNewLawyerEmail(e.target.value)} 
+                  required 
+                  placeholder="name@lawyers.com" 
+                  disabled={isSubmitting}
+                />
               </div>
-              <Button type="submit"><Plus className="mr-2 h-4 w-4" /> Authorize</Button>
+              <div className="space-y-2">
+                <Label>Initial Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    type="password" 
+                    value={newLawyerPassword} 
+                    onChange={(e) => setNewLawyerPassword(e.target.value)} 
+                    required 
+                    placeholder="Minimum 6 characters" 
+                    className="pl-9"
+                    disabled={isSubmitting}
+                  />
+                </div>
+              </div>
+              <Button type="submit" disabled={isSubmitting} className="w-full md:w-auto">
+                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />} 
+                Register & Authorize
+              </Button>
             </form>
           </CardContent>
         </Card>
@@ -91,17 +151,27 @@ export default function AdminLawyersPage() {
               {isEmailsLoading ? <Loader2 className="animate-spin" /> : (
                 <Table>
                   <TableHeader>
-                    <TableRow><TableHead>Email</TableHead><TableHead className="text-right">Action</TableHead></TableRow>
+                    <TableRow>
+                      <TableHead>Email</TableHead>
+                      <TableHead className="text-right">Action</TableHead>
+                    </TableRow>
                   </TableHeader>
                   <TableBody>
                     {authorizedEmails?.map((auth) => (
                       <TableRow key={auth.id}>
-                        <TableCell>{auth.email}</TableCell>
+                        <TableCell className="font-medium">{auth.email}</TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" onClick={() => handleRemoveAuthorization(auth.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleRemoveAuthorization(auth.id)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
+                    {(!authorizedEmails || authorizedEmails.length === 0) && (
+                      <TableRow>
+                        <TableCell colSpan={2} className="text-center text-muted-foreground py-4">No authorized emails yet.</TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               )}
@@ -114,15 +184,25 @@ export default function AdminLawyersPage() {
               {isLawyersLoading ? <Loader2 className="animate-spin" /> : (
                 <Table>
                   <TableHeader>
-                    <TableRow><TableHead>Lawyer Email</TableHead><TableHead className="text-right">Status</TableHead></TableRow>
+                    <TableRow>
+                      <TableHead>Lawyer Email</TableHead>
+                      <TableHead className="text-right">Status</TableHead>
+                    </TableRow>
                   </TableHeader>
                   <TableBody>
                     {registeredLawyers?.map((lawyer) => (
                       <TableRow key={lawyer.id}>
                         <TableCell>{lawyer.email}</TableCell>
-                        <TableCell className="text-right"><span className="text-green-600 font-bold">Registered</span></TableCell>
+                        <TableCell className="text-right">
+                          <span className="text-green-600 font-bold px-2 py-1 bg-green-50 rounded text-xs">Registered</span>
+                        </TableCell>
                       </TableRow>
                     ))}
+                    {(!registeredLawyers || registeredLawyers.length === 0) && (
+                      <TableRow>
+                        <TableCell colSpan={2} className="text-center text-muted-foreground py-4">No active practitioners yet.</TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               )}

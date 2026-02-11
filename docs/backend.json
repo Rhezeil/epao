@@ -122,12 +122,16 @@
           "type": "string",
           "format": "email"
         },
+        "password": {
+          "type": "string",
+          "description": "Initial temporary password for the account."
+        },
         "authorizedAt": {
           "type": "string",
           "format": "date-time"
         }
       },
-      "required": ["email"]
+      "required": ["email", "password"]
     }
   },
   "auth": {
