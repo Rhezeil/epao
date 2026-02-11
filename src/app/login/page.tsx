@@ -137,7 +137,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-transparent">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <div className="w-full max-w-md space-y-8">
         <div className="flex flex-col items-center space-y-4">
           {logo && (
@@ -145,17 +145,16 @@ export default function LoginPage() {
               <Image 
                 src={logo.imageUrl} 
                 alt={logo.description} 
-                width={160} 
-                height={160} 
+                width={200} 
+                height={200} 
                 className="rounded-full object-contain"
                 data-ai-hint={logo.imageHint}
               />
             </div>
           )}
-          <p className="text-primary font-bold text-lg tracking-widest uppercase">Legal Portal</p>
         </div>
 
-        <Card className="shadow-2xl border-primary/10 bg-white/95 backdrop-blur-sm">
+        <Card className="shadow-2xl border-primary/10 bg-white">
           <CardHeader>
             <CardTitle className="text-2xl text-center font-headline text-primary">Sign In</CardTitle>
           </CardHeader>
@@ -163,11 +162,11 @@ export default function LoginPage() {
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="name@example.com" className="bg-white/50" />
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="name@example.com" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="bg-white/50" />
+                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
               </div>
               <Button type="submit" className="w-full bg-primary hover:bg-primary/90 shadow-md" disabled={isLoading}>
                 {isLoading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : "Login"}
@@ -184,13 +183,13 @@ export default function LoginPage() {
               </div>
             </div>
             <div className="grid grid-cols-3 gap-2 w-full">
-              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('admin')} className="bg-white/50 hover:bg-primary/5">
+              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('admin')} className="hover:bg-primary/5">
                 <ShieldCheck className="mr-1 h-3 w-3" /> Admin
               </Button>
-              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('lawyer')} className="bg-white/50 hover:bg-primary/5">
+              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('lawyer')} className="hover:bg-primary/5">
                 <Briefcase className="mr-1 h-3 w-3" /> Lawyer
               </Button>
-              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('client')} className="bg-white/50 hover:bg-primary/5">
+              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('client')} className="hover:bg-primary/5">
                 <UserIcon className="mr-1 h-3 w-3" /> Client
               </Button>
             </div>

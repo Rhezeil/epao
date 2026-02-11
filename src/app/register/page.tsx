@@ -103,7 +103,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-transparent">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <div className="w-full max-w-md space-y-8">
         <div className="flex justify-center">
           {logo && (
@@ -111,15 +111,15 @@ export default function RegisterPage() {
               <Image 
                 src={logo.imageUrl} 
                 alt={logo.description} 
-                width={120} 
-                height={120} 
+                width={160} 
+                height={160} 
                 className="rounded-full object-contain"
                 data-ai-hint={logo.imageHint}
               />
             </div>
           )}
         </div>
-        <Card className="w-full shadow-2xl border-primary/10 bg-white/95 backdrop-blur-sm">
+        <Card className="w-full shadow-2xl border-primary/10 bg-white">
           <CardHeader>
             <CardTitle className="text-center font-headline text-primary">Create Account</CardTitle>
           </CardHeader>
@@ -128,20 +128,20 @@ export default function RegisterPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required className="bg-white/50" />
+                  <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required className="bg-white/50" />
+                  <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="bg-white/50" />
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="bg-white/50" />
+                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
               </div>
               <Button type="submit" className="w-full bg-primary hover:bg-primary/90 shadow-md" disabled={isLoading}>
                 {isLoading ? "Creating Account..." : "Register"}
