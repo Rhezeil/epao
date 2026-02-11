@@ -138,22 +138,22 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <Card className="shadow-2xl border-primary/10 bg-white/80 backdrop-blur-md overflow-hidden">
+      <div className="w-full max-w-lg">
+        <Card className="shadow-2xl border-primary/10 bg-white/80 backdrop-blur-md overflow-hidden p-4">
           <CardHeader className="flex flex-col items-center space-y-4 pb-2">
             {logo && (
-              <div className="p-2 bg-white rounded-full shadow-sm border border-border/50">
+              <div className="p-4 bg-white rounded-full shadow-sm border border-border/50">
                 <Image 
                   src={logo.imageUrl} 
                   alt={logo.description} 
-                  width={120} 
-                  height={120} 
+                  width={280} 
+                  height={280} 
                   className="rounded-full object-contain"
                   data-ai-hint={logo.imageHint}
                 />
               </div>
             )}
-            <CardTitle className="text-2xl text-center font-headline text-primary">Sign In</CardTitle>
+            <CardTitle className="text-2xl text-center font-headline text-primary mt-4">Sign In</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
