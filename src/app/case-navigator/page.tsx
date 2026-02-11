@@ -3,7 +3,7 @@
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { useAuth } from "@/components/auth-provider";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Compass, HelpCircle, Search } from "lucide-react";
@@ -15,27 +15,15 @@ export default function CaseNavigatorPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
 
-  const criminalCategories = [
-    {
-      title: "Persons",
-      cases: ["Murder", "Homicide", "Physical Injury", "Assault", "Rape", "Sexual Harassment", "VAWC", "Kidnapping", "Abduction"]
-    },
-    {
-      title: "Property",
-      cases: ["Theft", "Robbery", "Arson", "Estafa / Fraud", "Embezzlement", "Malversation"]
-    },
-    {
-      title: "Public Order",
-      cases: ["Rebellion", "Sedition", "Resistance", "Illegal Possession of Firearms"]
-    },
-    {
-      title: "Drugs",
-      cases: ["Possession", "Trafficking", "Use / Distribution"]
-    },
-    {
-      title: "Special Cases",
-      cases: ["Cybercrime", "Human Trafficking", "White-Collar", "Juvenile Delinquency"]
-    }
+  const categories = [
+    "Criminal",
+    "Civil",
+    "Labor",
+    "Administrative",
+    "Constitutional",
+    "Commercial",
+    "Special/Other",
+    "Notarization"
   ];
 
   return (
@@ -49,7 +37,7 @@ export default function CaseNavigatorPage() {
             ePAO Case Requirements, Appointment, and Service Management
           </h1>
           <p className="text-sm text-muted-foreground leading-tight max-w-2xl mx-auto">
-            Check PAO jurisdiction and book a consultation. 
+            Determine if your case is under PAO jurisdiction and book a consultation. 
             {!user && (
               <span className="ml-1 font-medium text-secondary">
                 Log in for existing cases.
@@ -68,45 +56,46 @@ export default function CaseNavigatorPage() {
           )}
         </div>
 
-        {/* Search Bar Section */}
-        <div className="flex gap-2 max-w-2xl mx-auto bg-white p-1 rounded-lg border shadow-sm">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search case (e.g., 'Theft')..." 
-              className="pl-9 h-9 border-none shadow-none focus-visible:ring-0 text-sm"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <Button size="sm" className="bg-[#E67E22] hover:bg-[#D35400] text-white h-9">
-            Search
-          </Button>
-        </div>
+        {/* Search and Category Exploration Section */}
+        <Card className="border-none bg-[#EBF2FA] shadow-none rounded-xl overflow-hidden">
+          <CardContent className="p-6 space-y-6">
+            {/* Search Bar */}
+            <div className="flex gap-2 max-w-4xl mx-auto bg-white p-1 rounded-lg border shadow-sm">
+              <div className="flex-1">
+                <Input 
+                  placeholder='e.g., "Theft", "Annulment", "Child Support"...' 
+                  className="h-10 border-none shadow-none focus-visible:ring-0 text-sm italic text-muted-foreground"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <Button size="sm" className="bg-[#E67E22] hover:bg-[#D35400] text-white h-10 px-6 font-semibold flex items-center gap-2">
+                <Search className="h-4 w-4" />
+                Search
+              </Button>
+            </div>
 
-        {/* Case Directory Section */}
-        <Card className="border-none bg-[#F0F7FF] shadow-none">
-          <CardContent className="p-4">
-            <h2 className="text-lg font-bold text-primary font-headline mb-4 border-b border-primary/10 pb-2">Criminal Cases</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              {criminalCategories.map((category, idx) => (
-                <div key={idx} className="space-y-1">
-                  <h3 className="font-bold text-primary text-sm">{category.title}</h3>
-                  <ul className="space-y-0.5">
-                    {category.cases.map((caseName, cIdx) => (
-                      <li key={cIdx}>
-                        <button className="text-[11px] text-primary/80 hover:text-primary hover:underline text-left transition-colors truncate w-full">
-                          {caseName}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
+            {/* Category Selection */}
+            <div className="space-y-4 max-w-4xl mx-auto">
+              <p className="text-sm text-primary font-medium opacity-80">
+                Or select a category to explore case types:
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {categories.map((category) => (
+                  <Button
+                    key={category}
+                    variant="outline"
+                    className="h-12 bg-[#DCE6F5] border-none text-primary font-bold text-sm hover:bg-[#CAD6E8] hover:text-primary transition-all shadow-sm justify-start px-4"
+                  >
+                    {category}
+                  </Button>
+                ))}
+              </div>
             </div>
           </CardContent>
         </Card>
 
+        {/* Guidelines / Help Section */}
         <Card className="bg-muted/30 border-dashed border">
           <CardContent className="p-3">
             <div className="flex items-start gap-3">
