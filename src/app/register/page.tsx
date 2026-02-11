@@ -32,14 +32,18 @@ export default function RegisterPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Initialize the user document in Firestore with the "client" role
+      // Determine the role - grant admin to the specific requested email
+      const isSystemAdmin = email.toLowerCase() === "admin@epao.com";
+      const userRole = isSystemAdmin ? "admin" : "client";
+
+      // Initialize the user document in Firestore
       const userDocRef = doc(db, "users", user.uid);
       const profileDocRef = doc(db, "users", user.uid, "profile", "profile");
       
       setDocumentNonBlocking(userDocRef, {
         id: user.uid,
         email: user.email,
-        role: "client",
+        role: userRole,
         profileId: "profile",
         createdAt: new Date().toISOString(),
       }, { merge: true });
@@ -51,15 +55,25 @@ export default function RegisterPage() {
         createdAt: new Date().toISOString(),
       }, { merge: true });
 
+      // If they are an admin, we also need to add them to the roles_admin collection
+      if (isSystemAdmin) {
+        const adminDocRef = doc(db, "roles_admin", user.uid);
+        setDocumentNonBlocking(adminDocRef, {
+          id: user.uid,
+          role: "admin",
+          resource: "all",
+          permission: "read/write",
+        }, { merge: true });
+      }
+
       toast({ 
-        title: "Account created", 
-        description: "Welcome to LexConnect! Redirecting to your dashboard..." 
+        title: userRole === "admin" ? "Admin account created" : "Account created", 
+        description: `Welcome to LexConnect! Redirecting to your ${userRole} dashboard...` 
       });
 
-      // The AuthProvider will detect the role change and handle the final redirect,
-      // but we add a small delay to ensure Firestore operations are initiated
+      // Redirect after a short delay
       setTimeout(() => {
-        router.push("/dashboard/client");
+        router.push(`/dashboard/${userRole}`);
       }, 1000);
 
     } catch (error: any) {
@@ -83,10 +97,10 @@ export default function RegisterPage() {
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center font-bold flex items-center justify-center gap-2">
               <UserPlus className="h-6 w-6 text-primary" />
-              Client Registration
+              Portal Registration
             </CardTitle>
             <CardDescription className="text-center">
-              Create your secure legal portal account
+              Create your secure account
             </CardDescription>
           </CardHeader>
           <CardContent>
