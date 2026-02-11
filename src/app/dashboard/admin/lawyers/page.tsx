@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
 import { useAuth } from "@/components/auth-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,7 @@ export default function AdminLawyersPage() {
   const { user, role } = useAuth();
   const [newLawyerEmail, setNewLawyerEmail] = useState("");
 
-  // Fetch registered lawyers from the NEW dedicated collection
+  // Fetch registered lawyers
   const registeredLawyersQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'admin') return null;
     return query(collection(db, "roleLawyer"), orderBy("email", "asc"));
@@ -39,15 +39,16 @@ export default function AdminLawyersPage() {
     e.preventDefault();
     if (!db || !newLawyerEmail) return;
 
-    const emailId = newLawyerEmail.toLowerCase().replace(/[@.]/g, "_");
-    const authRef = doc(db, "lawyersEmail", emailId);
+    // Use email directly as ID for consistency with Security Rules
+    const email = newLawyerEmail.toLowerCase();
+    const authRef = doc(db, "lawyersEmail", email);
 
     setDocumentNonBlocking(authRef, {
-      email: newLawyerEmail.toLowerCase(),
+      email: email,
       authorizedAt: new Date().toISOString()
     }, { merge: true });
 
-    toast({ title: "Lawyer Authorized", description: `${newLawyerEmail} added to whitelist.` });
+    toast({ title: "Lawyer Authorized", description: `${email} added to whitelist.` });
     setNewLawyerEmail("");
   };
 
@@ -76,7 +77,7 @@ export default function AdminLawyersPage() {
             <form onSubmit={handleAuthorizeLawyer} className="flex gap-4 items-end">
               <div className="flex-1 space-y-2">
                 <Label>Email Address</Label>
-                <Input type="email" value={newLawyerEmail} onChange={(e) => setNewLawyerEmail(e.target.value)} required />
+                <Input type="email" value={newLawyerEmail} onChange={(e) => setNewLawyerEmail(e.target.value)} required placeholder="name@lawyers.com" />
               </div>
               <Button type="submit"><Plus className="mr-2 h-4 w-4" /> Authorize</Button>
             </form>
@@ -85,7 +86,7 @@ export default function AdminLawyersPage() {
 
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
-            <CardHeader><CardTitle>Authorized Emails</CardTitle></CardHeader>
+            <CardHeader><CardTitle>Authorized Emails (Whitelist)</CardTitle></CardHeader>
             <CardContent>
               {isEmailsLoading ? <Loader2 className="animate-spin" /> : (
                 <Table>
@@ -108,7 +109,7 @@ export default function AdminLawyersPage() {
           </Card>
 
           <Card>
-            <CardHeader><CardTitle>Registered Practitioners</CardTitle></CardHeader>
+            <CardHeader><CardTitle>Active Practitioners (Registered)</CardTitle></CardHeader>
             <CardContent>
               {isLawyersLoading ? <Loader2 className="animate-spin" /> : (
                 <Table>
@@ -119,7 +120,7 @@ export default function AdminLawyersPage() {
                     {registeredLawyers?.map((lawyer) => (
                       <TableRow key={lawyer.id}>
                         <TableCell>{lawyer.email}</TableCell>
-                        <TableCell className="text-right"><span className="text-green-600 font-bold">Active</span></TableCell>
+                        <TableCell className="text-right"><span className="text-green-600 font-bold">Registered</span></TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

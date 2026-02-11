@@ -8,10 +8,10 @@ import { useAuth, useFirestore, setDocumentNonBlocking } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { ShieldCheck, User as UserIcon, Briefcase, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -31,14 +31,14 @@ export default function LoginPage() {
 
       let role = null;
 
-      // Check roleAdmin first
+      // 1. Check roleAdmin first
       const adminDocRef = doc(db, "roleAdmin", user.uid);
       const adminDoc = await getDoc(adminDocRef);
       if (adminDoc.exists()) {
         role = "admin";
       }
 
-      // Check roleLawyer
+      // 2. Check roleLawyer
       if (!role) {
         const lawyerDocRef = doc(db, "roleLawyer", user.uid);
         const lawyerDoc = await getDoc(lawyerDocRef);
@@ -47,7 +47,7 @@ export default function LoginPage() {
         }
       }
 
-      // Check standard users (Clients)
+      // 3. Check standard users (Clients)
       if (!role) {
         const userDocRef = doc(db, "users", user.uid);
         const userDoc = await getDoc(userDocRef);
@@ -56,7 +56,9 @@ export default function LoginPage() {
         }
       }
 
-      // Auto-repair for bootstrap admin
+      // --- AUTO-REPAIR LOGIC ---
+      
+      // Bootstrap Admin UID or Email
       const isBootstrapAdmin = 
         email.toLowerCase() === "admin@epao.com" || 
         user.uid === "fs4k8QifPHSmUdshxh1NLweHSj73";
@@ -76,10 +78,10 @@ export default function LoginPage() {
         toast({ title: "Admin Records Initialized" });
       } 
       
-      // Auto-repair for authorized lawyers (including specific UID)
+      // Authorized Lawyers Check
       if (!role) {
-        const emailId = user.email?.toLowerCase().replace(/[@.]/g, "_") || "";
-        const lawyerAuthRef = doc(db, "lawyersEmail", emailId);
+        const normalizedEmail = user.email?.toLowerCase() || "";
+        const lawyerAuthRef = doc(db, "lawyersEmail", normalizedEmail);
         const lawyerAuthDoc = await getDoc(lawyerAuthRef);
         const isAuthorizedLawyer = lawyerAuthDoc.exists() || user.uid === "ygkXuNUWJrbffovhXBtr6r1o5vr2";
         

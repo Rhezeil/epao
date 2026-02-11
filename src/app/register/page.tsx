@@ -8,10 +8,9 @@ import { useAuth, useFirestore, setDocumentNonBlocking } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, ArrowLeft } from "lucide-react";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -29,8 +28,8 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const emailId = email.toLowerCase().replace(/[@.]/g, "_");
-      const lawyerAuthRef = doc(db, "lawyersEmail", emailId);
+      const normalizedEmail = email.toLowerCase();
+      const lawyerAuthRef = doc(db, "lawyersEmail", normalizedEmail);
       const lawyerAuthDoc = await getDoc(lawyerAuthRef);
       const isAuthorizedLawyerByEmail = lawyerAuthDoc.exists();
 
@@ -47,7 +46,7 @@ export default function RegisterPage() {
       if (isSystemAdmin) userRole = "admin";
       else if (isLawyer) userRole = "lawyer";
 
-      // 1. Create Profile first (always in users subcollection for simplicity)
+      // 1. Create Profile
       const profileDocRef = doc(db, "users", user.uid, "profile", "profile");
       setDocumentNonBlocking(profileDocRef, {
         id: "profile",

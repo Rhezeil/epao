@@ -43,7 +43,6 @@ service cloud.firestore {
     match /roleAdmin/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      // Allow bootstrap admin via email, UID Admin@ePAO.com or specific UID
       allow create: if isOwner(userId) && (
         request.auth.token.email.lower() == "admin@epao.com" || 
         userId == "fs4k8QifPHSmUdshxh1NLweHSj73"
@@ -54,15 +53,15 @@ service cloud.firestore {
     match /roleLawyer/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      // Allow bootstrap lawyer via specific UID
       allow create: if isOwner(userId) && (
         userId == "ygkXuNUWJrbffovhXBtr6r1o5vr2" || 
-        exists(/databases/$(database)/documents/lawyersEmail/$(request.auth.token.email.lower().replace("[@.]", "_")))
+        exists(/databases/$(database)/documents/lawyersEmail/$(request.auth.token.email.lower()))
       );
       allow update, delete: if isAdmin();
     }
 
     match /lawyersEmail/{emailId} {
+      // Allow individual lookup for registration/login check
       allow get: if true;
       allow list, write: if isAdmin();
     }
