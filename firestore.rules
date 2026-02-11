@@ -1,19 +1,5 @@
-rules_version = '2';
 
-/**
- * LexConnect Security Rules
- *
- * Core Philosophy:
- * This ruleset implements a robust Role-Based Access Control (RBAC) model combined with path-based 
- * ownership. It prioritizes "Authorization Independence" by using denormalized role data and 
- * document existence checks to minimize complex cross-document lookups.
- *
- * Data Structure:
- * - /users/{userId}: Primary user metadata including the user's role.
- * - /users/{userId}/profile: Personal user information, isolated for privacy and streamlined updates.
- * - /roles_admin/{userId}: A control collection where document existence signifies administrative status.
- * - /access_control_rules/{ruleId}: System-wide permissions mapping roles to resources.
- */
+rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -55,7 +41,6 @@ service cloud.firestore {
 
     match /roles_admin/{userId} {
       allow get, list: if isOwner(userId) || isAdmin();
-      // Allow the bootstrap admin to create their own record
       allow create: if isOwner(userId) && (request.auth.token.email == "Admin@ePAO.com" || userId == "fs4k8QifPHSmUdshxh1NLweHSj73");
       allow update, delete: if isAdmin();
     }
@@ -63,6 +48,11 @@ service cloud.firestore {
     match /access_control_rules/{ruleId} {
       allow get, list: if isSignedIn();
       allow create, update, delete: if isAdmin();
+    }
+
+    match /lawyersEmail/{emailId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
   }
 }

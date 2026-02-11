@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -93,6 +94,23 @@
         "resource",
         "permission"
       ]
+    },
+    "LawyerAuthorization": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "LawyerAuthorization",
+      "type": "object",
+      "description": "Represents an authorized email for a lawyer.",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "authorizedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["email"]
     }
   },
   "auth": {
@@ -110,7 +128,7 @@
           "schema": {
             "$ref": "#/backend/entities/User"
           },
-          "description": "Stores user authentication information. Includes 'role' for authorization independence. The 'role' field is denormalized to avoid using `get()` calls in security rules for accessing the user's role. Also includes profileId.",
+          "description": "Stores user authentication information.",
           "params": [
             {
               "name": "userId",
@@ -126,7 +144,7 @@
           "schema": {
             "$ref": "#/backend/entities/Profile"
           },
-          "description": "Stores user profile information. Accessed only by the user or admins.",
+          "description": "Stores user profile information.",
           "params": [
             {
               "name": "userId",
@@ -142,7 +160,7 @@
           "schema": {
             "$ref": "#/backend/entities/AccessControlRule"
           },
-          "description": "Indicates admin role membership based on document existence. Presence of a document for a user ID in this collection grants admin privileges.",
+          "description": "Admin role membership.",
           "params": [
             {
               "name": "userId",
@@ -152,22 +170,21 @@
         }
       },
       {
-        "path": "/access_control_rules/{ruleId}",
+        "path": "/lawyersEmail/{emailId}",
         "definition": {
-          "entityName": "AccessControlRule",
+          "entityName": "LawyerAuthorization",
           "schema": {
-            "$ref": "#/backend/entities/AccessControlRule"
+            "$ref": "#/backend/entities/LawyerAuthorization"
           },
-          "description": "Stores access control rules for different roles.",
+          "description": "Whitelist of authorized lawyer emails.",
           "params": [
             {
-              "name": "ruleId",
-              "description": "The unique identifier for the access control rule."
+              "name": "emailId",
+              "description": "Hashed or slugified email address."
             }
           ]
         }
       }
-    ],
-    "reasoning": "This Firestore data structure is designed to support LexConnect's role-based authentication and access control requirements, while adhering to the principles of Authorization Independence, Structural Segregation, Access Modeling, and Data Clarity. It prioritizes security, scalability, and debuggability. \n\nAuthorization Independence is achieved through denormalization. Specifically, the `users` collection includes a `role` field. Any subcollections or related data that require role-based access control will denormalize this `role` information within their documents, eliminating the need for `get()` calls in security rules. Furthermore, the profileId stored in the `users` collection allows a 1:1 relationship with the profiles data. \n\nStructural Segregation is implemented by separating user roles into different collections. Admin roles are handled via document existence in the `/roles_admin/{userId}` collection. This segregation simplifies security rules, ensuring that each collection has a homogeneous security posture. User profiles are stored separately from authentication information to isolate personal data and streamline updates without affecting authentication processes. Access control rules are stored in their own collection for easy management and updates.\n\nAccess Modeling follows a combination of path-based ownership and existence checks. User profiles are accessed via a path-based structure (`/users/{userId}/profile`), ensuring that only the user can read/write their profile data. Admin access is verified by checking for document existence in the `/roles_admin/{userId}` collection. \n\nThe structure supports QAPs by using segregation and existence checks. Listing users is only allowed for admins, determined by role membership in `/roles_admin/{userId}`. User profiles are accessible only to the user and admins, following the path-based ownership model. Access control rules can be queried to determine resource-based permissions based on user role."
+    ]
   }
 }

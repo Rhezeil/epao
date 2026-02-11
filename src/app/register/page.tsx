@@ -3,7 +3,7 @@
 
 import React, { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import { useAuth, useFirestore, setDocumentNonBlocking } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,12 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
+      // 1. Check if email is authorized for lawyer role
+      const emailId = email.toLowerCase().replace(/[@.]/g, "_");
+      const lawyerAuthRef = doc(db, "lawyersEmail", emailId);
+      const lawyerAuthDoc = await getDoc(lawyerAuthRef);
+      const isAuthorizedLawyer = lawyerAuthDoc.exists();
+
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
@@ -36,10 +42,11 @@ export default function RegisterPage() {
         email.toLowerCase() === "admin@epao.com" || 
         user.uid === "fs4k8QifPHSmUdshxh1NLweHSj73";
       
-      const userRole = isSystemAdmin ? "admin" : "client";
+      let userRole: "admin" | "lawyer" | "client" = "client";
+      if (isSystemAdmin) userRole = "admin";
+      else if (isAuthorizedLawyer) userRole = "lawyer";
 
-      if (isSystemAdmin) {
-        // SAVED ONLY ON roles_admin (Separate Collection)
+      if (userRole === "admin") {
         const adminDocRef = doc(db, "roles_admin", user.uid);
         setDocumentNonBlocking(adminDocRef, {
           id: user.uid,
@@ -53,10 +60,9 @@ export default function RegisterPage() {
         
         toast({ 
           title: "Admin account created", 
-          description: "Welcome! Your administrative account is saved in the roles_admin collection." 
+          description: "Welcome! Your administrative account has been initialized." 
         });
       } else {
-        // Standard users collection for non-admins
         const userDocRef = doc(db, "users", user.uid);
         const profileDocRef = doc(db, "users", user.uid, "profile", "profile");
         
@@ -77,7 +83,7 @@ export default function RegisterPage() {
 
         toast({ 
           title: "Account created", 
-          description: `Welcome to LexConnect! Your account has been saved.` 
+          description: `Welcome to LexConnect! You are registered as a ${userRole}.` 
         });
       }
 
@@ -124,7 +130,6 @@ export default function RegisterPage() {
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     required
-                    className="focus-visible:ring-secondary"
                   />
                 </div>
                 <div className="space-y-2">
@@ -136,7 +141,6 @@ export default function RegisterPage() {
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     required
-                    className="focus-visible:ring-secondary"
                   />
                 </div>
               </div>
@@ -149,7 +153,6 @@ export default function RegisterPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="focus-visible:ring-secondary"
                 />
               </div>
               <div className="space-y-2">
@@ -160,7 +163,6 @@ export default function RegisterPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="focus-visible:ring-secondary"
                 />
               </div>
               <Button type="submit" className="w-full bg-primary hover:bg-primary/90 transition-all h-11" disabled={isLoading}>
