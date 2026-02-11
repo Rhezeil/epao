@@ -74,10 +74,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     <SidebarProvider>
       <Sidebar className="border-r border-border bg-white">
         <SidebarHeader className="p-6">
-          <div className="flex items-center space-x-2">
-            <Scale className="h-6 w-6 text-primary" />
-          </div>
-          <div className="mt-4 px-2 py-1 bg-secondary/10 rounded-md inline-block">
+          <div className="mt-0 px-2 py-1 bg-secondary/10 rounded-md inline-block">
             <span className="text-[10px] uppercase tracking-wider font-bold text-secondary">{role} Portal</span>
           </div>
         </SidebarHeader>
