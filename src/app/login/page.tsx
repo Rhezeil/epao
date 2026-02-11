@@ -54,7 +54,6 @@ export default function LoginPage() {
               <Scale className="h-8 w-8 text-white" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold tracking-tight text-primary font-headline">LexConnect</h1>
           <p className="text-muted-foreground">Professional Legal Access Simplified</p>
         </div>
 
