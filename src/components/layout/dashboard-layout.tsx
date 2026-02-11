@@ -43,7 +43,6 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
         { icon: Compass, label: "Case Navigator", path: "/case-navigator" },
         { icon: Users, label: "Users Management", path: "/dashboard/admin/users" },
         { icon: Briefcase, label: "Lawyer List", path: "/dashboard/admin/lawyers" },
-        { icon: Settings, label: "System Settings", path: "/dashboard/admin/settings" },
       ];
     }
 
