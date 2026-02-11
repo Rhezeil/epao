@@ -35,30 +35,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      if (user) {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setUser(firebaseUser);
+      if (firebaseUser) {
+        setLoading(true);
         try {
-          // 1. Check roleAdmin
-          const adminDoc = await getDoc(doc(db, "roleAdmin", user.uid));
+          // Check roleAdmin
+          const adminDoc = await getDoc(doc(db, "roleAdmin", firebaseUser.uid));
           if (adminDoc.exists()) {
             setRole("admin");
           } else {
-            // 2. Check roleLawyer
-            const lawyerDoc = await getDoc(doc(db, "roleLawyer", user.uid));
+            // Check roleLawyer
+            const lawyerDoc = await getDoc(doc(db, "roleLawyer", firebaseUser.uid));
             if (lawyerDoc.exists()) {
               setRole("lawyer");
             } else {
-              // 3. Check standard users (Clients)
-              const userDoc = await getDoc(doc(db, "users", user.uid));
+              // Check standard users (Clients)
+              const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
               if (userDoc.exists()) {
                 setRole("client");
               } else {
+                // If logged in but no role found, it might be in transition/initialization
                 setRole(null);
               }
             }
           }
         } catch (error) {
+          console.error("Auth role detection error:", error);
           setRole(null);
         }
       } else {
@@ -70,6 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, [auth, db]);
 
+  // Redirect Logic
   useEffect(() => {
     const publicPaths = ["/login", "/register", "/"];
     if (!loading) {
@@ -83,6 +87,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await auth.signOut();
+    setUser(null);
+    setRole(null);
     router.push("/login");
   };
 

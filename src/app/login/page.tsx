@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, ShieldCheck, Briefcase, User as UserIcon } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -29,116 +29,91 @@ export default function LoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      let role = null;
+      let resolvedRole: "admin" | "lawyer" | "client" | null = null;
 
-      // 1. Check roleAdmin first
-      const adminDocRef = doc(db, "roleAdmin", user.uid);
-      const adminDoc = await getDoc(adminDocRef);
-      if (adminDoc.exists()) {
-        role = "admin";
+      // 1. Check existing records to find current role
+      const adminDoc = await getDoc(doc(db, "roleAdmin", user.uid));
+      if (adminDoc.exists()) resolvedRole = "admin";
+
+      if (!resolvedRole) {
+        const lawyerDoc = await getDoc(doc(db, "roleLawyer", user.uid));
+        if (lawyerDoc.exists()) resolvedRole = "lawyer";
       }
 
-      // 2. Check roleLawyer
-      if (!role) {
-        const lawyerDocRef = doc(db, "roleLawyer", user.uid);
-        const lawyerDoc = await getDoc(lawyerDocRef);
-        if (lawyerDoc.exists()) {
-          role = "lawyer";
-        }
+      if (!resolvedRole) {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) resolvedRole = "client";
       }
 
-      // 3. Check standard users (Clients)
-      if (!role) {
-        const userDocRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          role = "client";
-        }
-      }
-
-      // --- AUTO-INITIALIZATION LOGIC ---
-      
-      // Bootstrap Admin check (by UID or specific email)
-      const isBootstrapAdmin = 
-        user.uid === "fs4k8QifPHSmUdshxh1NLweHSj73" || 
-        email.toLowerCase() === "admin@epao.com";
-
-      if (!role && isBootstrapAdmin) {
-        role = "admin";
-        const adminDocRef = doc(db, "roleAdmin", user.uid);
-        setDocumentNonBlocking(adminDocRef, {
-          id: user.uid,
-          email: user.email,
-          role: "admin",
-          firstName: "System",
-          lastName: "Administrator",
-          permission: "read/write",
-          createdAt: new Date().toISOString(),
-        }, { merge: true });
-        toast({ title: "Admin Records Initialized" });
-      } 
-      
-      // Lawyer check (by UID or Email Whitelist)
-      if (!role) {
+      // --- AUTO-INITIALIZATION / REPAIR LOGIC ---
+      // If no record found, determine what they SHOULD be based on bootstrap rules
+      if (!resolvedRole) {
         const normalizedEmail = user.email?.toLowerCase() || "";
-        const lawyerAuthRef = doc(db, "lawyersEmail", normalizedEmail);
-        const lawyerAuthDoc = await getDoc(lawyerAuthRef);
         
-        const isAuthorizedLawyer = 
-          lawyerAuthDoc.exists() || 
-          user.uid === "ygkXuNUWJrbffovhXBtr6r1o5vr2" ||
-          normalizedEmail.endsWith("@lawyers.com");
-        
-        if (isAuthorizedLawyer) {
-          role = "lawyer";
-          const lawyerDocRef = doc(db, "roleLawyer", user.uid);
-          const profileDocRef = doc(db, "users", user.uid, "profile", "profile");
-          
-          setDocumentNonBlocking(lawyerDocRef, {
+        // Admin Bootstrap Check
+        const isBootstrapAdmin = 
+          user.uid === "fs4k8QifPHSmUdshxh1NLweHSj73" || 
+          normalizedEmail === "admin@epao.com";
+
+        if (isBootstrapAdmin) {
+          resolvedRole = "admin";
+          setDocumentNonBlocking(doc(db, "roleAdmin", user.uid), {
             id: user.uid,
             email: user.email,
-            role: "lawyer",
-            profileId: "profile",
+            role: "admin",
+            firstName: "System",
+            lastName: "Administrator",
+            permission: "read/write",
             createdAt: new Date().toISOString(),
           }, { merge: true });
+        } else {
+          // Lawyer Bootstrap Check
+          const lawyerAuthDoc = await getDoc(doc(db, "lawyersEmail", normalizedEmail));
+          const isAuthorizedLawyer = 
+            lawyerAuthDoc.exists() || 
+            user.uid === "ygkXuNUWJrbffovhXBtr6r1o5vr2" ||
+            normalizedEmail.endsWith("@lawyers.com");
 
-          setDocumentNonBlocking(profileDocRef, {
-            id: "profile",
-            firstName: "Authorized",
-            lastName: "Practitioner",
-            createdAt: new Date().toISOString(),
-          }, { merge: true });
+          if (isAuthorizedLawyer) {
+            resolvedRole = "lawyer";
+            setDocumentNonBlocking(doc(db, "roleLawyer", user.uid), {
+              id: user.uid,
+              email: user.email,
+              role: "lawyer",
+              profileId: "profile",
+              createdAt: new Date().toISOString(),
+            }, { merge: true });
+            
+            setDocumentNonBlocking(doc(db, "users", user.uid, "profile", "profile"), {
+              id: "profile",
+              firstName: "Authorized",
+              lastName: "Practitioner",
+              createdAt: new Date().toISOString(),
+            }, { merge: true });
+          } else {
+            // Default to Client
+            resolvedRole = "client";
+            setDocumentNonBlocking(doc(db, "users", user.uid), {
+              id: user.uid,
+              email: user.email,
+              role: "client",
+              profileId: "profile",
+              createdAt: new Date().toISOString(),
+            }, { merge: true });
 
-          toast({ title: "Lawyer Records Initialized" });
+            setDocumentNonBlocking(doc(db, "users", user.uid, "profile", "profile"), {
+              id: "profile",
+              firstName: "New",
+              lastName: "Client",
+              createdAt: new Date().toISOString(),
+            }, { merge: true });
+          }
         }
-      }
-
-      // If still no role, default to client and create standard record
-      if (!role) {
-        role = "client";
-        const userDocRef = doc(db, "users", user.uid);
-        const profileDocRef = doc(db, "users", user.uid, "profile", "profile");
-
-        setDocumentNonBlocking(userDocRef, {
-          id: user.uid,
-          email: user.email,
-          role: "client",
-          profileId: "profile",
-          createdAt: new Date().toISOString(),
-        }, { merge: true });
-
-        setDocumentNonBlocking(profileDocRef, {
-          id: "profile",
-          firstName: "New",
-          lastName: "Client",
-          createdAt: new Date().toISOString(),
-        }, { merge: true });
-        
-        toast({ title: "Client Account Initialized" });
+        toast({ title: "Account Records Initialized" });
       }
 
       // Redirect based on resolved role
-      router.push(`/dashboard/${role}`);
+      router.push(`/dashboard/${resolvedRole}`);
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -193,13 +168,19 @@ export default function LoginPage() {
                 <span className="w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">Demo Accounts</span>
+                <span className="bg-background px-2 text-muted-foreground">Quick Access</span>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-2 w-full">
-              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('admin')}>Admin</Button>
-              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('lawyer')}>Lawyer</Button>
-              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('client')}>Client</Button>
+              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('admin')}>
+                <ShieldCheck className="mr-1 h-3 w-3" /> Admin
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('lawyer')}>
+                <Briefcase className="mr-1 h-3 w-3" /> Lawyer
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('client')}>
+                <UserIcon className="mr-1 h-3 w-3" /> Client
+              </Button>
             </div>
             <div className="text-center text-sm">
               <span className="text-muted-foreground">Don't have an account? </span>
