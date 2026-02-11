@@ -142,18 +142,18 @@ export default function LoginPage() {
         <Card className="shadow-2xl border-primary/10 bg-white/80 backdrop-blur-md overflow-hidden p-4">
           <CardHeader className="flex flex-col items-center space-y-4 pb-2">
             {logo && (
-              <div className="p-4 bg-white rounded-full shadow-sm border border-border/50">
+              <div className="p-3 bg-white rounded-full shadow-sm border border-border/50">
                 <Image 
                   src={logo.imageUrl} 
                   alt={logo.description} 
-                  width={280} 
-                  height={280} 
+                  width={180} 
+                  height={180} 
                   className="rounded-full object-contain"
                   data-ai-hint={logo.imageHint}
                 />
               </div>
             )}
-            <CardTitle className="text-2xl text-center font-headline text-primary mt-4">Sign In</CardTitle>
+            <CardTitle className="text-2xl text-center font-headline text-primary mt-2">Sign In</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
@@ -180,13 +180,13 @@ export default function LoginPage() {
               </div>
             </div>
             <div className="grid grid-cols-3 gap-2 w-full">
-              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('admin')} className="hover:bg-primary/5 bg-white/50">
+              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('admin')} className="hover:bg-primary/5 bg-white/50 text-xs">
                 <ShieldCheck className="mr-1 h-3 w-3" /> Admin
               </Button>
-              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('lawyer')} className="hover:bg-primary/5 bg-white/50">
+              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('lawyer')} className="hover:bg-primary/5 bg-white/50 text-xs">
                 <Briefcase className="mr-1 h-3 w-3" /> Lawyer
               </Button>
-              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('client')} className="hover:bg-primary/5 bg-white/50">
+              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('client')} className="hover:bg-primary/5 bg-white/50 text-xs">
                 <UserIcon className="mr-1 h-3 w-3" /> Client
               </Button>
             </div>

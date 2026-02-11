@@ -62,9 +62,9 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     if (role === "client") {
       return [
         { icon: Compass, label: "Case Navigator", path: "/case-navigator" },
-        { icon: LayoutDashboard, label: "About", path: `/dashboard/client` },
         { icon: Calendar, label: "Book Appointment", path: "/dashboard/client/book-appointment" },
         { icon: CalendarCheck, label: "Manage Appointment", path: "/case-navigator?mode=manage" },
+        { icon: LayoutDashboard, label: "About", path: `/dashboard/client` },
         { icon: FileText, label: "Case Updates", path: "/dashboard/client/cases" },
       ];
     }
@@ -82,8 +82,8 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
                 <Image 
                   src={logo.imageUrl} 
                   alt={logo.description} 
-                  width={140} 
-                  height={140} 
+                  width={110} 
+                  height={110} 
                   className="rounded-full object-contain"
                   data-ai-hint={logo.imageHint}
                 />

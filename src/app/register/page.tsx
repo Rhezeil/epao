@@ -111,8 +111,8 @@ export default function RegisterPage() {
               <Image 
                 src={logo.imageUrl} 
                 alt={logo.description} 
-                width={160} 
-                height={160} 
+                width={120} 
+                height={120} 
                 className="rounded-full object-contain"
                 data-ai-hint={logo.imageHint}
               />
