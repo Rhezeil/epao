@@ -138,7 +138,6 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <h2 className="text-4xl font-bold text-primary font-headline">LexConnect</h2>
           <p className="text-muted-foreground mt-2">Legal Services Management Portal</p>
         </div>
 
