@@ -22,7 +22,8 @@ import {
   Briefcase, 
   Users, 
   FileText, 
-  Settings 
+  Settings,
+  Calendar
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -61,7 +62,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     if (role === "client") {
       return [
         ...common,
-        { icon: Briefcase, label: "My Lawyers", path: "/dashboard/client/lawyers" },
+        { icon: Calendar, label: "Book Appointment", path: "/dashboard/client/book-appointment" },
         { icon: FileText, label: "Case Updates", path: "/dashboard/client/cases" },
       ];
     }
