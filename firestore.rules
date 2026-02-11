@@ -43,13 +43,14 @@ service cloud.firestore {
     match /roles_admin/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      // Allow bootstrap admin to initialize their own record
+      // Allow bootstrap admin or the specific UID to initialize their own record
       allow create: if isOwner(userId) && (request.auth.token.email == "Admin@ePAO.com" || userId == "fs4k8QifPHSmUdshxh1NLweHSj73");
       allow update, delete: if isAdmin();
     }
 
     match /lawyersEmail/{emailId} {
-      // Allow individual lookups for registration authorization check
+      // Allow individual lookups for registration/login authorization check
+      // We allow any signed-in user or even unauthenticated users to check their own email ID
       allow get: if true;
       // Restrict management to admins
       allow list, write: if isAdmin();

@@ -47,7 +47,7 @@ export default function LoginPage() {
         }
       }
 
-      // Auto-repair for bootstrap admin if records are missing
+      // Auto-repair for bootstrap admin
       const isBootstrapAdmin = 
         email.toLowerCase() === "admin@epao.com" || 
         user.uid === "fs4k8QifPHSmUdshxh1NLweHSj73";
@@ -65,9 +65,41 @@ export default function LoginPage() {
           createdAt: new Date().toISOString(),
         }, { merge: true });
 
-        toast({ title: "Admin Records Initialized", description: "Your administrative record has been created in roles_admin." });
-      } else if (!role) {
-        throw new Error("Your account record was not found.");
+        toast({ title: "Admin Records Initialized", description: "Your administrative record has been created." });
+      } 
+      
+      // Auto-repair for authorized lawyers
+      if (!role) {
+        const emailId = user.email?.toLowerCase().replace(/[@.]/g, "_") || "";
+        const lawyerAuthRef = doc(db, "lawyersEmail", emailId);
+        const lawyerAuthDoc = await getDoc(lawyerAuthRef);
+        
+        if (lawyerAuthDoc.exists()) {
+          role = "lawyer";
+          const userDocRef = doc(db, "users", user.uid);
+          const profileDocRef = doc(db, "users", user.uid, "profile", "profile");
+          
+          setDocumentNonBlocking(userDocRef, {
+            id: user.uid,
+            email: user.email,
+            role: "lawyer",
+            profileId: "profile",
+            createdAt: new Date().toISOString(),
+          }, { merge: true });
+
+          setDocumentNonBlocking(profileDocRef, {
+            id: "profile",
+            firstName: "Authorized",
+            lastName: "Practitioner",
+            createdAt: new Date().toISOString(),
+          }, { merge: true });
+
+          toast({ title: "Lawyer Records Initialized", description: "Welcome back, your practitioner profile has been restored." });
+        }
+      }
+
+      if (!role) {
+        throw new Error("Your account record was not found. Please register if you haven't already.");
       }
 
       toast({ title: "Login successful", description: `Welcome back to the ${role} portal.` });
