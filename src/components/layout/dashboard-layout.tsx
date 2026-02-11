@@ -19,11 +19,9 @@ import {
   LayoutDashboard, 
   Compass, 
   LogOut, 
-  Scale, 
   Briefcase, 
   Users, 
   FileText, 
-  Settings,
   Calendar,
   CalendarCheck
 } from "lucide-react";
@@ -77,17 +75,19 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   return (
     <SidebarProvider>
       <Sidebar className="border-r border-border bg-white">
-        <SidebarHeader className="p-6 pb-2 space-y-4">
+        <SidebarHeader className="p-4 pb-2 space-y-4">
           <div className="flex items-center justify-center">
             {logo && (
-              <Image 
-                src={logo.imageUrl} 
-                alt={logo.description} 
-                width={80} 
-                height={80} 
-                className="rounded-full shadow-sm border border-border/50"
-                data-ai-hint={logo.imageHint}
-              />
+              <div className="p-1 bg-white rounded-full shadow-sm border border-border/50 overflow-hidden">
+                <Image 
+                  src={logo.imageUrl} 
+                  alt={logo.description} 
+                  width={100} 
+                  height={100} 
+                  className="rounded-full object-contain"
+                  data-ai-hint={logo.imageHint}
+                />
+              </div>
             )}
           </div>
           <div className="flex justify-center">
@@ -132,7 +132,6 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
         <header className="flex h-16 items-center border-b bg-white px-6">
           <SidebarTrigger />
           <div className="ml-auto flex items-center space-x-4">
-            {/* Additional Header Actions */}
           </div>
         </header>
         <main className="flex-1 overflow-auto bg-background p-6">

@@ -16,13 +16,13 @@ export default function AdminDashboard() {
         {/* Logo and Header */}
         <div className="space-y-4">
           <div className="flex justify-center">
-            <div className="p-4 bg-white rounded-full shadow-sm border overflow-hidden">
+            <div className="p-6 bg-white rounded-full shadow-md border overflow-hidden">
               {logo && (
                 <Image 
                   src={logo.imageUrl} 
                   alt={logo.description} 
-                  width={120} 
-                  height={120} 
+                  width={160} 
+                  height={160} 
                   className="object-contain"
                   data-ai-hint={logo.imageHint}
                 />
