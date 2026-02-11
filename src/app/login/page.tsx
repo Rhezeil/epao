@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Scale, ShieldCheck, User as UserIcon, Briefcase } from "lucide-react";
+import { ShieldCheck, User as UserIcon, Briefcase } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -49,11 +49,6 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center space-y-2">
-          <div className="flex justify-center">
-            <div className="bg-primary p-3 rounded-2xl shadow-xl transform transition-transform hover:scale-105">
-              <Scale className="h-8 w-8 text-white" />
-            </div>
-          </div>
           <p className="text-muted-foreground">Professional Legal Access Simplified</p>
         </div>
 
