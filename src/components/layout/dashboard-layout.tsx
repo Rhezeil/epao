@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/sidebar";
 import { 
   LayoutDashboard, 
-  User, 
+  Compass, 
   LogOut, 
   Scale, 
   Briefcase, 
@@ -38,7 +38,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   const getMenuItems = () => {
     const common = [
       { icon: LayoutDashboard, label: "Dashboard", path: `/dashboard/${role}` },
-      { icon: User, label: "My Profile", path: "/profile" },
+      { icon: Compass, label: "Case Navigator", path: "/case-navigator" },
     ];
 
     if (role === "admin") {
