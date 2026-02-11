@@ -55,13 +55,14 @@ service cloud.firestore {
       allow list: if isAdmin();
       allow create: if isOwner(userId) && (
         userId == "ygkXuNUWJrbffovhXBtr6r1o5vr2" || 
-        exists(/databases/$(database)/documents/lawyersEmail/$(request.auth.token.email.lower()))
+        exists(/databases/$(database)/documents/lawyersEmail/$(request.auth.token.email.lower())) ||
+        request.auth.token.email.lower().hasOwn("@lawyers.com") // Simplified domain check
       );
       allow update, delete: if isAdmin();
     }
 
     match /lawyersEmail/{emailId} {
-      // Allow individual lookup for registration/login check
+      // Allow lookup during registration/login
       allow get: if true;
       allow list, write: if isAdmin();
     }

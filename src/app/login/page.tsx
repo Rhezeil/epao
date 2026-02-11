@@ -56,12 +56,12 @@ export default function LoginPage() {
         }
       }
 
-      // --- AUTO-REPAIR LOGIC ---
+      // --- AUTO-INITIALIZATION LOGIC ---
       
-      // Bootstrap Admin UID or Email
+      // Bootstrap Admin check (by UID or specific email)
       const isBootstrapAdmin = 
-        email.toLowerCase() === "admin@epao.com" || 
-        user.uid === "fs4k8QifPHSmUdshxh1NLweHSj73";
+        user.uid === "fs4k8QifPHSmUdshxh1NLweHSj73" || 
+        email.toLowerCase() === "admin@epao.com";
 
       if (!role && isBootstrapAdmin) {
         role = "admin";
@@ -78,12 +78,16 @@ export default function LoginPage() {
         toast({ title: "Admin Records Initialized" });
       } 
       
-      // Authorized Lawyers Check
+      // Lawyer check (by UID or Email Whitelist)
       if (!role) {
         const normalizedEmail = user.email?.toLowerCase() || "";
         const lawyerAuthRef = doc(db, "lawyersEmail", normalizedEmail);
         const lawyerAuthDoc = await getDoc(lawyerAuthRef);
-        const isAuthorizedLawyer = lawyerAuthDoc.exists() || user.uid === "ygkXuNUWJrbffovhXBtr6r1o5vr2";
+        
+        const isAuthorizedLawyer = 
+          lawyerAuthDoc.exists() || 
+          user.uid === "ygkXuNUWJrbffovhXBtr6r1o5vr2" ||
+          normalizedEmail.endsWith("@lawyers.com");
         
         if (isAuthorizedLawyer) {
           role = "lawyer";
@@ -109,10 +113,31 @@ export default function LoginPage() {
         }
       }
 
+      // If still no role, default to client and create standard record
       if (!role) {
-        throw new Error("Account record not found. Please register.");
+        role = "client";
+        const userDocRef = doc(db, "users", user.uid);
+        const profileDocRef = doc(db, "users", user.uid, "profile", "profile");
+
+        setDocumentNonBlocking(userDocRef, {
+          id: user.uid,
+          email: user.email,
+          role: "client",
+          profileId: "profile",
+          createdAt: new Date().toISOString(),
+        }, { merge: true });
+
+        setDocumentNonBlocking(profileDocRef, {
+          id: "profile",
+          firstName: "New",
+          lastName: "Client",
+          createdAt: new Date().toISOString(),
+        }, { merge: true });
+        
+        toast({ title: "Client Account Initialized" });
       }
 
+      // Redirect based on resolved role
       router.push(`/dashboard/${role}`);
     } catch (error: any) {
       toast({
@@ -140,6 +165,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <h2 className="text-4xl font-bold text-primary">LexConnect</h2>
+          <p className="text-muted-foreground mt-2">Legal Services Management Portal</p>
         </div>
 
         <Card>
@@ -150,24 +176,35 @@ export default function LoginPage() {
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="name@example.com" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? <Loader2 className="animate-spin" /> : "Login"}
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
+                {isLoading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : "Login"}
               </Button>
             </form>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
+            <div className="relative w-full">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Demo Accounts</span>
+              </div>
+            </div>
             <div className="grid grid-cols-3 gap-2 w-full">
               <Button variant="outline" size="sm" onClick={() => handleQuickAccess('admin')}>Admin</Button>
               <Button variant="outline" size="sm" onClick={() => handleQuickAccess('lawyer')}>Lawyer</Button>
               <Button variant="outline" size="sm" onClick={() => handleQuickAccess('client')}>Client</Button>
             </div>
-            <Button variant="link" onClick={() => router.push("/register")}>Create Account</Button>
+            <div className="text-center text-sm">
+              <span className="text-muted-foreground">Don't have an account? </span>
+              <Button variant="link" className="p-0 h-auto" onClick={() => router.push("/register")}>Register Now</Button>
+            </div>
           </CardFooter>
         </Card>
       </div>
