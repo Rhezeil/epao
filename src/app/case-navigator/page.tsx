@@ -537,16 +537,6 @@ function CaseNavigatorContent() {
         {/* Mode Toggle Tabs */}
         <div className="flex justify-center gap-4 mb-2">
           <Button 
-            variant={mode === "explore" ? "default" : "ghost"}
-            onClick={() => {
-              setMode("explore");
-              router.push("/case-navigator");
-            }}
-            className={cn("h-9 rounded-full px-6", mode === "explore" ? "bg-primary" : "text-primary hover:bg-primary/5")}
-          >
-            Explore Cases
-          </Button>
-          <Button 
             variant={mode === "manage" ? "default" : "ghost"}
             onClick={() => {
               setMode("manage");
