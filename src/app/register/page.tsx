@@ -38,6 +38,7 @@ export default function RegisterPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      // Special bootstrap for UID fs4k8QifPHSmUdshxh1NLweHSj73
       const isSystemAdmin = 
         email.toLowerCase() === "admin@epao.com" || 
         user.uid === "fs4k8QifPHSmUdshxh1NLweHSj73";
@@ -47,7 +48,7 @@ export default function RegisterPage() {
       else if (isAuthorizedLawyer) userRole = "lawyer";
 
       if (userRole === "admin") {
-        const adminDocRef = doc(db, "roles_admin", user.uid);
+        const adminDocRef = doc(db, "roleAdmin", user.uid);
         setDocumentNonBlocking(adminDocRef, {
           id: user.uid,
           email: user.email,
@@ -60,7 +61,7 @@ export default function RegisterPage() {
         
         toast({ 
           title: "Admin account created", 
-          description: "Welcome! Your administrative account has been initialized." 
+          description: "Welcome! Your administrative account has been initialized in 'roleAdmin'." 
         });
       } else {
         const userDocRef = doc(db, "users", user.uid);

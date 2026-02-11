@@ -39,8 +39,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(user);
       if (user) {
         try {
-          // Check roles_admin first (Separate Collection)
-          const adminDoc = await getDoc(doc(db, "roles_admin", user.uid));
+          // Check roleAdmin collection first (New Segregated Collection)
+          const adminDoc = await getDoc(doc(db, "roleAdmin", user.uid));
           if (adminDoc.exists()) {
             setRole("admin");
           } else {

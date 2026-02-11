@@ -146,7 +146,7 @@
         }
       },
       {
-        "path": "/roles_admin/{userId}",
+        "path": "/roleAdmin/{userId}",
         "definition": {
           "entityName": "AccessControlRule",
           "schema": {

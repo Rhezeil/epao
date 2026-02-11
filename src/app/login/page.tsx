@@ -29,11 +29,10 @@ export default function LoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Logic to determine role based on collection membership
       let role = null;
 
-      // Check roles_admin first
-      const adminDocRef = doc(db, "roles_admin", user.uid);
+      // Check roleAdmin first
+      const adminDocRef = doc(db, "roleAdmin", user.uid);
       const adminDoc = await getDoc(adminDocRef);
       
       if (adminDoc.exists()) {
@@ -47,14 +46,14 @@ export default function LoginPage() {
         }
       }
 
-      // Auto-repair for bootstrap admin
+      // Auto-repair for bootstrap admin (UID fs4k8QifPHSmUdshxh1NLweHSj73 or specific email)
       const isBootstrapAdmin = 
         email.toLowerCase() === "admin@epao.com" || 
         user.uid === "fs4k8QifPHSmUdshxh1NLweHSj73";
 
       if (!role && isBootstrapAdmin) {
         role = "admin";
-        const adminDocRef = doc(db, "roles_admin", user.uid);
+        const adminDocRef = doc(db, "roleAdmin", user.uid);
         setDocumentNonBlocking(adminDocRef, {
           id: user.uid,
           email: user.email,
@@ -65,7 +64,7 @@ export default function LoginPage() {
           createdAt: new Date().toISOString(),
         }, { merge: true });
 
-        toast({ title: "Admin Records Initialized", description: "Your administrative record has been created." });
+        toast({ title: "Admin Records Initialized", description: "Your administrative record has been created in 'roleAdmin'." });
       } 
       
       // Auto-repair for authorized lawyers
@@ -151,7 +150,7 @@ export default function LoginPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@epao.com"
+                  placeholder="Admin@ePAO.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required

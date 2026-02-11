@@ -19,7 +19,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+      return isSignedIn() && exists(/databases/$(database)/documents/roleAdmin/$(request.auth.uid));
     }
 
     // --- Rules ---
@@ -40,17 +40,19 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    match /roles_admin/{userId} {
+    match /roleAdmin/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      // Allow bootstrap admin or the specific UID to initialize their own record
-      allow create: if isOwner(userId) && (request.auth.token.email == "Admin@ePAO.com" || userId == "fs4k8QifPHSmUdshxh1NLweHSj73");
+      // Allow bootstrap admin via email or specific UID to initialize their own record
+      allow create: if isOwner(userId) && (
+        request.auth.token.email.lower() == "admin@epao.com" || 
+        userId == "fs4k8QifPHSmUdshxh1NLweHSj73"
+      );
       allow update, delete: if isAdmin();
     }
 
     match /lawyersEmail/{emailId} {
-      // Allow individual lookups for registration/login authorization check
-      // We allow any signed-in user or even unauthenticated users to check their own email ID
+      // Allow individual lookups for registration authorization check
       allow get: if true;
       // Restrict management to admins
       allow list, write: if isAdmin();

@@ -7,12 +7,11 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { collection, query, orderBy, doc } from "firebase/firestore";
 import { Shield, Briefcase, UserCircle, Loader2, MoreVertical, ShieldAlert, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { Button as UIButton } from "@/components/ui/button";
 
 export default function AdminUsersPage() {
   const db = useFirestore();
@@ -43,19 +42,21 @@ export default function AdminUsersPage() {
     if (!db) return;
     
     const userRef = doc(db, "users", userId);
-    const adminRef = doc(db, "roles_admin", userId);
+    const adminRef = doc(db, "roleAdmin", userId);
 
+    // Remove from users if you want strict separation, or just mark role
     updateDocumentNonBlocking(userRef, { role: "admin" });
     setDocumentNonBlocking(adminRef, {
       id: userId,
       role: "admin",
-      resource: "all",
+      email: currentEmail,
       permission: "read/write",
+      createdAt: new Date().toISOString(),
     }, { merge: true });
 
     toast({
       title: "User Promoted",
-      description: `${currentEmail} has been granted administrative access.`
+      description: `${currentEmail} has been granted administrative access in 'roleAdmin'.`
     });
   };
 
@@ -117,9 +118,9 @@ export default function AdminUsersPage() {
                         <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <UIButton variant="ghost" size="icon">
+                              <Button variant="ghost" size="icon">
                                 <MoreVertical className="h-4 w-4" />
-                              </UIButton>
+                              </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               {user.role !== 'admin' && (
