@@ -14,10 +14,6 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    function isExistingOwner(userId) {
-      return resource != null && isOwner(userId);
-    }
-
     function isAdmin() {
       return isSignedIn() && exists(/databases/$(database)/documents/roleAdmin/$(request.auth.uid));
     }
@@ -27,42 +23,39 @@ service cloud.firestore {
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId) || isAdmin();
+      allow create, update: if isOwner(userId);
       allow delete: if isAdmin();
     }
 
     match /users/{userId}/profile/{profileId} {
-      allow get: if isOwner(userId) || isAdmin();
-      allow list: if isOwner(userId) || isAdmin();
-      allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId) || isAdmin();
+      allow get, list: if isOwner(userId) || isAdmin();
+      allow create, update: if isOwner(userId);
       allow delete: if isAdmin();
     }
 
     match /roleAdmin/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      allow create: if isOwner(userId) && (
+      allow create, update: if isOwner(userId) && (
         request.auth.token.email.lower() == "admin@epao.com" || 
         userId == "fs4k8QifPHSmUdshxh1NLweHSj73"
       );
-      allow update, delete: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     match /roleLawyer/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      allow create: if isOwner(userId) && (
+      allow create, update: if isOwner(userId) && (
         userId == "ygkXuNUWJrbffovhXBtr6r1o5vr2" || 
         exists(/databases/$(database)/documents/lawyersEmail/$(request.auth.token.email.lower())) ||
         request.auth.token.email.lower().endsWith("@lawyers.com")
       );
-      allow update, delete: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     match /lawyersEmail/{emailId} {
-      // Allow lookup during registration/login
+      // Allow public lookup for registration check
       allow get: if true;
       allow list, write: if isAdmin();
     }
