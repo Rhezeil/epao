@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "@/lib/firebase";
+import { useAuth, useFirestore } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,8 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const auth = useAuth();
+  const db = useFirestore();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,6 +45,20 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleQuickAccess = (role: 'admin' | 'lawyer' | 'client') => {
+    const demoAccounts = {
+      admin: { email: "admin@lexconnect.com", password: "password123" },
+      lawyer: { email: "lawyer@lexconnect.com", password: "password123" },
+      client: { email: "client@lexconnect.com", password: "password123" }
+    };
+    setEmail(demoAccounts[role].email);
+    setPassword(demoAccounts[role].password);
+    toast({
+      title: "Demo Credentials Loaded",
+      description: `Loaded credentials for ${role} role. Click sign in to continue.`,
+    });
   };
 
   return (
@@ -97,19 +113,34 @@ export default function LoginPage() {
             </form>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4 border-t pt-6 bg-muted/20">
+            <p className="text-[10px] text-center uppercase tracking-widest text-muted-foreground font-semibold">
+              Select a role for quick access
+            </p>
             <div className="grid grid-cols-3 gap-2 w-full text-[10px] text-center uppercase tracking-widest text-muted-foreground font-semibold">
-              <div className="flex flex-col items-center space-y-1">
-                <ShieldCheck className="h-4 w-4" />
-                <span>Admin</span>
-              </div>
-              <div className="flex flex-col items-center space-y-1">
-                <Briefcase className="h-4 w-4" />
-                <span>Lawyer</span>
-              </div>
-              <div className="flex flex-col items-center space-y-1">
-                <UserIcon className="h-4 w-4" />
-                <span>Client</span>
-              </div>
+              <button 
+                type="button"
+                onClick={() => handleQuickAccess('admin')}
+                className="flex flex-col items-center space-y-1 p-2 hover:bg-primary/5 rounded-lg transition-colors group"
+              >
+                <ShieldCheck className="h-4 w-4 group-hover:text-primary transition-colors" />
+                <span className="group-hover:text-primary transition-colors">Admin</span>
+              </button>
+              <button 
+                type="button"
+                onClick={() => handleQuickAccess('lawyer')}
+                className="flex flex-col items-center space-y-1 p-2 hover:bg-secondary/5 rounded-lg transition-colors group"
+              >
+                <Briefcase className="h-4 w-4 group-hover:text-secondary transition-colors" />
+                <span className="group-hover:text-secondary transition-colors">Lawyer</span>
+              </button>
+              <button 
+                type="button"
+                onClick={() => handleQuickAccess('client')}
+                className="flex flex-col items-center space-y-1 p-2 hover:bg-secondary/5 rounded-lg transition-colors group"
+              >
+                <UserIcon className="h-4 w-4 group-hover:text-secondary transition-colors" />
+                <span className="group-hover:text-secondary transition-colors">Client</span>
+              </button>
             </div>
           </CardFooter>
         </Card>
