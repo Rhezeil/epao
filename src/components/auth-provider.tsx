@@ -46,7 +46,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setRole(null);
           }
         } catch (error) {
-          console.error("Error fetching user role:", error);
           setRole(null);
         }
       } else {
@@ -59,12 +58,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [auth, db]);
 
   useEffect(() => {
+    const publicPaths = ["/login", "/register", "/"];
     if (!loading) {
-      if (!user && pathname !== "/login" && pathname !== "/") {
+      if (!user && !publicPaths.includes(pathname)) {
         router.push("/login");
+      } else if (user && role && (pathname === "/login" || pathname === "/register")) {
+        router.push(`/dashboard/${role}`);
       }
     }
-  }, [user, loading, pathname, router]);
+  }, [user, role, loading, pathname, router]);
 
   const signOut = async () => {
     await auth.signOut();

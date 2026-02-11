@@ -36,7 +36,6 @@ export default function RegisterPage() {
       const userDocRef = doc(db, "users", user.uid);
       const profileDocRef = doc(db, "users", user.uid, "profile", "profile");
       
-      // Using non-blocking pattern as per guidelines for user metadata
       setDocumentNonBlocking(userDocRef, {
         id: user.uid,
         email: user.email,
@@ -45,7 +44,6 @@ export default function RegisterPage() {
         createdAt: new Date().toISOString(),
       }, { merge: true });
 
-      // Initialize the profile document with provided names
       setDocumentNonBlocking(profileDocRef, {
         id: "profile",
         firstName: firstName,
@@ -55,17 +53,21 @@ export default function RegisterPage() {
 
       toast({ 
         title: "Account created", 
-        description: "Welcome to LexConnect! Your profile has been initialized." 
+        description: "Welcome to LexConnect! Redirecting to your dashboard..." 
       });
 
-      // Navigation is handled by the AuthProvider once the session is detected
+      // The AuthProvider will detect the role change and handle the final redirect,
+      // but we add a small delay to ensure Firestore operations are initiated
+      setTimeout(() => {
+        router.push("/dashboard/client");
+      }, 1000);
+
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Registration failed",
         description: error.message || "Could not create your account.",
       });
-    } finally {
       setIsLoading(false);
     }
   };
