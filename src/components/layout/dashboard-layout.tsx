@@ -39,10 +39,10 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   const getMenuItems = () => {
     if (role === "admin") {
       return [
-        { icon: LayoutDashboard, label: "About", path: `/dashboard/admin` },
         { icon: Compass, label: "Case Navigator", path: "/case-navigator" },
         { icon: Users, label: "Users Management", path: "/dashboard/admin/users" },
         { icon: Briefcase, label: "Lawyer List", path: "/dashboard/admin/lawyers" },
+        { icon: LayoutDashboard, label: "About", path: `/dashboard/admin` },
       ];
     }
 
