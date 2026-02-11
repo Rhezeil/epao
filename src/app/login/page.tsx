@@ -33,7 +33,7 @@ export default function LoginPage() {
     try {
       const normalizedEmail = user.email?.toLowerCase() || "";
       
-      // 1. Check for Admin status
+      // 1. Check for Admin status (Bootstrap Admin)
       const isBootstrapAdmin = 
         user.uid === "fs4k8QifPHSmUdshxh1NLweHSj73" || 
         normalizedEmail === "admin@epao.com";
@@ -60,7 +60,8 @@ export default function LoginPage() {
         normalizedEmail.endsWith("@lawyers.com");
 
       if (isAuthorizedLawyer) {
-        setDocumentNonBlocking(doc(db, "roleLawyer", user.uid), {
+        const lawyerDocRef = doc(db, "roleLawyer", user.uid);
+        setDocumentNonBlocking(lawyerDocRef, {
           id: user.uid,
           email: user.email,
           role: "lawyer",
@@ -78,8 +79,9 @@ export default function LoginPage() {
         return;
       }
 
-      // 3. Default to Client
-      setDocumentNonBlocking(doc(db, "users", user.uid), {
+      // 3. Default to Client (ensure record exists and is synced)
+      const userDocRef = doc(db, "users", user.uid);
+      setDocumentNonBlocking(userDocRef, {
         id: user.uid,
         email: user.email,
         role: "client",
@@ -126,7 +128,7 @@ export default function LoginPage() {
     const demoAccounts = {
       admin: { email: "admin@epao.com", password: "password123" },
       lawyer: { email: "lawyer@lawyers.com", password: "password123" },
-      client: { email: "client@lexconnect.com", password: "password123" }
+      client: { email: "client@gmail.com", password: "password123" }
     };
     setEmail(demoAccounts[role].email);
     setPassword(demoAccounts[role].password);
