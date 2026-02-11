@@ -32,14 +32,14 @@ export default function RegisterPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Determine the role - grant admin to the specific requested email or UID
+      // Determine the role - grant admin to the specific requested email or the specific UID
       const isSystemAdmin = 
         email.toLowerCase() === "admin@epao.com" || 
         user.uid === "fs4k8QifPHSmUdshxh1NLweHSj73";
       
       const userRole = isSystemAdmin ? "admin" : "client";
 
-      // Initialize the user document in Firestore
+      // Initialize the user document in Firestore using the Auth UID as the key
       const userDocRef = doc(db, "users", user.uid);
       const profileDocRef = doc(db, "users", user.uid, "profile", "profile");
       
@@ -58,7 +58,7 @@ export default function RegisterPage() {
         createdAt: new Date().toISOString(),
       }, { merge: true });
 
-      // If they are an admin, we also need to add them to the roles_admin collection
+      // If they are an admin, we also need to add them to the roles_admin collection with their UID
       if (isSystemAdmin) {
         const adminDocRef = doc(db, "roles_admin", user.uid);
         setDocumentNonBlocking(adminDocRef, {
@@ -71,10 +71,10 @@ export default function RegisterPage() {
 
       toast({ 
         title: userRole === "admin" ? "Admin account created" : "Account created", 
-        description: `Welcome to LexConnect! Redirecting to your ${userRole} dashboard...` 
+        description: `Welcome to LexConnect! Your ${userRole} account has been saved with UID: ${user.uid}` 
       });
 
-      // Redirect after a short delay
+      // Redirect after a short delay to allow background writes to initiate
       setTimeout(() => {
         router.push(`/dashboard/${userRole}`);
       }, 1000);
