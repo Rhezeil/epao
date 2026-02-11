@@ -5,24 +5,50 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { useAuth } from "@/components/auth-provider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Compass, CheckCircle, Calendar, ShieldCheck, HelpCircle, ArrowRight } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Compass, CheckCircle, Calendar, ShieldCheck, HelpCircle, ArrowRight, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function CaseNavigatorPage() {
   const { role, user } = useAuth();
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const criminalCategories = [
+    {
+      title: "Crimes against Persons",
+      cases: ["Murder", "Homicide", "Physical Injury", "Assault", "Rape", "Sexual Harassment", "Violence Against Women and Children (VAWC)", "Kidnapping", "Abduction"]
+    },
+    {
+      title: "Crimes against Property",
+      cases: ["Theft", "Robbery", "Arson", "Estafa / Fraud", "Embezzlement", "Malversation"]
+    },
+    {
+      title: "Crimes against Public Order",
+      cases: ["Rebellion", "Sedition", "Resistance to Public Officials", "Illegal Possession of Firearms"]
+    },
+    {
+      title: "Drug-related Offenses",
+      cases: ["Drug Possession", "Drug Trafficking", "Drug Use / Distribution"]
+    },
+    {
+      title: "Special Criminal Cases",
+      cases: ["Cybercrime", "Human Trafficking", "White-Collar Crimes", "Juvenile Delinquency"]
+    }
+  ];
 
   return (
     <DashboardLayout role={role}>
-      <div className="max-w-4xl mx-auto space-y-8 py-4">
-        <div className="text-center space-y-6">
+      <div className="max-w-6xl mx-auto space-y-8 py-4 px-4">
+        <div className="text-center space-y-4">
           <div className="inline-flex items-center justify-center p-4 bg-primary/10 rounded-full mb-2">
-            <Compass className="h-12 w-12 text-primary" />
+            <Compass className="h-10 w-10 text-primary" />
           </div>
-          <h1 className="text-4xl font-bold font-headline text-primary tracking-tight md:text-5xl">
+          <h1 className="text-3xl font-bold font-headline text-primary tracking-tight md:text-4xl">
             ePAO Case Requirements, Appointment, and Service Management System
           </h1>
-          <p className="text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto">
+          <p className="text-lg text-muted-foreground leading-relaxed max-w-3xl mx-auto">
             Determine if your case is under PAO jurisdiction and book a consultation. 
             {!user && (
               <span className="block mt-2 font-medium text-secondary">
@@ -42,6 +68,46 @@ export default function CaseNavigatorPage() {
           )}
         </div>
 
+        {/* Search Bar Section */}
+        <div className="flex gap-2 max-w-4xl mx-auto bg-white p-2 rounded-xl border shadow-sm">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input 
+              placeholder="e.g., 'Theft', 'Annulment', 'Child Support'..." 
+              className="pl-10 border-none shadow-none focus-visible:ring-0 text-base"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <Button className="bg-[#E67E22] hover:bg-[#D35400] text-white px-8">
+            <Search className="mr-2 h-4 w-4" /> Search
+          </Button>
+        </div>
+
+        {/* Case Directory Section */}
+        <Card className="border-none bg-[#F0F7FF] shadow-none">
+          <CardContent className="pt-8 px-8">
+            <h2 className="text-2xl font-bold text-primary font-headline mb-8 border-b-2 border-primary/10 pb-4">Criminal Cases</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-10">
+              {criminalCategories.map((category, idx) => (
+                <div key={idx} className="space-y-4">
+                  <h3 className="font-bold text-primary text-lg">{category.title}</h3>
+                  <ul className="space-y-2">
+                    {category.cases.map((caseName, cIdx) => (
+                      <li key={cIdx}>
+                        <button className="text-sm text-primary/80 hover:text-primary hover:underline text-left transition-colors">
+                          {caseName}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Action Cards */}
         <div className="grid md:grid-cols-2 gap-6">
           <Card className="relative overflow-hidden border-2 border-secondary/10 hover:border-secondary/30 transition-all shadow-sm">
             <CardHeader className="bg-secondary/5">
