@@ -86,7 +86,7 @@ export default function LoginPage() {
   const handleQuickAccess = (role: 'admin' | 'lawyer' | 'client') => {
     const demoAccounts = {
       admin: { email: "Admin@ePAO.com", password: "654321" },
-      lawyer: { email: "lawyer@lexconnect.com", password: "password123" },
+      lawyer: { email: "lawyer@lawyers.com", password: "password123" },
       client: { email: "client@lexconnect.com", password: "password123" }
     };
     setEmail(demoAccounts[role].email);

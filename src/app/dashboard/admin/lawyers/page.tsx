@@ -88,7 +88,7 @@ export default function AdminLawyersPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="lawyer@example.com"
+                  placeholder="name@lawyers.com"
                   value={newLawyerEmail}
                   onChange={(e) => setNewLawyerEmail(e.target.value)}
                   required
