@@ -42,7 +42,6 @@ export default function AdminLawyersPage() {
 
     try {
       // 1. Create the Auth account using a secondary app instance
-      // This prevents the admin from being signed out on account creation
       const secondaryApp = initializeApp(firebaseConfig, "secondary-registration");
       const secondaryAuth = getAuth(secondaryApp);
       
@@ -53,11 +52,10 @@ export default function AdminLawyersPage() {
       }
 
       // 2. Save the record in the Firestore whitelist
-      // Use email directly as ID for consistency with Security Rules
       const authRef = doc(db, "lawyersEmail", email);
       setDocumentNonBlocking(authRef, {
         email: email,
-        password: password, // Storing for admin visibility, though usually handled via Auth
+        password: password,
         authorizedAt: new Date().toISOString()
       }, { merge: true });
 
@@ -77,6 +75,24 @@ export default function AdminLawyersPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleDeleteLawyer = (lawyerId: string, email: string) => {
+    if (!db) return;
+
+    // 1. Delete from roleLawyer collection
+    const lawyerRef = doc(db, "roleLawyer", lawyerId);
+    deleteDocumentNonBlocking(lawyerRef);
+
+    // 2. Delete from lawyersEmail whitelist
+    const emailRef = doc(db, "lawyersEmail", email.toLowerCase());
+    deleteDocumentNonBlocking(emailRef);
+
+    toast({
+      variant: "destructive",
+      title: "Practitioner Removed",
+      description: `Removed ${email} from registered practitioners and authorization list.`
+    });
   };
 
   return (
@@ -138,21 +154,32 @@ export default function AdminLawyersPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Lawyer Email</TableHead>
-                    <TableHead className="text-right">Status</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {registeredLawyers?.map((lawyer) => (
                     <TableRow key={lawyer.id}>
                       <TableCell>{lawyer.email}</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell>
                         <span className="text-green-600 font-bold px-2 py-1 bg-green-50 rounded text-xs">Registered</span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => handleDeleteLawyer(lawyer.id, lawyer.email)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
                   {(!registeredLawyers || registeredLawyers.length === 0) && (
                     <TableRow>
-                      <TableCell colSpan={2} className="text-center text-muted-foreground py-4">No active practitioners yet.</TableCell>
+                      <TableCell colSpan={3} className="text-center text-muted-foreground py-4">No active practitioners yet.</TableCell>
                     </TableRow>
                   )}
                 </TableBody>
