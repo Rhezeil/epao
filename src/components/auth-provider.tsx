@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "@/lib/firebase";
+import { useAuth as useFirebaseAuth, useFirestore } from "@/firebase";
 import { useRouter, usePathname } from "next/navigation";
 
 export type UserRole = "admin" | "lawyer" | "client" | null;
@@ -28,6 +28,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<UserRole>(null);
   const [loading, setLoading] = useState(true);
+  const auth = useFirebaseAuth();
+  const db = useFirestore();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -35,10 +37,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
       if (user) {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists()) {
-          setRole(userDoc.data().role as UserRole);
-        } else {
+        try {
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          if (userDoc.exists()) {
+            setRole(userDoc.data().role as UserRole);
+          } else {
+            setRole(null);
+          }
+        } catch (error) {
+          console.error("Error fetching user role:", error);
           setRole(null);
         }
       } else {
@@ -48,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [auth, db]);
 
   useEffect(() => {
     if (!loading) {
