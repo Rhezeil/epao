@@ -1,4 +1,3 @@
-
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -34,6 +33,29 @@ const criminalCaseCategories = [
   }
 ];
 
+const civilCaseCategories = [
+  {
+    title: "Family Law",
+    items: ["Annulment", "Legal Separation", "Divorce (for Muslims)", "Child Custody / Visitation", "Child Support / Alimony", "Adoption", "Paternity / Legitimacy Claims"]
+  },
+  {
+    title: "Property / Real Estate",
+    items: ["Land Disputes", "Boundary Disputes", "Eviction / Ejectment", "Condemnation / Expropriation"]
+  },
+  {
+    title: "Contract / Business Disputes",
+    items: ["Breach of Contract", "Non-Performance of Contract", "Sale / Lease Disputes", "Partnership / Corporation Disputes", "Loan / Debt Collection"]
+  },
+  {
+    title: "Tort / Civil Wrongs",
+    items: ["Personal Injury", "Medical Malpractice", "Defamation (Libel & Slander)", "Negligence", "Product Liability"]
+  },
+  {
+    title: "Probate / Estate Cases",
+    items: ["Estate Settlement", "Will Contests", "Inheritance Disputes", "Trust Administration"]
+  }
+];
+
 export default function CaseNavigatorPage() {
   const { role, user } = useAuth();
   const router = useRouter();
@@ -54,6 +76,134 @@ export default function CaseNavigatorPage() {
   const handleCategoryClick = (category: string) => {
     setSelectedCategory(category === selectedCategory ? null : category);
   };
+
+  const renderCriminalView = () => (
+    <div className="space-y-6">
+      <div className="flex items-center gap-2">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => setSelectedCategory(null)}
+          className="p-0 h-8 w-8 text-primary hover:bg-primary/5"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <h2 className="text-xl font-bold text-primary font-headline">Criminal Cases</h2>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-8">
+        <div className="space-y-6 col-span-1">
+          <div className="space-y-2">
+            <h3 className="text-sm font-bold text-primary">Crimes against Persons</h3>
+            <ul className="space-y-1">
+              {criminalCaseCategories[0].items.map((item) => (
+                <li key={item} className="text-xs text-[#2E5A99] cursor-pointer hover:underline">{item}</li>
+              ))}
+            </ul>
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-sm font-bold text-primary">Special Criminal Cases</h3>
+            <ul className="space-y-1">
+              {criminalCaseCategories[4].items.map((item) => (
+                <li key={item} className="text-xs text-[#2E5A99] cursor-pointer hover:underline">{item}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div className="space-y-2 col-span-1">
+          <h3 className="text-sm font-bold text-primary">Crimes against Property</h3>
+          <ul className="space-y-1">
+            {criminalCaseCategories[1].items.map((item) => (
+              <li key={item} className="text-xs text-[#2E5A99] cursor-pointer hover:underline">{item}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="space-y-2 col-span-1">
+          <h3 className="text-sm font-bold text-primary">Crimes against Public Order</h3>
+          <ul className="space-y-1">
+            {criminalCaseCategories[2].items.map((item) => (
+              <li key={item} className="text-xs text-[#2E5A99] cursor-pointer hover:underline">{item}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="space-y-2 col-span-1">
+          <h3 className="text-sm font-bold text-primary">Drug-related Offenses</h3>
+          <ul className="space-y-1">
+            {criminalCaseCategories[3].items.map((item) => (
+              <li key={item} className="text-xs text-[#2E5A99] cursor-pointer hover:underline">{item}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderCivilView = () => (
+    <div className="space-y-6">
+      <div className="flex items-center gap-2">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => setSelectedCategory(null)}
+          className="p-0 h-8 w-8 text-primary hover:bg-primary/5"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <h2 className="text-xl font-bold text-primary font-headline">Civil Cases</h2>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-8">
+        <div className="space-y-6 col-span-1">
+          <div className="space-y-2">
+            <h3 className="text-sm font-bold text-primary">Family Law</h3>
+            <ul className="space-y-1">
+              {civilCaseCategories[0].items.map((item) => (
+                <li key={item} className="text-xs text-[#2E5A99] cursor-pointer hover:underline">{item}</li>
+              ))}
+            </ul>
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-sm font-bold text-primary">Probate / Estate Cases</h3>
+            <ul className="space-y-1">
+              {civilCaseCategories[4].items.map((item) => (
+                <li key={item} className="text-xs text-[#2E5A99] cursor-pointer hover:underline">{item}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div className="space-y-2 col-span-1">
+          <h3 className="text-sm font-bold text-primary">Property / Real Estate</h3>
+          <ul className="space-y-1">
+            {civilCaseCategories[1].items.map((item) => (
+              <li key={item} className="text-xs text-[#2E5A99] cursor-pointer hover:underline">{item}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="space-y-2 col-span-1">
+          <h3 className="text-sm font-bold text-primary">Contract / Business Disputes</h3>
+          <ul className="space-y-1">
+            {civilCaseCategories[2].items.map((item) => (
+              <li key={item} className="text-xs text-[#2E5A99] cursor-pointer hover:underline">{item}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="space-y-2 col-span-1">
+          <h3 className="text-sm font-bold text-primary">Tort / Civil Wrongs</h3>
+          <ul className="space-y-1">
+            {civilCaseCategories[3].items.map((item) => (
+              <li key={item} className="text-xs text-[#2E5A99] cursor-pointer hover:underline">{item}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <DashboardLayout role={role}>
@@ -89,67 +239,9 @@ export default function CaseNavigatorPage() {
         <Card className="border-none bg-[#EBF2FA] shadow-none rounded-xl overflow-hidden min-h-[400px]">
           <CardContent className="p-6 space-y-6">
             {selectedCategory === "Criminal" ? (
-              <div className="space-y-6">
-                <div className="flex items-center gap-2">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => setSelectedCategory(null)}
-                    className="p-0 h-8 w-8 text-primary hover:bg-primary/5"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                  </Button>
-                  <h2 className="text-xl font-bold text-primary font-headline">Criminal Cases</h2>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-8">
-                  <div className="space-y-6 col-span-1">
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-bold text-primary">Crimes against Persons</h3>
-                      <ul className="space-y-1">
-                        {criminalCaseCategories[0].items.map((item) => (
-                          <li key={item} className="text-xs text-[#2E5A99] cursor-pointer hover:underline">{item}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-bold text-primary">Special Criminal Cases</h3>
-                      <ul className="space-y-1">
-                        {criminalCaseCategories[4].items.map((item) => (
-                          <li key={item} className="text-xs text-[#2E5A99] cursor-pointer hover:underline">{item}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 col-span-1">
-                    <h3 className="text-sm font-bold text-primary">Crimes against Property</h3>
-                    <ul className="space-y-1">
-                      {criminalCaseCategories[1].items.map((item) => (
-                        <li key={item} className="text-xs text-[#2E5A99] cursor-pointer hover:underline">{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="space-y-2 col-span-1">
-                    <h3 className="text-sm font-bold text-primary">Crimes against Public Order</h3>
-                    <ul className="space-y-1">
-                      {criminalCaseCategories[2].items.map((item) => (
-                        <li key={item} className="text-xs text-[#2E5A99] cursor-pointer hover:underline">{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="space-y-2 col-span-1">
-                    <h3 className="text-sm font-bold text-primary">Drug-related Offenses</h3>
-                    <ul className="space-y-1">
-                      {criminalCaseCategories[3].items.map((item) => (
-                        <li key={item} className="text-xs text-[#2E5A99] cursor-pointer hover:underline">{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
+              renderCriminalView()
+            ) : selectedCategory === "Civil" ? (
+              renderCivilView()
             ) : (
               <>
                 {/* Search Bar */}
