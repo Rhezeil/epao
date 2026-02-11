@@ -16,6 +16,8 @@ import { UserPlus, ArrowLeft } from "lucide-react";
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
@@ -32,8 +34,9 @@ export default function RegisterPage() {
 
       // Initialize the user document in Firestore with the "client" role
       const userDocRef = doc(db, "users", user.uid);
+      const profileDocRef = doc(db, "users", user.uid, "profile", "profile");
       
-      // Using non-blocking pattern as per guidelines
+      // Using non-blocking pattern as per guidelines for user metadata
       setDocumentNonBlocking(userDocRef, {
         id: user.uid,
         email: user.email,
@@ -42,12 +45,20 @@ export default function RegisterPage() {
         createdAt: new Date().toISOString(),
       }, { merge: true });
 
+      // Initialize the profile document with provided names
+      setDocumentNonBlocking(profileDocRef, {
+        id: "profile",
+        firstName: firstName,
+        lastName: lastName,
+        createdAt: new Date().toISOString(),
+      }, { merge: true });
+
       toast({ 
         title: "Account created", 
-        description: "Welcome to LexConnect! Redirecting to your dashboard..." 
+        description: "Welcome to LexConnect! Your profile has been initialized." 
       });
 
-      // Navigation will be handled by the AuthProvider once the session is established
+      // Navigation is handled by the AuthProvider once the session is detected
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -78,6 +89,32 @@ export default function RegisterPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleRegister} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input
+                    id="firstName"
+                    type="text"
+                    placeholder="John"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    required
+                    className="focus-visible:ring-secondary"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    type="text"
+                    placeholder="Doe"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    required
+                    className="focus-visible:ring-secondary"
+                  />
+                </div>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
