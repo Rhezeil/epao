@@ -34,19 +34,29 @@ export default function LoginPage() {
       // Check roleAdmin first
       const adminDocRef = doc(db, "roleAdmin", user.uid);
       const adminDoc = await getDoc(adminDocRef);
-      
       if (adminDoc.exists()) {
         role = "admin";
-      } else {
-        // Check standard users collection
-        const userDocRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          role = userDoc.data().role;
+      }
+
+      // Check roleLawyer
+      if (!role) {
+        const lawyerDocRef = doc(db, "roleLawyer", user.uid);
+        const lawyerDoc = await getDoc(lawyerDocRef);
+        if (lawyerDoc.exists()) {
+          role = "lawyer";
         }
       }
 
-      // Auto-repair for bootstrap admin (UID fs4k8QifPHSmUdshxh1NLweHSj73 or specific email)
+      // Check standard users (Clients)
+      if (!role) {
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          role = "client";
+        }
+      }
+
+      // Auto-repair for bootstrap admin
       const isBootstrapAdmin = 
         email.toLowerCase() === "admin@epao.com" || 
         user.uid === "fs4k8QifPHSmUdshxh1NLweHSj73";
@@ -63,22 +73,22 @@ export default function LoginPage() {
           permission: "read/write",
           createdAt: new Date().toISOString(),
         }, { merge: true });
-
-        toast({ title: "Admin Records Initialized", description: "Your administrative record has been created in 'roleAdmin'." });
+        toast({ title: "Admin Records Initialized" });
       } 
       
-      // Auto-repair for authorized lawyers
+      // Auto-repair for authorized lawyers (including specific UID)
       if (!role) {
         const emailId = user.email?.toLowerCase().replace(/[@.]/g, "_") || "";
         const lawyerAuthRef = doc(db, "lawyersEmail", emailId);
         const lawyerAuthDoc = await getDoc(lawyerAuthRef);
+        const isAuthorizedLawyer = lawyerAuthDoc.exists() || user.uid === "ygkXuNUWJrbffovhXBtr6r1o5vr2";
         
-        if (lawyerAuthDoc.exists()) {
+        if (isAuthorizedLawyer) {
           role = "lawyer";
-          const userDocRef = doc(db, "users", user.uid);
+          const lawyerDocRef = doc(db, "roleLawyer", user.uid);
           const profileDocRef = doc(db, "users", user.uid, "profile", "profile");
           
-          setDocumentNonBlocking(userDocRef, {
+          setDocumentNonBlocking(lawyerDocRef, {
             id: user.uid,
             email: user.email,
             role: "lawyer",
@@ -93,21 +103,20 @@ export default function LoginPage() {
             createdAt: new Date().toISOString(),
           }, { merge: true });
 
-          toast({ title: "Lawyer Records Initialized", description: "Welcome back, your practitioner profile has been restored." });
+          toast({ title: "Lawyer Records Initialized" });
         }
       }
 
       if (!role) {
-        throw new Error("Your account record was not found. Please register if you haven't already.");
+        throw new Error("Account record not found. Please register.");
       }
 
-      toast({ title: "Login successful", description: `Welcome back to the ${role} portal.` });
       router.push(`/dashboard/${role}`);
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: error.message || "Please check your credentials.",
+        description: error.message,
       });
     } finally {
       setIsLoading(false);
@@ -122,118 +131,43 @@ export default function LoginPage() {
     };
     setEmail(demoAccounts[role].email);
     setPassword(demoAccounts[role].password);
-    toast({
-      title: "Demo Credentials Loaded",
-      description: `Credentials for ${role} loaded. Click Sign In to proceed.`,
-    });
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4 font-body">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-8">
-        <div className="text-center space-y-2">
-          <h2 className="text-4xl font-bold font-headline text-primary">LexConnect</h2>
-          <p className="text-muted-foreground text-sm uppercase tracking-widest">Legal Portal Access</p>
+        <div className="text-center">
+          <h2 className="text-4xl font-bold text-primary">LexConnect</h2>
         </div>
 
-        <Card className="border-none shadow-2xl bg-white/90 backdrop-blur-md">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center font-bold">Sign In</CardTitle>
-            <CardDescription className="text-center">
-              Enter your credentials to manage your legal workspace
-            </CardDescription>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl text-center">Sign In</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Admin@ePAO.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="bg-background/50"
-                />
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
               </div>
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Button variant="link" className="p-0 h-auto text-xs text-secondary">
-                    Forgot password?
-                  </Button>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="bg-background/50"
-                />
+                <Label htmlFor="password">Password</Label>
+                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
               </div>
-              <Button type="submit" className="w-full h-11 text-base font-semibold transition-all" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Authenticating...
-                  </>
-                ) : (
-                  "Login to Portal"
-                )}
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? <Loader2 className="animate-spin" /> : "Login"}
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4 border-t pt-6 bg-muted/10">
-            <p className="text-[10px] text-center uppercase tracking-widest text-muted-foreground font-bold">
-              Rapid Access Selectors
-            </p>
+          <CardFooter className="flex flex-col space-y-4">
             <div className="grid grid-cols-3 gap-2 w-full">
-              <button 
-                type="button"
-                onClick={() => handleQuickAccess('admin')}
-                className="flex flex-col items-center space-y-1 p-2 hover:bg-primary/5 rounded-xl transition-all group"
-              >
-                <div className="p-2 rounded-full bg-primary/10 group-hover:bg-primary group-hover:text-white transition-all">
-                  <ShieldCheck className="h-5 w-5" />
-                </div>
-                <span className="text-[10px] font-bold text-muted-foreground">Admin</span>
-              </button>
-              <button 
-                type="button"
-                onClick={() => handleQuickAccess('lawyer')}
-                className="flex flex-col items-center space-y-1 p-2 hover:bg-secondary/5 rounded-xl transition-all group"
-              >
-                <div className="p-2 rounded-full bg-secondary/10 group-hover:bg-secondary group-hover:text-white transition-all">
-                  <Briefcase className="h-5 w-5" />
-                </div>
-                <span className="text-[10px] font-bold text-muted-foreground">Lawyer</span>
-              </button>
-              <button 
-                type="button"
-                onClick={() => handleQuickAccess('client')}
-                className="flex flex-col items-center space-y-1 p-2 hover:bg-accent/5 rounded-xl transition-all group"
-              >
-                <div className="p-2 rounded-full bg-accent/10 group-hover:bg-accent group-hover:text-white transition-all">
-                  <UserIcon className="h-5 w-5" />
-                </div>
-                <span className="text-[10px] font-bold text-muted-foreground">Client</span>
-              </button>
+              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('admin')}>Admin</Button>
+              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('lawyer')}>Lawyer</Button>
+              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('client')}>Client</Button>
             </div>
+            <Button variant="link" onClick={() => router.push("/register")}>Create Account</Button>
           </CardFooter>
         </Card>
-
-        <p className="text-center text-sm text-muted-foreground">
-          New to LexConnect?{" "}
-          <Button 
-            variant="link" 
-            className="p-0 h-auto text-secondary font-bold hover:no-underline"
-            onClick={() => router.push("/register")}
-          >
-            Create Client Account
-          </Button>
-        </p>
       </div>
     </div>
   );

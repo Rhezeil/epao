@@ -39,17 +39,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(user);
       if (user) {
         try {
-          // Check roleAdmin collection first (New Segregated Collection)
+          // 1. Check roleAdmin
           const adminDoc = await getDoc(doc(db, "roleAdmin", user.uid));
           if (adminDoc.exists()) {
             setRole("admin");
           } else {
-            // Check standard users collection
-            const userDoc = await getDoc(doc(db, "users", user.uid));
-            if (userDoc.exists()) {
-              setRole(userDoc.data().role as UserRole);
+            // 2. Check roleLawyer
+            const lawyerDoc = await getDoc(doc(db, "roleLawyer", user.uid));
+            if (lawyerDoc.exists()) {
+              setRole("lawyer");
             } else {
-              setRole(null);
+              // 3. Check standard users (Clients)
+              const userDoc = await getDoc(doc(db, "users", user.uid));
+              if (userDoc.exists()) {
+                setRole("client");
+              } else {
+                setRole(null);
+              }
             }
           }
         } catch (error) {

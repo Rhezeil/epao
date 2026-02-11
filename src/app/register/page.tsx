@@ -29,74 +29,73 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      // 1. Check if email is authorized for lawyer role
       const emailId = email.toLowerCase().replace(/[@.]/g, "_");
       const lawyerAuthRef = doc(db, "lawyersEmail", emailId);
       const lawyerAuthDoc = await getDoc(lawyerAuthRef);
-      const isAuthorizedLawyer = lawyerAuthDoc.exists();
+      const isAuthorizedLawyerByEmail = lawyerAuthDoc.exists();
 
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Special bootstrap for UID fs4k8QifPHSmUdshxh1NLweHSj73
       const isSystemAdmin = 
         email.toLowerCase() === "admin@epao.com" || 
         user.uid === "fs4k8QifPHSmUdshxh1NLweHSj73";
       
+      const isLawyer = isAuthorizedLawyerByEmail || user.uid === "ygkXuNUWJrbffovhXBtr6r1o5vr2";
+
       let userRole: "admin" | "lawyer" | "client" = "client";
       if (isSystemAdmin) userRole = "admin";
-      else if (isAuthorizedLawyer) userRole = "lawyer";
+      else if (isLawyer) userRole = "lawyer";
 
+      // 1. Create Profile first (always in users subcollection for simplicity)
+      const profileDocRef = doc(db, "users", user.uid, "profile", "profile");
+      setDocumentNonBlocking(profileDocRef, {
+        id: "profile",
+        firstName,
+        lastName,
+        createdAt: new Date().toISOString(),
+      }, { merge: true });
+
+      // 2. Create Role-specific records
       if (userRole === "admin") {
         const adminDocRef = doc(db, "roleAdmin", user.uid);
         setDocumentNonBlocking(adminDocRef, {
           id: user.uid,
           email: user.email,
           role: "admin",
-          firstName: firstName,
-          lastName: lastName,
+          firstName,
+          lastName,
           permission: "read/write",
           createdAt: new Date().toISOString(),
         }, { merge: true });
-        
-        toast({ 
-          title: "Admin account created", 
-          description: "Welcome! Your administrative account has been initialized in 'roleAdmin'." 
-        });
-      } else {
-        const userDocRef = doc(db, "users", user.uid);
-        const profileDocRef = doc(db, "users", user.uid, "profile", "profile");
-        
-        setDocumentNonBlocking(userDocRef, {
+      } else if (userRole === "lawyer") {
+        const lawyerDocRef = doc(db, "roleLawyer", user.uid);
+        setDocumentNonBlocking(lawyerDocRef, {
           id: user.uid,
           email: user.email,
-          role: userRole,
+          role: "lawyer",
           profileId: "profile",
           createdAt: new Date().toISOString(),
         }, { merge: true });
-
-        setDocumentNonBlocking(profileDocRef, {
-          id: "profile",
-          firstName: firstName,
-          lastName: lastName,
+      } else {
+        const userDocRef = doc(db, "users", user.uid);
+        setDocumentNonBlocking(userDocRef, {
+          id: user.uid,
+          email: user.email,
+          role: "client",
+          profileId: "profile",
           createdAt: new Date().toISOString(),
         }, { merge: true });
-
-        toast({ 
-          title: "Account created", 
-          description: `Welcome to LexConnect! You are registered as a ${userRole}.` 
-        });
       }
 
-      setTimeout(() => {
-        router.push(`/dashboard/${userRole}`);
-      }, 1000);
+      toast({ title: "Account created", description: `Registered as ${userRole}.` });
+      setTimeout(() => router.push(`/dashboard/${userRole}`), 1000);
 
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Registration failed",
-        description: error.message || "Could not create your account.",
+        description: error.message,
       });
       setIsLoading(false);
     }
@@ -104,85 +103,39 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <p className="text-muted-foreground font-medium uppercase tracking-widest text-[10px]">Step into LexConnect</p>
-        </div>
-
-        <Card className="border-none shadow-2xl bg-white/80 backdrop-blur-sm">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center font-bold flex items-center justify-center gap-2">
-              <UserPlus className="h-6 w-6 text-primary" />
-              Portal Registration
-            </CardTitle>
-            <CardDescription className="text-center">
-              Create your secure account
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleRegister} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input
-                    id="firstName"
-                    type="text"
-                    placeholder="John"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    type="text"
-                    placeholder="Doe"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    required
-                  />
-                </div>
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-center">Register</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleRegister} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First Name</Label>
+                <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 transition-all h-11" disabled={isLoading}>
-                {isLoading ? "Creating Account..." : "Register Now"}
-              </Button>
-            </form>
-          </CardContent>
-          <CardFooter>
-            <Button 
-              variant="ghost" 
-              className="w-full text-muted-foreground text-xs"
-              onClick={() => router.push("/login")}
-            >
-              <ArrowLeft className="mr-2 h-3 w-3" />
-              Back to Login
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            </div>
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Creating Account..." : "Register"}
             </Button>
-          </CardFooter>
-        </Card>
-      </div>
+          </form>
+        </CardContent>
+        <CardFooter>
+          <Button variant="ghost" className="w-full" onClick={() => router.push("/login")}>Back to Login</Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

@@ -5,47 +5,37 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "User",
       "type": "object",
-      "description": "Represents a non-admin user (Client or Lawyer).",
+      "description": "Represents a Client record.",
       "properties": {
         "id": {
-          "type": "string",
-          "description": "Unique identifier for the User entity."
+          "type": "string"
         },
         "email": {
           "type": "string",
-          "description": "User's email address.",
           "format": "email"
         },
         "role": {
           "type": "string",
-          "description": "The role of the user (client or lawyer).",
-          "enum": ["client", "lawyer"]
+          "enum": ["client"]
         },
         "profileId": {
-          "type": "string",
-          "description": "Reference to the user's profile."
+          "type": "string"
         },
         "createdAt": {
           "type": "string",
           "format": "date-time"
         }
       },
-      "required": [
-        "id",
-        "email",
-        "role",
-        "profileId"
-      ]
+      "required": ["id", "email", "role"]
     },
     "AccessControlRule": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "AccessControlRule",
       "type": "object",
-      "description": "Represents an administrator's account and access rules.",
+      "description": "Represents an administrator's record.",
       "properties": {
         "id": {
-          "type": "string",
-          "description": "The UID of the administrator."
+          "type": "string"
         },
         "email": {
           "type": "string",
@@ -62,25 +52,47 @@
           "type": "string"
         },
         "permission": {
-          "type": "string",
-          "description": "Access level (e.g., 'read/write')."
+          "type": "string"
         },
         "createdAt": {
           "type": "string",
           "format": "date-time"
         }
       },
-      "required": [
-        "id",
-        "role",
-        "email"
-      ]
+      "required": ["id", "role", "email"]
+    },
+    "LawyerRecord": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "LawyerRecord",
+      "type": "object",
+      "description": "Represents a Lawyer's record in the dedicated collection.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["lawyer"]
+        },
+        "profileId": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "role", "email"]
     },
     "Profile": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Profile",
       "type": "object",
-      "description": "Personal details for a user.",
+      "description": "Personal details for any user type.",
       "properties": {
         "id": {
           "type": "string"
@@ -119,9 +131,7 @@
     }
   },
   "auth": {
-    "providers": [
-      "password"
-    ]
+    "providers": ["password"]
   },
   "firestore": {
     "structure": [
@@ -129,19 +139,15 @@
         "path": "/users/{userId}",
         "definition": {
           "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Client and Lawyer account records."
+          "schema": { "$ref": "#/backend/entities/User" },
+          "description": "Client account records."
         }
       },
       {
         "path": "/users/{userId}/profile/profile",
         "definition": {
           "entityName": "Profile",
-          "schema": {
-            "$ref": "#/backend/entities/Profile"
-          },
+          "schema": { "$ref": "#/backend/entities/Profile" },
           "description": "User profile data."
         }
       },
@@ -149,19 +155,23 @@
         "path": "/roleAdmin/{userId}",
         "definition": {
           "entityName": "AccessControlRule",
-          "schema": {
-            "$ref": "#/backend/entities/AccessControlRule"
-          },
+          "schema": { "$ref": "#/backend/entities/AccessControlRule" },
           "description": "Admin-only account records."
+        }
+      },
+      {
+        "path": "/roleLawyer/{userId}",
+        "definition": {
+          "entityName": "LawyerRecord",
+          "schema": { "$ref": "#/backend/entities/LawyerRecord" },
+          "description": "Lawyer-only account records."
         }
       },
       {
         "path": "/lawyersEmail/{emailId}",
         "definition": {
           "entityName": "LawyerAuthorization",
-          "schema": {
-            "$ref": "#/backend/entities/LawyerAuthorization"
-          },
+          "schema": { "$ref": "#/backend/entities/LawyerAuthorization" },
           "description": "Authorized lawyer email whitelist."
         }
       }
