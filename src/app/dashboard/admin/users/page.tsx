@@ -1,16 +1,20 @@
 
 "use client";
 
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { collection, query, orderBy } from "firebase/firestore";
-import { User, Shield, Briefcase, UserCircle, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { collection, query, orderBy, doc } from "firebase/firestore";
+import { User, Shield, Briefcase, UserCircle, Loader2, MoreVertical, ShieldAlert, Trash2 } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AdminUsersPage() {
   const db = useFirestore();
+  const { toast } = useToast();
 
   // Memoize the query to fetch all users
   const usersQuery = useMemoFirebase(() => {
@@ -30,6 +34,37 @@ export default function AdminUsersPage() {
       default:
         return <Badge variant="outline"><UserCircle className="mr-1 h-3 w-3" /> Client</Badge>;
     }
+  };
+
+  const handlePromoteToAdmin = (userId: string, currentEmail: string) => {
+    if (!db) return;
+    
+    const userRef = doc(db, "users", userId);
+    const adminRef = doc(db, "roles_admin", userId);
+
+    updateDocumentNonBlocking(userRef, { role: "admin" });
+    setDocumentNonBlocking(adminRef, {
+      id: userId,
+      role: "admin",
+      resource: "all",
+      permission: "read/write",
+    }, { merge: true });
+
+    toast({
+      title: "User Promoted",
+      description: `${currentEmail} has been granted administrative access.`
+    });
+  };
+
+  const handleDeleteUser = (userId: string) => {
+    if (!db) return;
+    const userRef = doc(db, "users", userId);
+    deleteDocumentNonBlocking(userRef);
+    toast({
+      variant: "destructive",
+      title: "User Removed",
+      description: "User account has been deleted from the database."
+    });
   };
 
   return (
@@ -61,6 +96,7 @@ export default function AdminUsersPage() {
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Registration Date</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -75,11 +111,35 @@ export default function AdminUsersPage() {
                         <TableCell className="text-xs text-muted-foreground">
                           {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
                         </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {user.role !== 'admin' && (
+                                <DropdownMenuItem onClick={() => handlePromoteToAdmin(user.id, user.email)}>
+                                  <ShieldAlert className="mr-2 h-4 w-4" />
+                                  Make Admin
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem 
+                                onClick={() => handleDeleteUser(user.id)}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete User
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                         No users found.
                       </TableCell>
                     </TableRow>
