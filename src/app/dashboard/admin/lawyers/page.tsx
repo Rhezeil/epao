@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -31,14 +30,7 @@ export default function AdminLawyersPage() {
     return query(collection(db, "roleLawyer"), orderBy("email", "asc"));
   }, [db, user, role]);
 
-  // Fetch authorized emails whitelist
-  const authorizedEmailsQuery = useMemoFirebase(() => {
-    if (!db || !user || role !== 'admin') return null;
-    return collection(db, "lawyersEmail");
-  }, [db, user, role]);
-
   const { data: registeredLawyers, isLoading: isLawyersLoading } = useCollection(registeredLawyersQuery);
-  const { data: authorizedEmails, isLoading: isEmailsLoading } = useCollection(authorizedEmailsQuery);
 
   const handleAuthorizeLawyer = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,12 +77,6 @@ export default function AdminLawyersPage() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleRemoveAuthorization = (id: string) => {
-    if (!db) return;
-    deleteDocumentNonBlocking(doc(db, "lawyersEmail", id));
-    toast({ variant: "destructive", title: "Authorization Revoked" });
   };
 
   return (
@@ -144,71 +130,36 @@ export default function AdminLawyersPage() {
           </CardContent>
         </Card>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader><CardTitle>Authorized Emails (Whitelist)</CardTitle></CardHeader>
-            <CardContent>
-              {isEmailsLoading ? <Loader2 className="animate-spin" /> : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Email</TableHead>
-                      <TableHead className="text-right">Action</TableHead>
+        <Card>
+          <CardHeader><CardTitle>Active Practitioners (Registered)</CardTitle></CardHeader>
+          <CardContent>
+            {isLawyersLoading ? <Loader2 className="animate-spin" /> : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Lawyer Email</TableHead>
+                    <TableHead className="text-right">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {registeredLawyers?.map((lawyer) => (
+                    <TableRow key={lawyer.id}>
+                      <TableCell>{lawyer.email}</TableCell>
+                      <TableCell className="text-right">
+                        <span className="text-green-600 font-bold px-2 py-1 bg-green-50 rounded text-xs">Registered</span>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {authorizedEmails?.map((auth) => (
-                      <TableRow key={auth.id}>
-                        <TableCell className="font-medium">{auth.email}</TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" onClick={() => handleRemoveAuthorization(auth.id)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {(!authorizedEmails || authorizedEmails.length === 0) && (
-                      <TableRow>
-                        <TableCell colSpan={2} className="text-center text-muted-foreground py-4">No authorized emails yet.</TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader><CardTitle>Active Practitioners (Registered)</CardTitle></CardHeader>
-            <CardContent>
-              {isLawyersLoading ? <Loader2 className="animate-spin" /> : (
-                <Table>
-                  <TableHeader>
+                  ))}
+                  {(!registeredLawyers || registeredLawyers.length === 0) && (
                     <TableRow>
-                      <TableHead>Lawyer Email</TableHead>
-                      <TableHead className="text-right">Status</TableHead>
+                      <TableCell colSpan={2} className="text-center text-muted-foreground py-4">No active practitioners yet.</TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {registeredLawyers?.map((lawyer) => (
-                      <TableRow key={lawyer.id}>
-                        <TableCell>{lawyer.email}</TableCell>
-                        <TableCell className="text-right">
-                          <span className="text-green-600 font-bold px-2 py-1 bg-green-50 rounded text-xs">Registered</span>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {(!registeredLawyers || registeredLawyers.length === 0) && (
-                      <TableRow>
-                        <TableCell colSpan={2} className="text-center text-muted-foreground py-4">No active practitioners yet.</TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                  )}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );
