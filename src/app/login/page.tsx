@@ -137,25 +137,22 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-transparent">
-      <div className="w-full max-w-md space-y-8">
-        <div className="flex flex-col items-center space-y-4">
-          {logo && (
-            <div className="p-2 bg-white rounded-full shadow-lg border border-border/50">
-              <Image 
-                src={logo.imageUrl} 
-                alt={logo.description} 
-                width={200} 
-                height={200} 
-                className="rounded-full object-contain"
-                data-ai-hint={logo.imageHint}
-              />
-            </div>
-          )}
-        </div>
-
-        <Card className="shadow-2xl border-primary/10 bg-white/80 backdrop-blur-md">
-          <CardHeader>
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <Card className="shadow-2xl border-primary/10 bg-white/80 backdrop-blur-md overflow-hidden">
+          <CardHeader className="flex flex-col items-center space-y-4 pb-2">
+            {logo && (
+              <div className="p-2 bg-white rounded-full shadow-sm border border-border/50">
+                <Image 
+                  src={logo.imageUrl} 
+                  alt={logo.description} 
+                  width={120} 
+                  height={120} 
+                  className="rounded-full object-contain"
+                  data-ai-hint={logo.imageHint}
+                />
+              </div>
+            )}
             <CardTitle className="text-2xl text-center font-headline text-primary">Sign In</CardTitle>
           </CardHeader>
           <CardContent>
