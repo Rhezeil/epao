@@ -37,14 +37,10 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   const router = useRouter();
 
   const getMenuItems = () => {
-    const common = [
-      { icon: LayoutDashboard, label: "About", path: `/dashboard/${role}` },
-      { icon: Compass, label: "Case Navigator", path: "/case-navigator" },
-    ];
-
     if (role === "admin") {
       return [
-        ...common,
+        { icon: LayoutDashboard, label: "About", path: `/dashboard/admin` },
+        { icon: Compass, label: "Case Navigator", path: "/case-navigator" },
         { icon: Users, label: "Users Management", path: "/dashboard/admin/users" },
         { icon: Briefcase, label: "Lawyer List", path: "/dashboard/admin/lawyers" },
         { icon: Settings, label: "System Settings", path: "/dashboard/admin/settings" },
@@ -53,7 +49,8 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
 
     if (role === "lawyer") {
       return [
-        ...common,
+        { icon: LayoutDashboard, label: "About", path: `/dashboard/lawyer` },
+        { icon: Compass, label: "Case Navigator", path: "/case-navigator" },
         { icon: Users, label: "My Clients", path: "/dashboard/lawyer/clients" },
         { icon: FileText, label: "Active Cases", path: "/dashboard/lawyer/cases" },
       ];
@@ -61,13 +58,14 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
 
     if (role === "client") {
       return [
-        ...common,
+        { icon: Compass, label: "Case Navigator", path: "/case-navigator" },
         { icon: Calendar, label: "Book Appointment", path: "/dashboard/client/book-appointment" },
         { icon: FileText, label: "Case Updates", path: "/dashboard/client/cases" },
+        { icon: LayoutDashboard, label: "About", path: `/dashboard/client` },
       ];
     }
 
-    return common;
+    return [];
   };
 
   return (
