@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { useAuth, useFirestore, setDocumentNonBlocking } from "@/firebase";
@@ -22,16 +22,20 @@ export default function LoginPage() {
   const auth = useAuth();
   const db = useFirestore();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Handle case where user arrives at login but is already authenticated without records
+  useEffect(() => {
+    const firebaseAuth = auth;
+    if (firebaseAuth.currentUser && !isLoading) {
+      checkAndInitializeUser(firebaseAuth.currentUser);
+    }
+  }, []);
+
+  const checkAndInitializeUser = async (user: any) => {
     setIsLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
       let resolvedRole: "admin" | "lawyer" | "client" | null = null;
 
-      // 1. Check existing records to find current role
+      // Check existing records
       const adminDoc = await getDoc(doc(db, "roleAdmin", user.uid));
       if (adminDoc.exists()) resolvedRole = "admin";
 
@@ -45,12 +49,10 @@ export default function LoginPage() {
         if (userDoc.exists()) resolvedRole = "client";
       }
 
-      // --- AUTO-INITIALIZATION / REPAIR LOGIC ---
-      // If no record found, determine what they SHOULD be based on bootstrap rules
       if (!resolvedRole) {
         const normalizedEmail = user.email?.toLowerCase() || "";
         
-        // Admin Bootstrap Check
+        // Admin Bootstrap
         const isBootstrapAdmin = 
           user.uid === "fs4k8QifPHSmUdshxh1NLweHSj73" || 
           normalizedEmail === "admin@epao.com";
@@ -67,7 +69,7 @@ export default function LoginPage() {
             createdAt: new Date().toISOString(),
           }, { merge: true });
         } else {
-          // Lawyer Bootstrap Check
+          // Lawyer Authorization Check
           const lawyerAuthDoc = await getDoc(doc(db, "lawyersEmail", normalizedEmail));
           const isAuthorizedLawyer = 
             lawyerAuthDoc.exists() || 
@@ -109,18 +111,29 @@ export default function LoginPage() {
             }, { merge: true });
           }
         }
-        toast({ title: "Account Records Initialized" });
+        toast({ title: "Account Initialized" });
       }
 
-      // Redirect based on resolved role
       router.push(`/dashboard/${resolvedRole}`);
+    } catch (error) {
+      console.error("Initialization error", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      await checkAndInitializeUser(userCredential.user);
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Login failed",
         description: error.message,
       });
-    } finally {
       setIsLoading(false);
     }
   };

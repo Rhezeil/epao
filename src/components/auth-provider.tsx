@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import { useAuth as useFirebaseAuth, useFirestore } from "@/firebase";
 import { useRouter, usePathname } from "next/navigation";
 
@@ -35,42 +35,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    let unsubUser: () => void = () => {};
+    let unsubAdmin: () => void = () => {};
+    let unsubLawyer: () => void = () => {};
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
+      
+      // Clear existing listeners
+      unsubUser();
+      unsubAdmin();
+      unsubLawyer();
+
       if (firebaseUser) {
         setLoading(true);
-        try {
-          // Check roleAdmin
-          const adminDoc = await getDoc(doc(db, "roleAdmin", firebaseUser.uid));
-          if (adminDoc.exists()) {
+        
+        // Listen to Admin Role
+        unsubAdmin = onSnapshot(doc(db, "roleAdmin", firebaseUser.uid), (docSnap) => {
+          if (docSnap.exists()) {
             setRole("admin");
+            setLoading(false);
           } else {
-            // Check roleLawyer
-            const lawyerDoc = await getDoc(doc(db, "roleLawyer", firebaseUser.uid));
-            if (lawyerDoc.exists()) {
-              setRole("lawyer");
-            } else {
-              // Check standard users (Clients)
-              const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
-              if (userDoc.exists()) {
-                setRole("client");
+            // If not admin, check lawyer
+            unsubLawyer = onSnapshot(doc(db, "roleLawyer", firebaseUser.uid), (lawyerSnap) => {
+              if (lawyerSnap.exists()) {
+                setRole("lawyer");
+                setLoading(false);
               } else {
-                // If logged in but no role found, it might be in transition/initialization
-                setRole(null);
+                // If not lawyer, check client
+                unsubUser = onSnapshot(doc(db, "users", firebaseUser.uid), (userSnap) => {
+                  if (userSnap.exists()) {
+                    setRole("client");
+                  } else {
+                    setRole(null);
+                  }
+                  setLoading(false);
+                }, (err) => {
+                   console.error("User listener error", err);
+                   setLoading(false);
+                });
               }
-            }
+            }, (err) => {
+               console.error("Lawyer listener error", err);
+               setLoading(false);
+            });
           }
-        } catch (error) {
-          console.error("Auth role detection error:", error);
-          setRole(null);
-        }
+        }, (err) => {
+           console.error("Admin listener error", err);
+           setLoading(false);
+        });
       } else {
         setRole(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeAuth();
+      unsubUser();
+      unsubAdmin();
+      unsubLawyer();
+    };
   }, [auth, db]);
 
   // Redirect Logic
