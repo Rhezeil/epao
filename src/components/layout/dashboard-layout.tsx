@@ -45,15 +45,15 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
       return [
         { icon: Users, label: "Users Management", path: "/dashboard/admin/users" },
         { icon: Briefcase, label: "Lawyer List", path: "/dashboard/admin/lawyers" },
-        { icon: LayoutDashboard, label: "About", path: `/dashboard/admin` },
         { icon: Compass, label: "Case Navigator", path: "/case-navigator" },
+        { icon: LayoutDashboard, label: "About", path: `/dashboard/admin` },
       ];
     }
 
     if (role === "lawyer") {
       return [
-        { icon: LayoutDashboard, label: "About", path: `/dashboard/lawyer` },
         { icon: Compass, label: "Case Navigator", path: "/case-navigator" },
+        { icon: LayoutDashboard, label: "About", path: `/dashboard/lawyer` },
         { icon: Users, label: "My Clients", path: "/dashboard/lawyer/clients" },
         { icon: FileText, label: "Active Cases", path: "/dashboard/lawyer/cases" },
       ];
@@ -62,10 +62,10 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     if (role === "client") {
       return [
         { icon: Compass, label: "Case Navigator", path: "/case-navigator" },
+        { icon: LayoutDashboard, label: "About", path: `/dashboard/client` },
         { icon: Calendar, label: "Book Appointment", path: "/dashboard/client/book-appointment" },
         { icon: CalendarCheck, label: "Manage Appointment", path: "/case-navigator?mode=manage" },
         { icon: FileText, label: "Case Updates", path: "/dashboard/client/cases" },
-        { icon: LayoutDashboard, label: "About", path: `/dashboard/client` },
       ];
     }
 
