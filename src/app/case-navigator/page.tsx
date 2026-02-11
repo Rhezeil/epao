@@ -5,7 +5,7 @@ import { useAuth } from "@/components/auth-provider";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Compass, HelpCircle, Search, ArrowLeft } from "lucide-react";
+import { Compass, HelpCircle, Search, ArrowLeft, CalendarCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -137,6 +137,8 @@ export default function CaseNavigatorPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [mode, setMode] = useState<"explore" | "manage">("explore");
+  const [refCode, setRefCode] = useState("");
 
   const categories = [
     "Criminal",
@@ -461,6 +463,36 @@ export default function CaseNavigatorPage() {
     </div>
   );
 
+  const renderManageAppointment = () => (
+    <div className="space-y-8 max-w-4xl mx-auto">
+      <div className="space-y-2">
+        <h2 className="text-3xl font-bold text-primary font-headline">Manage Your Appointment</h2>
+        <p className="text-sm text-muted-foreground">
+          Enter the reference code you received after booking to view, reschedule, or cancel your appointment.
+        </p>
+      </div>
+
+      <Card className="border-none bg-white shadow-sm rounded-xl overflow-hidden">
+        <CardContent className="p-8 space-y-6">
+          <h3 className="text-xl font-bold text-primary">Find Your Appointment</h3>
+          <div className="flex gap-2 bg-[#F0F4F8] p-1 rounded-lg border">
+            <div className="flex-1">
+              <Input 
+                placeholder="Enter reference code (e.g., PAO-123456)" 
+                className="h-12 border-none shadow-none focus-visible:ring-0 text-sm bg-transparent"
+                value={refCode}
+                onChange={(e) => setRefCode(e.target.value)}
+              />
+            </div>
+            <Button size="lg" className="bg-[#2E5A99] hover:bg-[#1A3B6B] text-white h-12 px-8 font-semibold">
+              Search
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
   return (
     <DashboardLayout role={role}>
       <div className="max-w-6xl mx-auto space-y-4 py-2 px-4">
@@ -491,10 +523,31 @@ export default function CaseNavigatorPage() {
           )}
         </div>
 
-        {/* Search and Category Exploration Section */}
-        <Card className="border-none bg-[#EBF2FA] shadow-none rounded-xl overflow-hidden min-h-[400px]">
-          <CardContent className="p-6 space-y-6">
-            {selectedCategory === "Criminal" ? (
+        {/* Mode Toggle Tabs */}
+        <div className="flex justify-center gap-4 mb-2">
+          <Button 
+            variant={mode === "explore" ? "default" : "ghost"}
+            onClick={() => setMode("explore")}
+            className={cn("h-9 rounded-full px-6", mode === "explore" ? "bg-primary" : "text-primary hover:bg-primary/5")}
+          >
+            Explore Cases
+          </Button>
+          <Button 
+            variant={mode === "manage" ? "default" : "ghost"}
+            onClick={() => setMode("manage")}
+            className={cn("h-9 rounded-full px-6 flex items-center gap-2", mode === "manage" ? "bg-primary" : "text-primary hover:bg-primary/5")}
+          >
+            <CalendarCheck className="h-4 w-4" />
+            Manage Appointment
+          </Button>
+        </div>
+
+        {/* Main Content Area */}
+        <Card className="border-none bg-[#EBF2FA] shadow-none rounded-xl overflow-hidden min-h-[450px]">
+          <CardContent className="p-8">
+            {mode === "manage" ? (
+              renderManageAppointment()
+            ) : selectedCategory === "Criminal" ? (
               renderCriminalView()
             ) : selectedCategory === "Civil" ? (
               renderCivilView()
@@ -511,7 +564,7 @@ export default function CaseNavigatorPage() {
             ) : selectedCategory === "Notarization" ? (
               renderNotarizationView()
             ) : (
-              <>
+              <div className="space-y-8">
                 {/* Search Bar */}
                 <div className="flex gap-2 max-w-4xl mx-auto bg-white p-1 rounded-lg border shadow-sm">
                   <div className="flex-1">
@@ -549,7 +602,7 @@ export default function CaseNavigatorPage() {
                     ))}
                   </div>
                 </div>
-              </>
+              </div>
             )}
           </CardContent>
         </Card>
