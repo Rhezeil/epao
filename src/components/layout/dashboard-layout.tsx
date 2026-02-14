@@ -28,7 +28,8 @@ import {
   Settings,
   LogIn,
   UserPlus,
-  Database
+  Database,
+  Info
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
@@ -48,38 +49,41 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   const logo = PlaceHolderImages.find(img => img.id === 'pao-logo');
 
   const getMenuItems = () => {
-    const commonItems: { icon: any, label: string, path: string }[] = [];
+    const commonItems = [
+      { icon: Compass, label: "Case Requirements Navigator", path: "/case-navigator" },
+      { icon: Calendar, label: "Book Appointment", path: "/dashboard/client/book-appointment" },
+      { icon: CalendarCheck, label: "Manage Appointment", path: "/case-navigator?mode=manage" },
+      { icon: Info, label: "About", path: "/about" },
+    ];
 
     if (!user) {
-      return [
-        { icon: Compass, label: "Case Requirements Navigator", path: "/case-navigator" },
-      ];
+      return commonItems;
     }
 
     if (role === "admin") {
       return [
-        ...commonItems,
+        { icon: LayoutDashboard, label: "Admin Home", path: "/dashboard/admin" },
         { icon: Users, label: "Users Management", path: "/dashboard/admin/users" },
         { icon: Briefcase, label: "Lawyer List", path: "/dashboard/admin/lawyers" },
         { icon: Database, label: "Case Requirements", path: "/dashboard/admin/case-requirements" },
         { icon: UserPlus, label: "Register Practitioner", path: "/register" },
+        { icon: Info, label: "About", path: "/about" },
       ];
     }
 
     if (role === "lawyer") {
       return [
-        ...commonItems,
+        { icon: LayoutDashboard, label: "Lawyer Home", path: "/dashboard/lawyer" },
         { icon: Users, label: "My Clients", path: "/dashboard/lawyer/clients" },
         { icon: FileText, label: "Active Cases", path: "/dashboard/lawyer/cases" },
+        { icon: Info, label: "About", path: "/about" },
       ];
     }
 
     if (role === "client") {
       return [
+        { icon: LayoutDashboard, label: "Client Home", path: "/dashboard/client" },
         ...commonItems,
-        { icon: Compass, label: "Case Requirements Navigator", path: "/case-navigator" },
-        { icon: Calendar, label: "Book Appointment", path: "/dashboard/client/book-appointment" },
-        { icon: CalendarCheck, label: "Manage Appointment", path: "/case-navigator?mode=manage" },
         { icon: FileText, label: "Case Updates", path: "/dashboard/client/cases" },
       ];
     }
