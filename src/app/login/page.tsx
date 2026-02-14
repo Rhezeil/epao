@@ -45,7 +45,11 @@ export default function LoginPage() {
   const checkAndInitializeUser = async (user: any) => {
     setIsLoading(true);
     try {
-      const normalizedEmail = user.email?.toLowerCase() || "";
+      const normalizedEmail = (user.email || "").toLowerCase().trim();
+      if (!normalizedEmail) {
+        throw new Error("User email is required for role verification.");
+      }
+
       const isBootstrapAdmin = normalizedEmail === "admin@epao.com";
 
       // 1. Check Admin Status
@@ -72,20 +76,19 @@ export default function LoginPage() {
 
       if (isAuthorizedLawyer) {
         const lawyerDocRef = doc(db, "roleLawyer", user.uid);
-        const lawyerDoc = await getDoc(lawyerDocRef);
-        
-        if (!lawyerDoc.exists()) {
-          // Initialize lawyer role record so AuthProvider can detect it
-          setDocumentNonBlocking(lawyerDocRef, {
-            id: user.uid,
-            email: normalizedEmail,
-            role: "lawyer",
-            profileId: "profile",
-            createdAt: new Date().toISOString()
-          }, { merge: true });
+        // Always ensure the lawyer record exists and contains the email field for indexing/sorting
+        setDocumentNonBlocking(lawyerDocRef, {
+          id: user.uid,
+          email: normalizedEmail,
+          role: "lawyer",
+          profileId: "profile",
+          lastLoginAt: new Date().toISOString()
+        }, { merge: true });
 
-          // Initialize profile stub
-          const profileDocRef = doc(db, "users", user.uid, "profile", "profile");
+        // Initialize profile stub if it doesn't exist
+        const profileDocRef = doc(db, "users", user.uid, "profile", "profile");
+        const profileDoc = await getDoc(profileDocRef);
+        if (!profileDoc.exists()) {
           setDocumentNonBlocking(profileDocRef, {
             id: "profile",
             firstName: "Practitioner",
@@ -93,6 +96,7 @@ export default function LoginPage() {
             createdAt: new Date().toISOString()
           }, { merge: true });
         }
+        
         router.push(`/dashboard/lawyer`);
         return;
       }
@@ -122,7 +126,7 @@ export default function LoginPage() {
 
       router.push(`/dashboard/client`);
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Sync Error", description: "Failed to synchronize your role records." });
+      toast({ variant: "destructive", title: "Sync Error", description: error.message || "Failed to synchronize your role records." });
     } finally {
       setIsLoading(false);
     }
