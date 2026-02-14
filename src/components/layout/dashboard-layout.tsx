@@ -28,7 +28,8 @@ import {
   Settings,
   LogIn,
   UserPlus,
-  Database
+  Database,
+  Info
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
@@ -78,7 +79,6 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
 
     if (role === "client") {
       return [
-        { icon: LayoutDashboard, label: "Client Home", path: "/dashboard/client" },
         ...commonItems,
         { icon: FileText, label: "Case Updates", path: "/dashboard/client/cases" },
       ];
