@@ -244,10 +244,6 @@ export default function LoginPage() {
                   <Phone className="mr-1 h-3 w-3" /> Client
                 </Button>
               </div>
-              <div className="text-center text-sm pt-4">
-                <span className="text-muted-foreground">Don't have an account? </span>
-                <Button variant="link" className="p-0 h-auto text-secondary" onClick={() => router.push("/register")}>Register Now</Button>
-              </div>
             </CardFooter>
           </Card>
         </div>
