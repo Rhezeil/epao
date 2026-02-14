@@ -52,7 +52,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
 
     if (!user) {
       return [
-        { icon: Compass, label: "Services", path: "/case-navigator" },
+        { icon: Compass, label: "Case Requirements Navigator", path: "/case-navigator" },
       ];
     }
 
@@ -62,6 +62,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
         { icon: Users, label: "Users Management", path: "/dashboard/admin/users" },
         { icon: Briefcase, label: "Lawyer List", path: "/dashboard/admin/lawyers" },
         { icon: Database, label: "Case Requirements", path: "/dashboard/admin/case-requirements" },
+        { icon: UserPlus, label: "Register Practitioner", path: "/register" },
       ];
     }
 
@@ -76,7 +77,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     if (role === "client") {
       return [
         ...commonItems,
-        { icon: Compass, label: "Explore Services", path: "/case-navigator" },
+        { icon: Compass, label: "Case Requirements Navigator", path: "/case-navigator" },
         { icon: Calendar, label: "Book Appointment", path: "/dashboard/client/book-appointment" },
         { icon: CalendarCheck, label: "Manage Appointment", path: "/case-navigator?mode=manage" },
         { icon: FileText, label: "Case Updates", path: "/dashboard/client/cases" },
