@@ -1,4 +1,3 @@
-
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -6,7 +5,7 @@ import { useAuth } from "@/components/auth-provider";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Compass, HelpCircle, Search, ArrowLeft, CalendarCheck } from "lucide-react";
+import { Compass, HelpCircle, Search, ArrowLeft } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
 import { cn } from "@/lib/utils";
@@ -518,24 +517,14 @@ function CaseNavigatorContent() {
             Determine if your case is under PAO jurisdiction and book a consultation. 
             {!user && (
               <span className="ml-1 font-medium text-secondary">
-                Log in for existing cases.
+                Log in from the sidebar for existing cases.
               </span>
             )}
           </p>
-          {!user && (
-            <div className="flex justify-center gap-2 pt-2">
-              <Button onClick={() => router.push("/login")} size="sm" className="bg-primary px-4 h-8">
-                Login
-              </Button>
-              <Button onClick={() => router.push("/register")} size="sm" variant="outline" className="px-4 h-8 border-primary text-primary">
-                Register
-              </Button>
-            </div>
-          )}
         </div>
 
         {/* Main Content Area */}
-        <Card className="border-none bg-[#EBF2FA] shadow-none rounded-xl overflow-hidden min-h-[450px]">
+        <Card className="border-none bg-[#EBF2FA]/80 backdrop-blur-sm shadow-none rounded-xl overflow-hidden min-h-[450px]">
           <CardContent className="p-8">
             {mode === "manage" ? (
               renderManageAppointment()
