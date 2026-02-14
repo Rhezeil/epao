@@ -56,7 +56,6 @@ service cloud.firestore {
     match /roleAdmin/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      // Allow creation/update if user is owner and matches admin criteria
       allow create, update: if isOwner(userId) && (isSystemAdmin() || isAdmin());
       allow delete: if isAdmin();
     }
@@ -64,7 +63,6 @@ service cloud.firestore {
     match /roleLawyer/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      // Allow creation/update if user is owner and matches lawyer criteria
       allow create, update: if isOwner(userId) && (isAuthorizedLawyer() || isAdmin());
       allow delete: if isAdmin();
     }
@@ -72,6 +70,17 @@ service cloud.firestore {
     match /lawyersEmail/{emailId} {
       allow get: if true;
       allow list, write: if isAdmin();
+    }
+
+    match /caseRequirements/{caseName} {
+      allow get: if true;
+      allow list, write: if isAdmin();
+    }
+
+    match /appointments/{appointmentId} {
+      allow get: if true; // Public access for reference code search
+      allow create: if isSignedIn();
+      allow update, delete, list: if isAdmin() || (isSignedIn() && resource.data.clientId == request.auth.uid);
     }
   }
 }

@@ -137,6 +137,45 @@
         }
       },
       "required": ["email", "password"]
+    },
+    "CaseRequirement": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CaseRequirement",
+      "type": "object",
+      "description": "Dynamic requirements for specific case types.",
+      "properties": {
+        "caseName": { "type": "string" },
+        "requirements": { "type": "array", "items": { "type": "string" } },
+        "steps": { 
+          "type": "array", 
+          "items": { 
+            "type": "object", 
+            "properties": {
+              "step": { "type": "number" },
+              "title": { "type": "string" },
+              "content": { "type": "string" }
+            }
+          } 
+        }
+      }
+    },
+    "Appointment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Appointment",
+      "type": "object",
+      "description": "Client consultation booking record.",
+      "properties": {
+        "id": { "type": "string" },
+        "clientId": { "type": "string" },
+        "referenceCode": { "type": "string" },
+        "caseCategory": { "type": "string" },
+        "caseType": { "type": "string" },
+        "purpose": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["pending", "scheduled", "completed", "cancelled"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["clientId", "referenceCode", "caseType", "date", "status"]
     }
   },
   "auth": {
@@ -182,6 +221,22 @@
           "entityName": "LawyerAuthorization",
           "schema": { "$ref": "#/backend/entities/LawyerAuthorization" },
           "description": "Authorized lawyer email whitelist."
+        }
+      },
+      {
+        "path": "/caseRequirements/{caseName}",
+        "definition": {
+          "entityName": "CaseRequirement",
+          "schema": { "$ref": "#/backend/entities/CaseRequirement" },
+          "description": "Specific case documentation and process requirements."
+        }
+      },
+      {
+        "path": "/appointments/{appointmentId}",
+        "definition": {
+          "entityName": "Appointment",
+          "schema": { "$ref": "#/backend/entities/Appointment" },
+          "description": "Consultation and legal service bookings."
         }
       }
     ]

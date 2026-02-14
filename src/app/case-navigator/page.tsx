@@ -1,3 +1,4 @@
+
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -6,10 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Compass, HelpCircle, Search, ArrowLeft, X, CheckCircle2, FileText, Info, ListChecks, ArrowRight, CalendarCheck } from "lucide-react";
+import { Compass, HelpCircle, Search, ArrowLeft, X, CheckCircle2, FileText, Info, ListChecks, CalendarCheck, Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
 import { cn } from "@/lib/utils";
+import { useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
+import { doc, collection, query, where, limit } from "firebase/firestore";
 
 const criminalCaseCategories = [
   {
@@ -135,6 +138,7 @@ const notarizationCaseCategories = [
 
 function CaseNavigatorContent() {
   const { role, user } = useAuth();
+  const db = useFirestore();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
@@ -142,6 +146,22 @@ function CaseNavigatorContent() {
   const [selectedCase, setSelectedCase] = useState<string | null>(null);
   const [mode, setMode] = useState<"explore" | "manage">("explore");
   const [refCode, setRefCode] = useState("");
+
+  // Memoize requirements query
+  const reqDocRef = useMemoFirebase(() => {
+    if (!db || !selectedCase) return null;
+    return doc(db, "caseRequirements", selectedCase.toLowerCase().replace(/\s+/g, '-'));
+  }, [db, selectedCase]);
+
+  const { data: dynamicReqs, isLoading: isReqLoading } = useDoc(reqDocRef);
+
+  // Manage Appointment Logic
+  const appointmentsQuery = useMemoFirebase(() => {
+    if (!db || !refCode) return null;
+    return query(collection(db, "appointments"), where("referenceCode", "==", refCode), limit(1));
+  }, [db, refCode]);
+
+  const { data: appointmentFound, isLoading: isSearching } = useCollection(appointmentsQuery);
 
   useEffect(() => {
     const modeParam = searchParams.get("mode");
@@ -168,9 +188,10 @@ function CaseNavigatorContent() {
     setSelectedCase(null);
   };
 
-  const handleCaseClick = (caseItem: string) => {
+  const handleCaseClick = (caseItem: string, category?: string) => {
     setSelectedCase(caseItem);
     setSearchQuery(caseItem);
+    if (category) setSelectedCategory(category);
   };
 
   const handleSearch = () => {
@@ -183,6 +204,21 @@ function CaseNavigatorContent() {
     setSelectedCase(null);
     setSearchQuery("");
   };
+
+  const defaultRequirements = [
+    "Certificate of Indigency from DSWD",
+    "Police blotter / complaint report",
+    "Medico-legal certificate (for injuries or sexual assault)",
+    "Witness information / affidavits",
+    "Any prior related court orders"
+  ];
+
+  const defaultSteps = [
+    { step: 1, title: "Prepare documents", content: "Collect all listed documents including your Certificate of Indigency and case-related papers." },
+    { step: 2, title: "Visit PAO", content: "Go to your nearest PAO District Office with your prepared documents for initial assessment." },
+    { step: 3, title: "Screening interview", content: "A screening officer will verify your indigency and the merit of your case." },
+    { step: 4, title: "Lawyer assignment", content: "Once qualified, you will be assigned a Public Attorney to handle your legal matter." }
+  ];
 
   const renderCaseDetails = (caseName: string) => (
     <div className="space-y-6">
@@ -224,7 +260,7 @@ function CaseNavigatorContent() {
 
             <Button 
               className="w-full h-12 bg-primary hover:bg-[#1A3B6B] text-white font-bold rounded-xl flex items-center justify-center gap-2"
-              onClick={() => router.push("/dashboard/client/book-appointment")}
+              onClick={() => router.push(`/dashboard/client/book-appointment?caseType=${encodeURIComponent(caseName)}&category=${encodeURIComponent(selectedCategory || 'General')}`)}
             >
               <CalendarCheck className="h-5 w-5" />
               Book a Consultation
@@ -241,21 +277,19 @@ function CaseNavigatorContent() {
               </div>
               <CardTitle className="text-lg font-bold text-primary">Initial Documents</CardTitle>
             </div>
-            <p className="text-xs text-muted-foreground">A general checklist of documents you may need to prepare.</p>
+            <p className="text-xs text-muted-foreground">A checklist of documents you may need to prepare.</p>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
-            {[
-              "Certificate of Indigency from DSWD",
-              "Police blotter / complaint report",
-              "Medico-legal certificate (for injuries or sexual assault)",
-              "Witness information / affidavits",
-              "Any prior related court orders"
-            ].map((doc, idx) => (
-              <div key={idx} className="flex gap-3 items-center">
-                <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
-                <span className="text-sm text-[#2E5A99] font-medium leading-tight">{doc}</span>
-              </div>
-            ))}
+            {isReqLoading ? (
+              <div className="flex justify-center py-4"><Loader2 className="animate-spin h-5 w-5 text-primary" /></div>
+            ) : (
+              (dynamicReqs?.requirements || defaultRequirements).map((doc: string, idx: number) => (
+                <div key={idx} className="flex gap-3 items-center">
+                  <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
+                  <span className="text-sm text-[#2E5A99] font-medium leading-tight">{doc}</span>
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
 
@@ -268,21 +302,16 @@ function CaseNavigatorContent() {
               </div>
               <CardTitle className="text-lg font-bold text-primary">Next Steps</CardTitle>
             </div>
-            <p className="text-xs text-muted-foreground">A general guide to the legal process for this case type.</p>
+            <p className="text-xs text-muted-foreground">Legal process for this case type.</p>
           </CardHeader>
           <CardContent className="pt-4">
             <Accordion type="single" collapsible className="w-full space-y-2">
-              {[
-                { step: 1, title: "Prepare documents", content: "Collect all listed documents including your Certificate of Indigency and case-related papers." },
-                { step: 2, title: "Visit PAO", content: "Go to your nearest PAO District Office with your prepared documents for initial assessment." },
-                { step: 3, title: "Screening interview", content: "A screening officer will verify your indigency and the merit of your case." },
-                { step: 4, title: "Lawyer assignment", content: "Once qualified, you will be assigned a Public Attorney to handle your legal matter." }
-              ].map((step) => (
-                <AccordionItem key={step.step} value={`step-${step.step}`} className="border rounded-xl bg-white px-4">
+              {(dynamicReqs?.steps || defaultSteps).map((step: any, idx: number) => (
+                <AccordionItem key={idx} value={`step-${idx}`} className="border rounded-xl bg-white px-4">
                   <AccordionTrigger className="hover:no-underline py-4">
                     <div className="flex items-center gap-3 text-left">
                       <div className="h-6 w-6 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center shrink-0">
-                        {step.step}
+                        {step.step || idx + 1}
                       </div>
                       <span className="text-sm font-bold text-primary">{step.title}</span>
                     </div>
@@ -299,136 +328,21 @@ function CaseNavigatorContent() {
     </div>
   );
 
-  const renderCriminalView = () => (
+  const renderCategoryListView = (title: string, data: any[]) => (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => setSelectedCategory(null)}
-          className="p-0 h-8 w-8 text-primary hover:bg-primary/5"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h2 className="text-xl font-bold text-primary font-headline">Criminal Cases</h2>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-8">
-        {criminalCaseCategories.map((cat, idx) => (
-          <div key={idx} className="space-y-2">
-            <h3 className="text-sm font-bold text-primary">{cat.title}</h3>
-            <ul className="space-y-1">
-              {cat.items.map((item) => (
-                <li 
-                  key={item} 
-                  onClick={() => handleCaseClick(item)}
-                  className="text-xs text-[#2E5A99] cursor-pointer hover:underline hover:text-primary transition-colors"
-                >
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  const renderCivilView = () => (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => setSelectedCategory(null)}
-          className="p-0 h-8 w-8 text-primary hover:bg-primary/5"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h2 className="text-xl font-bold text-primary font-headline">Civil Cases</h2>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-8">
-        {civilCaseCategories.map((cat, idx) => (
-          <div key={idx} className="space-y-2">
-            <h3 className="text-sm font-bold text-primary">{cat.title}</h3>
-            <ul className="space-y-1">
-              {cat.items.map((item) => (
-                <li 
-                  key={item} 
-                  onClick={() => handleCaseClick(item)}
-                  className="text-xs text-[#2E5A99] cursor-pointer hover:underline hover:text-primary transition-colors"
-                >
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  const renderLaborView = () => (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => setSelectedCategory(null)}
-          className="p-0 h-8 w-8 text-primary hover:bg-primary/5"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h2 className="text-xl font-bold text-primary font-headline">Labor Cases</h2>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-8">
-        {laborCaseCategories.map((cat, idx) => (
-          <div key={idx} className="space-y-2">
-            <h3 className="text-sm font-bold text-primary">{cat.title}</h3>
-            <ul className="space-y-1">
-              {cat.items.map((item) => (
-                <li 
-                  key={item} 
-                  onClick={() => handleCaseClick(item)}
-                  className="text-xs text-[#2E5A99] cursor-pointer hover:underline hover:text-primary transition-colors"
-                >
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  const renderSimpleCategoryView = (title: string, categoriesList: any[]) => (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => setSelectedCategory(null)}
-          className="p-0 h-8 w-8 text-primary hover:bg-primary/5"
-        >
+        <Button variant="ghost" size="sm" onClick={() => setSelectedCategory(null)} className="p-0 h-8 w-8 text-primary">
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <h2 className="text-xl font-bold text-primary font-headline">{title}</h2>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-1 gap-x-8 gap-y-8">
-        {categoriesList.map((cat, idx) => (
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-8">
+        {data.map((cat, idx) => (
           <div key={idx} className="space-y-2">
             <h3 className="text-sm font-bold text-primary">{cat.title}</h3>
             <ul className="space-y-1">
               {cat.items.map((item: string) => (
-                <li 
-                  key={item} 
-                  onClick={() => handleCaseClick(item)}
-                  className="text-xs text-[#2E5A99] cursor-pointer hover:underline hover:text-primary transition-colors"
-                >
+                <li key={item} onClick={() => handleCaseClick(item, title.split(' ')[0])} className="text-xs text-[#2E5A99] cursor-pointer hover:underline hover:text-primary transition-colors">
                   {item}
                 </li>
               ))}
@@ -457,13 +371,41 @@ function CaseNavigatorContent() {
                 placeholder="Enter reference code (e.g., PAO-123456)" 
                 className="h-12 border-none shadow-none focus-visible:ring-0 text-sm bg-transparent"
                 value={refCode}
-                onChange={(e) => setRefCode(e.target.value)}
+                onChange={(e) => setRefCode(e.target.value.toUpperCase())}
               />
             </div>
-            <Button size="lg" className="bg-[#2E5A99] hover:bg-[#1A3B6B] text-white h-12 px-8 font-semibold">
-              Search
+            <Button size="lg" disabled={isSearching} className="bg-[#2E5A99] hover:bg-[#1A3B6B] text-white h-12 px-8 font-semibold">
+              {isSearching ? <Loader2 className="animate-spin h-5 w-5" /> : "Search"}
             </Button>
           </div>
+
+          {appointmentFound && appointmentFound.length > 0 && (
+            <div className="mt-8 p-6 bg-[#E8F5E9] rounded-xl border border-green-200 animate-in fade-in slide-in-from-top-2">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h4 className="text-lg font-bold text-green-900">Appointment Found</h4>
+                  <p className="text-sm text-green-800">Ref: {appointmentFound[0].referenceCode}</p>
+                </div>
+                <Badge className="bg-green-600">{appointmentFound[0].status}</Badge>
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-xs text-green-700 font-bold uppercase">Case Type</p>
+                  <p className="text-green-900 font-medium">{appointmentFound[0].caseType}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-green-700 font-bold uppercase">Scheduled Date</p>
+                  <p className="text-green-900 font-medium">{new Date(appointmentFound[0].date).toLocaleDateString()} at {new Date(appointmentFound[0].date).toLocaleTimeString()}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {refCode && appointmentFound?.length === 0 && !isSearching && (
+            <div className="mt-4 p-4 bg-destructive/10 text-destructive text-sm rounded-lg border border-destructive/20 text-center">
+              No appointment found with this reference code. Please check and try again.
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
@@ -481,15 +423,9 @@ function CaseNavigatorContent() {
           </h1>
           <p className="text-sm text-muted-foreground leading-tight max-w-2xl mx-auto">
             Determine if your case is under PAO jurisdiction and book a consultation. 
-            {!user && (
-              <span className="ml-1 font-medium text-secondary">
-                For existing cases, please log in to manage your appointments.
-              </span>
-            )}
           </p>
         </div>
 
-        {/* Main Search Bar */}
         <div className="flex gap-2 max-w-4xl mx-auto bg-white p-1 rounded-lg border shadow-sm">
           <div className="flex-1">
             <Input 
@@ -500,68 +436,48 @@ function CaseNavigatorContent() {
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             />
           </div>
-          <Button 
-            size="sm" 
-            onClick={handleSearch}
-            className="bg-[#E67E22] hover:bg-[#D35400] text-white h-10 px-6 font-semibold flex items-center gap-2"
-          >
+          <Button size="sm" onClick={handleSearch} className="bg-[#E67E22] hover:bg-[#D35400] text-white h-10 px-6 font-semibold flex items-center gap-2">
             <Search className="h-4 w-4" />
             Search
           </Button>
         </div>
 
-        {/* Main Content Area */}
         <Card className="border-none bg-[#EBF2FA]/80 backdrop-blur-sm shadow-none rounded-xl overflow-hidden min-h-[450px]">
           <CardContent className="p-8">
-            {selectedCase ? (
-              renderCaseDetails(selectedCase)
-            ) : mode === "manage" ? (
-              renderManageAppointment()
-            ) : selectedCategory === "Criminal" ? (
-              renderCriminalView()
-            ) : selectedCategory === "Civil" ? (
-              renderCivilView()
-            ) : selectedCategory === "Labor" ? (
-              renderLaborView()
-            ) : selectedCategory === "Administrative" ? (
-              renderSimpleCategoryView("Administrative Cases", administrativeCaseCategories)
-            ) : selectedCategory === "Constitutional" ? (
-              renderSimpleCategoryView("Constitutional Cases", constitutionalCaseCategories)
-            ) : selectedCategory === "Commercial" ? (
-              renderSimpleCategoryView("Commercial Cases", commercialCaseCategories)
-            ) : selectedCategory === "Special/Other" ? (
-              renderSimpleCategoryView("Special/Other Cases", specialCaseCategories)
-            ) : selectedCategory === "Notarization" ? (
-              renderSimpleCategoryView("Notarization Cases", notarizationCaseCategories)
-            ) : (
+            {selectedCase ? renderCaseDetails(selectedCase) : mode === "manage" ? renderManageAppointment() : (
               <div className="space-y-8">
-                {/* Category Selection */}
-                <div className="space-y-4 max-w-4xl mx-auto">
-                  <p className="text-sm text-primary font-medium opacity-80">
-                    Or select a category to explore case types:
-                  </p>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {categories.map((category) => (
-                      <Button
-                        key={category}
-                        variant="outline"
-                        onClick={() => handleCategoryClick(category)}
-                        className={cn(
-                          "h-12 bg-[#DCE6F5] border-none text-primary font-bold text-sm hover:bg-[#CAD6E8] hover:text-primary transition-all shadow-sm justify-start px-4",
-                          selectedCategory === category && "bg-[#CAD6E8] ring-1 ring-primary/20"
-                        )}
-                      >
-                        {category}
-                      </Button>
-                    ))}
+                {selectedCategory === "Criminal" ? renderCategoryListView("Criminal Cases", criminalCaseCategories) :
+                 selectedCategory === "Civil" ? renderCategoryListView("Civil Cases", civilCaseCategories) :
+                 selectedCategory === "Labor" ? renderCategoryListView("Labor Cases", laborCaseCategories) :
+                 selectedCategory === "Administrative" ? renderCategoryListView("Administrative Cases", administrativeCaseCategories) :
+                 selectedCategory === "Constitutional" ? renderCategoryListView("Constitutional Cases", constitutionalCaseCategories) :
+                 selectedCategory === "Commercial" ? renderCategoryListView("Commercial Cases", commercialCaseCategories) :
+                 selectedCategory === "Special/Other" ? renderCategoryListView("Special/Other Cases", specialCaseCategories) :
+                 selectedCategory === "Notarization" ? renderCategoryListView("Notarization Cases", notarizationCaseCategories) : (
+                  <div className="space-y-4 max-w-4xl mx-auto">
+                    <p className="text-sm text-primary font-medium opacity-80">Or select a category to explore case types:</p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {categories.map((category) => (
+                        <Button
+                          key={category}
+                          variant="outline"
+                          onClick={() => handleCategoryClick(category)}
+                          className={cn(
+                            "h-12 bg-[#DCE6F5] border-none text-primary font-bold text-sm hover:bg-[#CAD6E8] shadow-sm justify-start px-4",
+                            selectedCategory === category && "bg-[#CAD6E8] ring-1 ring-primary/20"
+                          )}
+                        >
+                          {category}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Guidelines / Help Section */}
         <Card className="bg-muted/30 border-dashed border">
           <CardContent className="p-3">
             <div className="flex items-start gap-3">
@@ -591,3 +507,9 @@ export default function CaseNavigatorPage() {
     </Suspense>
   );
 }
+
+const Badge = ({ children, className }: { children: React.ReactNode, className?: string }) => (
+  <span className={cn("px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-white", className)}>
+    {children}
+  </span>
+);
