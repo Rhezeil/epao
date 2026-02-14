@@ -52,10 +52,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     ];
 
     if (!user) {
-      return [
-        ...commonItems,
-        { icon: LogIn, label: "Login", path: "/login" },
-      ];
+      return commonItems;
     }
 
     if (role === "admin") {
