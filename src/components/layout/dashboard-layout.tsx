@@ -55,7 +55,6 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
       return [
         ...commonItems,
         { icon: LogIn, label: "Login", path: "/login" },
-        { icon: UserPlus, label: "Register", path: "/register" },
       ];
     }
 
@@ -65,6 +64,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
         { icon: LayoutDashboard, label: "About", path: `/dashboard/admin` },
         { icon: Users, label: "Users Management", path: "/dashboard/admin/users" },
         { icon: Briefcase, label: "Lawyer List", path: "/dashboard/admin/lawyers" },
+        { icon: UserPlus, label: "Register Practitioner", path: "/dashboard/admin/lawyers" },
       ];
     }
 
@@ -122,7 +122,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
           <SidebarContent className="px-4">
             <SidebarMenu>
               {menuItems.map((item) => (
-                <SidebarMenuItem key={item.path}>
+                <SidebarMenuItem key={item.path + item.label}>
                   <SidebarMenuButton 
                     onClick={() => router.push(item.path)}
                     isActive={pathname === item.path}
