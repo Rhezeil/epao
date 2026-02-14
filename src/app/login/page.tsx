@@ -70,12 +70,15 @@ export default function LoginPage() {
         return;
       }
 
-      // 2. Check Lawyer Status (via whitelist or domain)
+      // 2. Check Existing Lawyer Record
+      const lawyerDocRef = doc(db, "roleLawyer", user.uid);
+      const lawyerDoc = await getDoc(lawyerDocRef);
+
+      // 3. Check Whitelist or Domain if no record exists
       const lawyerAuthDoc = await getDoc(doc(db, "lawyersEmail", normalizedEmail));
-      const isAuthorizedLawyer = lawyerAuthDoc.exists() || normalizedEmail.endsWith("@lawyers.com");
+      const isAuthorizedLawyer = lawyerDoc.exists() || lawyerAuthDoc.exists() || normalizedEmail.endsWith("@lawyers.com");
 
       if (isAuthorizedLawyer) {
-        const lawyerDocRef = doc(db, "roleLawyer", user.uid);
         // Always ensure the lawyer record exists and contains the email field for indexing/sorting
         setDocumentNonBlocking(lawyerDocRef, {
           id: user.uid,
@@ -101,7 +104,7 @@ export default function LoginPage() {
         return;
       }
 
-      // 3. Default to Client Status
+      // 4. Default to Client Status
       const clientDocRef = doc(db, "users", user.uid);
       const clientDoc = await getDoc(clientDocRef);
       

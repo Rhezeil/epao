@@ -26,7 +26,7 @@ export default function AdminLawyersPage() {
   const [newLawyerPassword, setNewLawyerPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch registered lawyers (those who have logged in at least once)
+  // Fetch registered lawyers (those who have logged in at least once or been created by admin)
   const registeredLawyersQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'admin') return null;
     return query(collection(db, "roleLawyer"), orderBy("email", "asc"));
@@ -55,12 +55,16 @@ export default function AdminLawyersPage() {
       const secondaryApp = initializeApp(firebaseConfig, "secondary-registration-" + Date.now());
       const secondaryAuth = getAuth(secondaryApp);
       
+      let newUserId: string | null = null;
       try {
-        await createUserWithEmailAndPassword(secondaryAuth, email, password);
+        const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+        newUserId = userCredential.user.uid;
       } catch (authError: any) {
         if (authError.code !== 'auth/email-already-in-use') {
           throw authError;
         }
+        // If email already in use, we can't get the UID without signing in, 
+        // but we'll still update the whitelist.
       } finally {
         await deleteApp(secondaryApp);
       }
@@ -72,6 +76,18 @@ export default function AdminLawyersPage() {
         password: password,
         authorizedAt: new Date().toISOString()
       }, { merge: true });
+
+      // 3. Immediately create the roleLawyer record if we have the UID
+      if (newUserId) {
+        const lawyerRef = doc(db, "roleLawyer", newUserId);
+        setDocumentNonBlocking(lawyerRef, {
+          id: newUserId,
+          email: email,
+          role: "lawyer",
+          profileId: "profile",
+          createdAt: new Date().toISOString()
+        }, { merge: true });
+      }
 
       toast({ 
         title: "Lawyer Authorized", 
@@ -188,7 +204,7 @@ export default function AdminLawyersPage() {
             <Card className="border-none shadow-sm">
               <CardHeader>
                 <CardTitle>Registered Practitioners</CardTitle>
-                <CardDescription>Legal professionals who have logged in and completed registration.</CardDescription>
+                <CardDescription>Legal professionals with active accounts in the system.</CardDescription>
               </CardHeader>
               <CardContent>
                 {isLawyersLoading ? <div className="flex justify-center py-8"><Loader2 className="animate-spin text-primary" /></div> : (
@@ -245,7 +261,7 @@ export default function AdminLawyersPage() {
                         <TableHead>Authorized Email</TableHead>
                         <TableHead>Auth Date</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
+                      </TableHeader>
                     </TableHeader>
                     <TableBody>
                       {authorizedEmails?.map((item) => (
