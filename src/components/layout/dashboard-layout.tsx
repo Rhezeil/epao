@@ -200,11 +200,6 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
         <SidebarInset className="bg-transparent flex-1">
           <header className="sticky top-0 z-30 flex h-16 items-center border-b bg-white/20 backdrop-blur-lg px-6">
             <SidebarTrigger className="text-primary hover:bg-primary/5" />
-            <div className="ml-4">
-              <h2 className="text-sm font-bold text-primary uppercase tracking-wider">
-                LexConnect Legal Portal
-              </h2>
-            </div>
           </header>
           <main className="flex-1 overflow-auto p-6 md:p-10">
             {children}
