@@ -10,9 +10,14 @@
         "id": {
           "type": "string"
         },
+        "mobileNumber": {
+          "type": "string",
+          "description": "The primary identifier for client accounts."
+        },
         "email": {
           "type": "string",
-          "format": "email"
+          "format": "email",
+          "description": "Virtual email used for auth compatibility."
         },
         "role": {
           "type": "string",
@@ -26,7 +31,7 @@
           "format": "date-time"
         }
       },
-      "required": ["id", "email", "role"]
+      "required": ["id", "mobileNumber", "role"]
     },
     "AccessControlRule": {
       "$schema": "http://json-schema.org/draft-07/schema#",

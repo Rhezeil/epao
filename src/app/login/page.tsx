@@ -11,21 +11,20 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ShieldCheck, Briefcase, User as UserIcon } from "lucide-react";
+import { Loader2, ShieldCheck, Briefcase, User as UserIcon, Phone } from "lucide-react";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [showRegister, setShowRegister] = useState(true);
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
   const db = useFirestore();
 
-  const logo = PlaceHolderImages.find(img => img.id === 'pao-logo');
+  const logo = PlaceHolderImages.find(img => img.imgId === 'pao-logo' || img.id === 'pao-logo');
 
   useEffect(() => {
     if (auth.currentUser && !isLoading) {
@@ -113,7 +112,13 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      let finalIdentifier = identifier.trim();
+      // If identifier is a mobile number (only digits, 10-11 chars), format it as internal email
+      if (/^\d{10,11}$/.test(finalIdentifier)) {
+        finalIdentifier = `${finalIdentifier}@epao.mobile`;
+      }
+
+      const userCredential = await signInWithEmailAndPassword(auth, finalIdentifier, password);
       await checkAndInitializeUser(userCredential.user);
     } catch (error: any) {
       toast({
@@ -129,11 +134,10 @@ export default function LoginPage() {
     const demoAccounts = {
       admin: { email: "admin@epao.com", password: "password123" },
       lawyer: { email: "lawyer@lawyers.com", password: "password123" },
-      client: { email: "client@gmail.com", password: "password123" }
+      client: { email: "09123456789", password: "password123" }
     };
-    setEmail(demoAccounts[role].email);
+    setIdentifier(demoAccounts[role].email);
     setPassword(demoAccounts[role].password);
-    setShowRegister(role === 'client');
   };
 
   return (
@@ -146,8 +150,8 @@ export default function LoginPage() {
                 <Image 
                   src={logo.imageUrl} 
                   alt={logo.description} 
-                  width={180} 
-                  height={180} 
+                  width={140} 
+                  height={140} 
                   className="rounded-full object-contain"
                   data-ai-hint={logo.imageHint}
                 />
@@ -158,8 +162,17 @@ export default function LoginPage() {
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="name@example.com" />
+                <Label htmlFor="identifier">Email or Mobile Number</Label>
+                <div className="relative">
+                  <Input 
+                    id="identifier" 
+                    type="text" 
+                    value={identifier} 
+                    onChange={(e) => setIdentifier(e.target.value)} 
+                    required 
+                    placeholder="name@example.com or 09123456789" 
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
@@ -187,15 +200,13 @@ export default function LoginPage() {
                 <Briefcase className="mr-1 h-3 w-3" /> Lawyer
               </Button>
               <Button variant="outline" size="sm" onClick={() => handleQuickAccess('client')} className="hover:bg-primary/5 bg-white/50 text-xs">
-                <UserIcon className="mr-1 h-3 w-3" /> Client
+                <Phone className="mr-1 h-3 w-3" /> Client
               </Button>
             </div>
-            {showRegister && (
-              <div className="text-center text-sm pt-4">
-                <span className="text-muted-foreground">Don't have an account? </span>
-                <Button variant="link" className="p-0 h-auto text-secondary" onClick={() => router.push("/register")}>Register Now</Button>
-              </div>
-            )}
+            <div className="text-center text-sm pt-4">
+              <span className="text-muted-foreground">Don't have an account? </span>
+              <Button variant="link" className="p-0 h-auto text-secondary" onClick={() => router.push("/register")}>Register Now</Button>
+            </div>
           </CardFooter>
         </Card>
       </div>

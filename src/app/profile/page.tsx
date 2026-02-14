@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
 import { doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { User, Shield, Lock } from "lucide-react";
+import { User, Shield, Lock, Phone, Mail } from "lucide-react";
 
 export default function ProfilePage() {
   const { user } = useUser();
@@ -66,6 +66,8 @@ export default function ProfilePage() {
 
   if (!role) return null;
 
+  const isClient = role === 'client';
+
   return (
     <DashboardLayout role={role}>
       <div className="max-w-2xl mx-auto space-y-8">
@@ -74,7 +76,7 @@ export default function ProfilePage() {
           <p className="text-muted-foreground">Manage your personal information and preferences.</p>
         </div>
 
-        <Card>
+        <Card className="bg-white/50 backdrop-blur-sm border-primary/10 shadow-lg">
           <CardHeader>
             <div className="flex items-center space-x-4">
               <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
@@ -93,6 +95,7 @@ export default function ProfilePage() {
                   <Label htmlFor="firstName">First Name</Label>
                   <Input 
                     id="firstName" 
+                    className="bg-white/60"
                     value={formState.firstName} 
                     onChange={(e) => setFormState({...formState, firstName: e.target.value})} 
                   />
@@ -101,6 +104,7 @@ export default function ProfilePage() {
                   <Label htmlFor="lastName">Last Name</Label>
                   <Input 
                     id="lastName" 
+                    className="bg-white/60"
                     value={formState.lastName} 
                     onChange={(e) => setFormState({...formState, lastName: e.target.value})} 
                   />
@@ -109,14 +113,22 @@ export default function ProfilePage() {
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input id="email" value={user?.email || ""} disabled />
-                  <p className="text-[10px] text-muted-foreground">Email cannot be changed.</p>
+                  <Label className="flex items-center gap-1">
+                    {isClient ? <Phone className="h-3 w-3" /> : <Mail className="h-3 w-3" />}
+                    {isClient ? "Mobile Identifier" : "Email Address"}
+                  </Label>
+                  <Input 
+                    className="bg-muted/50"
+                    value={isClient ? (formState.phoneNumber || user?.email?.split('@')[0]) : (user?.email || "")} 
+                    disabled 
+                  />
+                  <p className="text-[10px] text-muted-foreground">Identity identifier cannot be changed.</p>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="phone">Phone Number</Label>
+                  <Label htmlFor="phone">Contact Number</Label>
                   <Input 
                     id="phone" 
+                    className="bg-white/60"
                     value={formState.phoneNumber} 
                     onChange={(e) => setFormState({...formState, phoneNumber: e.target.value})} 
                   />
@@ -127,19 +139,20 @@ export default function ProfilePage() {
                 <Label htmlFor="address">Address</Label>
                 <Input 
                   id="address" 
+                  className="bg-white/60"
                   value={formState.address} 
                   onChange={(e) => setFormState({...formState, address: e.target.value})} 
                 />
               </div>
 
-              <Button type="submit" className="w-fit bg-secondary hover:bg-secondary/90">
+              <Button type="submit" className="w-fit bg-secondary hover:bg-secondary/90 shadow-md">
                 Save Profile Changes
               </Button>
             </form>
           </CardContent>
         </Card>
 
-        <Card className="border-destructive/20">
+        <Card className="border-destructive/20 bg-white/50 backdrop-blur-sm shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center text-destructive">
               <Shield className="h-5 w-5 mr-2" />
@@ -156,7 +169,7 @@ export default function ProfilePage() {
                   <p className="text-xs text-muted-foreground">Update your account password</p>
                 </div>
               </div>
-              <Button variant="outline" size="sm">Update Password</Button>
+              <Button variant="outline" size="sm" className="border-primary/20 hover:bg-primary/5">Update Password</Button>
             </div>
           </CardContent>
         </Card>
