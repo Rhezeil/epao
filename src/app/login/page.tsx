@@ -48,20 +48,76 @@ export default function LoginPage() {
       const normalizedEmail = user.email?.toLowerCase() || "";
       const isBootstrapAdmin = normalizedEmail === "admin@epao.com";
 
+      // 1. Check Admin Status
       const adminDocRef = doc(db, "roleAdmin", user.uid);
       const adminDoc = await getDoc(adminDocRef);
       
       if (isBootstrapAdmin || adminDoc.exists()) {
+        if (!adminDoc.exists()) {
+          setDocumentNonBlocking(adminDocRef, {
+            id: user.uid,
+            role: "admin",
+            email: normalizedEmail,
+            permission: "full",
+            createdAt: new Date().toISOString()
+          }, { merge: true });
+        }
         router.push(`/dashboard/admin`);
         return;
       }
 
+      // 2. Check Lawyer Status (via whitelist or domain)
       const lawyerAuthDoc = await getDoc(doc(db, "lawyersEmail", normalizedEmail));
       const isAuthorizedLawyer = lawyerAuthDoc.exists() || normalizedEmail.endsWith("@lawyers.com");
 
       if (isAuthorizedLawyer) {
+        const lawyerDocRef = doc(db, "roleLawyer", user.uid);
+        const lawyerDoc = await getDoc(lawyerDocRef);
+        
+        if (!lawyerDoc.exists()) {
+          // Initialize lawyer role record so AuthProvider can detect it
+          setDocumentNonBlocking(lawyerDocRef, {
+            id: user.uid,
+            email: normalizedEmail,
+            role: "lawyer",
+            profileId: "profile",
+            createdAt: new Date().toISOString()
+          }, { merge: true });
+
+          // Initialize profile stub
+          const profileDocRef = doc(db, "users", user.uid, "profile", "profile");
+          setDocumentNonBlocking(profileDocRef, {
+            id: "profile",
+            firstName: "Practitioner",
+            lastName: "",
+            createdAt: new Date().toISOString()
+          }, { merge: true });
+        }
         router.push(`/dashboard/lawyer`);
         return;
+      }
+
+      // 3. Default to Client Status
+      const clientDocRef = doc(db, "users", user.uid);
+      const clientDoc = await getDoc(clientDocRef);
+      
+      if (!clientDoc.exists()) {
+        setDocumentNonBlocking(clientDocRef, {
+          id: user.uid,
+          mobileNumber: normalizedEmail.split('@')[0],
+          email: normalizedEmail,
+          role: "client",
+          profileId: "profile",
+          createdAt: new Date().toISOString()
+        }, { merge: true });
+
+        const profileDocRef = doc(db, "users", user.uid, "profile", "profile");
+        setDocumentNonBlocking(profileDocRef, {
+          id: "profile",
+          firstName: "Client",
+          lastName: "",
+          createdAt: new Date().toISOString()
+        }, { merge: true });
       }
 
       router.push(`/dashboard/client`);
@@ -103,8 +159,6 @@ export default function LoginPage() {
 
       if (/^\d{10,11}$/.test(finalIdentifier)) {
         finalIdentifier = `${finalIdentifier}@epao.mobile`;
-        
-        // If using OTP login for client
         if (useOtp) {
           if (otpValue !== generatedOtp) {
             throw new Error("Invalid verification code.");
