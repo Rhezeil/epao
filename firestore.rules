@@ -56,15 +56,14 @@ service cloud.firestore {
     match /roleAdmin/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      allow create, update: if isOwner(userId) && (isSystemAdmin() || isAdmin());
-      allow delete: if isAdmin();
+      allow write: if isAdmin();
     }
 
     match /roleLawyer/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      allow create, update: if isOwner(userId) && (isAuthorizedLawyer() || isAdmin());
-      allow delete: if isAdmin();
+      allow write: if isAdmin();
+      allow update: if isOwner(userId);
     }
 
     match /lawyersEmail/{emailId} {
