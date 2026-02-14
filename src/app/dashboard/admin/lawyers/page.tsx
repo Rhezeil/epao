@@ -261,7 +261,7 @@ export default function AdminLawyersPage() {
                         <TableHead>Authorized Email</TableHead>
                         <TableHead>Auth Date</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
-                      </TableHeader>
+                      </TableRow>
                     </TableHeader>
                     <TableBody>
                       {authorizedEmails?.map((item) => (
