@@ -27,7 +27,8 @@ import {
   User,
   Settings,
   LogIn,
-  UserPlus
+  UserPlus,
+  Database
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
@@ -50,7 +51,9 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     const commonItems: { icon: any, label: string, path: string }[] = [];
 
     if (!user) {
-      return [];
+      return [
+        { icon: Compass, label: "Services", path: "/case-navigator" },
+      ];
     }
 
     if (role === "admin") {
@@ -58,7 +61,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
         ...commonItems,
         { icon: Users, label: "Users Management", path: "/dashboard/admin/users" },
         { icon: Briefcase, label: "Lawyer List", path: "/dashboard/admin/lawyers" },
-        { icon: UserPlus, label: "Register Practitioner", path: "/dashboard/admin/lawyers" },
+        { icon: Database, label: "Case Requirements", path: "/dashboard/admin/case-requirements" },
       ];
     }
 
@@ -73,6 +76,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     if (role === "client") {
       return [
         ...commonItems,
+        { icon: Compass, label: "Explore Services", path: "/case-navigator" },
         { icon: Calendar, label: "Book Appointment", path: "/dashboard/client/book-appointment" },
         { icon: CalendarCheck, label: "Manage Appointment", path: "/case-navigator?mode=manage" },
         { icon: FileText, label: "Case Updates", path: "/dashboard/client/cases" },

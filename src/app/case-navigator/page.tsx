@@ -13,128 +13,7 @@ import { useState, useEffect, Suspense } from "react";
 import { cn } from "@/lib/utils";
 import { useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
 import { doc, collection, query, where, limit } from "firebase/firestore";
-
-const criminalCaseCategories = [
-  {
-    title: "Crimes against Persons",
-    items: ["Murder", "Homicide", "Physical Injury", "Assault", "Rape", "Sexual Harassment", "Violence Against Women and Children (VAWC)", "Kidnapping", "Abduction"]
-  },
-  {
-    title: "Crimes against Property",
-    items: ["Theft", "Robbery", "Arson", "Estafa / Fraud", "Embezzlement", "Malversation"]
-  },
-  {
-    title: "Crimes against Public Order",
-    items: ["Rebellion", "Sedition", "Resistance to Public Officials", "Illegal Possession of Firearms"]
-  },
-  {
-    title: "Drug-related Offenses",
-    items: ["Drug Possession", "Drug Trafficking", "Drug Use / Distribution"]
-  },
-  {
-    title: "Special Criminal Cases",
-    items: ["Cybercrime", "Human Trafficking", "White-Collar Crimes", "Juvenile Delinquency"]
-  }
-];
-
-const civilCaseCategories = [
-  {
-    title: "Family Law",
-    items: ["Annulment", "Legal Separation", "Divorce (for Muslims)", "Child Custody / Visitation", "Child Support / Alimony", "Adoption", "Paternity / Legitimacy Claims"]
-  },
-  {
-    title: "Property / Real Estate",
-    items: ["Land Disputes", "Boundary Disputes", "Eviction / Ejectment", "Condemnation / Expropriation"]
-  },
-  {
-    title: "Contract / Business Disputes",
-    items: ["Breach of Contract", "Non-Performance of Contract", "Sale / Lease Disputes", "Partnership / Corporation Disputes", "Loan / Debt Collection"]
-  },
-  {
-    title: "Tort / Civil Wrongs",
-    items: ["Personal Injury", "Medical Malpractice", "Defamation (Libel & Slander)", "Negligence", "Product Liability"]
-  },
-  {
-    title: "Probate / Estate Cases",
-    items: ["Estate Settlement", "Will Contests", "Inheritance Disputes", "Trust Administration"]
-  }
-];
-
-const laborCaseCategories = [
-  {
-    title: "Labor Disputes",
-    items: ["Wrongful Termination", "Non-payment of Wages", "Illegal Dismissal / Wrongful Termination", "Contract Violations"]
-  },
-  {
-    title: "Workplace & Benefits",
-    items: ["Workplace Injuries / Compensation Claims", "Benefits Disputes (SSS, PhilHealth, Pag-IBIG)"]
-  },
-  {
-    title: "Union / Collective Bargaining",
-    items: ["Union / Collective Bargaining Disputes"]
-  }
-];
-
-const administrativeCaseCategories = [
-  {
-    title: "Government Dealings",
-    items: ["Tax / Revenue Disputes", "Immigration / Deportation", "Licensing / Permit Issues", "Environmental / Regulatory Violations"]
-  }
-];
-
-const constitutionalCaseCategories = [
-  {
-    title: "Rights & Writs",
-    items: [
-      "Civil Liberties",
-      "Equality / Anti-Discrimination",
-      "Separation of Powers",
-      "Writ of Habeas Corpus",
-      "Writ of Mandamus",
-      "Writ of Amparo",
-      "Writ of Kalikasan"
-    ]
-  }
-];
-
-const commercialCaseCategories = [
-  {
-    title: "Business Law",
-    items: [
-      "Corporate / Partnership Disputes",
-      "Intellectual Property",
-      "Bankruptcy / Insolvency",
-      "Contracts / Trade Disputes"
-    ]
-  }
-];
-
-const specialCaseCategories = [
-  {
-    title: "Miscellaneous",
-    items: [
-      "Juvenile Cases",
-      "Human Rights Cases",
-      "Election Cases",
-      "Online Scams / Cyberlaw",
-      "Consumer Protection"
-    ]
-  }
-];
-
-const notarizationCaseCategories = [
-  {
-    title: "Legal Documents",
-    items: [
-      "Notarization",
-      "Affidavits / Sworn Statements",
-      "Powers of Attorney",
-      "Deed of Sale / Transfer",
-      "Contracts / Agreements",
-      "Certification / Authentication"
-    ]
-  }
-];
+import { caseCategories, defaultRequirements, defaultSteps } from "@/app/lib/case-data";
 
 function CaseNavigatorContent() {
   const { role, user } = useAuth();
@@ -172,16 +51,7 @@ function CaseNavigatorContent() {
     }
   }, [searchParams]);
 
-  const categories = [
-    "Criminal",
-    "Civil",
-    "Labor",
-    "Administrative",
-    "Constitutional",
-    "Commercial",
-    "Special/Other",
-    "Notarization"
-  ];
+  const categories = Object.keys(caseCategories);
 
   const handleCategoryClick = (category: string) => {
     setSelectedCategory(category === selectedCategory ? null : category);
@@ -205,21 +75,6 @@ function CaseNavigatorContent() {
     setSearchQuery("");
   };
 
-  const defaultRequirements = [
-    "Certificate of Indigency from DSWD",
-    "Police blotter / complaint report",
-    "Medico-legal certificate (for injuries or sexual assault)",
-    "Witness information / affidavits",
-    "Any prior related court orders"
-  ];
-
-  const defaultSteps = [
-    { step: 1, title: "Prepare documents", content: "Collect all listed documents including your Certificate of Indigency and case-related papers." },
-    { step: 2, title: "Visit PAO", content: "Go to your nearest PAO District Office with your prepared documents for initial assessment." },
-    { step: 3, title: "Screening interview", content: "A screening officer will verify your indigency and the merit of your case." },
-    { step: 4, title: "Lawyer assignment", content: "Once qualified, you will be assigned a Public Attorney to handle your legal matter." }
-  ];
-
   const renderCaseDetails = (caseName: string) => (
     <div className="space-y-6">
       <div className="flex justify-end">
@@ -229,7 +84,6 @@ function CaseNavigatorContent() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Case Information */}
         <Card className="border-none shadow-none bg-white/50 backdrop-blur-sm">
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2 mb-1">
@@ -268,7 +122,6 @@ function CaseNavigatorContent() {
           </CardContent>
         </Card>
 
-        {/* Initial Documents */}
         <Card className="border-none shadow-none bg-white/50 backdrop-blur-sm">
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2 mb-1">
@@ -293,7 +146,6 @@ function CaseNavigatorContent() {
           </CardContent>
         </Card>
 
-        {/* Next Steps */}
         <Card className="border-none shadow-none bg-white/50 backdrop-blur-sm">
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2 mb-1">
@@ -342,7 +194,7 @@ function CaseNavigatorContent() {
             <h3 className="text-sm font-bold text-primary">{cat.title}</h3>
             <ul className="space-y-1">
               {cat.items.map((item: string) => (
-                <li key={item} onClick={() => handleCaseClick(item, title.split(' ')[0])} className="text-xs text-[#2E5A99] cursor-pointer hover:underline hover:text-primary transition-colors">
+                <li key={item} onClick={() => handleCaseClick(item, title)} className="text-xs text-[#2E5A99] cursor-pointer hover:underline hover:text-primary transition-colors">
                   {item}
                 </li>
               ))}
@@ -446,14 +298,9 @@ function CaseNavigatorContent() {
           <CardContent className="p-8">
             {selectedCase ? renderCaseDetails(selectedCase) : mode === "manage" ? renderManageAppointment() : (
               <div className="space-y-8">
-                {selectedCategory === "Criminal" ? renderCategoryListView("Criminal Cases", criminalCaseCategories) :
-                 selectedCategory === "Civil" ? renderCategoryListView("Civil Cases", civilCaseCategories) :
-                 selectedCategory === "Labor" ? renderCategoryListView("Labor Cases", laborCaseCategories) :
-                 selectedCategory === "Administrative" ? renderCategoryListView("Administrative Cases", administrativeCaseCategories) :
-                 selectedCategory === "Constitutional" ? renderCategoryListView("Constitutional Cases", constitutionalCaseCategories) :
-                 selectedCategory === "Commercial" ? renderCategoryListView("Commercial Cases", commercialCaseCategories) :
-                 selectedCategory === "Special/Other" ? renderCategoryListView("Special/Other Cases", specialCaseCategories) :
-                 selectedCategory === "Notarization" ? renderCategoryListView("Notarization Cases", notarizationCaseCategories) : (
+                {selectedCategory ? (
+                  renderCategoryListView(selectedCategory, caseCategories[selectedCategory as keyof typeof caseCategories])
+                ) : (
                   <div className="space-y-4 max-w-4xl mx-auto">
                     <p className="text-sm text-primary font-medium opacity-80">Or select a category to explore case types:</p>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
