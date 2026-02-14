@@ -47,9 +47,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   const logo = PlaceHolderImages.find(img => img.id === 'pao-logo');
 
   const getMenuItems = () => {
-    const commonItems = [
-      { icon: Compass, label: "Case Navigator", path: "/case-navigator" },
-    ];
+    const commonItems: { icon: any, label: string, path: string }[] = [];
 
     if (!user) {
       return commonItems;
