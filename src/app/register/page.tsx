@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from "react";
@@ -10,11 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { Mail, Phone } from "lucide-react";
+import { Mail, Phone, ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
+import { sendOtpSms } from "@/ai/flows/sms-service";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -25,29 +25,52 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [regMode, setRegMode] = useState<"client" | "lawyer">("client");
   
+  // OTP States
+  const [step, setStep] = useState<1 | 2>(1);
+  const [otpValue, setOtpValue] = useState("");
+  const [generatedOtp, setGeneratedOtp] = useState("");
+  const [isSmsSending, setIsSmsSending] = useState(false);
+
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
   const db = useFirestore();
 
-  const logo = PlaceHolderImages.find(img => img.imgId === 'pao-logo' || img.id === 'pao-logo');
+  const logo = PlaceHolderImages.find(img => img.id === 'pao-logo');
+
+  const handleSendOtp = async () => {
+    if (!/^\d{10,11}$/.test(mobileNumber)) {
+      toast({ variant: "destructive", title: "Invalid Number", description: "Enter a valid 10-11 digit mobile number." });
+      return;
+    }
+
+    setIsSmsSending(true);
+    try {
+      const result = await sendOtpSms(mobileNumber);
+      if (result.success) {
+        setGeneratedOtp(result.code);
+        setStep(2);
+        toast({ title: "Code Sent", description: `Verification code sent to ${mobileNumber}. (Debug: ${result.code})` });
+      }
+    } catch (error) {
+      toast({ variant: "destructive", title: "SMS Failed", description: "Could not send verification code." });
+    } finally {
+      setIsSmsSending(false);
+    }
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (regMode === "client" && otpValue !== generatedOtp) {
+      toast({ variant: "destructive", title: "Invalid Code", description: "The verification code you entered is incorrect." });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // Determine virtual or actual email
-      let authEmail = "";
-      if (regMode === "client") {
-        if (!/^\d{10,11}$/.test(mobileNumber)) {
-          throw new Error("Please enter a valid 10-11 digit mobile number.");
-        }
-        authEmail = `${mobileNumber}@epao.mobile`;
-      } else {
-        authEmail = email.toLowerCase();
-      }
-
+      let authEmail = regMode === "client" ? `${mobileNumber}@epao.mobile` : email.toLowerCase();
       const normalizedEmail = authEmail;
       
       const lawyerAuthDoc = await getDoc(doc(db, "lawyersEmail", normalizedEmail));
@@ -56,14 +79,8 @@ export default function RegisterPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
       const user = userCredential.user;
 
-      const isSystemAdmin = 
-        normalizedEmail === "admin@epao.com" || 
-        user.uid === "fs4k8QifPHSmUdshxh1NLweHSj73";
-      
-      const isLawyer = 
-        isAuthorizedLawyerByEmail || 
-        user.uid === "ygkXuNUWJrbffovhXBtr6r1o5vr2" ||
-        normalizedEmail.endsWith("@lawyers.com");
+      const isSystemAdmin = normalizedEmail === "admin@epao.com";
+      const isLawyer = isAuthorizedLawyerByEmail || normalizedEmail.endsWith("@lawyers.com");
 
       let userRole: "admin" | "lawyer" | "client" = "client";
       if (isSystemAdmin) userRole = "admin";
@@ -80,16 +97,14 @@ export default function RegisterPage() {
       }, { merge: true });
 
       if (userRole === "admin") {
-        const adminDocRef = doc(db, "roleAdmin", user.uid);
-        setDocumentNonBlocking(adminDocRef, {
+        setDocumentNonBlocking(doc(db, "roleAdmin", user.uid), {
           id: user.uid,
           email: user.email,
           role: "admin",
           updatedAt: new Date().toISOString(),
         }, { merge: true });
       } else if (userRole === "lawyer") {
-        const lawyerDocRef = doc(db, "roleLawyer", user.uid);
-        setDocumentNonBlocking(lawyerDocRef, {
+        setDocumentNonBlocking(doc(db, "roleLawyer", user.uid), {
           id: user.uid,
           email: user.email,
           role: "lawyer",
@@ -97,8 +112,7 @@ export default function RegisterPage() {
           updatedAt: new Date().toISOString(),
         }, { merge: true });
       } else {
-        const userDocRef = doc(db, "users", user.uid);
-        setDocumentNonBlocking(userDocRef, {
+        setDocumentNonBlocking(doc(db, "users", user.uid), {
           id: user.uid,
           mobileNumber: mobileNumber,
           email: user.email,
@@ -112,11 +126,7 @@ export default function RegisterPage() {
       setTimeout(() => router.push(`/dashboard/${userRole}`), 1000);
 
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Registration failed",
-        description: error.message,
-      });
+      toast({ variant: "destructive", title: "Registration failed", description: error.message });
       setIsLoading(false);
     }
   };
@@ -143,7 +153,10 @@ export default function RegisterPage() {
             <CardTitle className="text-center font-headline text-primary">Create Account</CardTitle>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="client" className="w-full mb-6" onValueChange={(v) => setRegMode(v as any)}>
+            <Tabs defaultValue="client" className="w-full mb-6" onValueChange={(v) => {
+              setRegMode(v as any);
+              setStep(1);
+            }}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="client" className="flex items-center gap-2">
                   <Phone className="h-4 w-4" /> Client
@@ -155,52 +168,84 @@ export default function RegisterPage() {
             </Tabs>
 
             <form onSubmit={handleRegister} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
-                </div>
-              </div>
+              {step === 1 ? (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">First Name</Label>
+                      <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Last Name</Label>
+                      <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+                    </div>
+                  </div>
 
-              {regMode === "client" ? (
-                <div className="space-y-2">
-                  <Label htmlFor="mobileNumber">Mobile Number</Label>
-                  <Input 
-                    id="mobileNumber" 
-                    type="tel" 
-                    placeholder="09123456789"
-                    value={mobileNumber} 
-                    onChange={(e) => setMobileNumber(e.target.value)} 
-                    required 
-                  />
-                  <p className="text-[10px] text-muted-foreground">Standard 11-digit Philippine mobile number.</p>
-                </div>
+                  {regMode === "client" ? (
+                    <div className="space-y-2">
+                      <Label htmlFor="mobileNumber">Mobile Number</Label>
+                      <Input 
+                        id="mobileNumber" 
+                        type="tel" 
+                        placeholder="09123456789"
+                        value={mobileNumber} 
+                        onChange={(e) => setMobileNumber(e.target.value)} 
+                        required 
+                      />
+                      <Button 
+                        type="button" 
+                        className="w-full mt-2 bg-secondary" 
+                        onClick={handleSendOtp}
+                        disabled={isSmsSending}
+                      >
+                        {isSmsSending ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <ArrowRight className="mr-2 h-4 w-4" />}
+                        Send Verification Code
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Work Email</Label>
+                      <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                      <div className="space-y-2 pt-2">
+                        <Label htmlFor="password">Password</Label>
+                        <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                      </div>
+                      <Button type="submit" className="w-full mt-4" disabled={isLoading}>
+                        {isLoading ? "Creating Account..." : "Register"}
+                      </Button>
+                    </div>
+                  )}
+                </>
               ) : (
-                <div className="space-y-2">
-                  <Label htmlFor="email">Work Email</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="lawyer@lawyers.com"
-                    value={email} 
-                    onChange={(e) => setEmail(e.target.value)} 
-                    required 
-                  />
+                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+                  <div className="p-3 bg-secondary/10 rounded-lg flex items-center gap-3 border border-secondary/20">
+                    <CheckCircle2 className="h-5 w-5 text-secondary" />
+                    <p className="text-xs text-secondary font-medium">Verify your mobile: {mobileNumber}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="otp">Verification Code</Label>
+                    <Input 
+                      id="otp" 
+                      placeholder="Enter 6-digit code"
+                      value={otpValue} 
+                      onChange={(e) => setOtpValue(e.target.value)} 
+                      maxLength={6}
+                      className="text-center text-lg tracking-[0.5em] font-bold"
+                      required 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Set Password</Label>
+                    <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                  </div>
+                  <Button type="submit" className="w-full bg-primary" disabled={isLoading}>
+                    {isLoading ? "Finalizing..." : "Verify & Complete Registration"}
+                  </Button>
+                  <Button variant="ghost" type="button" className="w-full text-xs" onClick={() => setStep(1)}>
+                    Back to edit number
+                  </Button>
                 </div>
               )}
-
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-              </div>
-
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 shadow-md" disabled={isLoading}>
-                {isLoading ? "Creating Account..." : "Register"}
-              </Button>
             </form>
           </CardContent>
           <CardFooter>
