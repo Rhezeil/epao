@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { collection, query, doc, orderBy } from "firebase/firestore";
-import { Loader2, Plus, Trash2, Mail, Lock, UserCheck, Clock } from "lucide-react";
+import { Loader2, Plus, Trash2, Lock, UserCheck } from "lucide-react";
 import { initializeApp, deleteApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { firebaseConfig } from "@/firebase/config";
@@ -33,14 +33,6 @@ export default function AdminLawyersPage() {
   }, [db, user, role]);
 
   const { data: registeredLawyers, isLoading: isLawyersLoading } = useCollection(registeredLawyersQuery);
-
-  // Fetch authorized but not yet registered (whitelist)
-  const authorizedEmailsQuery = useMemoFirebase(() => {
-    if (!db || !user || role !== 'admin') return null;
-    return query(collection(db, "lawyersEmail"), orderBy("email", "asc"));
-  }, [db, user, role]);
-
-  const { data: authorizedEmails, isLoading: isEmailsLoading } = useCollection(authorizedEmailsQuery);
 
   const handleAuthorizeLawyer = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,17 +117,6 @@ export default function AdminLawyersPage() {
     });
   };
 
-  const handleRevokeAuth = (email: string) => {
-    if (!db) return;
-    const emailRef = doc(db, "lawyersEmail", email.toLowerCase());
-    deleteDocumentNonBlocking(emailRef);
-    toast({
-      variant: "destructive",
-      title: "Authorization Revoked",
-      description: `Invitation for ${email} has been cancelled.`
-    });
-  };
-
   return (
     <DashboardLayout role="admin">
       <div className="space-y-6">
@@ -191,12 +172,9 @@ export default function AdminLawyersPage() {
         </Card>
 
         <Tabs defaultValue="registered" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsList className="grid w-full grid-cols-1 max-w-md">
             <TabsTrigger value="registered" className="flex items-center gap-2">
               <UserCheck className="h-4 w-4" /> Active Practitioners
-            </TabsTrigger>
-            <TabsTrigger value="pending" className="flex items-center gap-2">
-              <Clock className="h-4 w-4" /> Pending Invitations
             </TabsTrigger>
           </TabsList>
           
@@ -238,53 +216,6 @@ export default function AdminLawyersPage() {
                       {(!registeredLawyers || registeredLawyers.length === 0) && (
                         <TableRow>
                           <TableCell colSpan={3} className="text-center text-muted-foreground py-12">No registered practitioners yet.</TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="pending">
-            <Card className="border-none shadow-sm">
-              <CardHeader>
-                <CardTitle>Authorized Whitelist</CardTitle>
-                <CardDescription>Emails authorized to access the system but have not logged in yet.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {isEmailsLoading ? <div className="flex justify-center py-8"><Loader2 className="animate-spin text-primary" /></div> : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Authorized Email</TableHead>
-                        <TableHead>Auth Date</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {authorizedEmails?.map((item) => (
-                        <TableRow key={item.id}>
-                          <TableCell className="font-medium">{item.email}</TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
-                            {item.authorizedAt ? new Date(item.authorizedAt).toLocaleDateString() : 'N/A'}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={() => handleRevokeAuth(item.email)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      {(!authorizedEmails || authorizedEmails.length === 0) && (
-                        <TableRow>
-                          <TableCell colSpan={3} className="text-center text-muted-foreground py-12">No pending invitations.</TableCell>
                         </TableRow>
                       )}
                     </TableBody>
