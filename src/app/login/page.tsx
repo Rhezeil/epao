@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -14,6 +15,7 @@ import { Loader2, ShieldCheck, Briefcase, Phone, Mail, ArrowRight, Lock } from "
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { sendOtpSms } from "@/ai/flows/sms-service";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState("");
@@ -25,7 +27,7 @@ export default function LoginPage() {
   const [step, setStep] = useState<1 | 2>(1);
   const [otpValue, setOtpValue] = useState("");
   const [generatedOtp, setGeneratedOtp] = useState("");
-  const [isSmsSending, setIsSmsSending] = useState(false);
+  const [isSmsSending, setIsLoadingSms] = useState(false);
 
   const router = useRouter();
   const { toast } = useToast();
@@ -77,7 +79,7 @@ export default function LoginPage() {
       return;
     }
 
-    setIsSmsSending(true);
+    setIsLoadingSms(true);
     try {
       const result = await sendOtpSms(mobile);
       if (result.success) {
@@ -88,7 +90,7 @@ export default function LoginPage() {
     } catch (error) {
       toast({ variant: "destructive", title: "SMS Error", description: "Could not send verification code." });
     } finally {
-      setIsSmsSending(false);
+      setIsLoadingSms(false);
     }
   };
 
@@ -107,8 +109,6 @@ export default function LoginPage() {
           if (otpValue !== generatedOtp) {
             throw new Error("Invalid verification code.");
           }
-          // In this prototype, we'll assume the client uses a default "mobile" password
-          // or we'd handle a more complex passwordless flow.
           finalPassword = "password123"; 
         }
       }
@@ -134,122 +134,124 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-lg">
-        <Card className="shadow-2xl border-primary/10 bg-white/80 backdrop-blur-md overflow-hidden p-4">
-          <CardHeader className="flex flex-col items-center space-y-4 pb-2">
-            {logo && (
-              <div className="p-3 bg-white rounded-full shadow-sm border border-border/50">
-                <Image 
-                  src={logo.imageUrl} 
-                  alt={logo.description} 
-                  width={140} 
-                  height={140} 
-                  className="rounded-full object-contain"
-                  data-ai-hint={logo.imageHint}
-                />
-              </div>
-            )}
-            <CardTitle className="text-2xl text-center font-headline text-primary mt-2">Sign In</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              {step === 1 ? (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="identifier">Email or Mobile Number</Label>
-                    <div className="relative">
-                      <Input 
-                        id="identifier" 
-                        type="text" 
-                        value={identifier} 
-                        onChange={(e) => setIdentifier(e.target.value)} 
-                        required 
-                        placeholder="09123456789 or name@example.com" 
-                      />
-                    </div>
-                  </div>
-
-                  {!useOtp ? (
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
-                      <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-                    </div>
-                  ) : null}
-
-                  <Button type="submit" className="w-full bg-primary" disabled={isLoading || useOtp}>
-                    {isLoading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : "Login"}
-                  </Button>
-
-                  {/^\d{10,11}$/.test(identifier.trim()) && (
-                    <div className="pt-2">
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        className="w-full border-secondary text-secondary hover:bg-secondary/5"
-                        onClick={() => { setUseOtp(true); handleSendOtp(); }}
-                        disabled={isSmsSending}
-                      >
-                        {isSmsSending ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Phone className="mr-2 h-4 w-4" />}
-                        Login with SMS Verification
-                      </Button>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="space-y-4 animate-in fade-in zoom-in-95">
-                  <div className="text-center space-y-2">
-                    <p className="text-sm font-medium">Verify your number</p>
-                    <p className="text-xs text-muted-foreground">{identifier}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="otp">6-Digit Code</Label>
-                    <Input 
-                      id="otp" 
-                      value={otpValue} 
-                      onChange={(e) => setOtpValue(e.target.value)} 
-                      maxLength={6}
-                      className="text-center text-xl font-bold tracking-widest"
-                      required 
-                    />
-                  </div>
-                  <Button type="submit" className="w-full bg-secondary text-white" disabled={isLoading}>
-                    {isLoading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : "Verify & Sign In"}
-                  </Button>
-                  <Button variant="ghost" type="button" className="w-full text-xs" onClick={() => { setStep(1); setUseOtp(false); }}>
-                    Back to password login
-                  </Button>
+    <DashboardLayout role={null}>
+      <div className="flex items-center justify-center py-12">
+        <div className="w-full max-w-lg">
+          <Card className="shadow-2xl border-primary/10 bg-white/80 backdrop-blur-md overflow-hidden">
+            <CardHeader className="flex flex-col items-center space-y-4 pb-2">
+              {logo && (
+                <div className="p-3 bg-white rounded-full shadow-sm border border-border/50">
+                  <Image 
+                    src={logo.imageUrl} 
+                    alt={logo.description} 
+                    width={100} 
+                    height={100} 
+                    className="rounded-full object-contain"
+                    data-ai-hint={logo.imageHint}
+                  />
                 </div>
               )}
-            </form>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <div className="relative w-full">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
+              <CardTitle className="text-2xl text-center font-headline text-primary">Sign In</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleLogin} className="space-y-4">
+                {step === 1 ? (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="identifier">Email or Mobile Number</Label>
+                      <div className="relative">
+                        <Input 
+                          id="identifier" 
+                          type="text" 
+                          value={identifier} 
+                          onChange={(e) => setIdentifier(e.target.value)} 
+                          required 
+                          placeholder="09123456789 or name@example.com" 
+                        />
+                      </div>
+                    </div>
+
+                    {!useOtp ? (
+                      <div className="space-y-2">
+                        <Label htmlFor="password">Password</Label>
+                        <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                      </div>
+                    ) : null}
+
+                    <Button type="submit" className="w-full bg-primary" disabled={isLoading || useOtp}>
+                      {isLoading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : "Login"}
+                    </Button>
+
+                    {/^\d{10,11}$/.test(identifier.trim()) && (
+                      <div className="pt-2">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          className="w-full border-secondary text-secondary hover:bg-secondary/5"
+                          onClick={() => { setUseOtp(true); handleSendOtp(); }}
+                          disabled={isSmsSending}
+                        >
+                          {isSmsSending ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Phone className="mr-2 h-4 w-4" />}
+                          Login with SMS Verification
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="space-y-4 animate-in fade-in zoom-in-95">
+                    <div className="text-center space-y-2">
+                      <p className="text-sm font-medium">Verify your number</p>
+                      <p className="text-xs text-muted-foreground">{identifier}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="otp">6-Digit Code</Label>
+                      <Input 
+                        id="otp" 
+                        value={otpValue} 
+                        onChange={(e) => setOtpValue(e.target.value)} 
+                        maxLength={6}
+                        className="text-center text-xl font-bold tracking-widest"
+                        required 
+                      />
+                    </div>
+                    <Button type="submit" className="w-full bg-secondary text-white" disabled={isLoading}>
+                      {isLoading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : "Verify & Sign In"}
+                    </Button>
+                    <Button variant="ghost" type="button" className="w-full text-xs" onClick={() => { setStep(1); setUseOtp(false); }}>
+                      Back to password login
+                    </Button>
+                  </div>
+                )}
+              </form>
+            </CardContent>
+            <CardFooter className="flex flex-col space-y-4">
+              <div className="relative w-full">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white/80 px-2 text-muted-foreground font-bold">Quick Access</span>
+                </div>
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-muted-foreground font-bold">Quick Access</span>
+              <div className="grid grid-cols-3 gap-2 w-full">
+                <Button variant="outline" size="sm" onClick={() => handleQuickAccess('admin')} className="text-xs">
+                  <ShieldCheck className="mr-1 h-3 w-3" /> Admin
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleQuickAccess('lawyer')} className="text-xs">
+                  <Briefcase className="mr-1 h-3 w-3" /> Lawyer
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleQuickAccess('client')} className="text-xs">
+                  <Phone className="mr-1 h-3 w-3" /> Client
+                </Button>
               </div>
-            </div>
-            <div className="grid grid-cols-3 gap-2 w-full">
-              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('admin')} className="text-xs">
-                <ShieldCheck className="mr-1 h-3 w-3" /> Admin
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('lawyer')} className="text-xs">
-                <Briefcase className="mr-1 h-3 w-3" /> Lawyer
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => handleQuickAccess('client')} className="text-xs">
-                <Phone className="mr-1 h-3 w-3" /> Client
-              </Button>
-            </div>
-            <div className="text-center text-sm pt-4">
-              <span className="text-muted-foreground">Don't have an account? </span>
-              <Button variant="link" className="p-0 h-auto text-secondary" onClick={() => router.push("/register")}>Register Now</Button>
-            </div>
-          </CardFooter>
-        </Card>
+              <div className="text-center text-sm pt-4">
+                <span className="text-muted-foreground">Don't have an account? </span>
+                <Button variant="link" className="p-0 h-auto text-secondary" onClick={() => router.push("/register")}>Register Now</Button>
+              </div>
+            </CardFooter>
+          </Card>
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

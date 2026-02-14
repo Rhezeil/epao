@@ -25,7 +25,9 @@ import {
   Calendar,
   CalendarCheck,
   User,
-  Settings
+  Settings,
+  LogIn,
+  UserPlus
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
@@ -48,6 +50,14 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     const commonItems = [
       { icon: Compass, label: "Case Navigator", path: "/case-navigator" },
     ];
+
+    if (!user) {
+      return [
+        ...commonItems,
+        { icon: LogIn, label: "Login", path: "/login" },
+        { icon: UserPlus, label: "Register", path: "/register" },
+      ];
+    }
 
     if (role === "admin") {
       return [
@@ -136,39 +146,55 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
 
           <SidebarFooter className="p-6 border-t border-primary/10 mt-auto">
             <div className="space-y-4">
-              <div className="px-4 py-3 bg-white/40 rounded-lg border border-primary/5">
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <User className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-primary truncate">
-                      {user?.email?.includes('@epao.mobile') ? user.email.split('@')[0] : user?.email}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground capitalize">{role}</p>
+              {user && (
+                <div className="px-4 py-3 bg-white/40 rounded-lg border border-primary/5">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <User className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-primary truncate">
+                        {user?.email?.includes('@epao.mobile') ? user.email.split('@')[0] : user?.email}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground capitalize">{role}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
               
               <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton 
-                    onClick={() => router.push('/profile')}
-                    className="w-full justify-start text-primary hover:bg-primary/5 py-4"
-                  >
-                    <Settings className="h-4 w-4 mr-2" />
-                    <span className="text-xs font-medium">Settings</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton 
-                    onClick={signOut} 
-                    className="w-full justify-start text-destructive hover:bg-destructive/10 hover:text-destructive py-4"
-                  >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    <span className="text-xs font-bold">Logout</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                {user && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton 
+                      onClick={() => router.push('/profile')}
+                      className="w-full justify-start text-primary hover:bg-primary/5 py-4"
+                    >
+                      <Settings className="h-4 w-4 mr-2" />
+                      <span className="text-xs font-medium">Settings</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
+                {user ? (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton 
+                      onClick={signOut} 
+                      className="w-full justify-start text-destructive hover:bg-destructive/10 hover:text-destructive py-4"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      <span className="text-xs font-bold">Logout</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ) : (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton 
+                      onClick={() => router.push('/login')} 
+                      className="w-full justify-start text-primary hover:bg-primary/5 py-4"
+                    >
+                      <LogIn className="h-4 w-4 mr-2" />
+                      <span className="text-xs font-bold">Sign In</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
               </SidebarMenu>
             </div>
           </SidebarFooter>

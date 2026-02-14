@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from "react";
@@ -15,6 +16,7 @@ import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Mail, Phone, ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import { sendOtpSms } from "@/ai/flows/sms-service";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -29,7 +31,7 @@ export default function RegisterPage() {
   const [step, setStep] = useState<1 | 2>(1);
   const [otpValue, setOtpValue] = useState("");
   const [generatedOtp, setGeneratedOtp] = useState("");
-  const [isSmsSending, setIsSmsSending] = useState(false);
+  const [isSmsSending, setIsLoadingSms] = useState(false);
 
   const router = useRouter();
   const { toast } = useToast();
@@ -44,7 +46,7 @@ export default function RegisterPage() {
       return;
     }
 
-    setIsSmsSending(true);
+    setIsLoadingSms(true);
     try {
       const result = await sendOtpSms(mobileNumber);
       if (result.success) {
@@ -55,7 +57,7 @@ export default function RegisterPage() {
     } catch (error) {
       toast({ variant: "destructive", title: "SMS Failed", description: "Could not send verification code." });
     } finally {
-      setIsSmsSending(false);
+      setIsLoadingSms(false);
     }
   };
 
@@ -132,127 +134,127 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-transparent">
-      <div className="w-full max-w-md space-y-6">
-        <div className="flex justify-center">
-          {logo && (
-            <div className="p-2 bg-white rounded-full shadow-lg border border-border/50">
-              <Image 
-                src={logo.imageUrl} 
-                alt={logo.description} 
-                width={120} 
-                height={120} 
-                className="rounded-full object-contain"
-                data-ai-hint={logo.imageHint}
-              />
-            </div>
-          )}
-        </div>
-        <Card className="w-full shadow-2xl border-primary/10 bg-white/80 backdrop-blur-md">
-          <CardHeader>
-            <CardTitle className="text-center font-headline text-primary">Create Account</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="client" className="w-full mb-6" onValueChange={(v) => {
-              setRegMode(v as any);
-              setStep(1);
-            }}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="client" className="flex items-center gap-2">
-                  <Phone className="h-4 w-4" /> Client
-                </TabsTrigger>
-                <TabsTrigger value="lawyer" className="flex items-center gap-2">
-                  <Mail className="h-4 w-4" /> Practitioner
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-
-            <form onSubmit={handleRegister} className="space-y-4">
-              {step === 1 ? (
-                <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name</Label>
-                      <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name</Label>
-                      <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
-                    </div>
-                  </div>
-
-                  {regMode === "client" ? (
-                    <div className="space-y-2">
-                      <Label htmlFor="mobileNumber">Mobile Number</Label>
-                      <Input 
-                        id="mobileNumber" 
-                        type="tel" 
-                        placeholder="09123456789"
-                        value={mobileNumber} 
-                        onChange={(e) => setMobileNumber(e.target.value)} 
-                        required 
-                      />
-                      <Button 
-                        type="button" 
-                        className="w-full mt-2 bg-secondary" 
-                        onClick={handleSendOtp}
-                        disabled={isSmsSending}
-                      >
-                        {isSmsSending ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <ArrowRight className="mr-2 h-4 w-4" />}
-                        Send Verification Code
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Work Email</Label>
-                      <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                      <div className="space-y-2 pt-2">
-                        <Label htmlFor="password">Password</Label>
-                        <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-                      </div>
-                      <Button type="submit" className="w-full mt-4" disabled={isLoading}>
-                        {isLoading ? "Creating Account..." : "Register"}
-                      </Button>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
-                  <div className="p-3 bg-secondary/10 rounded-lg flex items-center gap-3 border border-secondary/20">
-                    <CheckCircle2 className="h-5 w-5 text-secondary" />
-                    <p className="text-xs text-secondary font-medium">Verify your mobile: {mobileNumber}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="otp">Verification Code</Label>
-                    <Input 
-                      id="otp" 
-                      placeholder="Enter 6-digit code"
-                      value={otpValue} 
-                      onChange={(e) => setOtpValue(e.target.value)} 
-                      maxLength={6}
-                      className="text-center text-lg tracking-[0.5em] font-bold"
-                      required 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Set Password</Label>
-                    <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-                  </div>
-                  <Button type="submit" className="w-full bg-primary" disabled={isLoading}>
-                    {isLoading ? "Finalizing..." : "Verify & Complete Registration"}
-                  </Button>
-                  <Button variant="ghost" type="button" className="w-full text-xs" onClick={() => setStep(1)}>
-                    Back to edit number
-                  </Button>
+    <DashboardLayout role={null}>
+      <div className="flex items-center justify-center py-12">
+        <div className="w-full max-w-md space-y-6">
+          <Card className="w-full shadow-2xl border-primary/10 bg-white/80 backdrop-blur-md">
+            <CardHeader className="flex flex-col items-center space-y-4">
+              {logo && (
+                <div className="p-2 bg-white rounded-full shadow-lg border border-border/50">
+                  <Image 
+                    src={logo.imageUrl} 
+                    alt={logo.description} 
+                    width={80} 
+                    height={80} 
+                    className="rounded-full object-contain"
+                    data-ai-hint={logo.imageHint}
+                  />
                 </div>
               )}
-            </form>
-          </CardContent>
-          <CardFooter>
-            <Button variant="ghost" className="w-full text-primary" onClick={() => router.push("/login")}>Back to Login</Button>
-          </CardFooter>
-        </Card>
+              <CardTitle className="text-center font-headline text-primary">Create Account</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="client" className="w-full mb-6" onValueChange={(v) => {
+                setRegMode(v as any);
+                setStep(1);
+              }}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="client" className="flex items-center gap-2">
+                    <Phone className="h-4 w-4" /> Client
+                  </TabsTrigger>
+                  <TabsTrigger value="lawyer" className="flex items-center gap-2">
+                    <Mail className="h-4 w-4" /> Practitioner
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+
+              <form onSubmit={handleRegister} className="space-y-4">
+                {step === 1 ? (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="firstName">First Name</Label>
+                        <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="lastName">Last Name</Label>
+                        <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+                      </div>
+                    </div>
+
+                    {regMode === "client" ? (
+                      <div className="space-y-2">
+                        <Label htmlFor="mobileNumber">Mobile Number</Label>
+                        <Input 
+                          id="mobileNumber" 
+                          type="tel" 
+                          placeholder="09123456789"
+                          value={mobileNumber} 
+                          onChange={(e) => setMobileNumber(e.target.value)} 
+                          required 
+                        />
+                        <Button 
+                          type="button" 
+                          className="w-full mt-2 bg-secondary" 
+                          onClick={handleSendOtp}
+                          disabled={isSmsSending}
+                        >
+                          {isSmsSending ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <ArrowRight className="mr-2 h-4 w-4" />}
+                          Send Verification Code
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Work Email</Label>
+                        <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                        <div className="space-y-2 pt-2">
+                          <Label htmlFor="password">Password</Label>
+                          <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                        </div>
+                        <Button type="submit" className="w-full mt-4" disabled={isLoading}>
+                          {isLoading ? "Creating Account..." : "Register"}
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+                    <div className="p-3 bg-secondary/10 rounded-lg flex items-center gap-3 border border-secondary/20">
+                      <CheckCircle2 className="h-5 w-5 text-secondary" />
+                      <p className="text-xs text-secondary font-medium">Verify your mobile: {mobileNumber}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="otp">Verification Code</Label>
+                      <Input 
+                        id="otp" 
+                        placeholder="Enter 6-digit code"
+                        value={otpValue} 
+                        onChange={(e) => setOtpValue(e.target.value)} 
+                        maxLength={6}
+                        className="text-center text-lg tracking-[0.5em] font-bold"
+                        required 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Set Password</Label>
+                      <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                    </div>
+                    <Button type="submit" className="w-full bg-primary" disabled={isLoading}>
+                      {isLoading ? "Finalizing..." : "Verify & Complete Registration"}
+                    </Button>
+                    <Button variant="ghost" type="button" className="w-full text-xs" onClick={() => setStep(1)}>
+                      Back to edit number
+                    </Button>
+                  </div>
+                )}
+              </form>
+            </CardContent>
+            <CardFooter>
+              <Button variant="ghost" className="w-full text-primary" onClick={() => router.push("/login")}>Back to Login</Button>
+            </CardFooter>
+          </Card>
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
