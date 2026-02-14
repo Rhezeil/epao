@@ -50,13 +50,15 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     const commonItems: { icon: any, label: string, path: string }[] = [];
 
     if (!user) {
-      return commonItems;
+      return [
+        { icon: Calendar, label: "Schedule", path: "/case-navigator" },
+      ];
     }
 
     if (role === "admin") {
       return [
         ...commonItems,
-        { icon: LayoutDashboard, label: "About", path: `/dashboard/admin` },
+        { icon: Calendar, label: "Schedule", path: `/case-navigator` },
         { icon: Users, label: "Users Management", path: "/dashboard/admin/users" },
         { icon: Briefcase, label: "Lawyer List", path: "/dashboard/admin/lawyers" },
         { icon: UserPlus, label: "Register Practitioner", path: "/dashboard/admin/lawyers" },
@@ -66,7 +68,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     if (role === "lawyer") {
       return [
         ...commonItems,
-        { icon: LayoutDashboard, label: "About", path: `/dashboard/lawyer` },
+        { icon: Calendar, label: "Schedule", path: `/case-navigator` },
         { icon: Users, label: "My Clients", path: "/dashboard/lawyer/clients" },
         { icon: FileText, label: "Active Cases", path: "/dashboard/lawyer/cases" },
       ];
@@ -75,7 +77,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     if (role === "client") {
       return [
         ...commonItems,
-        { icon: LayoutDashboard, label: "About", path: `/dashboard/client` },
+        { icon: Calendar, label: "Schedule", path: "/case-navigator" },
         { icon: Calendar, label: "Book Appointment", path: "/dashboard/client/book-appointment" },
         { icon: CalendarCheck, label: "Manage Appointment", path: "/case-navigator?mode=manage" },
         { icon: FileText, label: "Case Updates", path: "/dashboard/client/cases" },
