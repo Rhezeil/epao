@@ -21,7 +21,7 @@ export const caseCategories = {
       ]
     },
     {
-      title: "🩹 II. CRIMES AGAINST PERSONS (Physical Injuries)",
+      title: "🩹 II. PHYSICAL INJURIES",
       items: [
         "Mutilation (Art 262)", 
         "Serious Physical Injuries (Art 263)", 
@@ -112,57 +112,58 @@ export const caseCategories = {
 };
 
 export const standardPaoDocs = [
-  "Certificate of Indigency (from Barangay, DSWD, or MSWD)",
-  "Latest Income Tax Return (ITR) or BIR Certification of Exemption / Payslip",
-  "Valid Government-issued ID (Original & 3 Photocopies)",
-  "Case Narrative (Written account for the affidavit)"
+  "Certificate of Indigency (from Barangay Chairman or DSWD)",
+  "Latest Income Tax Return (ITR), pay slip, or proof of income",
+  "Valid Government-issued ID (Original & Photocopy)",
+  "Initial Case Documents (Complaint, Summons, or Police Report)",
+  "Merit Test compliance (Verified during interview)"
 ];
 
 export const universalPaoFlow = [
   { 
     step: 1, 
     title: "Locate Nearest Office", 
-    content: "Find the nearest PAO district office, usually located near courts or local government units. PAO operates in almost all municipalities and cities nationwide." 
+    content: "Find the nearest PAO district office, usually located near courts or local government units. PAO operates nationwide to serve indigent litigants." 
   },
   { 
     step: 2, 
     title: "Submit Requirements", 
-    content: "Provide proof of indigency (e.g., Certificate of Indigency, ITR, or Pay Slip), Valid ID, and documents related to the case (e.g., complaint, subpoena, or police report)." 
+    content: "Provide proof of indigency (Barangay/DSWD Certificate), valid ID, and documents related to the case for initial screening." 
   },
   { 
     step: 3, 
-    title: "Client Interview & Evaluation", 
-    content: "A public attorney will interview the applicant to determine if the case has merit (Merit Test) and if the applicant qualifies financially (Indigency Test)." 
+    title: "Interview & Evaluation", 
+    content: "A public attorney will interview you to perform the Indigency Test (financial check) and the Merit Test (legal basis check)." 
   },
   { 
     step: 4, 
-    title: "Acceptance & Case Assignment", 
-    content: "Upon approval, a lawyer is assigned to the case to provide counseling, mediation, or full representation in court proceedings." 
+    title: "Acceptance & Assignment", 
+    content: "Upon approval, a lawyer is officially assigned to your case for counseling, mediation, or full court representation." 
   }
 ];
 
 export const pAONotes = [
-  "Indigency Test: Your net income must not exceed the threshold (varies by location/region).",
-  "Merit Test: PAO handles cases where the cause is valid and supported by evidence.",
-  "Conflict of Interest: PAO cannot represent both parties in the same case.",
-  "Public Service: All legal services provided by PAO are free of charge."
+  "Indigency Test: Your net income must meet the agency's regional threshold.",
+  "Merit Test: PAO handles cases where the cause is valid and has a legal basis.",
+  "Conflict of Interest: PAO cannot represent opposing parties in the same matter.",
+  "Free Service: All legal services provided by PAO are free of charge."
 ];
 
 export const caseSpecificData: Record<string, { requirements: string[], steps: any[], description: string }> = {
   // --- CRIMES AGAINST PERSONS: DESTRUCTION OF LIFE ---
   "Parricide (Art 246)": {
     description: "Killing of one's father, mother, or child (legitimate or illegitimate), or any ascendant or descendant, or spouse. Penalized with Reclusion Perpetua to Death.",
-    requirements: ["PSA Birth Certificate (Proof of Relation)", "PSA Marriage Contract (if spouse)", "Death Certificate", "Police Investigation Report", "Autopsy Report"],
+    requirements: ["PSA Birth Certificate (Proof of Relation)", "PSA Marriage Contract (if spouse)", "Death Certificate of the Victim", "Police Investigation Report", "Autopsy/Post-Mortem Report"],
     steps: universalPaoFlow
   },
   "Death/Injuries under Exceptional Circumstances (Art 247)": {
-    description: "Killing or injuring a spouse or daughter in the act of sexual intercourse with another, or immediately thereafter, while in the act of surprised betrayal.",
-    requirements: ["Proof of Marriage (PSA Contract)", "Police Blotter of the Incident", "Medico-Legal Certificate", "Witness Affidavits"],
+    description: "Killing or injuring a spouse or daughter in the act of sexual intercourse with another, while in the act of surprised betrayal.",
+    requirements: ["PSA Marriage Contract (Proof of Relation)", "Police Blotter of the Incident", "Medico-Legal Certificate", "Witness Affidavits"],
     steps: universalPaoFlow
   },
   "Murder (Art 248)": {
     description: "The unlawful killing of a person with qualifying circumstances such as treachery, price/reward, poison, fire, or evident premeditation.",
-    requirements: ["Police Investigation Report", "Autopsy/Post-Mortem Report", "Death Certificate", "Witness Affidavits", "CCTV/Physical Evidence"],
+    requirements: ["Police Investigation Report", "Autopsy/Post-Mortem Report", "Death Certificate", "Witness Affidavits", "CCTV or Physical Evidence"],
     steps: universalPaoFlow
   },
   "Homicide (Art 249)": {
@@ -194,8 +195,8 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     steps: universalPaoFlow
   },
   "Abortion (Art 256-259)": {
-    description: "Abortion is strictly prohibited and penalized under Articles 256-259 RPC, whether intentional or unintentional, practiced by the woman, parents, or medical professionals. PAO provides defense for the indigent accused.",
-    requirements: ["Medico-Legal Report", "Police Investigation Report", "Hospital Records", "Witness Statements"],
+    description: "Strictly prohibited and penalized under Articles 256-259 RPC, whether intentional or unintentional, practiced by the woman, parents, or medical professionals.",
+    requirements: ["Medico-Legal Report", "Police Investigation Report", "Hospital Records (if any)", "Witness Statements"],
     steps: universalPaoFlow
   },
 
@@ -207,7 +208,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   },
   "Serious Physical Injuries (Art 263)": {
     description: "Injuries causing insanity, imbecility, impotence, blindness, or incapacity for labor for more than 90 days.",
-    requirements: ["Detailed Medical Certificate (90+ days healing)", "Police Report/Blotter", "Witness Affidavits", "Photographs of Injuries", "Medical Receipts"],
+    requirements: ["Detailed Medical Certificate (90+ days healing)", "Police Report/Blotter", "Witness Affidavits", "Photographs of Injuries"],
     steps: universalPaoFlow
   },
   "Less Serious Physical Injuries (Art 265)": {
@@ -223,30 +224,23 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
 
   // --- VAWC (RA 9262) ---
   "Physical Violence (VAWC - Sec 5a)": {
-    description: "Acts causing bodily harm, battery, or physical assault, threats, or causing fear of harm. Section 5a of R.A. 9262.",
+    description: "Acts causing bodily harm, battery, physical assault, or threats. Section 5a of R.A. 9262.",
     requirements: ["Proof of Relation (Marriage/Birth Cert)", "Medico-Legal Certificate", "Photos of Injuries", "Police/Barangay Blotter"],
     steps: universalPaoFlow
   },
   "Sexual Violence (VAWC - Sec 5b)": {
-    description: "Sexual acts including rape, harassment, treating someone as a sex object, demeaning remarks, or forcing cohabitation with a mistress. Section 5b of R.A. 9262.",
+    description: "Sexual acts including rape, harassment, acts of lasciviousness, or prostituting the woman or child. Section 5b of R.A. 9262.",
     requirements: ["Medico-Legal Report", "Psychological Evaluation", "Police Report", "Witness Affidavits"],
     steps: universalPaoFlow
   },
   "Psychological Violence (VAWC - Sec 5h-i)": {
-    description: "Acts causing mental/emotional anguish: marital infidelity, intimidation, stalking, public ridicule, or deprivation of custody. Section 5h & 5i of R.A. 9262.",
+    description: "Acts causing mental/emotional anguish: infidelity, intimidation, stalking, or deprivation of custody. Section 5h & 5i of R.A. 9262.",
     requirements: ["Screenshots (SMS/Chat)", "Psychological Evaluation Report", "Barangay Protection Order (BPO)", "Witness Affidavits"],
     steps: universalPaoFlow
   },
   "Economic Abuse (VAWC - Sec 5e-f)": {
-    description: "Acts causing financial dependence: withdrawal of support, preventing work/business, controlling assets, or destroying property. Section 5e & 5f of R.A. 9262.",
-    requirements: ["Evidence of Withheld Support", "Bank Statements/Payslips", "Affidavit of Fact", "Property Damage Photos"],
-    steps: universalPaoFlow
-  },
-
-  // --- CYBERCRIME (RA 10175) ---
-  "Cyberlibel": {
-    description: "Defamation committed through a computer system or any other similar means. Penalty is one degree higher than traditional libel.",
-    requirements: ["Certified Screenshots of Posts", "URL of the Content", "Witness Affidavits", "Evidence of Identity of Account Owner"],
+    description: "Acts causing financial dependence: withdrawal of support or preventing work. Section 5e & 5f of R.A. 9262.",
+    requirements: ["Evidence of Withheld Support", "Bank Statements/Payslips", "Affidavit of Fact"],
     steps: universalPaoFlow
   }
 };

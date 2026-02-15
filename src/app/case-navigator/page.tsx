@@ -22,7 +22,7 @@ import {
   Briefcase,
   Layers,
   ClipboardList,
-  User,
+  User, // Ensure User is imported for the icon
   Gavel
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -148,7 +148,7 @@ function CaseNavigatorContent() {
                   <div className="space-y-0.5">
                     <p className="text-sm font-bold text-green-900 leading-tight">PAO Mandated</p>
                     <p className="text-xs text-green-700 font-medium leading-snug">
-                      Eligible for free legal assistance if you pass the Indigency Test.
+                      Eligible for free legal assistance if you pass the Merit and Indigency Tests.
                     </p>
                   </div>
                 </div>
