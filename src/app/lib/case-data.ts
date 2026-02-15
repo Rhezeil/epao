@@ -163,13 +163,6 @@ export const universalPaoFlow = [
   }
 ];
 
-export const generalRequirements = [
-  "Valid Government ID",
-  "Affidavit of Indigency",
-  "Barangay Certificate of Indigency",
-  "Proof of income / Certificate of No Income"
-];
-
 export const defaultRequirements = generalRequirements;
 export const defaultSteps = universalPaoFlow;
 
