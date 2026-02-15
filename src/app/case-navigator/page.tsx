@@ -43,11 +43,10 @@ function CaseNavigatorContent() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedCase, setSelectedCase] = useState<string | null>(null);
   const [mode, setMode] = useState<"explore" | "manage">("explore");
-  const [refCode, setRefCode] = useState("");
 
   const reqDocRef = useMemoFirebase(() => {
     if (!db || !selectedCase) return null;
-    const docId = selectedCase.toLowerCase().replace(/[\s/]+/g, '-').replace(/[()]+/g, '');
+    const docId = selectedCase.toLowerCase().replace(/[\s/().,]+/g, '-').replace(/-+$/, '');
     return doc(db, "caseRequirements", docId);
   }, [db, selectedCase]);
 

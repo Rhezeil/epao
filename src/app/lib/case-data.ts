@@ -1,110 +1,69 @@
 /**
- * @fileOverview Exhaustive legal database for LexConnect.
- * Comprehensive documentation and process flows based on official PAO standards.
- * Includes all 14 sections of Criminal Law and expanded Civil, Labor, and Admin categories.
+ * @fileOverview Refined legal database for LexConnect.
+ * Standardized documentation and process flows based on official PAO standards.
  */
 
 export const caseCategories = {
   "Criminal": [
     {
-      title: "🔴 I. CRIMES AGAINST PERSONS (Destruction of Life)",
-      items: ["Parricide (Art 246)", "Murder (Art 248)", "Homicide (Art 249)", "Death in Tumultuous Affray (Art 251)", "Assistance to Suicide (Art 253)", "Infanticide (Art 255)", "Abortion (Art 256-259)"]
+      title: "🔴 I. CRIMES AGAINST PERSONS",
+      items: ["Parricide (Art. 246)", "Murder (Art. 248)", "Homicide (Art. 249)", "Physical Injuries (Arts. 262–266)"]
     },
     {
-      title: "🩹 II. PHYSICAL INJURIES",
-      items: ["Mutilation (Art 262)", "Serious Physical Injuries (Art 263)", "Less Serious Physical Injuries (Art 265)", "Slight Physical Injuries (Art 266)"]
+      title: "🟠 II. CRIMES AGAINST PROPERTY",
+      items: ["Robbery (Arts. 293–294)", "Theft (Art. 308)", "Qualified Theft (Art. 310)", "Estafa (Art. 315)", "Arson (Arts. 320–326)", "Malicious Mischief (Art. 327)"]
     },
     {
-      title: "💜 III. VAWC & DOMESTIC ABUSE (R.A. 9262)",
-      items: ["Physical Violence (Section 5a)", "Sexual Violence (Section 5b)", "Psychological Violence (Section 5h & 5i)", "Economic Abuse (Section 5e & 5f)"]
+      title: "⛓ III. CRIMES AGAINST PERSONAL LIBERTY",
+      items: ["Kidnapping / Serious Illegal Detention (Art. 267)", "Grave Threats (Art. 282)", "Grave Coercion (Art. 286)"]
     },
     {
-      title: "🟠 IV. CRIMES AGAINST PROPERTY (RPC)",
-      items: ["Robbery (Art 293)", "Theft (Art 308)", "Qualified Theft (Art 310)", "Estafa (Art 315)", "Malicious Mischief (Art 327)"]
+      title: "🔞 IV. SEXUAL OFFENSES",
+      items: ["Rape (Art. 266-A)", "Acts of Lasciviousness (Art. 336)"]
     },
     {
-      title: "🛡️ V. PROPERTY CRIMES (SPECIAL LAWS)",
-      items: ["BP Blg. 22 (Anti-Bouncing Checks)", "PD 1612 (Anti-Fencing)", "RA 7832 (Anti-Electricity Pilferage)"]
+      title: "🛡️ V. SPECIAL CRIMINAL LAWS",
+      items: ["Drug Cases (RA 9165)", "VAWC (RA 9262)", "Child Abuse (RA 7610)", "Bouncing Checks (BP 22)", "Illegal Recruitment (RA 8042)", "Anti-Fencing (PD 1612)", "Cybercrime (RA 10175)"]
     },
     {
-      title: "⚖️ VI. PUBLIC ORDER (STATE SECURITY)",
-      items: ["Rebellion (Art 134)", "Coup d'état (Art 134-A)", "Sedition (Art 139)", "Conspiracy to Commit Rebellion (Art 136)"]
-    },
-    {
-      title: "👮 VII. PUBLIC ORDER (AGAINST AUTHORITY)",
-      items: ["Direct Assault (Art 148)", "Indirect Assault (Art 149)", "Resistance & Disobedience (Art 151)"]
-    },
-    {
-      title: "📢 VIII. PUBLIC ORDER (DISTURBANCES)",
-      items: ["Tumults & Public Disturbance (Art 153)", "Alarms and Scandals (Art 155)", "Illegal Assembly (Art 146)"]
-    },
-    {
-      title: "✍️ IX. PUBLIC INTEREST (FORGERY/FALSIFICATION)",
-      items: ["Counterfeiting Currency (Art 161)", "Falsification by Public Officer (Art 171)", "Falsification by Private Individual (Art 172)", "Use of Falsified Documents"]
-    },
-    {
-      title: "🔞 X. PUBLIC MORALS",
-      items: ["Grave Scandal (Art 200)", "Vagrancy and Prostitution (Art 202)", "Illegal Gambling (PD 1602)"]
-    },
-    {
-      title: "🏛 XI. CRIMES BY PUBLIC OFFICERS",
-      items: ["Malversation of Public Funds (Art 217)", "Direct Bribery (Art 210)", "Indirect Bribery (Art 211)", "Graft and Corruption (RA 3019)"]
-    },
-    {
-      title: "⛓ XII. CRIMES AGAINST LIBERTY & SECURITY",
-      items: ["Kidnapping & Serious Illegal Detention (Art 267)", "Slight Illegal Detention (Art 268)", "Grave Threats (Art 282)", "Light Coercion (Art 287)", "Cyber-Libel (RA 10175)"]
-    },
-    {
-      title: "🗣 XIII. CRIMES AGAINST HONOR",
-      items: ["Libel (Art 353)", "Slander (Oral Defamation)", "Slander by Deed (Art 359)"]
-    },
-    {
-      title: "🚗 XIV. QUASI-OFFENSES (NEGLIGENCE)",
-      items: ["Reckless Imprudence (Art 365)", "Simple Imprudence", "Homicide through Reckless Imprudence"]
+      title: "⚖️ VI. PROCEDURAL CRIMINAL MATTERS",
+      items: ["Bail (Rule 114)", "Habeas Corpus (Rule 102)"]
     }
   ],
   "Civil": [
     {
       title: "📖 I. FAMILY RELATIONS",
-      items: ["Annulment of Marriage (Art 36/45 FC)", "Legal Separation (Art 55 FC)", "Support (Art 194-208 FC)", "Custody of Children (Art 211-213 FC)", "Domestic Adoption"]
+      items: ["Annulment of Marriage", "Legal Separation", "Support", "Custody of Children", "Adoption"]
     },
     {
       title: "🏠 II. PROPERTY & LAND",
-      items: ["Unlawful Detainer (Ejectment)", "Forcible Entry", "Recovery of Possession (Accion Publiciana)", "Partition of Property (Art 494 CC)"]
-    },
-    {
-      title: "💰 III. SUM OF MONEY & DAMAGES",
-      items: ["Collection of Sum of Money", "Breach of Contract", "Damages (Actual, Moral, Exemplary)", "Small Claims Cases"]
-    },
-    {
-      title: "📜 IV. SPECIAL PROCEEDINGS",
-      items: ["Correction of Clerical Error (RA 9048)", "Change of First Name (RA 10172)", "Guardianship of Minors", "Probate of Will"]
+      items: ["Unlawful Detainer", "Forcible Entry", "Recovery of Possession", "Partition"]
     }
   ],
   "Labor": [
     {
       title: "🔒 I. TERMINATION & TENURE",
-      items: ["Illegal Dismissal (Art 279)", "Constructive Dismissal", "Regularization (Labor-Only Contracting)", "Separation Pay Claims"]
+      items: ["Illegal Dismissal", "Constructive Dismissal", "Separation Pay"]
     },
     {
       title: "💰 II. MONETARY CLAIMS",
-      items: ["Unpaid Wages", "13th Month Pay (PD 851)", "Service Incentive Leave", "Overtime/Holiday Pay", "Illegal Deductions"]
+      items: ["Unpaid Wages", "13th Month Pay", "Overtime Pay"]
     }
   ],
   "Administrative": [
     {
       title: "🏛 GOVERNMENT & AGENCY CLAIMS",
-      items: ["Civil Service Commission Appeals", "SSS / GSIS Benefits Claims", "Agrarian Reform (DARAB) Cases", "Barangay Conciliation (Katarungang Pambarangay)"]
+      items: ["CSC Appeals", "SSS / GSIS Claims", "DARAB Cases", "Barangay Conciliation"]
     }
   ]
 };
 
 export const standardPaoDocs = [
   "Certificate of Indigency from Barangay Chairman (Residence jurisdiction)",
-  "Certificate of Indigency from DSWD or MSWD",
+  "OR Certificate of Indigency from DSWD/MSWD",
   "Latest ITR, pay slip, or Certificate of No Income",
   "Valid Government-issued ID (SSS, PhilHealth, Voter's, etc.)",
-  "Merit Test compliance (Determined during lawyer interview)"
+  "Relevant Case Documents (Complaint, Summons, Police Report)"
 ];
 
 export const universalPaoFlow = [
@@ -116,7 +75,7 @@ export const universalPaoFlow = [
   { 
     step: 2, 
     title: "Submit Requirements", 
-    content: "Provide proof of indigency (e.g., Certificate of Indigency, ITR, or Pay Slip), Valid ID, and documents related to the case (e.g., complaint, subpoena)." 
+    content: "Provide proof of indigency (e.g., Certificate of Indigency, Income Tax Return, or Pay Slip), Valid ID, and documents related to the case." 
   },
   { 
     step: 3, 
@@ -126,7 +85,7 @@ export const universalPaoFlow = [
   { 
     step: 4, 
     title: "Acceptance & Case Assignment", 
-    content: "Upon approval, a lawyer is officially assigned to your case to provide counseling, mediation, or full court representation." 
+    content: "Upon approval, a lawyer is officially assigned to your case to provide counseling, mediation, or representation." 
   }
 ];
 
@@ -140,76 +99,134 @@ export const pAONotes = [
 
 export const caseSpecificData: Record<string, { requirements: string[], steps: any[], description: string }> = {
   // --- CRIMES AGAINST PERSONS ---
-  "Parricide (Art 246)": {
-    description: "Killing of one's father, mother, or child (legitimate/illegitimate), or any ascendant/descendant, or spouse.",
-    requirements: ["PSA Birth/Marriage Certificate", "Victim Death Certificate", "Police Investigation Report", "Autopsy Report"],
+  "Parricide (Art. 246)": {
+    description: "Killing of spouse, parent, child, or legitimate ascendant/descendant. Elements: A person is killed; Accused killed the person; Victim is a spouse or close relative.",
+    requirements: ["Death certificate", "Autopsy report", "Marriage/Birth certificate (proof of relationship)", "Witness affidavits", "CCTV footage"],
     steps: universalPaoFlow
   },
-  "Murder (Art 248)": {
-    description: "Unlawful killing with qualifying circumstances like treachery, price/reward, or evident premeditation.",
-    requirements: ["Police Investigation Report", "Autopsy Report", "Death Certificate", "Witness Affidavits", "CCTV Evidence"],
+  "Murder (Art. 248)": {
+    description: "Killing with qualifying circumstances (treachery, price/reward, poison, fire, evident premeditation, or cruelty).",
+    requirements: ["Autopsy report", "Medico-legal report", "Police investigation report", "Witness statements", "Weapon recovered (if any)"],
     steps: universalPaoFlow
   },
-  "Abortion (Art 256-259)": {
-    description: "Prohibited acts of ending a pregnancy, whether intentional or not, by the mother or medical practitioners. Strictly penalized in PH.",
-    requirements: ["Medico-Legal Report", "Hospital Records", "Police Investigation Report", "Witness Statements"],
+  "Homicide (Art. 249)": {
+    description: "Killing a person without the qualifying circumstances of murder or parricide.",
+    requirements: ["Death certificate", "Autopsy report", "Witness affidavits", "Police Blotter"],
     steps: universalPaoFlow
   },
-  
-  // --- VAWC ---
-  "Physical Violence (Section 5a)": {
-    description: "Acts causing bodily harm, battery, or causing fear of harm under R.A. 9262 Section 5a.",
-    requirements: ["Proof of Relation (Marriage/Birth Cert)", "Medico-Legal Certificate", "Photos of Injuries", "Police/Barangay Blotter"],
-    steps: universalPaoFlow
-  },
-  "Psychological Violence (Section 5h & 5i)": {
-    description: "Acts causing mental/emotional anguish, including stalking, verbal abuse, or deprivation of custody (Section 5h/5i).",
-    requirements: ["Psychological Evaluation Report", "Chat/SMS Screenshots", "Witness Affidavits", "Barangay Protection Order (BPO)"],
+  "Physical Injuries (Arts. 262–266)": {
+    description: "Inflicting bodily harm resulting in mutilation, serious, less serious, or slight injuries.",
+    requirements: ["Medical certificate", "Hospital records", "Photos of injuries", "Police blotter", "Witness affidavits"],
     steps: universalPaoFlow
   },
 
-  // --- PROPERTY ---
-  "Robbery (Art 293)": {
+  // --- CRIMES AGAINST PROPERTY ---
+  "Robbery (Arts. 293–294)": {
     description: "Taking personal property with intent to gain through violence, intimidation, or force.",
-    requirements: ["Police Blotter Report", "Proof of Ownership", "Medical Certificate (if violence used)", "CCTV Footage"],
+    requirements: ["Police report", "Sworn complaint-affidavit", "Medical certificate (if injured)", "Proof of ownership", "CCTV footage"],
     steps: universalPaoFlow
   },
-  "Qualified Theft (Art 310)": {
-    description: "Theft committed with grave abuse of confidence, by domestic servants, or involving specific property like motor vehicles.",
-    requirements: ["Employment Records", "Proof of Trust Relationship", "Police Investigation Report", "Inventory of Stolen Items"],
+  "Theft (Art. 308)": {
+    description: "Taking personal property without consent and without violence, with intent to gain.",
+    requirements: ["Affidavit of loss", "Proof of ownership (receipts)", "CCTV footage", "Witness affidavits"],
+    steps: universalPaoFlow
+  },
+  "Qualified Theft (Art. 310)": {
+    description: "Theft committed with grave abuse of confidence, by domestic servants, or involving specific property.",
+    requirements: ["Employment records", "Proof of trust relationship", "Inventory of stolen items", "Police investigation report"],
+    steps: universalPaoFlow
+  },
+  "Estafa (Art. 315)": {
+    description: "Defrauding another through abuse of confidence or deceit causing damage.",
+    requirements: ["Contract / agreement", "Promissory note", "Receipts / Proof of payment", "Demand letter with proof of receipt", "Bank records", "Screenshots / chat messages"],
+    steps: universalPaoFlow
+  },
+  "Arson (Arts. 320–326)": {
+    description: "The malicious burning of property, including inhabited houses or public buildings.",
+    requirements: ["Bureau of Fire Protection (BFP) report", "Photos of fire damage", "Witness affidavits", "Property title / Proof of ownership"],
+    steps: universalPaoFlow
+  },
+  "Malicious Mischief (Art. 327)": {
+    description: "Deliberate damage to the property of another without intent to gain.",
+    requirements: ["Photos of damaged property", "Repair estimates", "Police blotter", "Witness affidavits", "CCTV footage"],
+    steps: universalPaoFlow
+  },
+
+  // --- PERSONAL LIBERTY ---
+  "Kidnapping / Serious Illegal Detention (Art. 267)": {
+    description: "Depriving a person of liberty through kidnapping or serious illegal detention.",
+    requirements: ["Witness statements", "CCTV footage", "Communication records (ransom/threats)", "Police rescue report"],
+    steps: universalPaoFlow
+  },
+  "Grave Threats (Art. 282)": {
+    description: "Threatening another with the infliction of a wrong amounting to a crime.",
+    requirements: ["Threatening messages / recordings", "Screenshots", "Witness testimony"],
+    steps: universalPaoFlow
+  },
+  "Grave Coercion (Art. 286)": {
+    description: "Compelling another to do something against their will using violence or intimidation.",
+    requirements: ["Police report", "Video evidence", "Witness affidavits"],
+    steps: universalPaoFlow
+  },
+
+  // --- SEXUAL OFFENSES ---
+  "Rape (Art. 266-A)": {
+    description: "Sexual assault as defined under Art. 266-A of the RPC as amended by RA 8353.",
+    requirements: ["Medico-legal certificate", "Victim affidavit", "Birth certificate (if minor)", "Psychological evaluation report"],
+    steps: universalPaoFlow
+  },
+  "Acts of Lasciviousness (Art. 336)": {
+    description: "Committing lascivious acts under circumstances which would constitute rape but without penetration.",
+    requirements: ["Victim statement", "Medical report", "Witness affidavits"],
     steps: universalPaoFlow
   },
 
   // --- SPECIAL LAWS ---
-  "BP Blg. 22 (Anti-Bouncing Checks)": {
-    description: "Punishes issuing a check that is dishonored due to insufficient funds. It is a malum prohibitum offense.",
-    requirements: ["Original Dishonored Check", "Bank Return Slip (NSF/Closed)", "Written Demand Letter with Proof of Receipt"],
+  "Drug Cases (RA 9165)": {
+    description: "Violations of the Comprehensive Dangerous Drugs Act (Sale, Possession, or Use).",
+    requirements: ["Chemistry report", "Seizure inventory / Receipt of property seized", "Chain of custody documentation", "Arrest report"],
+    steps: universalPaoFlow
+  },
+  "VAWC (RA 9262)": {
+    description: "Violence against women and their children, covering physical, sexual, psychological, and economic abuse.",
+    requirements: ["Police blotter", "Marriage/Birth certificate (proof of relation)", "Screenshots of threats", "Medical report / Medico-legal"],
+    steps: universalPaoFlow
+  },
+  "Child Abuse (RA 7610)": {
+    description: "Special protection of children against abuse, exploitation, and discrimination.",
+    requirements: ["Birth certificate of victim", "Medical report", "Social worker's assessment", "Photos/Videos of abuse"],
+    steps: universalPaoFlow
+  },
+  "Bouncing Checks (BP 22)": {
+    description: "Issuing a check without sufficient funds or drawing against a closed account.",
+    requirements: ["Original dishonored check", "Bank return slip", "Written demand letter", "Proof of receipt of demand letter"],
+    steps: universalPaoFlow
+  },
+  "Illegal Recruitment (RA 8042)": {
+    description: "Recruitment activities for overseas employment without a valid license or authority.",
+    requirements: ["Receipts of payment", "Employment contract", "Recruitment advertisement / Postings", "Witness affidavits"],
+    steps: universalPaoFlow
+  },
+  "Anti-Fencing (PD 1612)": {
+    description: "Buying, possessing, or selling property knowing it was stolen.",
+    requirements: ["Proof property was stolen", "Proof of possession by accused", "Receipt of sale (if any)"],
+    steps: universalPaoFlow
+  },
+  "Cybercrime (RA 10175)": {
+    description: "Crimes committed through computer systems (Cyber-Libel, Identity Theft, etc.).",
+    requirements: ["Screenshots with URLs", "Email headers / logs", "Digital forensic report (if available)", "Police cybercrime report"],
     steps: universalPaoFlow
   },
 
-  // --- PUBLIC ORDER ---
-  "Rebellion (Art 134)": {
-    description: "Rising publicly and taking arms against the government to remove allegiance or deprive government powers.",
-    requirements: ["Intelligence Reports", "Firearms Seized Inventory", "Witness Testimony", "Arrest Report"],
+  // --- PROCEDURAL ---
+  "Bail (Rule 114)": {
+    description: "The security given for the release of a person in custody of the law.",
+    requirements: ["Copy of Information", "Commitment Order", "Bail petition / Motion"],
     steps: universalPaoFlow
   },
-
-  // --- CIVIL ---
-  "Annulment of Marriage (Art 36/45 FC)": {
-    description: "Legal process to declare a marriage null and void based on psychological incapacity or other legal grounds.",
-    requirements: ["PSA Marriage Certificate", "PSA Birth Certificates of Children", "Psychological Evaluation Report", "Witness Testimonies"],
-    steps: universalPaoFlow
-  },
-  "Unlawful Detainer (Ejectment)": {
-    description: "Legal action to recover possession of property when the occupant refuses to leave after the right to stay has expired.",
-    requirements: ["Proof of Ownership (TCT/OCT)", "Demand Letter to Vacate", "Proof of Service of Demand", "Barangay Certificate to File Action"],
-    steps: universalPaoFlow
-  },
-
-  // --- LABOR ---
-  "Illegal Dismissal (Art 279)": {
-    description: "When an employee is terminated without just or authorized cause, or without due process.",
-    requirements: ["Appointment Letter/Contract", "Payslips", "Termination Letter (if any)", "Notice of Conference"],
+  "Habeas Corpus (Rule 102)": {
+    description: "A writ requiring a person under arrest to be brought before a judge or into court.",
+    requirements: ["Proof of detention", "Affidavit of illegal restraint", "Verified Petition"],
     steps: universalPaoFlow
   }
 };
