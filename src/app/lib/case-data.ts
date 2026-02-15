@@ -72,10 +72,31 @@ export const defaultRequirements = [
 ];
 
 export const defaultSteps = [
-  { step: 1, title: "Initial Consultation", content: "Visit PAO for an interview to determine eligibility based on the Indigency and Merit tests." },
-  { step: 2, title: "Document Submission", content: "Submit all required documents including IDs, proof of indigency, and case-specific evidence." },
-  { step: 3, title: "Case Assessment", content: "A Public Attorney will evaluate the merit of your case and prepare necessary pleadings or affidavits." },
-  { step: 4, title: "Legal Representation", content: "Representation in court hearings, mediation, or administrative proceedings until resolution." }
+  { 
+    step: 1, 
+    title: "Establish Eligibility (Indigency Test)", 
+    content: "You must prove you are an indigent person, usually by providing a Certificate of Indigency from the Barangay Chairman or the Department of Social Welfare and Development (DSWD), or your latest income tax return/pay slip." 
+  },
+  { 
+    step: 2, 
+    title: "Locate the Nearest PAO Office", 
+    content: "Find the nearest district office (usually located within city/provincial halls or courts)." 
+  },
+  { 
+    step: 3, 
+    title: "Initial Consultation & Evaluation", 
+    content: "Present your case to a public attorney. The PAO will evaluate the case for merit (ensure it is not frivolous or without legal basis)." 
+  },
+  { 
+    step: 4, 
+    title: "Submit Documents", 
+    content: "Submit necessary documents (e.g., police report for criminal cases, demand letter for civil cases)." 
+  },
+  { 
+    step: 5, 
+    title: "Case Assignment", 
+    content: "Once accepted, a public attorney will be assigned to handle the drafting of affidavits, complaints, or other required legal documents to initiate the lawsuit." 
+  }
 ];
 
 /**
@@ -91,12 +112,7 @@ export const categoryDefaults: Record<string, { requirements: string[], steps: a
       "Arrest Warrant (if available)",
       "Police Blotter"
     ],
-    steps: [
-      { step: 1, title: "Interview", content: "Interview by PAO lawyer to check Indigency + Merit Test." },
-      { step: 2, title: "Acceptance", content: "If qualified, the case is accepted and a Control Number is assigned." },
-      { step: 3, title: "Preparation", content: "Lawyer prepares Counter-Affidavits or Pleadings." },
-      { step: 4, title: "Trial", content: "Representation in court hearings and appeals if necessary." }
-    ]
+    steps: defaultSteps
   },
   Civil: {
     requirements: [
@@ -107,11 +123,6 @@ export const categoryDefaults: Record<string, { requirements: string[], steps: a
       "Marriage/Birth Cert (for Family)",
       "Demand Letter / Receipts"
     ],
-    steps: [
-      { step: 1, title: "Initial Interview", content: "Strict Indigency and Merit tests for civil petitions." },
-      { step: 2, title: "Drafting", content: "Preparation of Complaint or Petition for filing." },
-      { step: 3, title: "Mediation", content: "Mandatory court-annexed mediation if applicable." },
-      { step: 4, title: "Trial", content: "Full trial proceedings until court decision." }
-    ]
+    steps: defaultSteps
   }
 };
