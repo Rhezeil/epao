@@ -142,6 +142,17 @@ export const caseCategories = {
         "Reckless Imprudence Resulting in Physical Injuries",
         "Reckless Imprudence Resulting in Damage to Property"
       ]
+    },
+    {
+      title: "📜 XIII. CRIMES AGAINST CIVIL STATUS (RPC)",
+      items: [
+        "Simulation of Births (Art. 347)",
+        "Usurpation of Civil Status (Art. 348)",
+        "Bigamy (Art. 349)",
+        "Marriage Contracted Against Provisions of Law (Art. 350)",
+        "Premature Marriage (Art. 351)",
+        "Performance of Illegal Marriage Ceremony (Art. 352)"
+      ]
     }
   ],
   "Civil": [
@@ -467,6 +478,38 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   "Reckless Imprudence Resulting in Damage to Property": {
     description: "A negligent act resulting in damage to the property of another, such as crashing into a building or another vehicle.",
     requirements: ["Police Accident Report", "Estimated Cost of Repair/Damage Appraisal", "Proof of ownership (OR/CR)", "Photos of damage", "Witness affidavits"],
+    steps: defaultSteps
+  },
+
+  // --- CRIMES AGAINST CIVIL STATUS ---
+  "Simulation of Births (Art. 347)": {
+    description: "Deceptively making it appear a child was born to a person not their biological mother, or swapping children to alter their status.",
+    requirements: ["Birth Certificate", "Hospital/Clinic records", "Sworn Statement of biological mother/witnesses", "DNA test results (if available)"],
+    steps: defaultSteps
+  },
+  "Usurpation of Civil Status (Art. 348)": {
+    description: "Using another person’s name, title, or status (e.g., pretending to be a legal spouse) with the intent to defraud.",
+    requirements: ["Proof of identity", "Documents showing the used name/status", "Evidence of fraudulent intent", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Bigamy (Art. 349)": {
+    description: "Contracting a second or subsequent marriage while a previous marriage is still valid and subsisting.",
+    requirements: ["Certified True Copy of 1st Marriage Contract", "Certified True Copy of 2nd Marriage Contract", "CENOMAR showing multiple entries", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Marriage Contracted Against Provisions of Law (Art. 350)": {
+    description: "Contracting a marriage without legal authority or violating legal requirements, punishable under special laws.",
+    requirements: ["Marriage Certificate", "Proof of lack of authority of solemnizing officer", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Premature Marriage (Art. 351)": {
+    description: "A widow or woman marrying within 301 days after the dissolution of a previous marriage before delivery, to avoid confusion of paternity.",
+    requirements: ["Death Certificate of husband or Annulment Decree", "New Marriage Certificate", "Medical certificate (pregnancy status)"],
+    steps: defaultSteps
+  },
+  "Performance of Illegal Marriage Ceremony (Art. 352)": {
+    description: "A priest or solemnizing officer who knowingly performs a marriage ceremony that is illegal.",
+    requirements: ["Marriage Certificate", "Proof of knowledge of illegality", "License of the solemnizing officer", "Witness affidavits"],
     steps: defaultSteps
   }
 };
