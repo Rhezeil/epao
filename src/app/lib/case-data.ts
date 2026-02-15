@@ -3,33 +3,45 @@
  * Comprehensive documentation and process flows based on official PAO standards.
  */
 
+export const generalRequirements = [
+  "Valid Government ID",
+  "Affidavit of Indigency",
+  "Barangay Certificate of Indigency",
+  "Proof of income / Certificate of No Income"
+];
+
 export const caseCategories = {
-  Criminal: [
+  "Criminal": [
     {
-      title: "1️⃣ Crimes Under the Revised Penal Code",
-      items: [
-        "Murder", "Homicide", "Parricide", "Infanticide", 
-        "Physical Injuries (Serious, Less Serious, Slight)",
-        "Theft", "Qualified Theft", "Robbery (with violence / intimidation)", 
-        "Robbery with Homicide", "Estafa (Swindling)", "Arson", "Malicious Mischief",
-        "Libel", "Slander (Oral Defamation)", "Incriminating an Innocent Person",
-        "Acts of Lasciviousness", "Seduction", "Concubinage", "Adultery",
-        "Direct Assault", "Resistance and Disobedience", "Illegal Possession of Firearms"
-      ]
+      title: "🔴 Crimes Against Persons",
+      items: ["Murder", "Homicide", "Parricide", "Infanticide", "Physical Injuries"]
+    },
+    {
+      title: "🟠 Crimes Against Property",
+      items: ["Theft", "Robbery", "Estafa", "Arson", "Malicious Mischief"]
+    },
+    {
+      title: "🟡 Crimes Against Honor",
+      items: ["Libel", "Slander"]
+    },
+    {
+      title: "🟢 Crimes Against Chastity",
+      items: ["Acts of Lasciviousness", "Seduction", "Adultery", "Concubinage"]
+    },
+    {
+      title: "🔵 Crimes Against Public Order",
+      items: ["Direct Assault", "Illegal Possession of Firearms"]
     },
     {
       title: "2️⃣ Dangerous Drugs Cases (RA 9165)",
-      items: [
-        "Illegal Possession of Drugs", "Illegal Sale of Drugs", "Use of Dangerous Drugs", 
-        "Drug Den Operations", "Possession of Drug Paraphernalia", "Drug Planting (as defense)"
-      ]
+      items: ["Illegal Possession of Drugs", "Illegal Sale of Drugs", "Use of Dangerous Drugs"]
     },
     {
-      title: "3️⃣ Violence Against Women & Children (RA 9262)",
-      items: ["Physical abuse", "Psychological abuse", "Economic abuse", "Protection Order cases"]
+      title: "3️⃣ VAWC Cases (RA 9262)",
+      items: ["Physical abuse", "Psychological abuse", "Economic abuse", "Protection Order"]
     },
     {
-      title: "4️⃣ Child Protection Cases (RA 7610)",
+      title: "4️⃣ Child Protection (RA 7610)",
       items: ["Child abuse", "Child exploitation", "Child trafficking"]
     },
     {
@@ -37,97 +49,140 @@ export const caseCategories = {
       items: ["Rape by sexual intercourse", "Rape by sexual assault"]
     },
     {
-      title: "6️⃣ Cybercrime Cases (RA 10175)",
-      items: ["Online libel", "Identity theft", "Online fraud", "Cybersex", "Computer-related fraud"]
+      title: "6️⃣ Cybercrime (RA 10175)",
+      items: ["Online libel", "Identity theft", "Online fraud"]
     },
     {
-      title: "7️⃣ Bouncing Checks Law (BP 22)",
+      title: "7️⃣ Bouncing Checks (BP 22)",
       items: ["Issuance of bouncing checks"]
     }
   ],
-  Civil: [
+  "Civil": [
     {
-      title: "1️⃣ Family Law Cases (Family Code)",
-      items: [
-        "Annulment of Marriage", "Declaration of Nullity of Marriage", 
-        "Legal Separation", "Child Custody", "Child Support", 
-        "Adoption (qualified cases)", "Recognition of Foreign Divorce"
-      ]
+      title: "📖 Family Law Cases",
+      items: ["Annulment of Marriage", "Legal Separation", "Child Support", "Child Custody", "Adoption", "Recognition of Foreign Divorce"]
     },
     {
-      title: "2️⃣ Civil Code Cases (Civil Code)",
-      items: ["Breach of Contract", "Collection of Sum of Money", "Damages", "Property Disputes", "Partition of Property"]
+      title: "📖 Civil Code Cases",
+      items: ["Collection of Sum of Money", "Breach of Contract", "Damages", "Property Disputes", "Partition of Property"]
     },
     {
-      title: "3️⃣ Ejectment Cases",
-      items: ["Unlawful Detainer", "Forcible Entry"]
-    },
-    {
-      title: "4️⃣ Small Claims (SC Rules)",
-      items: ["Collection of small debts (below jurisdictional amount)"]
+      title: "📖 Ejectment & Small Claims",
+      items: ["Unlawful Detainer", "Forcible Entry", "Small Claims"]
     }
   ],
-  Labor: [
+  "Labor": [
     {
-      title: "1️⃣ Employment Disputes (Labor Code)",
-      items: ["Illegal Dismissal", "Constructive Dismissal", "Non-payment of Wages", "Overtime Pay Claims", "Separation Pay", "13th Month Pay Claims", "Money Claims"]
+      title: "👷 Employment Disputes",
+      items: ["Illegal Dismissal", "Non-payment of Wages", "13th Month / Separation Pay"]
     }
   ],
   "Special Legislation": [
     {
-      title: "1️⃣ Anti-Trafficking in Persons (RA 9208)",
-      items: ["Human trafficking", "Forced labor", "Sexual exploitation"]
-    },
-    {
-      title: "2️⃣ Anti-Child Pornography (RA 9775)",
-      items: ["Production/distribution of child pornography"]
-    },
-    {
-      title: "3️⃣ Anti-Hazing Law (RA 11053)",
-      items: ["Hazing incidents in fraternities"]
-    },
-    {
-      title: "4️⃣ Anti-Illegal Recruitment",
-      items: ["Illegal recruitment", "Recruitment scams"]
-    },
-    {
-      title: "5️⃣ Juvenile Justice Cases (RA 9344)",
-      items: ["Representation of children in conflict with the law"]
+      title: "🏢 Special & Social Laws",
+      items: ["Anti-Trafficking", "Anti-Child Pornography", "Anti-Hazing", "Anti-Illegal Recruitment", "Juvenile Justice Cases"]
     }
   ],
-  Administrative: [
+  "Administrative": [
     {
-      title: "Quasi-Judicial & Administrative",
-      items: ["Civil Service cases", "SSS / GSIS claims", "DARAB agrarian disputes", "PRC cases", "Barangay conciliation"]
+      title: "🏛 Quasi-Judicial",
+      items: ["Civil Service Cases", "SSS / GSIS Claims", "DARAB agrarian disputes", "PRC cases", "Barangay conciliation"]
     }
   ]
 };
 
-export const allCaseNames = Object.values(caseCategories)
-  .flatMap(categories => categories.flatMap(cat => cat.items));
-
-export const generalRequirements = [
-  "Valid Government ID",
-  "Affidavit of Indigency",
-  "Barangay Certificate of Indigency",
-  "Proof of income / Certificate of No Income",
-  "Community Tax Certificate (Cedula)"
-];
-
 export const universalPaoFlow = [
-  { step: 1, title: "Client Interview", content: "Initial consultation with a public attorney." },
-  { step: 2, title: "Indigency Test", content: "Proof of financial status (low income/no property)." },
-  { step: 3, title: "Merit Test", content: "Evaluation of the case's legal basis and chance of success." },
-  { step: 4, title: "Document completion", content: "Submission of all required supporting evidence." },
-  { step: 5, title: "Case acceptance", content: "Formal acceptance by PAO for legal representation." },
-  { step: 6, title: "Case number assignment", content: "Recording the case in the official docket." },
-  { step: 7, title: "Filing", content: "Filing before the proper court or agency (e.g., Prosecutor, MTC, NLRC)." },
-  { step: 8, title: "Hearing/Trial", content: "Active representation during court or quasi-judicial proceedings." },
-  { step: 9, title: "Decision", content: "Final judgment and legal resolution of the case." }
+  { 
+    step: 1, 
+    title: "Application and Evaluation", 
+    content: "The client visits the nearest PAO district office (often at the local Hall of Justice) to file a request for legal assistance." 
+  },
+  { 
+    step: 2, 
+    title: "Indigency Test", 
+    content: "The applicant must prove they are indigent. This generally means having a low income and owning no significant real property. Required documents include Affidavit of Indigency, Certificate of Income, or ITR." 
+  },
+  { 
+    step: 3, 
+    title: "Merit Test", 
+    content: "A PAO lawyer assesses if the case has merit—meaning it has a chance of success and is not intended merely to harass the opposite party.\n\n- Criminal Defense: Generally considered meritorious.\n- Civil/Other: Evaluated based on law and evidence." 
+  },
+  { 
+    step: 4, 
+    title: "Conflict of Interest Check", 
+    content: "The PAO verifies that they do not already represent the opposing party to avoid conflicts of interest." 
+  },
+  { 
+    step: 5, 
+    title: "Acceptance", 
+    content: "If the applicant passes both tests, the lawyer will formally accept the case and provide representation, counseling, or document drafting." 
+  }
 ];
 
 export const defaultRequirements = generalRequirements;
 export const defaultSteps = universalPaoFlow;
+
+export const caseSpecificData: Record<string, { requirements: string[], steps: any[] }> = {
+  // --- Criminal: Accused Context ---
+  "Murder": { 
+    requirements: ["Copy of Complaint/Information", "Arrest warrant", "Subpoena", "Bail bond papers", ...generalRequirements], 
+    steps: universalPaoFlow 
+  },
+  "Theft": { 
+    requirements: ["Police report", "Affidavit of loss", "Proof of ownership (receipts, OR/CR)", "CCTV footage (if any)", ...generalRequirements], 
+    steps: universalPaoFlow 
+  },
+  "Estafa": { 
+    requirements: ["Contract or agreement", "Promissory note", "Receipts", "Demand letter with proof of receipt", "Screenshots (SMS/Chat)", ...generalRequirements], 
+    steps: universalPaoFlow 
+  },
+  "Libel": { 
+    requirements: ["Copy of defamatory statement", "Newspaper clipping / screenshot", "Certification of publication", ...generalRequirements], 
+    steps: universalPaoFlow 
+  },
+  "VAWC": { 
+    requirements: ["Police blotter", "Sworn affidavit", "Marriage certificate / Proof of relationship", "Birth certificate of child", "Medical certificate", "Screenshots of threats", ...generalRequirements], 
+    steps: universalPaoFlow 
+  },
+  "Illegal Possession of Drugs": {
+    requirements: ["Arrest report", "Inventory of seized items", "Chemistry report", "Chain of custody documents", "Confiscation receipt", ...generalRequirements],
+    steps: universalPaoFlow
+  },
+  "Annulment of Marriage": {
+    requirements: ["PSA Marriage Certificate", "Birth certificates of children", "Psychological report (Art. 36)", "Proof of residency", ...generalRequirements],
+    steps: universalPaoFlow
+  },
+  "Child Support": {
+    requirements: ["Birth certificate", "Proof of relationship", "Proof of financial capacity of parent", "Demand letter for support", ...generalRequirements],
+    steps: universalPaoFlow
+  },
+  "Collection of Sum of Money": {
+    requirements: ["Written contract", "Promissory note", "Receipts", "Demand letter", ...generalRequirements],
+    steps: universalPaoFlow
+  },
+  "Illegal Dismissal": {
+    requirements: ["Employment contract", "Payslips", "Termination letter", "Company ID", "Written explanation (if any)", ...generalRequirements],
+    steps: universalPaoFlow
+  },
+  "Anti-Trafficking": {
+    requirements: ["Recruitment contract", "Receipts", "Travel documents", "Witness affidavit", ...generalRequirements],
+    steps: universalPaoFlow
+  },
+  "Juvenile Justice Cases": {
+    requirements: ["Birth certificate (minor)", "Police report", "Social worker report", ...generalRequirements],
+    steps: universalPaoFlow
+  },
+  "Civil Service Cases": {
+    requirements: ["Notice of charge", "Employment records", "Written explanation", ...generalRequirements],
+    steps: universalPaoFlow
+  }
+};
+
+export const categoryDefaults: Record<string, { requirements: string[], steps: any[] }> = {
+  Criminal: { requirements: ["Court Subpoena", "Arrest Record", ...generalRequirements], steps: universalPaoFlow },
+  Civil: { requirements: ["Relevant contracts", "Demand letter", ...generalRequirements], steps: universalPaoFlow },
+  Labor: { requirements: ["Employment records", "Payslips", ...generalRequirements], steps: universalPaoFlow }
+};
 
 export const pAONotes = [
   "✔ PAO mainly handles criminal defense cases",
@@ -136,120 +191,5 @@ export const pAONotes = [
   "✔ Court-appointed cases (Counsel de Oficio) are automatically handled"
 ];
 
-const criminalAccusedRequirements = [
-  "Copy of Complaint / Information",
-  "Arrest Warrant (if any)",
-  "Subpoena (if under preliminary investigation)",
-  "Bail documents (if applicable)",
-  ...generalRequirements
-];
-
-const criminalComplainantRequirements = [
-  "Police blotter",
-  "Sworn Affidavit",
-  "Medical certificate (if injury)",
-  "Witness affidavits",
-  "Photos / Evidence",
-  ...generalRequirements
-];
-
-export const caseSpecificData: Record<string, { requirements: string[], steps: any[] }> = {
-  // Criminal Cases (Revised Penal Code)
-  "Murder": { requirements: criminalAccusedRequirements, steps: universalPaoFlow },
-  "Theft": { requirements: criminalAccusedRequirements, steps: universalPaoFlow },
-  "Robbery (with violence / intimidation)": { requirements: criminalAccusedRequirements, steps: universalPaoFlow },
-  "Estafa (Swindling)": { requirements: criminalAccusedRequirements, steps: universalPaoFlow },
-  "Libel": { requirements: criminalAccusedRequirements, steps: universalPaoFlow },
-  
-  // Drugs
-  "Illegal Possession of Drugs": {
-    requirements: ["Arrest report", "Chemistry report", "Confiscation receipt", "Charge sheet", ...generalRequirements],
-    steps: universalPaoFlow
-  },
-  
-  // VAWC
-  "Physical abuse": {
-    requirements: ["Police blotter", "Medical certificate", "Screenshots / messages", "Proof of relationship", "Birth certificate of child", ...generalRequirements],
-    steps: universalPaoFlow
-  },
-  
-  // Child Protection
-  "Child abuse": {
-    requirements: ["Sworn complaint", "Medical / social worker report", "Evidence of abuse", ...generalRequirements],
-    steps: universalPaoFlow
-  },
-  
-  // Rape
-  "Rape by sexual intercourse": {
-    requirements: ["Medico-legal certificate", "Police report", "Victim affidavit", ...generalRequirements],
-    steps: universalPaoFlow
-  },
-  
-  // Cybercrime
-  "Online libel": {
-    requirements: ["Screenshots", "URLs", "Digital evidence", "Police report", ...generalRequirements],
-    steps: universalPaoFlow
-  },
-  
-  // Bouncing Checks
-  "Issuance of bouncing checks": {
-    requirements: ["Dishonored check", "Bank return slip", "Written demand letter", "Proof of receipt of demand", ...generalRequirements],
-    steps: universalPaoFlow
-  },
-  
-  // Family Law
-  "Annulment of Marriage": {
-    requirements: ["PSA Marriage Certificate", "Birth Certificates of children", "Psychological report (if Art. 36)", ...generalRequirements],
-    steps: universalPaoFlow
-  },
-  "Child Support": {
-    requirements: ["Birth certificate", "Proof of neglect", "Proof of income of parent", ...generalRequirements],
-    steps: universalPaoFlow
-  },
-  
-  // Civil Code
-  "Collection of Sum of Money": {
-    requirements: ["Contract", "Receipts", "Demand letter", ...generalRequirements],
-    steps: universalPaoFlow
-  },
-  "Unlawful Detainer": {
-    requirements: ["Title / Tax Declaration", "Demand to vacate", ...generalRequirements],
-    steps: universalPaoFlow
-  },
-  "Collection of small debts (below jurisdictional amount)": {
-    requirements: ["Contract / IOU", "Receipts", "Statement of claim form", ...generalRequirements],
-    steps: universalPaoFlow
-  },
-  
-  // Labor
-  "Illegal Dismissal": {
-    requirements: ["Employment contract", "Payslips", "Termination letter", "Company ID", ...generalRequirements],
-    steps: universalPaoFlow
-  },
-  
-  // Special Legislation
-  "Human trafficking": {
-    requirements: ["Receipts", "Contracts", "Witness statements", ...generalRequirements],
-    steps: universalPaoFlow
-  },
-  "Representation of children in conflict with the law": {
-    requirements: ["Birth certificate (minor)", "Police report", ...generalRequirements],
-    steps: universalPaoFlow
-  },
-  
-  // Administrative
-  "Civil Service cases": {
-    requirements: ["Notice of charge", "Employment records", "Written Answer filing", ...generalRequirements],
-    steps: universalPaoFlow
-  },
-  "SSS / GSIS claims": {
-    requirements: ["Claim forms", "Contribution records", "Supporting medical docs", ...generalRequirements],
-    steps: universalPaoFlow
-  }
-};
-
-export const categoryDefaults: Record<string, { requirements: string[], steps: any[] }> = {
-  Criminal: { requirements: criminalAccusedRequirements, steps: universalPaoFlow },
-  Civil: { requirements: ["Relevant contracts", "Demand letter", "Evidence", ...generalRequirements], steps: universalPaoFlow },
-  Labor: { requirements: ["Employment records", "Termination notice", "Payslips", ...generalRequirements], steps: universalPaoFlow }
-};
+export const allCaseNames = Object.values(caseCategories)
+  .flatMap(categories => categories.flatMap(cat => cat.items));
