@@ -1,5 +1,5 @@
 /**
- * @fileOverview Shared legal database for LexConnect.
+ * @fileOverview Exhaustive legal database for LexConnect.
  * Comprehensive documentation and process flows based on official PAO standards.
  */
 
@@ -105,8 +105,8 @@ export const caseCategories = {
 export const standardPaoDocs = [
   "Affidavit of Indigency (PAO Form)",
   "Latest Income Tax Return (ITR) or BIR Certification of Exemption",
-  "Barangay Certificate of Indigency (stating purpose)",
-  "Social Case Study (if available from DSWD)",
+  "Barangay Certificate of Indigency (stating purpose: Legal Assistance)",
+  "Social Case Study (if available from DSWD/MSWD)",
   "Valid Government-issued ID (Original & 3 Photocopies)"
 ];
 
@@ -119,160 +119,131 @@ export const universalPaoFlow = [
 ];
 
 export const caseSpecificData: Record<string, { requirements: string[], steps: any[], description: string }> = {
-  // --- PERSONS ---
+  // --- CRIMES AGAINST PERSONS ---
   "Murder": {
-    description: "The unlawful killing of a person with qualifying circumstances such as treachery, price, or premeditation (Art. 248, RPC).",
-    requirements: ["Police Investigation Report", "Autopsy/Medico-Legal Report", "Death Certificate", "Sworn Witness Affidavits", "CCTV Footage (if any)"],
+    description: "The unlawful killing of a person with qualifying circumstances such as treachery, price, reward, or evident premeditation (Art. 248, Revised Penal Code).",
+    requirements: ["Police Investigation Report", "Autopsy/Medico-Legal Report", "Death Certificate (PSA)", "Sworn Witness Affidavits", "CCTV Footage/Photos (if available)"],
     steps: universalPaoFlow
   },
   "Homicide": {
-    description: "The unlawful killing of a person without the qualifying circumstances of murder (Art. 249, RPC).",
-    requirements: ["Police Blotter", "Death Certificate", "Medico-Legal Report", "Witness Statements"],
+    description: "The unlawful killing of a person without the qualifying circumstances of murder (Art. 249, Revised Penal Code).",
+    requirements: ["Police Blotter/Report", "Death Certificate (PSA)", "Medico-Legal Report", "Witness Statements"],
     steps: universalPaoFlow
   },
   "Parricide": {
-    description: "Killing of one's father, mother, child, or spouse (Art. 246, RPC).",
-    requirements: ["Marriage Contract / Birth Certificate (Proof of Relation)", "Death Certificate", "Police Report"],
+    description: "Killing of one's father, mother, child (whether legitimate or illegitimate), or legitimate spouse (Art. 246, Revised Penal Code).",
+    requirements: ["Marriage Contract / Birth Certificate (Proof of Relation)", "Death Certificate", "Police Report", "Witness Statements"],
     steps: universalPaoFlow
   },
+
   // --- VAWC ---
   "Physical Violence (VAWC)": {
-    description: "Acts causing bodily harm or threatening physical harm (Sec. 5a, RA 9262).",
+    description: "Acts causing bodily harm or threatening physical harm against a woman or her child (Sec. 5a, RA 9262).",
     requirements: ["Proof of Relationship (Marriage/Birth Cert)", "Medico-Legal Certificate", "Photos of Injuries", "Police Blotter/Report"],
     steps: universalPaoFlow
   },
   "Psychological Violence (VAWC)": {
-    description: "Acts causing mental/emotional suffering, including intimidation or harassment (Sec. 5h-i, RA 9262).",
-    requirements: ["Psychological Evaluation Report", "Screenshots of Threats/Messages", "Witness Affidavits"],
+    description: "Acts causing mental/emotional suffering, including intimidation, harassment, or stalking (Sec. 5h-i, RA 9262).",
+    requirements: ["Psychological Evaluation Report", "Screenshots of Threats/Messages", "Witness Affidavits", "Police Report"],
     steps: universalPaoFlow
   },
-  "Economic Abuse (VAWC)": {
-    description: "Acts making a woman financially dependent or controlling her money (Sec. 5e, RA 9262).",
-    requirements: ["Proof of Financial Denial", "Marriage Contract", "Birth Certificates of Children", "Letter of Demand for Support"],
+
+  // --- CRIMES AGAINST PROPERTY ---
+  "Theft": {
+    description: "Taking of personal property with intent to gain but without violence or intimidation (Art. 308, Revised Penal Code).",
+    requirements: ["Inventory of Missing Items", "Proof of Ownership (Receipts/Photos)", "Police Report", "Witness Statements"],
     steps: universalPaoFlow
   },
-  // --- PROPERTY ---
   "Qualified Theft": {
-    description: "Theft committed with grave abuse of confidence or by a domestic servant (Art. 310, RPC).",
-    requirements: ["Employment Contract (if applicable)", "Inventory of Missing Items", "Police Report", "Audit Report (if corporate)"],
+    description: "Theft committed with grave abuse of confidence, such as by a domestic servant or employee (Art. 310, Revised Penal Code).",
+    requirements: ["Employment Contract / Proof of Employment", "Inventory of Loss", "Police Blotter", "Audit/Accounting Report (if applicable)"],
     steps: universalPaoFlow
   },
   "Estafa": {
-    description: "Defrauding another by abuse of confidence or by means of deceit (Art. 315, RPC).",
-    requirements: ["Demand Letter", "Contract/Agreement", "Proof of Payment/Transaction", "Witness Statements"],
+    description: "Defrauding another by abuse of confidence or by means of deceit, such as false pretenses (Art. 315, Revised Penal Code).",
+    requirements: ["Demand Letter with Proof of Receipt", "Contract/Agreement", "Proof of Payment/Transfer", "Witness Affidavits"],
     steps: universalPaoFlow
   },
   "Bouncing Checks (BP 22)": {
-    description: "Issuing a check without sufficient funds or upon a closed account (BP 22).",
-    requirements: ["Original Bounced Check", "Notice of Dishonor (Demand Letter)", "Registry Return Receipt", "Bank Certification of Dishonor"],
+    description: "Issuing a check without sufficient funds or upon a closed account (BP 22 - Bouncing Checks Law).",
+    requirements: ["Original Bounced Check", "Notice of Dishonor (Demand Letter)", "Registry Return Receipt (Proof of Service)", "Bank Certification of Dishonor"],
     steps: universalPaoFlow
   },
-  // --- PUBLIC ORDER ---
-  "Rebellion": {
-    description: "Rising publicly and taking arms against the Government to overthrow it (Art. 134, RPC).",
-    requirements: ["Police/Military Arrest Report", "Intelligence Reports", "Photos/Videos of Armed Gathering", "Seized Logistics Inventory"],
-    steps: universalPaoFlow
-  },
-  "Coup d'état": {
-    description: "A swift attack against military/police installations or public facilities to seize power (Art. 134-A, RPC).",
-    requirements: ["Incident Report", "Deployment/Mission Orders", "Witness Testimonies", "Seized Weaponry Documentation"],
-    steps: universalPaoFlow
-  },
-  "Direct Assault": {
-    description: "Employing force or intimidation against persons in authority or their agents (Art. 148, RPC).",
-    requirements: ["Police/Incident Report", "Proof of Authority Status of Victim", "Medico-Legal (if injured)", "Witness Affidavits"],
-    steps: universalPaoFlow
-  },
+
   // --- CYBERCRIME ---
   "Cyberlibel": {
-    description: "Libel committed through a computer system or social media (RA 10175).",
-    requirements: ["Screenshots of Defamatory Post", "URL/Link to content", "Proof of Publication", "Witness Affidavits", "Police Cybercrime Report"],
-    steps: universalPaoFlow
-  },
-  "Illegal Access (Hacking)": {
-    description: "Unauthorized access to a computer system or network (Sec. 4a, RA 10175).",
-    requirements: ["Digital Audit/Log Report", "Screenshots of Unauthorized Activity", "Police Anti-Cybercrime Report", "Ownership Proof of Account"],
+    description: "Libel as defined in Art. 355 of the RPC, committed through a computer system or social media (RA 10175).",
+    requirements: ["Screenshots of Defamatory Post", "URL/Link to content", "Proof of Identity of Account Owner", "Witness Affidavits", "Police Cybercrime Report"],
     steps: universalPaoFlow
   },
   "Computer-Related Identity Theft": {
-    description: "Unauthorized use of another person's identifying information via computer (Sec. 4b, RA 10175).",
-    requirements: ["Screenshots of Fake Profile/Activity", "Government ID of Victim", "URLs/Links", "Affidavit of Denial"],
+    description: "Unauthorized use of another person's identifying information via a computer system (Sec. 4b, RA 10175).",
+    requirements: ["Screenshots of Unauthorized Activity", "Government ID of Victim", "URLs/Links of fake profiles", "Affidavit of Denial"],
     steps: universalPaoFlow
   },
-  // --- SPECIAL PENAL ---
+
+  // --- DRUGS & ARMS ---
   "Dangerous Drugs (RA 9165)": {
-    description: "Offenses involving possession, sale, or use of prohibited drugs (RA 9165).",
-    requirements: ["Inventory of Seized Items (Sec 21)", "Drug Test Results", "Chemistry Report", "Buy-Bust/Arrest Report", "CCTV (if any)"],
+    description: "Offenses involving possession, sale, or use of prohibited drugs (Comprehensive Dangerous Drugs Act of 2002).",
+    requirements: ["Inventory of Seized Items (Sec 21)", "Drug Test Results", "Chemistry Report", "Buy-Bust/Arrest Report", "Chain of Custody Form"],
     steps: universalPaoFlow
   },
   "Firearms Possession (RA 10591)": {
-    description: "Possessing unlicensed, unregistered, or altered firearms (loose firearms).",
-    requirements: ["Police Alarm Report", "Seized Firearm Documentation", "Ballistics Report", "Certification of No License (FEO)"],
+    description: "Possessing unlicensed, unregistered, or altered 'loose firearms' (RA 10591).",
+    requirements: ["Police Alarm/Incident Report", "Seized Firearm Documentation", "Ballistics Report", "Certification of No License from FEO-PNP"],
     steps: universalPaoFlow
   },
-  "Explosives Possession (RA 9516)": {
-    description: "Unlawful possession or manufacture of explosives or hand grenades (RA 9516).",
-    requirements: ["Police Incident Report", "EOD (Explosive Ordnance Disposal) Certification", "Inventory of Seized Materials"],
-    steps: universalPaoFlow
-  },
-  // --- RECRUITMENT & TRAFFICKING ---
-  "Human Trafficking (RA 9208)": {
-    description: "Recruitment or transportation of persons by force or fraud for exploitation (RA 9208 as amended).",
-    requirements: ["Rescue/Police Report", "Communication Logs", "Travel Documents/Passports", "Witness Affidavits", "IACAT Documentation"],
-    steps: universalPaoFlow
-  },
-  "Illegal Recruitment (RA 8042)": {
-    description: "Recruitment activities by non-licensees or prohibited acts by licensees (RA 8042).",
-    requirements: ["POEA Certification (Non-licensee)", "Recruitment Ads/Materials", "Proof of Payment", "Affidavit of Complainant"],
-    steps: universalPaoFlow
-  },
+
   // --- CIVIL STATUS ---
   "Bigamy": {
-    description: "Contracting a second marriage while a previous marriage is still valid (Art. 349, RPC).",
-    requirements: ["First Marriage Contract (PSA)", "Second Marriage Contract (PSA)", "CENOMAR", "Witness Affidavits"],
+    description: "Contracting a second marriage while a previous marriage is still valid and subsisting (Art. 349, Revised Penal Code).",
+    requirements: ["First Marriage Contract (PSA)", "Second Marriage Contract (PSA)", "CENOMAR (PSA)", "Witness Affidavits"],
     steps: universalPaoFlow
   },
   "Simulation of Birth": {
-    description: "Deceptively making it appear a child was born to a person not their biological mother (Art. 347, RPC).",
-    requirements: ["Simulated Birth Certificate", "Hospital/Clinic Records", "DNA Test Results (if any)", "Witness Affidavits"],
+    description: "Deceptively making it appear a child was born to a person not their biological mother (Art. 347, Revised Penal Code).",
+    requirements: ["PSA Birth Certificate of Child", "Hospital/Clinic Records", "DNA Test Results (if any)", "Witness Affidavits"],
     steps: universalPaoFlow
   },
+
   // --- TRAFFIC ---
   "Reckless Imprudence (Art 365)": {
-    description: "Voluntary act without malice but lacking precaution, resulting in injury or damage (Art. 365, RPC).",
-    requirements: ["Police Accident Report", "Medico-Legal / Death Certificate", "Photos of Scene/Vehicles", "Appraisal of Property Damage", "Witness Statements"],
+    description: "A voluntary act without malice but lacking precaution, resulting in injury or damage (Art. 365, Revised Penal Code).",
+    requirements: ["Police Accident Report", "Medico-Legal Report / Death Certificate", "Photos of Scene/Vehicles", "Appraisal of Property Damage", "Witness Statements"],
     steps: universalPaoFlow
   },
-  // --- CIVIL ---
+
+  // --- CIVIL LAW ---
   "Annulment of Marriage": {
-    description: "Cancellation of marriage based on grounds like psychological incapacity (Art. 36/45, Family Code).",
+    description: "Cancellation of marriage based on grounds like psychological incapacity existing at the time of celebration (Art. 36/45, Family Code).",
     requirements: ["PSA Marriage Contract", "PSA Birth Certificates of Children", "CENOMAR", "Psychological Evaluation Report", "Witness Statements"],
     steps: universalPaoFlow
   },
   "Unlawful Detainer": {
-    description: "Recovery of possession of property after legal right to stay has expired.",
-    requirements: ["Demand Letter to Vacate", "Proof of Ownership (Title/Tax Dec)", "Barangay Certificate to File Action", "Lease Contract (if any)"],
+    description: "Recovery of possession of property after a legal right to stay (like a lease) has expired or been terminated.",
+    requirements: ["Demand Letter to Vacate with Proof of Receipt", "Proof of Ownership (Title/Tax Dec)", "Barangay Certificate to File Action", "Lease Contract"],
     steps: universalPaoFlow
   },
   "Collection of Sum of Money": {
-    description: "Claims for debts or unpaid loans. (Art 1170 Civil Code).",
+    description: "Claims for debts, unpaid loans, or services rendered (Small Claims or Civil Case).",
     requirements: ["Promissory Note / Loan Agreement", "Demand Letter with Proof of Receipt", "Statement of Account", "Barangay Cert to File Action"],
     steps: universalPaoFlow
   },
-  // --- LABOR ---
+
+  // --- LABOR LAW ---
   "Illegal Dismissal (Art 279)": {
     description: "Termination of employment without just or authorized cause and due process (Art. 279, Labor Code).",
     requirements: ["Employment Contract", "Notice of Termination", "Latest Payslips", "Company ID", "Witness Affidavits"],
     steps: universalPaoFlow
   },
-  "OFW Claims (POEA)": {
-    description: "Assistance for OFWs regarding illegal dismissal or unpaid benefits under POEA contracts.",
-    requirements: ["POEA-approved Contract", "Passport & Visa", "OEC (Overseas Employment Cert)", "Communication Logs with Agency"],
+  "Unpaid Wages (Art 103)": {
+    description: "Claims for wages withheld, delayed, or underpaid by the employer (Art. 103, Labor Code).",
+    requirements: ["Latest Payslips", "Daily Time Records (DTR)", "Company ID", "Letter of Demand to Employer"],
     steps: universalPaoFlow
   },
-  "Unpaid Wages (Art 103)": {
-    description: "Claims for wages not paid on time or withheld by employer (Art. 103, Labor Code).",
-    requirements: ["Latest Payslips", "Daily Time Records (DTR)", "Company ID", "Letter of Demand to Employer"],
+  "OFW Claims (POEA)": {
+    description: "Assistance for OFWs regarding illegal dismissal, unpaid benefits, or death/disability claims under POEA contracts.",
+    requirements: ["POEA-approved Contract", "Passport & Visa", "OEC (Overseas Employment Cert)", "Proof of Remittances / Communication Logs"],
     steps: universalPaoFlow
   }
 };
@@ -282,7 +253,7 @@ export const pAONotes = [
   "✔ Eligibility: You must pass the Indigency Test (Income) and Merit Test (Legal Basis).",
   "✔ Conflict of Interest: PAO cannot represent both opposing parties.",
   "✔ Preparation: Bring original documents and 3 photocopies to your appointment.",
-  "✔ Special Priority: VAWC, Labor, and Criminal Defense for the poor take precedence."
+  "✔ Special Priority: VAWC, Labor, and Criminal Defense cases take precedence."
 ];
 
 export const allCaseNames = Object.values(caseCategories)
