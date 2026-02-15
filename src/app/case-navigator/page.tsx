@@ -127,7 +127,7 @@ function CaseNavigatorContent() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="border-none shadow-xl bg-white/70 backdrop-blur-md rounded-[2rem] overflow-hidden">
+          <Card className="border-none shadow-xl bg-white/70 backdrop-blur-md rounded-[2.5rem] overflow-hidden">
             <CardHeader className="pb-4 bg-primary/5">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-primary text-white rounded-xl shadow-md">
@@ -139,7 +139,7 @@ function CaseNavigatorContent() {
             <CardContent className="space-y-4 pt-6">
               <div className="space-y-1">
                 <p className="text-[10px] font-bold text-primary/40 uppercase tracking-widest">Matter Subject</p>
-                <h2 className="text-2xl font-black text-[#1A3B6B] leading-tight tracking-tight">{caseName}</h2>
+                <h2 className="text-xl font-black text-[#1A3B6B] leading-tight tracking-tight">{caseName}</h2>
                 {selectedCategory && <Badge className="mt-2 px-3 py-1 text-xs font-bold rounded-full bg-primary/10 text-primary border-none">{selectedCategory}</Badge>}
               </div>
 
@@ -173,7 +173,7 @@ function CaseNavigatorContent() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-xl bg-white/70 backdrop-blur-md rounded-[2rem] overflow-hidden">
+          <Card className="border-none shadow-xl bg-white/70 backdrop-blur-md rounded-[2.5rem] overflow-hidden">
             <CardHeader className="pb-4 bg-primary/5">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-primary text-white rounded-xl shadow-md">
@@ -207,7 +207,7 @@ function CaseNavigatorContent() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-xl bg-white/70 backdrop-blur-md rounded-[2rem] overflow-hidden">
+          <Card className="border-none shadow-xl bg-white/70 backdrop-blur-md rounded-[2.5rem] overflow-hidden">
             <CardHeader className="pb-4 bg-primary/5">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-primary text-white rounded-xl shadow-md">
@@ -247,7 +247,7 @@ function CaseNavigatorContent() {
         <Button variant="outline" size="icon" onClick={() => setSelectedCategory(null)} className="h-12 w-12 rounded-xl text-primary border-primary/20 bg-white shadow-md hover:scale-105 transition-transform">
           <ArrowLeft className="h-6 w-6" />
         </Button>
-        <h2 className="text-3xl font-black text-primary font-headline tracking-tight">{title} Cases</h2>
+        <h2 className="text-2xl font-black text-primary font-headline tracking-tight">{title} Cases</h2>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {subCategories.map((cat, idx) => (
@@ -260,7 +260,7 @@ function CaseNavigatorContent() {
                 <div 
                   key={item} 
                   onClick={() => handleCaseClick(item, title)} 
-                  className="text-base text-[#1A3B6B] font-bold cursor-pointer hover:bg-primary/5 px-5 py-3 rounded-xl flex items-center justify-between transition-all group border border-transparent hover:border-primary/20"
+                  className="text-sm text-[#1A3B6B] font-bold cursor-pointer hover:bg-primary/5 px-5 py-3 rounded-xl flex items-center justify-between transition-all group border border-transparent hover:border-primary/20"
                 >
                   <div className="flex items-center gap-3">
                     <div className="h-2 w-2 rounded-full bg-primary/20 group-hover:bg-primary group-hover:scale-125 transition-all shrink-0" />
@@ -283,10 +283,10 @@ function CaseNavigatorContent() {
           <div className="inline-flex items-center justify-center p-5 bg-primary/10 rounded-[2.5rem] mb-2 shadow-inner border border-white/50">
             <Compass className="h-12 w-12 text-primary" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-black font-headline text-primary tracking-tight leading-tight">
+          <h1 className="text-3xl md:text-4xl font-black font-headline text-primary tracking-tight leading-tight">
             Case Navigator
           </h1>
-          <p className="text-base text-muted-foreground font-semibold leading-relaxed max-w-2xl mx-auto">
+          <p className="text-sm text-muted-foreground font-semibold leading-relaxed max-w-2xl mx-auto">
             Official statutory requirements and process flows for legal assistance.
           </p>
         </div>
@@ -303,7 +303,7 @@ function CaseNavigatorContent() {
             />
           </div>
           <Button size="lg" onClick={handleSearch} className="bg-primary hover:bg-[#1A3B6B] text-white h-12 px-8 text-base font-bold rounded-xl flex items-center gap-2 shadow-lg transition-all hover:scale-[1.02] active:scale-95">
-            Navigator
+            Search
           </Button>
         </div>
 
@@ -313,8 +313,8 @@ function CaseNavigatorContent() {
                <div className="p-6 bg-primary/5 rounded-[3rem] mb-6 shadow-inner border border-primary/5">
                  <CalendarCheck className="h-12 w-12 text-primary" />
                </div>
-               <h2 className="text-3xl font-black text-primary tracking-tight">Manage Appointment</h2>
-               <p className="text-base text-muted-foreground mt-2 font-semibold">Enter your reference code PAO-XXXXXX to continue.</p>
+               <h2 className="text-2xl font-black text-primary tracking-tight">Manage Appointment</h2>
+               <p className="text-sm text-muted-foreground mt-2 font-semibold">Enter your reference code PAO-XXXXXX to continue.</p>
                <div className="mt-8 w-full max-w-sm flex flex-col gap-4">
                   <Input 
                     placeholder="PAO-123456" 
@@ -353,7 +353,7 @@ function CaseNavigatorContent() {
                           {category === 'Special Legislation' && <ShieldCheck className="h-8 w-8" />}
                           {category === 'Administrative' && <Info className="h-8 w-8" />}
                         </div>
-                        <span className="text-center leading-tight tracking-tight">{category}</span>
+                        <span className="text-center text-sm leading-tight tracking-tight">{category}</span>
                       </button>
                     ))}
                   </div>
@@ -362,7 +362,7 @@ function CaseNavigatorContent() {
                      <Card className="bg-amber-50/50 border-2 border-amber-100 rounded-[2.5rem] p-8 shadow-xl backdrop-blur-sm">
                        <div className="space-y-8">
                          <div className="text-center space-y-1">
-                           <h3 className="text-2xl font-black text-amber-900 flex items-center justify-center gap-3">
+                           <h3 className="text-xl font-black text-amber-900 flex items-center justify-center gap-3">
                              <AlertCircle className="h-6 w-6" /> Important Reminders
                            </h3>
                            <p className="text-amber-800/60 font-bold uppercase tracking-widest text-[10px]">Standard Operating Procedures</p>
@@ -371,7 +371,7 @@ function CaseNavigatorContent() {
                            {pAONotes.map((note, i) => (
                              <div key={i} className="flex gap-3 bg-white/60 p-4 rounded-xl border border-amber-200/50 shadow-sm">
                                <CheckCircle2 className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-                               <span className="text-sm text-amber-900 font-semibold leading-relaxed">{note}</span>
+                               <span className="text-xs text-amber-900 font-semibold leading-relaxed">{note}</span>
                              </div>
                            ))}
                          </div>
