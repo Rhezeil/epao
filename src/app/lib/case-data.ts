@@ -199,10 +199,25 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     steps: universalPaoFlow
   },
 
-  // --- VAWC ---
+  // --- VAWC (RA 9262) ---
   "Physical Violence (VAWC)": {
-    description: "Acts causing bodily harm or threatening physical harm against a woman or her child (RA 9262).",
+    description: "Acts causing or threatening physical harm, or inflicting bodily injury resulting in distress (Section 5a-d, RA 9262).",
     requirements: ["Proof of Relationship", "Medico-Legal Certificate", "Photos of Injuries", "Police/Barangay Blotter"],
+    steps: universalPaoFlow
+  },
+  "Sexual Violence (VAWC)": {
+    description: "Includes rape, harassment, indecent acts, or treating a woman/child as a sex object (Section 5g, RA 9262).",
+    requirements: ["Proof of Relation", "Medico-Legal Report", "Psychological Evaluation", "Police Report", "Witness Affidavits"],
+    steps: universalPaoFlow
+  },
+  "Psychological Violence (VAWC)": {
+    description: "Acts causing mental/emotional anguish, verbal abuse, stalking, or threatening custody (Section 5h-i, RA 9262).",
+    requirements: ["Communication Logs (SMS/Chat)", "Psychological Evaluation", "Barangay Protection Order (if any)", "Witness Affidavits"],
+    steps: universalPaoFlow
+  },
+  "Economic Abuse (VAWC)": {
+    description: "Depriving financial support, controlling finances, or preventing the victim from working (Section 5e, RA 9262).",
+    requirements: ["Bank Statements", "Evidence of Withheld Support", "Employment Records", "Affidavit of Fact"],
     steps: universalPaoFlow
   },
 
@@ -210,6 +225,11 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   "Cyberlibel": {
     description: "Libel as defined in Art. 355 of the RPC, committed through a computer system (RA 10175).",
     requirements: ["Screenshots of Defamatory Post", "URL/Link", "Proof of Account Identity", "Witness Affidavits", "Cybercrime Division Report"],
+    steps: universalPaoFlow
+  },
+  "Illegal Access (Hacking)": {
+    description: "Unauthorized access to a computer system or network (Section 4a, RA 10175).",
+    requirements: ["IT Audit Log/Report", "Screenshots of Breach", "Evidence of Account Hijacking", "Police Report"],
     steps: universalPaoFlow
   },
 
@@ -226,11 +246,21 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["Employment Contract", "Notice of Termination", "Latest Payslips", "Company ID", "Witness Affidavits"],
     steps: universalPaoFlow
   },
+  "Wage Deductions (Art 113)": {
+    description: "Prohibits unauthorized deductions from wages (Article 113, Labor Code).",
+    requirements: ["Payslips showing deductions", "Company Policy Handbook", "Employment Contract", "Grievance Records"],
+    steps: universalPaoFlow
+  },
 
   // --- CIVIL ---
   "Annulment of Marriage (Art 36/45 FC)": {
     description: "Legal process to declare a marriage null and void from the beginning (Article 36) or voidable (Article 45) under the Family Code.",
     requirements: ["PSA Marriage Contract", "PSA Birth Certificates of Children", "Psychological Evaluation Report", "Barangay Certificate of Residency", "Witness Affidavits"],
+    steps: universalPaoFlow
+  },
+  "Collection of Sum of Money": {
+    description: "Claims for debts, unpaid loans, or services rendered (Small Claims or Civil Actions).",
+    requirements: ["Promissory Note/Contract", "Demand Letter with Proof of Receipt", "Bank Transfer/Check Copies", "Witness Affidavits"],
     steps: universalPaoFlow
   }
 };
