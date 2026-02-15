@@ -52,7 +52,7 @@ export const caseCategories = {
     },
     {
       title: "⚖️ VI. PUBLIC ORDER (STATE SECURITY)",
-      items: ["Rebellion", "Coup d'état", "Sedition", "Conspiracy to Commit Rebellion"]
+      items: ["Rebellion (Art 134)", "Coup d'état (Art 134-A)", "Sedition (Art 139)", "Conspiracy to Commit Rebellion (Art 136)"]
     },
     {
       title: "👮 VII. PUBLIC ORDER (AUTHORITY)",
@@ -61,30 +61,6 @@ export const caseCategories = {
     {
       title: "📢 VIII. PUBLIC ORDER (DISTURBANCES)",
       items: ["Illegal Assembly", "Illegal Association", "Tumults & Public Disturbance", "Alarms and Scandals"]
-    },
-    {
-      title: "💻 IX. CYBERCRIME (OFFENSES AGAINST SYSTEMS)",
-      items: ["Illegal Access (Hacking)", "Illegal Interception", "Data Interference", "System Interference", "Misuse of Devices", "Cybersquatting"]
-    },
-    {
-      title: "🆔 X. CYBERCRIME (IDENTITY & FORGERY)",
-      items: ["Computer-Related Identity Theft", "Computer-Related Forgery", "Computer-Related Fraud"]
-    },
-    {
-      title: "🔞 XI. CYBERCRIME (CONTENT-RELATED)",
-      items: ["Cyberlibel", "Cybersex", "Child Pornography (RA 9775)", "Photo/Video Voyeurism (RA 9995)"]
-    },
-    {
-      title: "📦 XII. SPECIAL PENAL LAWS (DRUGS & ARMS)",
-      items: ["Dangerous Drugs (RA 9165)", "Firearms Possession (RA 10591)", "Explosives Possession (RA 9516)"]
-    },
-    {
-      title: "🌍 XIII. RECRUITMENT & TRAFFICKING",
-      items: ["Illegal Recruitment (RA 8042)", "Human Trafficking (RA 9208)", "Qualified Trafficking"]
-    },
-    {
-      title: "💍 XIV. CIVIL STATUS CRIMES",
-      items: ["Bigamy (Art 349)", "Simulation of Birth (Art 347)", "Usurpation of Civil Status (Art 348)", "Premature Marriage (Art 351)", "Illegal Marriage Ceremony (Art 352)"]
     }
   ],
   "Civil": [
@@ -155,209 +131,163 @@ export const pAONotes = [
 ];
 
 export const caseSpecificData: Record<string, { requirements: string[], steps: any[], description: string }> = {
-  // --- CRIMES AGAINST PROPERTY (RPC) ---
+  // --- CRIMES AGAINST PUBLIC ORDER (STATE SECURITY) ---
+  "Rebellion (Art 134)": {
+    description: "Rising publicly and taking arms against the government to remove allegiance or deprive government powers.",
+    requirements: ["Intelligence Reports", "Firearms Seized Inventory", "Witness Testimony", "Official Confession Records", "Video/Photo Evidence", "Arrest Report"],
+    steps: universalPaoFlow
+  },
+  "Coup d'état (Art 134-A)": {
+    description: "Swift attack by military/police or civilians against government authority to seize power.",
+    requirements: ["Military/Police Internal Reports", "Weapons Seized Inventory", "Recorded Orders/Communications", "Witness Testimony", "Intelligence Records"],
+    steps: universalPaoFlow
+  },
+  "Sedition (Art 139)": {
+    description: "Public uprising to prevent execution of laws or inflict acts of hate/revenge against the state.",
+    requirements: ["Rally Videos/Photos", "Social Media Posts Evidence", "Police Dispersal Report", "Witness Affidavits", "Arrest Records"],
+    steps: universalPaoFlow
+  },
+  "Conspiracy to Commit Rebellion (Art 136)": {
+    description: "Agreement between two or more persons to commit rebellion with the specific intent to execute it.",
+    requirements: ["Recorded Communications", "Documentation of Meetings", "Confession Records", "Witness Testimony"],
+    steps: universalPaoFlow
+  },
+
+  // --- CRIMES AGAINST PROPERTY ---
   "Robbery": {
-    description: "Robbery (Art 293) involves taking personal property with intent to gain through violence, intimidation, or force. Related: Art 294 (Violence), Art 295 (with Homicide), Art 299-302 (Inhabited/Uninhabited places).",
-    requirements: [
-      "Police Blotter Report",
-      "Sworn Complaint-Affidavit",
-      "Medical Certificate (if violence was used)",
-      "Proof of Ownership (Receipt, OR/CR, Title)",
-      "CCTV Footage (if available)",
-      "Witness Affidavits",
-      "Photos of the Crime Scene"
-    ],
+    description: "Robbery (Art 293) involves taking personal property belonging to another with intent to gain through violence, intimidation, or force.",
+    requirements: ["Police Blotter Report", "Sworn Complaint-Affidavit", "Medical Certificate (if violence used)", "Proof of Ownership (Receipt, OR/CR, Title)", "CCTV Footage", "Witness Affidavits", "Arrest Report"],
     steps: universalPaoFlow
   },
   "Theft": {
-    description: "Theft (Art 308) is the taking of personal property belonging to another without consent, without violence, and with intent to gain.",
-    requirements: [
-      "Police Report",
-      "Affidavit of Loss",
-      "Proof of Ownership (Receipt, Purchase Agreement)",
-      "CCTV Footage",
-      "Witness Affidavits"
-    ],
+    description: "Theft (Art 308) is taking personal property without consent, without violence, and with intent to gain.",
+    requirements: ["Police Report", "Affidavit of Loss", "Proof of Ownership", "CCTV Footage", "Witness Affidavits", "Recovery Receipt (if applicable)"],
     steps: universalPaoFlow
   },
   "Qualified Theft": {
-    description: "Qualified Theft (Art 310) is committed by a domestic servant, with grave abuse of confidence, or involving motor vehicles, large cattle, etc. Penalties are higher.",
-    requirements: [
-      "Employment Records (if domestic servant)",
-      "Proof of Trust Relationship (Contract, ID)",
-      "Proof of Ownership",
-      "Police Investigation Report"
-    ],
+    description: "Qualified Theft (Art 310) is theft committed with grave abuse of confidence, by domestic servants, or involving specific property like vehicles.",
+    requirements: ["Employment Records", "Proof of Trust Relationship", "Proof of Ownership", "CCTV Footage", "Inventory of Stolen Items", "Police Investigation Report"],
     steps: universalPaoFlow
   },
   "Estafa": {
-    description: "Estafa (Art 315) occurs when a person defrauds another through abuse of confidence or deceit. Common types: abuse of confidence, deceit, or bouncing checks.",
-    requirements: [
-      "Written Contract or Agreement",
-      "Promissory Note",
-      "Receipts or Proof of Payment",
-      "Demand Letter with Proof of Receipt",
-      "Screenshots / Chat Messages",
-      "Dishonored Check & Bank Return Slip (if applicable)"
-    ],
+    description: "Estafa (Art 315) involves defrauding another through abuse of confidence or deceit causing financial damage.",
+    requirements: ["Written Contract/Agreement", "Promissory Note", "Receipts/Proof of Payment", "Demand Letter with Registry Receipt", "Chat Messages/Screenshots", "Bank Records/Return Slip"],
     steps: universalPaoFlow
   },
   "Malicious Mischief": {
     description: "Malicious Mischief (Art 327) is the deliberate damage to the property of another without intent to gain.",
-    requirements: [
-      "Photos of Damaged Property",
-      "Repair Estimates",
-      "Police Blotter",
-      "Witness Affidavits",
-      "Proof of Ownership"
-    ],
+    requirements: ["Photos of Damaged Property", "Repair Estimates", "Police Blotter", "Witness Affidavits", "CCTV Footage", "Proof of Ownership"],
     steps: universalPaoFlow
   },
 
-  // --- PROPERTY CRIMES (SPECIAL LAWS) ---
+  // --- SPECIAL PROPERTY LAWS ---
   "BP Blg. 22 (Anti-Bouncing Checks)": {
-    description: "Anti-Bouncing Checks Law. Punishes issuing a check that is dishonored due to insufficient funds or drawn against a closed account. It is a malum prohibitum offense (intent to defraud not required).",
-    requirements: [
-      "Original dishonored check",
-      "Bank return slip (stamped NSF / Closed Account)",
-      "Written demand letter",
-      "Proof of receipt of demand letter (Registry return receipt)",
-      "Proof of underlying obligation (Contract, receipts)"
-    ],
+    description: "Punishes issuing a check that is dishonored due to insufficient funds. It is a malum prohibitum offense.",
+    requirements: ["Original Dishonored Check", "Bank Return Slip (NSF/Closed)", "Written Demand Letter", "Registry Return Receipt of Demand", "Proof of Underlying Obligation"],
     steps: universalPaoFlow
   },
   "PD 1612 (Anti-Fencing)": {
-    description: "Anti-Fencing Law of 1979. Punishes buying, possessing, or selling property knowing it was stolen. Possession of stolen property creates a presumption of fencing.",
-    requirements: [
-      "Police report of original theft/robbery",
-      "Proof property was stolen",
-      "Proof accused possessed/sold item",
-      "Receipts of sale",
-      "Witness testimony",
-      "CCTV footage"
-    ],
+    description: "Buying, possessing, or selling property knowing it was stolen. Possession creates a presumption of fencing.",
+    requirements: ["Original Theft Police Report", "Proof property was stolen", "Proof of Accused Possession", "Receipts of Sale", "Witness Testimony"],
     steps: universalPaoFlow
   },
   "RA 7832 (Anti-Electricity Pilferage)": {
-    description: "Anti-Electricity Pilferage Act of 1994. Punishes illegal use of electricity, jumper connections, meter tampering, or stealing transmission lines.",
-    requirements: [
-      "Inspection report by electric company",
-      "Photographs of illegal connection",
-      "Disconnection notice",
-      "Meter tampering report",
-      "Affidavit of inspecting officer",
-      "Technical report"
-    ],
+    description: "Illegal use of electricity, jumper connections, or tampering with electric meters.",
+    requirements: ["Electric Company Inspection Report", "Photos of Illegal Connection", "Disconnection Notice", "Tampering Report", "Affidavit of Inspecting Officer"],
     steps: universalPaoFlow
   },
 
-  // --- CRIMES AGAINST PERSONS: DESTRUCTION OF LIFE ---
+  // --- CRIMES AGAINST PERSONS ---
   "Parricide (Art 246)": {
-    description: "Killing of one's father, mother, or child (legitimate or illegitimate), or any ascendant or descendant, or spouse. Penalized with Reclusion Perpetua to Death.",
-    requirements: ["PSA Birth Certificate (Proof of Relation)", "PSA Marriage Contract (if spouse)", "Death Certificate of the Victim", "Police Investigation Report", "Autopsy/Post-Mortem Report"],
+    description: "Killing of one's father, mother, or child (legitimate or illegitimate), or any ascendant or descendant, or spouse.",
+    requirements: ["PSA Birth/Marriage Certificate", "Victim Death Certificate", "Police Investigation Report", "Autopsy Report"],
     steps: universalPaoFlow
   },
   "Death/Injuries under Exceptional Circumstances (Art 247)": {
-    description: "Killing or injuring a spouse or daughter in the act of sexual intercourse with another, while in the act of surprised betrayal.",
-    requirements: ["PSA Marriage Contract (Proof of Relation)", "Police Blotter of the Incident", "Medico-Legal Certificate", "Witness Affidavits"],
+    description: "Killing or injuring a spouse or daughter caught in the act of sexual betrayal.",
+    requirements: ["PSA Marriage Contract", "Police Blotter", "Medico-Legal Certificate", "Witness Affidavits"],
     steps: universalPaoFlow
   },
   "Murder (Art 248)": {
-    description: "The unlawful killing of a person with qualifying circumstances such as treachery, price/reward, poison, fire, or evident premeditation.",
-    requirements: ["Police Investigation Report", "Autopsy/Post-Mortem Report", "Death Certificate", "Witness Affidavits", "CCTV or Physical Evidence"],
+    description: "Unlawful killing with qualifying circumstances like treachery, price/reward, or evident premeditation.",
+    requirements: ["Police Investigation Report", "Autopsy Report", "Death Certificate", "Witness Affidavits", "CCTV Evidence"],
     steps: universalPaoFlow
   },
   "Homicide (Art 249)": {
-    description: "The unlawful killing of a person without the qualifying circumstances of murder and without the relationship elements of parricide.",
+    description: "Unlawful killing without the qualifying circumstances of murder.",
     requirements: ["Police Report", "Death Certificate", "Medico-Legal Certificate", "Witness Statements"],
     steps: universalPaoFlow
   },
   "Death in Tumultuous Affray (Art 251)": {
-    description: "Death in Tumultuous Affray (Article 251 RPC) occurs when a person is killed during a chaotic, unorganized fight involving several people, and it cannot be determined who specifically caused the death.",
-    requirements: [
-      "Complaint-Affidavit (if already filed)",
-      "Subpoena or Warrant of Arrest (if served)",
-      "Police Report of the chaotic incident",
-      "Witness Statements confirming the affray"
-    ],
+    description: "Killing during a chaotic fight involving several people where the specific killer cannot be identified.",
+    requirements: ["Complaint-Affidavit", "Subpoena/Warrant Records", "Police Incident Report", "Witness Statements"],
     steps: universalPaoFlow
   },
   "Assistance to Suicide (Art 253)": {
-    description: "Giving assistance to another person to commit suicide. Penalties vary if the suicide is consummated or merely attempted.",
+    description: "Assisting another to commit suicide. Liability depends on if suicide is consummated.",
     requirements: ["Police Report", "Suicide Note (if any)", "Witness Statements", "Medico-Legal Report"],
     steps: universalPaoFlow
   },
   "Discharge of Firearms (Art 254)": {
-    description: "Illegal Discharge of Firearms (Article 254 RPC, as amended by RA 11926) involves shooting at another without intent to kill, or willful and indiscriminate discharge regardless of target.",
-    requirements: [
-      "Police Investigation Report",
-      "Firearm Ballistics Report",
-      "Witness Affidavits",
-      "Notice of Inquest (if arrested)",
-      "Gun License Status (if any)"
-    ],
+    description: "Shooting at another without intent to kill, or willful/indiscriminate discharge (RA 11926).",
+    requirements: ["Police Investigation Report", "Ballistics Report", "Firearm License Status", "Witness Affidavits", "Inquest Records"],
     steps: [
-      { step: 1, title: "Inquest Assistance", content: "Immediate PAO assistance after arrest to determine legality of detention and presence of probable cause." },
+      { step: 1, title: "Inquest Assistance", content: "Immediate PAO representation during arrest to check legality of detention." },
       ...universalPaoFlow.slice(1)
     ]
   },
   "Infanticide (Art 255)": {
-    description: "The killing of a child less than three days (72 hours) old. Handled with specialized sensitivity.",
-    requirements: ["PSA Birth Certificate of Child", "Autopsy Report", "Police Report", "Witness Affidavits"],
+    description: "Killing of a child less than 72 hours old.",
+    requirements: ["PSA Birth Certificate", "Autopsy Report", "Police Report", "Witness Affidavits"],
     steps: universalPaoFlow
   },
   "Abortion (Art 256-259)": {
-    description: "Abortion is prohibited and penalized under Articles 256-259 RPC, whether intentional or unintentional, practiced by the woman, parents, or medical professionals.",
-    requirements: ["Medico-Legal Report", "Police Investigation Report", "Hospital Records (if any)", "Witness Statements"],
+    description: "Prohibited acts of ending a pregnancy, whether intentional or not, by the mother or medical practitioners.",
+    requirements: ["Medico-Legal Report", "Hospital Records", "Police Investigation Report", "Witness Statements"],
     steps: universalPaoFlow
   },
   "Responsibility in Duel (Art 260)": {
-    description: "Killing or injuring an opponent in a duel. Both participants and seconds may be held liable under the RPC.",
-    requirements: ["Police Report", "Witness Statements", "Duel Challenge/Agreement evidence", "Medico-Legal Report"],
+    description: "Killing or injuring an opponent in a duel. Participants and seconds are liable.",
+    requirements: ["Police Report", "Witness Statements", "Challenge Evidence", "Medico-Legal Report"],
     steps: universalPaoFlow
   },
 
   // --- PHYSICAL INJURIES ---
-  "Mutilation (Art 262)": {
-    description: "Intentionally depriving a person of a part of their body. Penalized based on the importance of the organ or limb.",
-    requirements: ["Medical Certificate", "Police Blotter", "Photos of Injury"],
-    steps: universalPaoFlow
-  },
   "Serious Physical Injuries (Art 263)": {
-    description: "Injuries causing insanity, imbecility, impotence, blindness, or incapacity for labor for more than 90 days (Section 1-4).",
-    requirements: ["Medical Certificate (Nature, extent, duration of healing)", "Police Report/Blotter", "Witness Affidavits", "Photographs of Injuries", "Certificate to File Action (from Barangay)"],
+    description: "Injuries causing insanity, blindness, or incapacity for labor for more than 90 days.",
+    requirements: ["Medical Certificate (90+ days)", "Police Blotter", "Photos of Injury", "Barangay Certificate to File Action"],
     steps: universalPaoFlow
   },
   "Less Serious Physical Injuries (Art 265)": {
-    description: "Injuries incapacitating the victim for labor or requiring medical assistance for 10 to 29 days.",
-    requirements: ["Medical Certificate stating 10-29 days healing", "Police Blotter", "Witness Affidavits", "Certificate to File Action"],
+    description: "Injuries requiring medical assistance for 10 to 29 days.",
+    requirements: ["Medical Certificate (10-29 days)", "Police Blotter", "Witness Affidavits", "Barangay Certificate to File Action"],
     steps: universalPaoFlow
   },
   "Slight Physical Injuries (Art 266)": {
-    description: "Injuries causing incapacity for 1 to 9 days or maltreatment without injury.",
-    requirements: ["Medical Certificate stating 1-9 days healing", "Police Blotter", "Certificate to File Action (from Barangay)"],
+    description: "Injuries causing incapacity for 1 to 9 days.",
+    requirements: ["Medical Certificate (1-9 days)", "Police Blotter", "Barangay Certificate to File Action"],
     steps: universalPaoFlow
   },
 
-  // --- VAWC (RA 9262) ---
+  // --- VAWC ---
   "Physical Violence (Section 5a)": {
-    description: "Acts causing bodily harm, such as battery, physical assault, threats, or causing fear of harm. Section 5a of R.A. 9262.",
-    requirements: ["Proof of Relation (Marriage/Birth Cert)", "Medico-Legal Certificate", "Photos of Injuries", "Police/Barangay Blotter", "Affidavits"],
+    description: "Acts causing bodily harm, battery, or causing fear of harm under R.A. 9262.",
+    requirements: ["Proof of Relation", "Medico-Legal Certificate", "Photos of Injuries", "Police/Barangay Blotter", "Affidavits"],
     steps: universalPaoFlow
   },
   "Sexual Violence (Section 5b)": {
-    description: "Sexual acts including rape, sexual harassment, acts of lasciviousness, treating someone as a sex object, demeaning remarks, forcing cohabitation with a mistress, or prostituting the woman or child. Section 5b of R.A. 9262.",
-    requirements: ["Medico-Legal Report", "Psychological Evaluation", "Police Report", "Witness Affidavits", "Screenshots (if applicable)"],
+    description: "Sexual acts including rape, harassment, and treating a woman/child as a sex object.",
+    requirements: ["Medico-Legal Report", "Psychological Evaluation", "Police Report", "Witness Affidavits"],
     steps: universalPaoFlow
   },
   "Psychological Violence (Section 5h & 5i)": {
-    description: "Acts causing mental or emotional anguish, such as marital infidelity, intimidation, harassment, stalking, public ridicule, verbal abuse, damage to property, unlawful deprivation of custody or visitation, and causing a child to witness abuse. Section 5h & 5i of R.A. 9262.",
-    requirements: ["Screenshots (SMS/Chat)", "Psychological Evaluation Report", "Barangay Protection Order (BPO)", "Witness Affidavits", "Proof of Harassment"],
+    description: "Causing mental anguish, marital infidelity, stalking, or public ridicule.",
+    requirements: ["Chat/SMS Screenshots", "Psychological Evaluation", "BPO Records", "Witness Affidavits"],
     steps: universalPaoFlow
   },
   "Economic Abuse (Section 5e & 5f)": {
-    description: "Acts causing financial dependence, including withdrawal of financial support, preventing work or business, controlling assets, and destroying household property. Section 5e & 5f of R.A. 9262.",
-    requirements: ["Evidence of Withheld Support", "Bank Statements/Payslips", "Affidavit of Fact", "Proof of Property Damage", "Employment Records"],
+    description: "Withdrawal of financial support or controlling victim's assets.",
+    requirements: ["Evidence of Withheld Support", "Bank Statements", "Affidavit of Fact", "Proof of Property Damage"],
     steps: universalPaoFlow
   }
 };
