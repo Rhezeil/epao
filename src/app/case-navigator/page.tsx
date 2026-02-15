@@ -12,7 +12,7 @@ import { useState, useEffect, Suspense } from "react";
 import { cn } from "@/lib/utils";
 import { useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
 import { doc, collection, query, where, limit } from "firebase/firestore";
-import { caseCategories, defaultRequirements, defaultSteps, categoryDefaults, caseSpecificData, generalRequirements, universalPaoFlow, pAONotes } from "@/app/lib/case-data";
+import { caseCategories, defaultRequirements, defaultSteps, categoryDefaults, caseSpecificData, pAONotes } from "@/app/lib/case-data";
 import { Badge } from "@/components/ui/badge";
 
 function CaseNavigatorContent() {
@@ -154,29 +154,20 @@ function CaseNavigatorContent() {
               <p className="text-xs text-muted-foreground">Checklist for your application.</p>
             </CardHeader>
             <CardContent className="space-y-3 pt-4">
-              <div className="mb-4 p-3 bg-amber-50 border border-amber-100 rounded-lg">
-                <div className="flex gap-2">
-                  <Info className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-                  <div className="space-y-1">
-                    <p className="text-[10px] text-amber-800 font-bold uppercase tracking-wider">General Requirements (Mandatory)</p>
-                    <ul className="text-[10px] text-amber-800 list-disc pl-3">
-                      {generalRequirements.slice(0, 4).map((r, i) => <li key={i}>{r}</li>)}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
               {isReqLoading ? (
                 <div className="flex justify-center py-4"><Loader2 className="animate-spin h-5 w-5 text-primary" /></div>
               ) : (
                 <div className="space-y-2">
-                  <p className="text-[10px] font-bold text-primary uppercase mb-2">Case-Specific Documentation</p>
+                  <p className="text-[10px] font-bold text-primary uppercase mb-2">Statutory Documentation</p>
                   {guidance.requirements.map((doc: string, idx: number) => (
                     <div key={idx} className="flex gap-3 items-start border-l-2 border-primary/10 pl-3 py-1">
                       <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
                       <span className="text-sm text-[#2E5A99] font-medium leading-tight">{doc}</span>
                     </div>
                   ))}
+                  {guidance.requirements.length === 0 && (
+                    <p className="text-xs text-muted-foreground italic">No specific documentation listed beyond general requirements.</p>
+                  )}
                 </div>
               )}
             </CardContent>

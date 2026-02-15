@@ -4,10 +4,6 @@
  */
 
 export const generalRequirements = [
-  "Valid Government ID",
-  "Affidavit of Indigency",
-  "Barangay Certificate of Indigency",
-  "Proof of income / Certificate of No Income",
   "Community Tax Certificate (Cedula)"
 ];
 
@@ -21,8 +17,8 @@ export const caseCategories = {
         "Parricide", 
         "Infanticide", 
         "Physical Injuries (Serious, Less Serious, Slight)",
-        "VAWC (RA 9262)",
-        "Illegal Detention / Kidnapping"
+        "Violence Against Women and Children (VAWC)",
+        "Illegal Detention/Kidnapping"
       ]
     },
     {
@@ -43,7 +39,7 @@ export const caseCategories = {
     },
     {
       title: "🟢 Crimes Against Chastity",
-      items: ["Acts of Lasciviousness", "Seduction", "Adultery", "Concubinage"]
+      items: ["Acts of Lasciviousness", "Seduction", "Concubinage", "Adultery"]
     },
     {
       title: "🔵 Crimes Against Public Order",
@@ -53,7 +49,9 @@ export const caseCategories = {
         "Sedition (Art. 139)",
         "Direct Assaults (Art. 148)",
         "Resistance and Disobedience (Art. 151)",
-        "Illegal Possession of Firearms"
+        "Illegal Possession of Firearms",
+        "Alarms and Scandals",
+        "Evasion of Service of Sentence"
       ]
     },
     {
@@ -136,28 +134,18 @@ export const universalPaoFlow = [
 export const defaultRequirements = generalRequirements;
 export const defaultSteps = universalPaoFlow;
 
-export const drugCaseProcess = [
-  { step: 1, title: "Inquest representation", content: "Immediate legal assistance during the inquest proceeding following arrest." },
-  { step: 2, title: "Bail hearing", content: "Petition for bail if the offense is bailable or if evidence of guilt is not strong." },
-  { step: 3, title: "Pre-trial", content: "Stipulation of facts and identification of issues." },
-  { step: 4, title: "Trial", content: "Presentation of evidence and witnesses." },
-  { step: 5, title: "Judgment", content: "Court's final decision on the case." }
-];
-
 export const caseSpecificData: Record<string, { requirements: string[], steps: any[] }> = {
   "Murder": { 
     requirements: [
       "If COMPLAINANT: Police blotter, Sworn Complaint-Affidavit, Medico-Legal Certificate, Hospital records, Death Certificate, Autopsy report, Photos of injuries, Witness affidavits",
-      "If ACCUSED: Copy of Complaint/Information, Arrest warrant, Subpoena, Bail bond papers, Court notices",
-      ...generalRequirements
+      "If ACCUSED: Copy of Complaint/Information, Arrest warrant, Subpoena, Bail bond papers, Court notices"
     ], 
     steps: universalPaoFlow 
   },
   "Homicide": {
     requirements: [
       "If COMPLAINANT: Police blotter, Sworn Complaint-Affidavit, Medico-Legal Certificate, Hospital records, Death Certificate, Autopsy report, Witness affidavits",
-      "If ACCUSED: Copy of Information, Arrest warrant, Subpoena, Bail documents",
-      ...generalRequirements
+      "If ACCUSED: Copy of Information, Arrest warrant, Subpoena, Bail documents"
     ],
     steps: universalPaoFlow
   },
@@ -167,18 +155,16 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
       "Birth Certificate (if parent/child)",
       "Police blotter",
       "Sworn Affidavit",
-      "Death Certificate",
-      ...generalRequirements
+      "Death Certificate"
     ],
     steps: universalPaoFlow
   },
   "Infanticide": {
     requirements: [
-      "Birth Certificate of child",
+      "Birth Certificate of child less than 72 hours old",
       "Police report",
       "Medico-legal report (cause of death)",
-      "Witness affidavits",
-      ...generalRequirements
+      "Witness affidavits"
     ],
     steps: universalPaoFlow
   },
@@ -187,44 +173,41 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
       "Medical Certificate",
       "Police blotter",
       "Photos of injuries",
-      "Sworn Complaint-Affidavit",
-      ...generalRequirements
+      "Sworn Complaint-Affidavit"
     ],
     steps: universalPaoFlow
   },
-  "VAWC (RA 9262)": {
+  "Violence Against Women and Children (VAWC)": {
     requirements: [
       "Police blotter",
       "Medical Certificate",
       "Screenshots of threats/messages",
       "Proof of relationship",
       "Birth certificate of child",
-      "Barangay Protection Order (if any)",
-      ...generalRequirements
+      "Barangay Protection Order (if any)"
     ],
     steps: universalPaoFlow
   },
-  "Illegal Detention / Kidnapping": {
+  "Illegal Detention/Kidnapping": {
     requirements: [
       "Police blotter",
       "Sworn Complaint-Affidavit",
       "Witness affidavits",
       "Photos / Evidence of deprivation of liberty",
-      "Arrest report (if involving public officer)",
-      ...generalRequirements
+      "Arrest report (if involving public officer)"
     ],
     steps: universalPaoFlow
   },
   "Illegal Possession of Dangerous Drugs (Section 11)": {
-    requirements: ["Arrest report", "Inventory of seized items", "Chemistry report", "Chain of custody documents", "Confiscation receipt", ...generalRequirements],
-    steps: drugCaseProcess
+    requirements: ["Arrest report", "Inventory of seized items", "Chemistry report", "Chain of custody documents", "Confiscation receipt"],
+    steps: universalPaoFlow
   },
   "Annulment of Marriage": {
-    requirements: ["PSA Marriage Certificate", "Birth certificates of children", "Psychological report (Art. 36)", "Proof of residency", ...generalRequirements],
+    requirements: ["PSA Marriage Certificate", "Birth certificates of children", "Psychological report (Art. 36)", "Proof of residency"],
     steps: universalPaoFlow
   },
   "Illegal Dismissal": {
-    requirements: ["Employment contract", "Payslips", "Termination letter", "Company ID", "Written explanation (if any)", ...generalRequirements],
+    requirements: ["Employment contract", "Payslips", "Termination letter", "Company ID", "Written explanation (if any)"],
     steps: [
       { step: 1, title: "Filing before NLRC", content: "Submission of the complaint to the National Labor Relations Commission." },
       { step: 2, title: "Conciliation", content: "Mandatory conference to explore settlement." },
@@ -235,9 +218,9 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
 };
 
 export const categoryDefaults: Record<string, { requirements: string[], steps: any[] }> = {
-  Criminal: { requirements: ["Court Subpoena", "Arrest Record", "Copy of Complaint", ...generalRequirements], steps: universalPaoFlow },
-  Civil: { requirements: ["Relevant contracts", "Demand letter", "Proof of claim", ...generalRequirements], steps: universalPaoFlow },
-  Labor: { requirements: ["Employment records", "Payslips", "ID card", ...generalRequirements], steps: universalPaoFlow }
+  Criminal: { requirements: ["Court Subpoena", "Arrest Record", "Copy of Complaint"], steps: universalPaoFlow },
+  Civil: { requirements: ["Relevant contracts", "Demand letter", "Proof of claim"], steps: universalPaoFlow },
+  Labor: { requirements: ["Employment records", "Payslips", "ID card"], steps: universalPaoFlow }
 };
 
 export const pAONotes = [
