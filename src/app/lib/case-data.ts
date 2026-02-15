@@ -110,39 +110,20 @@ export const generalRequirements = [
   "Valid Government ID",
   "Affidavit of Indigency",
   "Barangay Certificate of Indigency",
-  "Proof of Income (Payslip / Cert of No Income / DSWD Cert)",
-  "Community Tax Certificate (Cedula)",
-  "All relevant evidence (contracts, receipts, police reports, etc.)",
-  "Demand letter (if required)",
-  "Subpoena / Court Notice (if already filed)"
+  "Proof of income / Certificate of No Income",
+  "Community Tax Certificate (Cedula)"
 ];
 
 export const universalPaoFlow = [
-  { 
-    step: 1, 
-    title: "Application and Evaluation", 
-    content: "The client visits the nearest PAO district office (often at the local Hall of Justice) to file a request for legal assistance." 
-  },
-  { 
-    step: 2, 
-    title: "Indigency Test", 
-    content: "The applicant must prove they are indigent. This generally means having a low income (set thresholds apply depending on location, e.g., Metro Manila vs. other areas) and owning no significant real property. Required documents may include an Affidavit of Indigency, Certificate of Income, or Income Tax Return." 
-  },
-  { 
-    step: 3, 
-    title: "Merit Test", 
-    content: "A PAO lawyer assesses if the case has merit—meaning it has a chance of success and is not intended merely to harass the opposite party.\n\n• Criminal Defense: Cases for the accused are generally considered meritorious.\n• Civil/Other Cases: Evaluated based on law and evidence." 
-  },
-  { 
-    step: 4, 
-    title: "Conflict of Interest Check", 
-    content: "The PAO verifies that they do not already represent the opposing party to avoid conflicts of interest." 
-  },
-  { 
-    step: 5, 
-    title: "Acceptance", 
-    content: "If the applicant passes both tests, the lawyer will formally accept the case and provide legal representation, counseling, or document drafting (e.g., affidavits, complaints)." 
-  }
+  { step: 1, title: "Client Interview", content: "Initial consultation with a public attorney." },
+  { step: 2, title: "Indigency Test", content: "Proof of financial status (low income/no property)." },
+  { step: 3, title: "Merit Test", content: "Evaluation of the case's legal basis and chance of success." },
+  { step: 4, title: "Document completion", content: "Submission of all required supporting evidence." },
+  { step: 5, title: "Case acceptance", content: "Formal acceptance by PAO for legal representation." },
+  { step: 6, title: "Case number assignment", content: "Recording the case in the official docket." },
+  { step: 7, title: "Filing", content: "Filing before the proper court or agency (e.g., Prosecutor, MTC, NLRC)." },
+  { step: 8, title: "Hearing/Trial", content: "Active representation during court or quasi-judicial proceedings." },
+  { step: 9, title: "Decision", content: "Final judgment and legal resolution of the case." }
 ];
 
 export const defaultRequirements = generalRequirements;
@@ -155,52 +136,120 @@ export const pAONotes = [
   "✔ Court-appointed cases (Counsel de Oficio) are automatically handled"
 ];
 
+const criminalAccusedRequirements = [
+  "Copy of Complaint / Information",
+  "Arrest Warrant (if any)",
+  "Subpoena (if under preliminary investigation)",
+  "Bail documents (if applicable)",
+  ...generalRequirements
+];
+
+const criminalComplainantRequirements = [
+  "Police blotter",
+  "Sworn Affidavit",
+  "Medical certificate (if injury)",
+  "Witness affidavits",
+  "Photos / Evidence",
+  ...generalRequirements
+];
+
 export const caseSpecificData: Record<string, { requirements: string[], steps: any[] }> = {
-  "Murder": {
-    requirements: [
-      "If ACCUSED: Copy of Complaint, Arrest Warrant, Subpoena, Bail Documents",
-      "If COMPLAINANT: Police Blotter, Sworn Affidavit, Medico-Legal, Witness Affidavits",
-      "Valid ID & Indigency Documents"
-    ],
+  // Criminal Cases (Revised Penal Code)
+  "Murder": { requirements: criminalAccusedRequirements, steps: universalPaoFlow },
+  "Theft": { requirements: criminalAccusedRequirements, steps: universalPaoFlow },
+  "Robbery (with violence / intimidation)": { requirements: criminalAccusedRequirements, steps: universalPaoFlow },
+  "Estafa (Swindling)": { requirements: criminalAccusedRequirements, steps: universalPaoFlow },
+  "Libel": { requirements: criminalAccusedRequirements, steps: universalPaoFlow },
+  
+  // Drugs
+  "Illegal Possession of Drugs": {
+    requirements: ["Arrest report", "Chemistry report", "Confiscation receipt", "Charge sheet", ...generalRequirements],
     steps: universalPaoFlow
   },
-  "Illegal Dismissal": {
-    requirements: ["Employment Contract", "Latest Payslips", "Termination Letter", "Company ID", "Notice to Explain (if any)"],
-    steps: [
-      { step: 1, title: "Filing before NLRC", content: "Submitting the initial complaint (SENA)." },
-      { step: 2, title: "Conciliation", content: "Mandatory meetings to try and reach a settlement." },
-      { step: 3, title: "Position Papers", content: "Drafting and submitting evidence." },
-      { step: 4, title: "Decision", content: "Judgment by the Labor Arbiter." }
-    ]
+  
+  // VAWC
+  "Physical abuse": {
+    requirements: ["Police blotter", "Medical certificate", "Screenshots / messages", "Proof of relationship", "Birth certificate of child", ...generalRequirements],
+    steps: universalPaoFlow
   },
+  
+  // Child Protection
+  "Child abuse": {
+    requirements: ["Sworn complaint", "Medical / social worker report", "Evidence of abuse", ...generalRequirements],
+    steps: universalPaoFlow
+  },
+  
+  // Rape
+  "Rape by sexual intercourse": {
+    requirements: ["Medico-legal certificate", "Police report", "Victim affidavit", ...generalRequirements],
+    steps: universalPaoFlow
+  },
+  
+  // Cybercrime
+  "Online libel": {
+    requirements: ["Screenshots", "URLs", "Digital evidence", "Police report", ...generalRequirements],
+    steps: universalPaoFlow
+  },
+  
+  // Bouncing Checks
+  "Issuance of bouncing checks": {
+    requirements: ["Dishonored check", "Bank return slip", "Written demand letter", "Proof of receipt of demand", ...generalRequirements],
+    steps: universalPaoFlow
+  },
+  
+  // Family Law
   "Annulment of Marriage": {
-    requirements: ["PSA Marriage Certificate", "PSA Birth Certificates of children", "Psychological Evaluation Report (Client shoulders cost)", "IDs", "Affidavit of Indigency"],
-    steps: [
-      { step: 1, title: "Case Evaluation", content: "Strict merit test for Article 36 or other legal grounds." },
-      { step: 2, title: "Psychological Assessment", content: "Client undergoes clinical evaluation." },
-      { step: 3, title: "Filing Petition", content: "Submitting to Family Court." },
-      { step: 4, title: "Trial", content: "Presentation of witnesses and experts." },
-      { step: 5, title: "Decision", content: "Judgment and Civil Registry registration." }
-    ]
+    requirements: ["PSA Marriage Certificate", "Birth Certificates of children", "Psychological report (if Art. 36)", ...generalRequirements],
+    steps: universalPaoFlow
+  },
+  "Child Support": {
+    requirements: ["Birth certificate", "Proof of neglect", "Proof of income of parent", ...generalRequirements],
+    steps: universalPaoFlow
+  },
+  
+  // Civil Code
+  "Collection of Sum of Money": {
+    requirements: ["Contract", "Receipts", "Demand letter", ...generalRequirements],
+    steps: universalPaoFlow
+  },
+  "Unlawful Detainer": {
+    requirements: ["Title / Tax Declaration", "Demand to vacate", ...generalRequirements],
+    steps: universalPaoFlow
+  },
+  "Collection of small debts (below jurisdictional amount)": {
+    requirements: ["Contract / IOU", "Receipts", "Statement of claim form", ...generalRequirements],
+    steps: universalPaoFlow
+  },
+  
+  // Labor
+  "Illegal Dismissal": {
+    requirements: ["Employment contract", "Payslips", "Termination letter", "Company ID", ...generalRequirements],
+    steps: universalPaoFlow
+  },
+  
+  // Special Legislation
+  "Human trafficking": {
+    requirements: ["Receipts", "Contracts", "Witness statements", ...generalRequirements],
+    steps: universalPaoFlow
+  },
+  "Representation of children in conflict with the law": {
+    requirements: ["Birth certificate (minor)", "Police report", ...generalRequirements],
+    steps: universalPaoFlow
+  },
+  
+  // Administrative
+  "Civil Service cases": {
+    requirements: ["Notice of charge", "Employment records", "Written Answer filing", ...generalRequirements],
+    steps: universalPaoFlow
+  },
+  "SSS / GSIS claims": {
+    requirements: ["Claim forms", "Contribution records", "Supporting medical docs", ...generalRequirements],
+    steps: universalPaoFlow
   }
 };
 
 export const categoryDefaults: Record<string, { requirements: string[], steps: any[] }> = {
-  Criminal: {
-    requirements: ["Police Blotter / Complaint", "Subpoena / Court Order", "Valid ID & Indigency Documents"],
-    steps: universalPaoFlow
-  },
-  Civil: {
-    requirements: ["Contracts / Written Agreements", "Demand Letter", "Land Titles / Deeds", "Receipts"],
-    steps: universalPaoFlow
-  },
-  Labor: {
-    requirements: ["Proof of Employment", "Dismissal Notice", "Payslips"],
-    steps: [
-      { step: 1, title: "SENA filing", content: "The initial step for labor disputes." },
-      { step: 2, title: "Conciliation", content: "Attempting settlement." },
-      { step: 3, title: "Position Paper", content: "Submission of evidence." },
-      { step: 4, title: "Decision", content: "Arbiter's ruling." }
-    ]
-  }
+  Criminal: { requirements: criminalAccusedRequirements, steps: universalPaoFlow },
+  Civil: { requirements: ["Relevant contracts", "Demand letter", "Evidence", ...generalRequirements], steps: universalPaoFlow },
+  Labor: { requirements: ["Employment records", "Termination notice", "Payslips", ...generalRequirements], steps: universalPaoFlow }
 };
