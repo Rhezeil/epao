@@ -15,11 +15,27 @@ export const caseCategories = {
   "Criminal": [
     {
       title: "🔴 Crimes Against Persons",
-      items: ["Murder", "Homicide", "Parricide", "Infanticide", "Physical Injuries (Serious, Less Serious, Slight)"]
+      items: [
+        "Murder", 
+        "Homicide", 
+        "Parricide", 
+        "Infanticide", 
+        "Physical Injuries (Serious, Less Serious, Slight)",
+        "VAWC (RA 9262)",
+        "Illegal Detention / Kidnapping"
+      ]
     },
     {
       title: "🟠 Crimes Against Property",
-      items: ["Theft", "Qualified Theft", "Robbery (with violence / intimidation)", "Robbery with Homicide", "Estafa (Swindling)", "Arson", "Malicious Mischief"]
+      items: [
+        "Theft", 
+        "Qualified Theft", 
+        "Robbery (with violence / intimidation)", 
+        "Robbery with Homicide", 
+        "Estafa (Swindling)", 
+        "Arson", 
+        "Malicious Mischief"
+      ]
     },
     {
       title: "🟡 Crimes Against Honor",
@@ -30,107 +46,61 @@ export const caseCategories = {
       items: ["Acts of Lasciviousness", "Seduction", "Adultery", "Concubinage"]
     },
     {
-      title: "🔵 Rebellion, Insurrection, and Coup d'état",
+      title: "🔵 Crimes Against Public Order",
       items: [
         "Rebellion or Insurrection (Art. 134)",
         "Coup d'état (Art. 134-A)",
-        "Conspiracy and Proposal to Commit Coup d'état, Rebellion, or Insurrection (Art. 136)",
-        "Inciting to Rebellion or Insurrection (Art. 138)"
-      ]
-    },
-    {
-      title: "🔵 Sedition and Public Disturbances",
-      items: [
         "Sedition (Art. 139)",
-        "Conspiracy to Commit Sedition (Art. 141)",
-        "Inciting to Sedition (Art. 142)",
-        "Illegal Assemblies (Art. 146)",
-        "Illegal Associations (Art. 147)",
-        "Tumults and Other Disturbances of Public Order (Art. 153)"
-      ]
-    },
-    {
-      title: "🔵 Assaults, Resistance, and Disobedience",
-      items: [
         "Direct Assaults (Art. 148)",
-        "Indirect Assaults (Art. 149)",
-        "Resistance and Disobedience to a Person in Authority or Agents (Art. 151)"
-      ]
-    },
-    {
-      title: "🔵 Public Disorders and Evasion of Service",
-      items: [
-        "Alarms and Scandals (Art. 155)",
-        "Delivering Prisoners from Jail (Art. 156)",
-        "Evasion of Service of Sentence (Art. 157)",
-        "Violation of Conditional Pardon (Art. 159)"
+        "Resistance and Disobedience (Art. 151)",
+        "Illegal Possession of Firearms"
       ]
     },
     {
       title: "2️⃣ Dangerous Drugs Cases (RA 9165)",
       items: [
         "Illegal Possession of Dangerous Drugs (Section 11)",
-        "Illegal Sale, Trading, Administration, Dispensation, Delivery, Distribution, and Transportation (Section 5)",
-        "Possession of Equipment, Instrument, Apparatus, and Other Paraphernalia (Section 12)",
+        "Illegal Sale, Trading, etc. (Section 5)",
+        "Possession of Paraphernalia (Section 12)",
         "Use of Dangerous Drugs (Section 15)",
         "Cultivation of Marijuana (Section 16)"
       ]
     },
     {
-      title: "3️⃣ VAWC Cases (RA 9262)",
-      items: ["Physical abuse", "Psychological abuse", "Economic abuse", "Protection Order cases"]
-    },
-    {
-      title: "4️⃣ Child Protection (RA 7610)",
-      items: ["Child abuse", "Child exploitation", "Child trafficking"]
-    },
-    {
-      title: "5️⃣ Anti-Rape Law (RA 8353)",
-      items: ["Rape by sexual intercourse", "Rape by sexual assault"]
-    },
-    {
-      title: "6️⃣ Cybercrime (RA 10175)",
-      items: ["Online libel", "Identity theft", "Online fraud", "Cybersex", "Computer-related fraud"]
-    },
-    {
-      title: "7️⃣ Bouncing Checks (BP 22)",
-      items: ["Issuance of bouncing checks"]
+      title: "3️⃣ Cybercrime & Special Laws",
+      items: ["Online Libel", "Identity Theft", "Bouncing Checks (BP 22)"]
     }
   ],
   "Civil": [
     {
       title: "📖 Family Law Cases",
-      items: ["Annulment of Marriage", "Declaration of Nullity of Marriage", "Legal Separation", "Child Custody", "Child Support", "Adoption (qualified cases)", "Recognition of Foreign Divorce"]
+      items: ["Annulment of Marriage", "Declaration of Nullity", "Legal Separation", "Child Custody", "Child Support", "Adoption"]
     },
     {
       title: "📖 Civil Code Cases",
       items: ["Collection of Sum of Money", "Breach of Contract", "Damages", "Property Disputes", "Partition of Property"]
     },
     {
-      title: "📖 Ejectment Cases",
-      items: ["Unlawful Detainer", "Forcible Entry"]
-    },
-    {
-      title: "📖 Small Claims",
-      items: ["Small Claims Collection"]
+      title: "📖 Land & Ejectment",
+      items: ["Unlawful Detainer", "Forcible Entry", "Small Claims"]
     }
   ],
   "Labor": [
     {
       title: "👷 Employment Disputes",
-      items: ["Illegal Dismissal", "Constructive Dismissal", "Non-payment of Wages", "Overtime Pay Claims", "Separation Pay", "13th Month Pay Claims", "Money Claims"]
+      items: ["Illegal Dismissal", "Non-payment of Wages", "Overtime Pay Claims", "Separation Pay", "13th Month Pay"]
     }
   ],
   "Special Legislation": [
     {
-      title: "🏢 Special & Social Laws",
-      items: ["Anti-Trafficking", "Anti-Child Pornography", "Anti-Hazing", "Anti-Illegal Recruitment", "Juvenile Justice Cases"]
+      title: "🏢 Social & Special Laws",
+      items: ["Anti-Trafficking", "Anti-Child Pornography", "Anti-Hazing", "Anti-Illegal Recruitment", "Juvenile Justice"]
     }
   ],
   "Administrative": [
     {
       title: "🏛 Quasi-Judicial",
-      items: ["Civil Service Cases", "SSS / GSIS Claims", "DARAB agrarian disputes", "PRC cases", "Barangay conciliation"]
+      items: ["Civil Service Cases", "SSS / GSIS Claims", "DARAB Cases", "PRC Cases", "Barangay Conciliation"]
     }
   ]
 };
@@ -176,39 +146,81 @@ export const drugCaseProcess = [
 
 export const caseSpecificData: Record<string, { requirements: string[], steps: any[] }> = {
   "Murder": { 
-    requirements: ["Police blotter", "Sworn Complaint-Affidavit", "Medico-Legal Certificate", "Hospital records", "Death Certificate", "Autopsy report", "Photos of injuries", "Witness affidavits", ...generalRequirements], 
+    requirements: [
+      "If COMPLAINANT: Police blotter, Sworn Complaint-Affidavit, Medico-Legal Certificate, Hospital records, Death Certificate, Autopsy report, Photos of injuries, Witness affidavits",
+      "If ACCUSED: Copy of Complaint/Information, Arrest warrant, Subpoena, Bail bond papers, Court notices",
+      ...generalRequirements
+    ], 
     steps: universalPaoFlow 
+  },
+  "Homicide": {
+    requirements: [
+      "If COMPLAINANT: Police blotter, Sworn Complaint-Affidavit, Medico-Legal Certificate, Hospital records, Death Certificate, Autopsy report, Witness affidavits",
+      "If ACCUSED: Copy of Information, Arrest warrant, Subpoena, Bail documents",
+      ...generalRequirements
+    ],
+    steps: universalPaoFlow
+  },
+  "Parricide": {
+    requirements: [
+      "Marriage Certificate (if spouse)",
+      "Birth Certificate (if parent/child)",
+      "Police blotter",
+      "Sworn Affidavit",
+      "Death Certificate",
+      ...generalRequirements
+    ],
+    steps: universalPaoFlow
+  },
+  "Infanticide": {
+    requirements: [
+      "Birth Certificate of child",
+      "Police report",
+      "Medico-legal report (cause of death)",
+      "Witness affidavits",
+      ...generalRequirements
+    ],
+    steps: universalPaoFlow
+  },
+  "Physical Injuries (Serious, Less Serious, Slight)": {
+    requirements: [
+      "Medical Certificate",
+      "Police blotter",
+      "Photos of injuries",
+      "Sworn Complaint-Affidavit",
+      ...generalRequirements
+    ],
+    steps: universalPaoFlow
+  },
+  "VAWC (RA 9262)": {
+    requirements: [
+      "Police blotter",
+      "Medical Certificate",
+      "Screenshots of threats/messages",
+      "Proof of relationship",
+      "Birth certificate of child",
+      "Barangay Protection Order (if any)",
+      ...generalRequirements
+    ],
+    steps: universalPaoFlow
+  },
+  "Illegal Detention / Kidnapping": {
+    requirements: [
+      "Police blotter",
+      "Sworn Complaint-Affidavit",
+      "Witness affidavits",
+      "Photos / Evidence of deprivation of liberty",
+      "Arrest report (if involving public officer)",
+      ...generalRequirements
+    ],
+    steps: universalPaoFlow
   },
   "Illegal Possession of Dangerous Drugs (Section 11)": {
     requirements: ["Arrest report", "Inventory of seized items", "Chemistry report", "Chain of custody documents", "Confiscation receipt", ...generalRequirements],
     steps: drugCaseProcess
   },
-  "Illegal Sale, Trading, Administration, Dispensation, Delivery, Distribution, and Transportation (Section 5)": {
-    requirements: ["Buy-bust operation report", "Inventory of seized items", "Chemistry report", "Chain of custody documents", "Arrest report", ...generalRequirements],
-    steps: drugCaseProcess
-  },
-  "Possession of Equipment, Instrument, Apparatus, and Other Paraphernalia (Section 12)": {
-    requirements: ["Arrest report", "Inventory of seized paraphernalia", "Chemistry report on residue", "Chain of custody documents", ...generalRequirements],
-    steps: drugCaseProcess
-  },
-  "Use of Dangerous Drugs (Section 15)": {
-    requirements: ["Drug test result", "Arrest report", "Affidavit of arrest", ...generalRequirements],
-    steps: [
-      { step: 1, title: "Assessment", content: "Evaluation of whether the offender is a first-time user." },
-      { step: 2, title: "Rehabilitation Application", content: "Assisting first-time offenders in entering rehabilitation programs rather than serving prison time." },
-      { step: 3, title: "Court Monitoring", content: "Monitoring of compliance with the rehab program." }
-    ]
-  },
-  "Cultivation of Marijuana (Section 16)": {
-    requirements: ["Police report on plantation site", "Photos of seized plants", "Laboratory report", "Arrest report", ...generalRequirements],
-    steps: drugCaseProcess
-  },
   "Annulment of Marriage": {
     requirements: ["PSA Marriage Certificate", "Birth certificates of children", "Psychological report (Art. 36)", "Proof of residency", ...generalRequirements],
-    steps: universalPaoFlow
-  },
-  "Child Support": {
-    requirements: ["Birth certificate", "Proof of relationship", "Proof of financial capacity of parent", "Demand letter for support", ...generalRequirements],
     steps: universalPaoFlow
   },
   "Illegal Dismissal": {
@@ -219,21 +231,13 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
       { step: 3, title: "Position papers", content: "Submission of sworn statements and evidence." },
       { step: 4, title: "Decision", content: "Labor Arbiter's ruling." }
     ]
-  },
-  "Direct Assaults (Art. 148)": {
-    requirements: ["Police report", "Arrest report", "Witness affidavits", "Medical certificate (if injury)", ...generalRequirements],
-    steps: universalPaoFlow
-  },
-  "Resistance and Disobedience to a Person in Authority or Agents (Art. 151)": {
-    requirements: ["Police report", "Arrest report", "Witness affidavits", ...generalRequirements],
-    steps: universalPaoFlow
   }
 };
 
 export const categoryDefaults: Record<string, { requirements: string[], steps: any[] }> = {
-  Criminal: { requirements: ["Court Subpoena", "Arrest Record", ...generalRequirements], steps: universalPaoFlow },
-  Civil: { requirements: ["Relevant contracts", "Demand letter", ...generalRequirements], steps: universalPaoFlow },
-  Labor: { requirements: ["Employment records", "Payslips", ...generalRequirements], steps: universalPaoFlow }
+  Criminal: { requirements: ["Court Subpoena", "Arrest Record", "Copy of Complaint", ...generalRequirements], steps: universalPaoFlow },
+  Civil: { requirements: ["Relevant contracts", "Demand letter", "Proof of claim", ...generalRequirements], steps: universalPaoFlow },
+  Labor: { requirements: ["Employment records", "Payslips", "ID card", ...generalRequirements], steps: universalPaoFlow }
 };
 
 export const pAONotes = [
