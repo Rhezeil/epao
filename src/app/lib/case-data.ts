@@ -117,6 +117,13 @@ export const universalPaoFlow = [
   { step: 5, title: "Legal Strategy", content: "Drafting of complaints, affidavits, or answers. Filing in court." }
 ];
 
+export const pAONotes = [
+  "Indigency Test: Your net income must not exceed the threshold (e.g., P14,000 to P24,000 depending on location).",
+  "Merit Test: PAO handles cases where the client's cause appears to be valid and supported by evidence.",
+  "Conflict of Interest: PAO cannot represent both parties in the same case.",
+  "Public Service: All legal services provided by PAO are free of charge."
+];
+
 export const caseSpecificData: Record<string, { requirements: string[], steps: any[], description: string }> = {
   // --- CRIMES AGAINST PERSONS (Destruction of Life) ---
   "Parricide (Art 246)": {
@@ -199,18 +206,6 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     steps: universalPaoFlow
   },
 
-  // --- CIVIL STATUS CRIMES ---
-  "Bigamy (Art 349)": {
-    description: "Contracting a second or subsequent marriage while a previous marriage is still valid and subsisting (Article 349, RPC).",
-    requirements: ["1st Marriage Contract (PSA)", "2nd Marriage Contract (PSA)", "CENOMAR (PSA)", "Witness Affidavits"],
-    steps: universalPaoFlow
-  },
-  "Simulation of Birth (Art 347)": {
-    description: "Deceptively making it appear a child was born to a person not their biological mother (Article 347, RPC).",
-    requirements: ["PSA Birth Certificate", "Hospital/Clinic Records", "DNA Test Results (if any)", "Witness Affidavits"],
-    steps: universalPaoFlow
-  },
-
   // --- CYBERCRIME ---
   "Cyberlibel": {
     description: "Libel as defined in Art. 355 of the RPC, committed through a computer system (RA 10175).",
@@ -229,6 +224,13 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   "Illegal Dismissal (Art 279)": {
     description: "Dismissal without just or authorized cause and due process (Art 279, Labor Code). Claims reinstatement and backwages.",
     requirements: ["Employment Contract", "Notice of Termination", "Latest Payslips", "Company ID", "Witness Affidavits"],
+    steps: universalPaoFlow
+  },
+
+  // --- CIVIL ---
+  "Annulment of Marriage (Art 36/45 FC)": {
+    description: "Legal process to declare a marriage null and void from the beginning (Article 36) or voidable (Article 45) under the Family Code.",
+    requirements: ["PSA Marriage Contract", "PSA Birth Certificates of Children", "Psychological Evaluation Report", "Barangay Certificate of Residency", "Witness Affidavits"],
     steps: universalPaoFlow
   }
 };
