@@ -1,4 +1,3 @@
-
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -134,16 +133,6 @@ function CaseNavigatorContent() {
                 </div>
               </div>
 
-              <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                <div className="flex gap-3">
-                  <Scale className="h-5 w-5 text-blue-600 shrink-0" />
-                  <div className="space-y-1">
-                    <p className="text-sm font-bold text-blue-800">Legal Authority</p>
-                    <p className="text-[10px] text-blue-700 italic">Based on RPC, Family Code, and RA 9406.</p>
-                  </div>
-                </div>
-              </div>
-
               <Button 
                 className="w-full h-12 bg-primary hover:bg-[#1A3B6B] text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg"
                 onClick={() => router.push(`/dashboard/client/book-appointment?caseType=${encodeURIComponent(caseName)}&category=${encodeURIComponent(selectedCategory || 'General')}`)}
@@ -199,9 +188,9 @@ function CaseNavigatorContent() {
                 <div className="p-1.5 bg-primary/10 rounded-lg">
                   <Info className="h-5 w-5 text-primary" />
                 </div>
-                <CardTitle className="text-lg font-bold text-primary">Steps to File a Complaint</CardTitle>
+                <CardTitle className="text-lg font-bold text-primary">Steps to File a Complaint at PAO</CardTitle>
               </div>
-              <p className="text-xs text-muted-foreground">The 9-step legal process.</p>
+              <p className="text-xs text-muted-foreground">Official process roadmap.</p>
             </CardHeader>
             <CardContent className="pt-4">
               <Accordion type="single" collapsible className="w-full space-y-2">
