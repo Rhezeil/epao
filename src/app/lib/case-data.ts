@@ -13,12 +13,20 @@ export const caseCategories = {
         "Parricide", 
         "Infanticide", 
         "Physical Injuries (Serious, Less Serious, Slight)",
-        "Violence Against Women and Children (VAWC)",
         "Illegal Detention/Kidnapping"
       ]
     },
     {
-      title: "🟠 II. CRIMES AGAINST PROPERTY (RPC Title Ten)",
+      title: "💜 II. VAWC (R.A. 9262)",
+      items: [
+        "Physical Violence (VAWC - Sec. 5a)",
+        "Sexual Violence (VAWC - Sec. 5b-c)",
+        "Psychological Violence (VAWC - Sec. 5h-i)",
+        "Economic Abuse (VAWC - Sec. 5e)"
+      ]
+    },
+    {
+      title: "🟠 III. CRIMES AGAINST PROPERTY (RPC Title Ten)",
       items: [
         "Robbery (with violence/intimidation of persons - Art. 294)",
         "Robbery (with force upon things - Art. 299 & 302)",
@@ -35,7 +43,7 @@ export const caseCategories = {
       ]
     },
     {
-      title: "🛠 III. PROPERTY CRIMES (Special Laws)",
+      title: "🛠 IV. PROPERTY CRIMES (Special Laws)",
       items: [
         "New Anti-Carnapping Act (RA 10883)",
         "Anti-Cattle Rustling Law (PD 533)",
@@ -53,29 +61,16 @@ export const caseCategories = {
       ]
     },
     {
-      title: "🔵 IV. CRIMES AGAINST PUBLIC ORDER",
+      title: "🔵 V. CRIMES AGAINST PUBLIC ORDER",
       items: [
-        "Rebellion or Insurrection (Art. 134)",
-        "Coup d'état (Art. 134-A)",
-        "Conspiracy and Proposal to Commit Coup d'état/Rebellion (Art. 136)",
-        "Inciting to Rebellion or Insurrection (Art. 138)",
-        "Sedition (Art. 139)",
-        "Conspiracy to Commit Sedition (Art. 141)",
-        "Inciting to Sedition (Art. 142)",
-        "Illegal Assemblies (Art. 146)",
-        "Illegal Associations (Art. 147)",
-        "Direct Assaults (Art. 148)",
-        "Indirect Assaults (Art. 149)",
-        "Resistance and Disobedience (Art. 151)",
-        "Tumults and Other Disturbances (Art. 153)",
-        "Alarms and Scandals (Art. 155)",
-        "Delivering Prisoners from Jail (Art. 156)",
-        "Evasion of Service of Sentence (Art. 157)",
-        "Violation of Conditional Pardon (Art. 159)"
+        "Rebellion, Insurrection, and Coup d'état",
+        "Sedition and Public Disturbances",
+        "Assaults, Resistance, and Disobedience",
+        "Public Disorders and Evasion of Service"
       ]
     },
     {
-      title: "📦 V. DANGEROUS DRUGS CASES (RA 9165)",
+      title: "📦 VI. DANGEROUS DRUGS CASES (RA 9165)",
       items: [
         "Illegal Possession of Dangerous Drugs (Section 11)",
         "Illegal Possession of Paraphernalia (Section 12)",
@@ -87,7 +82,7 @@ export const caseCategories = {
       ]
     },
     {
-      title: "💜 VI. CRIMES AGAINST CHASTITY",
+      title: "💖 VII. CRIMES AGAINST CHASTITY",
       items: [
         "Adultery (Art. 333)",
         "Concubinage (Art. 334)",
@@ -102,11 +97,10 @@ export const caseCategories = {
       ]
     },
     {
-      title: "💻 VII. SEXUAL VIOLENCE & SPECIAL LAWS",
+      title: "💻 VIII. SEXUAL VIOLENCE & SPECIAL LAWS",
       items: [
         "Rape (R.A. 8353 / Art. 266-A)",
         "Acts of Lasciviousness under R.A. 7610",
-        "Violence Against Women and Children (R.A. 9262)",
         "Anti-Trafficking (R.A. 9208)",
         "Anti-Sexual Harassment (R.A. 7877)"
       ]
@@ -156,12 +150,12 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   // --- CRIMES AGAINST PERSONS ---
   "Murder": { 
     description: "Unlawful killing of a person with qualifying circumstances such as treachery, superior strength, or for reward/price.",
-    requirements: ["Police blotter", "Sworn Complaint-Affidavit", "Medico-Legal Certificate", "Hospital records", "Death Certificate", "Autopsy report", "Witness affidavits", "Information (If Accused)"], 
+    requirements: ["Police blotter", "Sworn Complaint-Affidavit", "Medico-Legal Certificate", "Death Certificate", "Autopsy report", "Witness affidavits"], 
     steps: defaultSteps 
   },
   "Homicide": {
     description: "Unlawful killing of a person that does not amount to murder, parricide, or infanticide.",
-    requirements: ["Police blotter", "Sworn Complaint-Affidavit", "Medico-Legal Certificate", "Death Certificate", "Autopsy report", "Witness affidavits", "Information (If Accused)"],
+    requirements: ["Police blotter", "Sworn Complaint-Affidavit", "Medico-Legal Certificate", "Death Certificate", "Autopsy report", "Witness affidavits"],
     steps: defaultSteps
   },
   "Parricide": {
@@ -174,46 +168,48 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["Birth Certificate of child", "Police report", "Medico-legal report (cause of death)", "Witness affidavits"],
     steps: defaultSteps
   },
-  "Illegal Detention/Kidnapping": {
-    description: "Unlawful deprivation of liberty, including cases involving unlawful arrest by public officers.",
-    requirements: ["Police blotter", "Sworn affidavit of victim/witness", "CCTV footage (if any)", "Identity documentation of victim"],
+
+  // --- VAWC (R.A. 9262) ---
+  "Physical Violence (VAWC - Sec. 5a)": {
+    description: "Acts that include bodily or physical harm, battery, or threatening/placing the victim in fear of physical harm.",
+    requirements: ["Marriage Certificate / Proof of Relationship", "Birth Certificates of children", "Medico-Legal Certificate", "Photos of injuries", "Sworn Affidavit", "Police Blotter"],
+    steps: defaultSteps
+  },
+  "Sexual Violence (VAWC - Sec. 5b-c)": {
+    description: "Acts of a sexual nature including rape, lasciviousness, sexual harassment, or prostituting the woman or child.",
+    requirements: ["Marriage Certificate / Proof of Relationship", "Medico-Legal Certificate", "Psychological Evaluation", "Sworn Complaint-Affidavit", "Police Blotter"],
+    steps: defaultSteps
+  },
+  "Psychological Violence (VAWC - Sec. 5h-i)": {
+    description: "Acts causing mental or emotional suffering, including intimidation, stalking, public ridicule, or marital infidelity.",
+    requirements: ["Marriage Certificate / Proof of Relationship", "Psychological Evaluation report", "Screenshots of messages/harassment", "Witness affidavits", "Sworn Affidavit"],
+    steps: defaultSteps
+  },
+  "Economic Abuse (VAWC - Sec. 5e)": {
+    description: "Acts making a woman financially dependent, such as withdrawing support, controlling money/assets, or preventing employment.",
+    requirements: ["Marriage Certificate / Proof of Relationship", "Birth Certificates of children", "Proof of income of partner", "Proof of denial of support", "Sworn Affidavit"],
     steps: defaultSteps
   },
 
   // --- CRIMES AGAINST PROPERTY (RPC) ---
   "Robbery (with violence/intimidation of persons - Art. 294)": {
-    description: "Taking of personal property belonging to another with intent to gain, by means of violence or intimidation against persons. Includes robbery with homicide, rape, or band.",
+    description: "Taking of personal property belonging to another with intent to gain, by means of violence or intimidation against persons.",
     requirements: ["Police report", "Affidavit of loss", "Proof of ownership", "Inventory of stolen items", "Witness affidavits", "CCTV footage"],
     steps: defaultSteps
   },
   "Robbery (with force upon things - Art. 299 & 302)": {
     description: "Taking of property by breaking into an inhabited house, public building, or private building using force upon things.",
-    requirements: ["Police report", "Affidavit of loss", "Proof of ownership", "Photos of forced entry", "Inventory of stolen items", "Witness affidavits"],
-    steps: defaultSteps
-  },
-  "Brigandage (Art. 306)": {
-    description: "Robbery committed by a band of more than three armed persons on the highway to commit robbery or kidnap for ransom.",
-    requirements: ["Police report", "Witness affidavits", "Arrest report", "Evidence of band organization"],
+    requirements: ["Police report", "Affidavit of loss", "Photos of forced entry", "Inventory of stolen items", "Witness affidavits"],
     steps: defaultSteps
   },
   "Theft (Art. 308)": {
     description: "Taking personal property belonging to another without consent, with intent to gain, but without violence or intimidation.",
-    requirements: ["Police report", "Affidavit of loss", "Proof of ownership (receipts/titles)", "CCTV footage", "Witness affidavits"],
+    requirements: ["Police report", "Affidavit of loss", "Proof of ownership (receipts)", "CCTV footage", "Witness affidavits"],
     steps: defaultSteps
   },
   "Qualified Theft (Art. 310)": {
-    description: "Theft committed by a domestic servant, or with grave abuse of confidence, or involving specific items like motor vehicles or coconuts.",
-    requirements: ["Employment contract/ID", "Police report", "Affidavit of loss", "Proof of ownership", "Witness affidavits"],
-    steps: defaultSteps
-  },
-  "Usurpation of Real Rights (Art. 312)": {
-    description: "Taking possession of real property or claiming real rights through violence or intimidation against persons.",
-    requirements: ["Land Title (TCT/OCT)", "Tax declaration", "Sworn affidavit of victim", "Police blotter", "Witness affidavits"],
-    steps: defaultSteps
-  },
-  "Altering Boundaries (Art. 313)": {
-    description: "Moving landmarks or boundary lines of properties with intent to gain or cause damage.",
-    requirements: ["Land Title", "Survey Plan", "Photos of landmark alteration", "Witness affidavits"],
+    description: "Theft committed by a domestic servant, or with grave abuse of confidence, or involving specific items.",
+    requirements: ["Employment records", "Police report", "Affidavit of loss", "Proof of ownership", "Witness affidavits"],
     steps: defaultSteps
   },
   "Swindling/Estafa (Art. 315)": {
@@ -221,158 +217,41 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["Contract/Agreement", "Promissory note", "Receipts", "Demand letter with proof of receipt", "SMS/Chat logs"],
     steps: defaultSteps
   },
-  "Other Forms of Swindling (Art. 316)": {
-    description: "Includes selling or mortgaging property as free from encumbrances when it is actually encumbered.",
-    requirements: ["Certified true copy of Title", "Contract of sale/mortgage", "Proof of prior encumbrance", "Witness affidavits"],
-    steps: defaultSteps
-  },
-  "Removal, Sale, or Pledge of Mortgaged Property (Art. 319)": {
-    description: "Removing, selling, or pledging mortgaged property to another without the written consent of the mortgagee.",
-    requirements: ["Chattel Mortgage Contract", "Proof of sale/pledge", "Affidavit of mortgagee", "Witness affidavits"],
-    steps: defaultSteps
-  },
-  "Arson (Art. 320-323)": {
-    description: "Intentional burning of property. Includes destructive arson of inhabited buildings.",
-    requirements: ["Fire investigation report (BFP)", "Property title / proof of ownership", "Damage assessment report", "Witness affidavits"],
-    steps: defaultSteps
-  },
-  "Malicious Mischief (Art. 327-331)": {
-    description: "Deliberately destroying or damaging another’s property for vengeance, hatred, or mere pleasure.",
-    requirements: ["Police report", "Photos of damage", "Damage estimate", "Witness affidavits"],
-    steps: defaultSteps
-  },
 
   // --- PROPERTY CRIMES (SPECIAL LAWS) ---
   "New Anti-Carnapping Act (RA 10883)": {
-    description: "The taking, with intent to gain, of a motor vehicle belonging to another without the latter's consent, or by means of violence against or intimidation of persons, or by using force upon things.",
-    requirements: ["LTO Certificate of Registration", "Official Receipt of vehicle", "Police alarm report", "Affidavit of loss", "Stolen vehicle details"],
-    steps: defaultSteps
-  },
-  "Anti-Cattle Rustling Law (PD 533)": {
-    description: "The taking, with intent to gain, of large cattle without the consent of the owner, whether or not the same be done with or without violence against or intimidation of persons or force upon things.",
-    requirements: ["Certificate of Ownership of Large Cattle", "Police report", "Witness affidavits", "Proof of animal registration"],
-    steps: defaultSteps
-  },
-  "Forestry Code & Timber Smuggling (PD 705/330)": {
-    description: "Illegal cutting, gathering, collecting, or removing timber or other forest products from any forest land without authority.",
-    requirements: ["DENR apprehension report", "Inventory of seized logs", "Photos of site", "Witness affidavits"],
-    steps: defaultSteps
-  },
-  "Anti-Fencing Law (PD 1612)": {
-    description: "The act of any person who, with intent to gain for himself or for another, shall buy, receive, possess, keep, acquire, conceal, sell or dispose of, or shall buy and sell, or in any other manner deal in any article, item, object or anything of value which he knows, or should be known to him, to have been derived from the proceeds of the crime of robbery or theft.",
-    requirements: ["Police report of original theft/robbery", "Inventory of recovered items", "Proof of purchase/receipt (if applicable)", "Witness affidavits"],
+    description: "The taking, with intent to gain, of a motor vehicle belonging to another without the latter's consent.",
+    requirements: ["LTO Certificate of Registration", "Official Receipt (OR/CR)", "Police alarm report", "Affidavit of loss"],
     steps: defaultSteps
   },
   "Bouncing Checks Law (BP 22)": {
-    description: "The making or drawing and issuance of any check to apply on account or for value, knowing at the time of issue that he does not have sufficient funds in or credit with the drawee bank for the payment of such check in full upon its presentment.",
+    description: "Issuing a check without sufficient funds, knowing at the time of issue the account has insufficient balance.",
     requirements: ["Original Bounced Check", "Return Slip from Bank", "Notice of Dishonor", "Proof of receipt of Notice", "Demand Letter"],
     steps: defaultSteps
   },
-  "Trust Receipts Law (PD 115)": {
-    description: "Failure to turn over the proceeds of the sale of the goods, documents or instruments released under a trust receipt to the extent of the amount owing to the entruster or as appears in the trust receipt or to return said goods, documents or instruments if they were not sold.",
-    requirements: ["Trust Receipt Agreement", "Proof of delivery of goods", "Demand letter", "Bank records of non-payment"],
+
+  // --- PUBLIC ORDER ---
+  "Rebellion, Insurrection, and Coup d'état": {
+    description: "Rising publicly and taking up arms against the Government to remove allegiance or seize state power.",
+    requirements: ["Arrest report", "Witness affidavits", "Intelligence reports", "Evidence of armed organization"],
     steps: defaultSteps
   },
-  "Qualified Estafa (PD 1689)": {
-    description: "Estafa committed by a syndicate consisting of five or more persons with the intention of carrying out the unlawful or illegal act, transaction, enterprise or scheme, and the fraud results in the misappropriation of moneys contributed by stockholders, or members of rural banks, cooperatives, or farmers' associations.",
-    requirements: ["Proof of investment/contribution", "SEC/CDA Registration of entity", "Affidavits of multiple victims", "Audit reports"],
+  "Sedition and Public Disturbances": {
+    description: "Public and tumultuous uprisings to prevent the execution of laws or inflict hate upon public officers.",
+    requirements: ["Police report", "Photos/Videos of incident", "Witness affidavits", "Media reports"],
     steps: defaultSteps
   },
-  "Anti-Arson Law (PD 1613)": {
-    description: "Destructive burning of property including those used for public service or those where people usually congregate.",
-    requirements: ["BFP Fire report", "Damage assessment", "Proof of ownership", "Witness affidavits"],
-    steps: defaultSteps
-  },
-  "Anti-Electricity Pilferage (RA 7832)": {
-    description: "Illegal use of electricity such as tapping, tampering with meters, or using jumpers.",
-    requirements: ["Utility company (Meralco/etc) Inspection Report", "Photos of jumper/tapping", "Billing history", "Apprehension report"],
-    steps: defaultSteps
-  },
-  "Anti-Cable Television & Internet Tapping (RA 10088)": {
-    description: "Illegal intercepting, receiving, or using any signal or service being emitted, transmitted, or distributed by any cable television system or cable internet system.",
-    requirements: ["Service provider report", "Photos of illegal connection", "Subscription contract (if existing)", "Witness affidavits"],
-    steps: defaultSteps
-  },
-  "Unauthorized Installation of Water/Telephone (PD 401)": {
-    description: "Unauthorized installation of water, electrical, or telephone connections, or tampering of water/electric meters or socialized housing water meters.",
-    requirements: ["Water/Telco inspection report", "Photos of unauthorized connection", "Billing discrepancy records"],
-    steps: defaultSteps
-  },
-  "Anti-Agricultural Smuggling (RA 10845)": {
-    description: "Large-scale agricultural smuggling as economic sabotage, involving sugar, corn, pork, poultry, etc. with value of at least 1M pesos.",
-    requirements: ["Customs / BOC apprehension report", "Inventory of seized products", "Import documents (or lack thereof)", "Market value assessment"],
+  "Assaults, Resistance, and Disobedience": {
+    description: "Employing force or intimidation against persons in authority (Direct Assault) or resisting their lawful orders.",
+    requirements: ["Police blotter", "Medico-legal (if injured)", "Sworn statement of officer", "Witness affidavits"],
     steps: defaultSteps
   },
 
   // --- DRUGS ---
   "Illegal Possession of Dangerous Drugs (Section 11)": {
-    description: "Possession of prohibited substances like methamphetamine ('shabu'), marijuana, or ecstasy without legal authority.",
+    description: "Possession of prohibited substances like methamphetamine ('shabu') or marijuana without legal authority.",
     requirements: ["Arrest report", "Inventory of seized items", "Chemistry report", "Chain of custody documents", "Confiscation receipt"],
     steps: defaultSteps
-  },
-  "Drug Trafficking / Pushing (Section 5)": {
-    description: "Sale, trading, delivery, distribution, or transportation of illegal drugs (non-bailable if evidence is strong).",
-    requirements: ["Buy-bust report", "Inventory of seized items", "Chemistry report", "Marked money copies", "Chain of custody"],
-    steps: defaultSteps
-  },
-  "Drug Cases Involving Minors": {
-    description: "Violations of the Dangerous Drugs Act where the offender is a minor, requiring specialized juvenile justice handling.",
-    requirements: ["Birth certificate of minor", "Social worker report", "Police/Arrest report", "Chemistry report"],
-    steps: defaultSteps
-  },
-
-  // --- CHASTITY & SEXUAL VIOLENCE ---
-  "Rape (R.A. 8353 / Art. 266-A)": {
-    description: "Classified as a crime against persons. Includes sexual intercourse through force, threat, or when the victim is deprived of reason.",
-    requirements: ["Medico-legal certificate", "Police blotter", "Sworn affidavit", "Birth certificate (if minor)", "Psychological evaluation"],
-    steps: defaultSteps
-  },
-  "Acts of Lasciviousness (Art. 336)": {
-    description: "Engaging in lewd acts with another person under circumstances of force or intimidation.",
-    requirements: ["Sworn affidavit", "Police blotter", "Witness affidavits", "Medico-legal (if applicable)"],
-    steps: defaultSteps
-  },
-  "Adultery (Art. 333)": {
-    description: "Committed by a married woman who shall have sexual intercourse with a man not her husband.",
-    requirements: ["PSA Marriage certificate", "Evidence of sexual intercourse (photos/messages)", "Witness affidavits"],
-    steps: defaultSteps
-  },
-  "Concubinage (Art. 334)": {
-    description: "Committed by a husband who keeps a mistress in the conjugal dwelling or under scandalous circumstances.",
-    requirements: ["PSA Marriage certificate", "Evidence of mistress (photos/witnesses)", "Proof of cohabitation"],
-    steps: defaultSteps
-  },
-  "Qualified Seduction (Art. 337)": {
-    description: "Seducing a virgin over 12 but under 18 years old, by person in authority or trust.",
-    requirements: ["Birth certificate of minor", "Sworn affidavit", "Proof of relationship/authority", "Witness affidavits"],
-    steps: defaultSteps
-  },
-  "Corruption of Minors (Art. 340)": {
-    description: "Promoting or facilitating the prostitution or corruption of a minor.",
-    requirements: ["Birth certificate of minor", "Evidence of promotion/facilitation", "Police report", "Witness affidavits"],
-    steps: defaultSteps
-  },
-  "Abuses Against Chastity by Public Officers (Art. 245)": {
-    description: "Public officers taking advantage of their position to solicit immoral advances from women with pending matters.",
-    requirements: ["Sworn affidavit", "Proof of pending matter", "Official identification of officer", "Witness affidavits"],
-    steps: defaultSteps
-  },
-
-  // --- CIVIL ---
-  "Annulment of Marriage": {
-    description: "Legal process to declare a marriage void due to specific grounds like psychological incapacity (Art. 36).",
-    requirements: ["PSA Marriage Certificate", "Birth certificates of children", "Psychological report (if Art. 36)", "Proof of residency"],
-    steps: defaultSteps
-  },
-  "Illegal Dismissal": {
-    description: "Unlawful termination of employment without just or authorized cause or without due process.",
-    requirements: ["Employment contract", "Payslips", "Termination letter", "Company ID", "Written explanation"],
-    steps: [
-      { step: 1, title: "Filing before NLRC", content: "Submission of the complaint to the National Labor Relations Commission." },
-      { step: 2, title: "Conciliation", content: "Mandatory conference to explore settlement." },
-      { step: 3, title: "Position papers", content: "Submission of sworn statements and evidence." },
-      { step: 4, title: "Decision", content: "Labor Arbiter's ruling." }
-    ]
   }
 };
 
