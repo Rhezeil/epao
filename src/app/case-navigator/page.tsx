@@ -188,7 +188,7 @@ function CaseNavigatorContent() {
                 <div className="p-1.5 bg-primary/10 rounded-lg">
                   <Info className="h-5 w-5 text-primary" />
                 </div>
-                <CardTitle className="text-lg font-bold text-primary">Steps to File a Complaint at PAO</CardTitle>
+                <CardTitle className="text-lg font-bold text-primary">Process flow</CardTitle>
               </div>
               <p className="text-xs text-muted-foreground">Official process roadmap.</p>
             </CardHeader>
