@@ -126,6 +126,22 @@ export const caseCategories = {
         "Anti-Trafficking (R.A. 9208)",
         "Anti-Sexual Harassment (R.A. 7877)"
       ]
+    },
+    {
+      title: "🔫 XI. FIREARMS & EXPLOSIVES LAWS (RA 10591 & RA 9516)",
+      items: [
+        "Illegal Possession of Firearms (RA 10591)",
+        "Illegal Possession of Explosives (RA 9516)",
+        "Unlawful Manufacture of Explosives"
+      ]
+    },
+    {
+      title: "🚗 XII. TRAFFIC LAWS & RECKLESS IMPRUDENCE (Art. 365)",
+      items: [
+        "Reckless Imprudence Resulting in Homicide",
+        "Reckless Imprudence Resulting in Physical Injuries",
+        "Reckless Imprudence Resulting in Damage to Property"
+      ]
     }
   ],
   "Civil": [
@@ -208,7 +224,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     steps: defaultSteps
   },
   "Psychological Violence (VAWC - Sec. 5h-i)": {
-    description: "Acts causing mental or emotional suffering, including intimidation, stalking, public ridicule, or marital infidelity.",
+    description: "Acts causing mental or emotional suffering, including intimidation, harassment, stalking, public ridicule, or marital infidelity.",
     requirements: ["Marriage Certificate / Proof of Relationship", "Psychological Evaluation report", "Screenshots of messages/harassment", "Witness affidavits", "Sworn Affidavit"],
     steps: defaultSteps
   },
@@ -417,6 +433,40 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   "Rape (R.A. 8353 / Art. 266-A)": {
     description: "Sexual assault classified as a crime against persons. Includes qualified rape cases.",
     requirements: ["Medico-legal report (Sexual Abuse Exam)", "Sworn complaint-affidavit", "Psychological evaluation", "Police blotter", "Clothing evidence"],
+    steps: defaultSteps
+  },
+
+  // --- FIREARMS & EXPLOSIVES ---
+  "Illegal Possession of Firearms (RA 10591)": {
+    description: "Possessing unlicensed, unregistered, or altered firearms (loose firearms). This includes small arms, Class A, and Class B Light Weapons. RA 8294 establishes that illegal possession is an aggravating circumstance when another crime is committed.",
+    requirements: ["Police report", "Inventory of seized firearms/ammunition", "Certification from FEU (Firearms and Explosives Office)", "Ballistics report", "Photos of evidence", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Illegal Possession of Explosives (RA 9516)": {
+    description: "Unlawful possession or manufacture of explosives, incendiary devices, or hand grenades. Usually carries the penalty of reclusión perpetua.",
+    requirements: ["BFP or Police Incident Report", "Inventory of seized explosives/paraphernalia", "Chemical Analysis/Certification from FEU", "Photos of evidence", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Unlawful Manufacture of Explosives": {
+    description: "The illegal creation or assembly of explosive devices or incendiary materials without government authorization.",
+    requirements: ["Inventory of seized materials", "Chemical Analysis report", "Arrest report", "Photos of laboratory/site", "Witness affidavits"],
+    steps: defaultSteps
+  },
+
+  // --- TRAFFIC & RECKLESS IMPRUDENCE ---
+  "Reckless Imprudence Resulting in Homicide": {
+    description: "A voluntary act without malice, but lacking precaution (negligence), resulting in death. Often involves motor vehicle accidents where the driver failed to exercise due diligence.",
+    requirements: ["Police Accident Report (Sketch & Narrative)", "Death Certificate", "Driver's License & Vehicle Registration", "Insurance documents", "Witness affidavits", "CCTV/Photos of accident site"],
+    steps: defaultSteps
+  },
+  "Reckless Imprudence Resulting in Physical Injuries": {
+    description: "A negligent act resulting in serious, less serious, or slight physical harm to another person due to lack of precaution.",
+    requirements: ["Police Accident Report", "Medico-Legal Certificate", "Driver's License & Vehicle Registration", "Witness affidavits", "CCTV/Photos"],
+    steps: defaultSteps
+  },
+  "Reckless Imprudence Resulting in Damage to Property": {
+    description: "A negligent act resulting in damage to the property of another, such as crashing into a building or another vehicle.",
+    requirements: ["Police Accident Report", "Estimated Cost of Repair/Damage Appraisal", "Proof of ownership (OR/CR)", "Photos of damage", "Witness affidavits"],
     steps: defaultSteps
   }
 };
