@@ -4,7 +4,10 @@
  */
 
 export const generalRequirements = [
-  "Community Tax Certificate (Cedula)"
+  "Valid Government ID",
+  "Affidavit of Indigency",
+  "Barangay Certificate of Indigency",
+  "Proof of income / Certificate of No Income"
 ];
 
 export const caseCategories = {
@@ -22,24 +25,34 @@ export const caseCategories = {
       ]
     },
     {
-      title: "🟠 Crimes Against Property",
+      title: "🟠 Crimes Against Property (RPC)",
       items: [
-        "Theft", 
-        "Qualified Theft", 
-        "Robbery (with violence / intimidation)", 
-        "Robbery with Homicide", 
-        "Estafa (Swindling)", 
-        "Arson", 
-        "Malicious Mischief"
+        "Robbery (Arts. 294-305)",
+        "Brigandage (Arts. 306-307)",
+        "Theft (Arts. 308-311)",
+        "Usurpation (Arts. 312-313)",
+        "Fraudulent Insolvency (Art. 314)",
+        "Swindling and Estafa (Arts. 315-318)",
+        "Removal, Sale, or Pledge of Mortgaged Property",
+        "Arson and Destruction (Arts. 320-326)",
+        "Malicious Mischief (Arts. 327-331)"
       ]
     },
     {
-      title: "🟡 Crimes Against Honor",
-      items: ["Libel", "Slander (Oral Defamation)", "Incriminating an Innocent Person"]
-    },
-    {
-      title: "🟢 Crimes Against Chastity",
-      items: ["Acts of Lasciviousness", "Seduction", "Concubinage", "Adultery"]
+      title: "📦 Crimes Against Property (Special Laws)",
+      items: [
+        "Anti-Fencing Law (PD 1612)",
+        "Anti-Cattle Rustling Law (PD 533)",
+        "New Anti-Carnapping Act (RA 10883)",
+        "Bouncing Checks Law (BP 22)",
+        "Trust Receipts Law (PD 115)",
+        "Anti-Electricity Pilferage (RA 7832)",
+        "Anti-Cable/Internet Tapping (RA 10515)",
+        "Anti-Agricultural Smuggling (RA 10845)",
+        "Timber Smuggling (PD 330/705)",
+        "Illegal Fishing (RA 8550)",
+        "Unauthorized Water/Phone Install (PD 401)"
+      ]
     },
     {
       title: "🔵 Crimes Against Public Order",
@@ -49,7 +62,6 @@ export const caseCategories = {
         "Sedition (Art. 139)",
         "Direct Assaults (Art. 148)",
         "Resistance and Disobedience (Art. 151)",
-        "Illegal Possession of Firearms",
         "Alarms and Scandals",
         "Evasion of Service of Sentence"
       ]
@@ -198,6 +210,37 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     ],
     steps: universalPaoFlow
   },
+  "Theft (Arts. 308-311)": {
+    requirements: [
+      "Police report",
+      "Affidavit of loss",
+      "Proof of ownership (receipts, title, OR/CR)",
+      "CCTV footage (if available)",
+      "Witness affidavits"
+    ],
+    steps: universalPaoFlow
+  },
+  "Robbery (Arts. 294-305)": {
+    requirements: [
+      "Police report",
+      "Proof of ownership (receipts, title, OR/CR)",
+      "Medical certificate (if with violence)",
+      "CCTV footage (if available)",
+      "Witness affidavits"
+    ],
+    steps: universalPaoFlow
+  },
+  "Swindling and Estafa (Arts. 315-318)": {
+    requirements: [
+      "Contract or agreement",
+      "Promissory note",
+      "Receipts",
+      "Proof of payment",
+      "Demand letter with proof of receipt",
+      "Messages (SMS/chat screenshots)"
+    ],
+    steps: universalPaoFlow
+  },
   "Illegal Possession of Dangerous Drugs (Section 11)": {
     requirements: ["Arrest report", "Inventory of seized items", "Chemistry report", "Chain of custody documents", "Confiscation receipt"],
     steps: universalPaoFlow
@@ -214,6 +257,15 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
       { step: 3, title: "Position papers", content: "Submission of sworn statements and evidence." },
       { step: 4, title: "Decision", content: "Labor Arbiter's ruling." }
     ]
+  },
+  "Bouncing Checks Law (BP 22)": {
+    requirements: [
+      "Original dishonored check",
+      "Bank return slip (insufficient funds)",
+      "Written demand letter",
+      "Proof of receipt of demand letter"
+    ],
+    steps: universalPaoFlow
   }
 };
 
