@@ -311,7 +311,7 @@ function CaseNavigatorContent() {
           <div className="flex-1 flex items-center px-4">
             <Search className="h-6 w-6 text-primary/30 mr-3" />
             <Input 
-              placeholder='Search a legal matter (e.g., "Murder", "Labor")...' 
+              placeholder='Search a legal matter (e.g., "Murder", "Annulment")...' 
               className="h-12 border-none shadow-none focus-visible:ring-0 text-base font-bold placeholder:font-medium placeholder:text-muted-foreground/40"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
