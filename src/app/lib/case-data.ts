@@ -59,10 +59,10 @@ export const caseCategories = {
         "VAWC Criminal (RA 9262)", 
         "Child Abuse (RA 7610)", 
         "Bouncing Checks (BP 22)", 
-        "Illegal Recruitment (RA 8042)", 
         "Anti-Fencing (PD 1612)", 
         "Cybercrime (RA 10175)",
-        "Electricity Pilferage (RA 7832)"
+        "Electricity Pilferage (RA 7832)",
+        "Illegal Recruitment (RA 8042)"
       ]
     },
     {
@@ -82,7 +82,7 @@ export const caseCategories = {
         "Support - Child or Spouse (Arts. 194–208)",
         "Child Custody (Art. 213)",
         "VAWC Civil Protection Order (RA 9262)",
-        "Habeas Corpus - Custody of Minor",
+        "Petition for Habeas Corpus (Minor)",
         "Declaration of Presumptive Death (Art. 41)"
       ]
     },
@@ -141,10 +141,11 @@ export const caseCategories = {
 };
 
 export const standardPaoDocs = [
-  "Certificate of Indigency from Barangay Chairman (Residence jurisdiction)",
+  "Certificate of Indigency from Barangay Chairman having jurisdiction over residence",
   "OR Certificate of Indigency from DSWD/MSWD",
   "Latest ITR, pay slip, or Certificate of No Income",
   "Valid Government-issued ID (SSS, PhilHealth, Voter's, etc.)",
+  "Case-Related Documents (Complaints, summons, affidavits, or police reports)",
   "Merit Test: The case must not be frivolous and must have legal basis."
 ];
 
@@ -182,7 +183,7 @@ export const pAONotes = [
 export const caseSpecificData: Record<string, { requirements: string[], steps: any[], description: string }> = {
   // --- CRIMES AGAINST PERSONS ---
   "Parricide (Art. 246)": {
-    description: "Killing of spouse, parent, child, or legitimate ascendant/descendant. Requires proof of valid relationship.",
+    description: "Killing of spouse, parent, child, or legitimate ascendant/descendant. Requires proof of relationship.",
     requirements: ["Death certificate", "Autopsy report", "Marriage/Birth certificate (proof of relationship)", "Witness affidavits", "CCTV footage"],
     steps: universalPaoFlow
   },
@@ -198,22 +199,22 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   },
   "Physical Injuries (Arts. 262–266)": {
     description: "Inflicting bodily harm resulting in serious, less serious, or slight injuries. Requires medical documentation.",
-    requirements: ["Medical certificate", "Hospital records", "Photos of injuries", "Police blotter", "Certificate to File Action (Barangay)"],
+    requirements: ["Medical Certificate (Original/Certified copy)", "Hospital records", "Photos of injuries", "Police blotter", "Certificate to File Action (Barangay)"],
     steps: universalPaoFlow
   },
   "Abortion (Arts. 256–259)": {
-    description: "Prohibited acts penalized under Articles 256-259 RPC, whether practiced by the woman herself or others.",
+    description: "Prohibited acts penalized regardless of whether practiced by the woman herself, her parents, a physician, or a midwife.",
     requirements: ["Medical records", "Witness affidavits", "Police report", "Sworn statements from involved parties"],
     steps: universalPaoFlow
   },
   "Death in Tumultuous Affray (Art. 251)": {
-    description: "Killing during a chaotic fight involving several people where the specific killer cannot be determined.",
-    requirements: ["Complaint-Affidavit", "Subpoena or Warrant of Arrest (if served)", "Police blotter", "Autopsy report", "Witness affidavits"],
+    description: "Killing during a chaotic, unorganized fight involving several people where the specific killer cannot be determined.",
+    requirements: ["Complaint-Affidavit (if filed)", "Subpoena or Warrant of Arrest (if served)", "Police blotter", "Autopsy report", "Witness affidavits"],
     steps: universalPaoFlow
   },
   "Discharge of Firearms (Art. 254 / RA 11926)": {
     description: "Shooting at another without intent to kill, or willful and indiscriminate discharge of any firearm.",
-    requirements: ["Police investigation report", "Ballistics report", "Paraffin test results (if available)", "Witness affidavits", "Seizure receipt of firearm"],
+    requirements: ["Police investigation report", "Ballistics report", "Paraffin test results (if any)", "Witness affidavits", "Seizure receipt of firearm"],
     steps: universalPaoFlow
   },
 
@@ -224,7 +225,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     steps: universalPaoFlow
   },
   "Theft (Art. 308)": {
-    description: "Taking personal property without consent and without violence, with intent to gain.",
+    description: "Taking personal property without owner's consent and without violence, with intent to gain.",
     requirements: ["Police report", "Affidavit of loss", "Proof of ownership", "CCTV footage", "Witness affidavits"],
     steps: universalPaoFlow
   },
@@ -235,7 +236,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   },
   "Estafa (Art. 315)": {
     description: "Defrauding another through abuse of confidence or deceit causing damage.",
-    requirements: ["Written contract / agreement", "Promissory note", "Receipts / Proof of payment", "Demand letter with proof of receipt", "Bank records", "Screenshots / chat messages"],
+    requirements: ["Written contract / agreement", "Promissory note", "Receipts / Proof of payment", "Demand letter with proof of receipt", "Bank records / messages"],
     steps: universalPaoFlow
   },
   "Arson (Arts. 320–326)": {
@@ -245,19 +246,19 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   },
   "Malicious Mischief (Art. 327)": {
     description: "Deliberate damage to property of another without intent to gain.",
-    requirements: ["Photos of damaged property", "Repair estimates", "Police blotter", "Witness affidavits", "CCTV footage"],
+    requirements: ["Photos of damaged property", "Repair estimates", "Police blotter", "Witness affidavits"],
     steps: universalPaoFlow
   },
 
-  // --- CRIMES AGAINST PUBLIC ORDER ---
+  // --- PUBLIC ORDER ---
   "Rebellion (Art. 134)": {
     description: "Rising publicly and taking arms against the government to remove allegiance or deprive powers.",
-    requirements: ["Intelligence reports", "Firearms seized", "Witness testimony", "Arrest report", "Videos/photos"],
+    requirements: ["Intelligence reports", "Firearms seized", "Witness testimony", "Arrest report"],
     steps: universalPaoFlow
   },
   "Coup d'état (Art. 134-A)": {
     description: "Swift attack by military/police or civilians against government authority to seize power.",
-    requirements: ["Military/Police reports", "Weapons seized", "Intelligence records", "Communications (orders/messages)"],
+    requirements: ["Military/Police reports", "Weapons seized", "Intelligence records", "Communications orders"],
     steps: universalPaoFlow
   },
   "Sedition (Art. 139)": {
@@ -271,7 +272,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     steps: universalPaoFlow
   },
 
-  // --- SPECIAL CRIMINAL LAWS ---
+  // --- SPECIAL LAWS ---
   "Drug Cases (RA 9165)": {
     description: "Violations of the Comprehensive Dangerous Drugs Act (Sale, Possession, or Use).",
     requirements: ["Chemistry report", "Seizure inventory", "Chain of custody documentation", "Arrest report"],
@@ -279,7 +280,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   },
   "VAWC Criminal (RA 9262)": {
     description: "Criminal aspect of Violence Against Women and Their Children (Physical, Sexual, Psychological, Economic).",
-    requirements: ["Police blotter", "Marriage/Birth certificate", "Screenshots of threats", "Medical report / Medico-legal", "Affidavit of victim"],
+    requirements: ["Police blotter", "Marriage/Birth certificate", "Screenshots of threats", "Medical report / Medico-legal"],
     steps: universalPaoFlow
   },
   "Bouncing Checks (BP 22)": {
@@ -289,21 +290,16 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   },
   "Anti-Fencing (PD 1612)": {
     description: "Buying, possessing, or selling property knowing it was stolen.",
-    requirements: ["Police report of original theft", "Proof property was stolen", "Proof of possession by accused", "Sale receipts"],
+    requirements: ["Police report of original theft", "Proof property was stolen", "Proof of possession by accused"],
     steps: universalPaoFlow
   },
   "Electricity Pilferage (RA 7832)": {
     description: "Illegal use of electricity, jumper connections, or tampering with electric meters.",
-    requirements: ["Inspection report by electric company", "Photographs of illegal connection", "Meter tampering report", "Affidavit of inspecting officer"],
-    steps: universalPaoFlow
-  },
-  "Cybercrime (RA 10175)": {
-    description: "Crimes committed through computer systems (Cyber-Libel, Identity Theft, etc.).",
-    requirements: ["Screenshots with URLs", "Email headers / logs", "Digital forensic report", "Police cybercrime report"],
+    requirements: ["Inspection report by electric company", "Photographs of illegal connection", "Meter tampering report"],
     steps: universalPaoFlow
   },
 
-  // --- FAMILY RELATIONS AND PERSONS ---
+  // --- CIVIL CASES ---
   "Declaration of Nullity of Marriage (Art. 36)": {
     description: "Marriage void from the beginning due to psychological incapacity or other grounds under Arts. 35-38.",
     requirements: ["PSA Marriage Certificate", "PSA Birth Certificates of children", "Psychological evaluation report", "Proof of residency", "Witness affidavits"],
@@ -329,7 +325,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["Police blotter", "Medical certificate", "Screenshots/messages", "Marriage certificate / Birth certificates"],
     steps: universalPaoFlow
   },
-  "Habeas Corpus - Custody of Minor": {
+  "Petition for Habeas Corpus (Minor)": {
     description: "Illegal detention or wrongful custody of a minor child.",
     requirements: ["Birth certificate", "Proof of custody rights", "Affidavit of illegal detention", "Police report"],
     steps: universalPaoFlow
@@ -339,8 +335,6 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["Marriage certificate", "Proof of absence", "Police certification", "Affidavits of diligent search"],
     steps: universalPaoFlow
   },
-
-  // --- PROPERTY AND LAND DISPUTES ---
   "Unlawful Detainer / Forcible Entry (Rule 70)": {
     description: "Recovery of physical possession of property within one year of unlawful deprivation.",
     requirements: ["Land title (TCT/OCT)", "Lease contract", "Demand to vacate letter", "Tax declaration"],
@@ -348,7 +342,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   },
   "Quieting of Title / Reconveyance": {
     description: "Removing cloud over title or reclaiming ownership through judicial action.",
-    requirements: ["Land title", "Deed of sale", "Tax declaration", "Evidence of fraud (if reconveyance)"],
+    requirements: ["Land title", "Deed of sale", "Tax declaration", "Evidence of fraud"],
     steps: universalPaoFlow
   },
   "Partition of Property (Art. 494)": {
@@ -366,8 +360,6 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["Loan agreement", "Promissory note", "Mortgage contract", "Notice of foreclosure"],
     steps: universalPaoFlow
   },
-
-  // --- OBLIGATIONS AND CONTRACTS ---
   "Breach of Contract (Art. 1159)": {
     description: "Failure to comply with contractual obligations without valid excuse.",
     requirements: ["Written contract", "Proof of breach", "Demand letter", "Receipts"],
@@ -386,6 +378,36 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   "Defamation Civil Damages (Arts. 19-21)": {
     description: "Civil action for damages resulting from libel or slanderous remarks.",
     requirements: ["Copy of defamatory statement", "Screenshot with URL", "Witness affidavits"],
+    steps: universalPaoFlow
+  },
+  "Guardianship (Rules 92–97)": {
+    description: "Appointment of a legal guardian for a minor or an incompetent person.",
+    requirements: ["Birth certificate", "Medical certificate (if incompetent)", "Financial documents", "Proof of relationship"],
+    steps: universalPaoFlow
+  },
+  "Settlement of Estate (Rule 74)": {
+    description: "Extrajudicial or judicial settlement of a deceased person's small estate.",
+    requirements: ["Death certificate", "Titles / Proof of Ownership", "Birth certificates of heirs", "List of properties"],
+    steps: universalPaoFlow
+  },
+  "Change of Name (Rule 103)": {
+    description: "Judicial proceeding to change a person's first name or surname.",
+    requirements: ["Birth certificate", "Police clearance", "Publication proof (newspaper)", "NBI Clearance"],
+    steps: universalPaoFlow
+  },
+  "Correction of Entry (Rule 108 / RA 9048)": {
+    description: "Correction of clerical or substantial errors in a person's civil registry records.",
+    requirements: ["PSA Certificate (with error)", "Supporting documents proving error", "Marriage/Birth certificates", "Baptismal certificate"],
+    steps: universalPaoFlow
+  },
+  "Interpleader (Rule 62)": {
+    description: "Action where a person who has property claimed by conflicting parties asks them to litigate among themselves.",
+    requirements: ["Contracts / Deeds", "Demand letters from conflicting claimants", "Proof of possession of property"],
+    steps: universalPaoFlow
+  },
+  "Declaratory Relief (Rule 63)": {
+    description: "Action for judicial interpretation of a contract, deed, or statute before breach occurs.",
+    requirements: ["Contract / Deed / Statute for interpretation", "Affidavit explaining the dispute", "Proof of interest"],
     steps: universalPaoFlow
   }
 };
