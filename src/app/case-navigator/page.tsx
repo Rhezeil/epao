@@ -193,9 +193,9 @@ function CaseNavigatorContent() {
                 <div className="p-1.5 bg-primary/10 rounded-lg">
                   <Info className="h-5 w-5 text-primary" />
                 </div>
-                <CardTitle className="text-lg font-bold text-primary">Process Flow</CardTitle>
+                <CardTitle className="text-lg font-bold text-primary">Steps to File a Complaint</CardTitle>
               </div>
-              <p className="text-xs text-muted-foreground">Steps involved in this case type.</p>
+              <p className="text-xs text-muted-foreground">Standard process at PAO.</p>
             </CardHeader>
             <CardContent className="pt-4">
               <Accordion type="single" collapsible className="w-full space-y-2">
@@ -209,7 +209,7 @@ function CaseNavigatorContent() {
                         <span className="text-sm font-bold text-primary">{step.title}</span>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="text-xs text-muted-foreground pb-4 leading-relaxed">
+                    <AccordionContent className="text-xs text-muted-foreground pb-4 leading-relaxed whitespace-pre-line">
                       {step.content}
                     </AccordionContent>
                   </AccordionItem>
