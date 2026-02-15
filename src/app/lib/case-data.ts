@@ -1,19 +1,14 @@
 /**
- * @fileOverview Shared case category data for LexConnect.
+ * @fileOverview Shared legal database for LexConnect.
  * Comprehensive documentation and process flows based on official PAO standards.
  */
 
-export const generalRequirements = [
-  "Valid Government ID",
-  "Affidavit of Indigency",
-  "Barangay Certificate of Indigency",
-  "Proof of income / Certificate of No Income"
-];
+export const generalRequirements: string[] = [];
 
 export const caseCategories = {
   "Criminal": [
     {
-      title: "🔴 Crimes Against Persons",
+      title: "🔴 I. CRIMES AGAINST PERSONS",
       items: [
         "Murder", 
         "Homicide", 
@@ -25,7 +20,7 @@ export const caseCategories = {
       ]
     },
     {
-      title: "🟠 Crimes Against Property (RPC)",
+      title: "🟠 II. CRIMES AGAINST PROPERTY",
       items: [
         "Robbery (Arts. 294-305)",
         "Brigandage (Arts. 306-307)",
@@ -35,12 +30,7 @@ export const caseCategories = {
         "Swindling and Estafa (Arts. 315-318)",
         "Removal, Sale, or Pledge of Mortgaged Property",
         "Arson and Destruction (Arts. 320-326)",
-        "Malicious Mischief (Arts. 327-331)"
-      ]
-    },
-    {
-      title: "📦 Crimes Against Property (Special Laws)",
-      items: [
+        "Malicious Mischief (Arts. 327-331)",
         "Anti-Fencing Law (PD 1612)",
         "Anti-Cattle Rustling Law (PD 533)",
         "New Anti-Carnapping Act (RA 10883)",
@@ -55,56 +45,64 @@ export const caseCategories = {
       ]
     },
     {
-      title: "🔵 Crimes Against Public Order",
+      title: "🔵 III. CRIMES AGAINST PUBLIC ORDER",
       items: [
         "Rebellion or Insurrection (Art. 134)",
         "Coup d'état (Art. 134-A)",
+        "Conspiracy and Proposal to Commit Coup d'état/Rebellion (Art. 136)",
+        "Inciting to Rebellion or Insurrection (Art. 138)",
         "Sedition (Art. 139)",
+        "Conspiracy to Commit Sedition (Art. 141)",
+        "Inciting to Sedition (Art. 142)",
+        "Illegal Assemblies (Art. 146)",
+        "Illegal Associations (Art. 147)",
         "Direct Assaults (Art. 148)",
+        "Indirect Assaults (Art. 149)",
         "Resistance and Disobedience (Art. 151)",
-        "Alarms and Scandals",
-        "Evasion of Service of Sentence"
+        "Tumults and Other Disturbances (Art. 153)",
+        "Alarms and Scandals (Art. 155)",
+        "Delivering Prisoners from Jail (Art. 156)",
+        "Evasion of Service of Sentence (Art. 157)",
+        "Violation of Conditional Pardon (Art. 159)"
       ]
     },
     {
-      title: "2️⃣ Dangerous Drugs Cases (RA 9165)",
+      title: "📦 IV. DANGEROUS DRUGS CASES (RA 9165)",
       items: [
         "Illegal Possession of Dangerous Drugs (Section 11)",
-        "Illegal Sale, Trading, etc. (Section 5)",
-        "Possession of Paraphernalia (Section 12)",
+        "Illegal Possession of Paraphernalia (Section 12)",
+        "Drug Trafficking / Pushing (Section 5)",
         "Use of Dangerous Drugs (Section 15)",
-        "Cultivation of Marijuana (Section 16)"
+        "Cultivation of Marijuana (Section 16)",
+        "Drug Cases Involving Minors",
+        "Drug Plea Bargaining Applications"
       ]
     },
     {
-      title: "3️⃣ Cybercrime & Special Laws",
-      items: ["Online Libel", "Identity Theft", "Bouncing Checks (BP 22)"]
+      title: "💻 V. CYBERCRIME & SPECIAL LAWS",
+      items: ["Online Libel", "Identity Theft", "Anti-Rape Law (RA 8353)", "Child Abuse (RA 7610)"]
     }
   ],
   "Civil": [
     {
       title: "📖 Family Law Cases",
-      items: ["Annulment of Marriage", "Declaration of Nullity", "Legal Separation", "Child Custody", "Child Support", "Adoption"]
+      items: ["Annulment of Marriage", "Declaration of Nullity", "Legal Separation", "Child Custody", "Child Support", "Adoption", "Recognition of Foreign Divorce"]
     },
     {
-      title: "📖 Civil Code Cases",
-      items: ["Collection of Sum of Money", "Breach of Contract", "Damages", "Property Disputes", "Partition of Property"]
-    },
-    {
-      title: "📖 Land & Ejectment",
-      items: ["Unlawful Detainer", "Forcible Entry", "Small Claims"]
+      title: "📖 Civil Code & Property",
+      items: ["Collection of Sum of Money", "Breach of Contract", "Damages", "Property Disputes", "Partition of Property", "Unlawful Detainer", "Forcible Entry", "Small Claims"]
     }
   ],
   "Labor": [
     {
       title: "👷 Employment Disputes",
-      items: ["Illegal Dismissal", "Non-payment of Wages", "Overtime Pay Claims", "Separation Pay", "13th Month Pay"]
+      items: ["Illegal Dismissal", "Constructive Dismissal", "Non-payment of Wages", "Overtime Pay Claims", "Separation Pay", "13th Month Pay"]
     }
   ],
   "Special Legislation": [
     {
       title: "🏢 Social & Special Laws",
-      items: ["Anti-Trafficking", "Anti-Child Pornography", "Anti-Hazing", "Anti-Illegal Recruitment", "Juvenile Justice"]
+      items: ["Anti-Trafficking (RA 9208)", "Anti-Child Pornography (RA 9775)", "Anti-Hazing (RA 11053)", "Anti-Illegal Recruitment", "Juvenile Justice (RA 9344)"]
     }
   ],
   "Administrative": [
@@ -124,125 +122,75 @@ export const universalPaoFlow = [
   { 
     step: 2, 
     title: "Indigency Test", 
-    content: "The applicant must prove they are indigent. This generally means having a low income (set thresholds apply depending on location, e.g., Metro Manila vs. other areas) and owning no significant real property. Required documents may include an Affidavit of Indigency, Certificate of Income, or Income Tax Return." 
+    content: "The applicant must prove they are indigent. This generally means having a low income and owning no significant real property. Required baseline documents include Affidavit of Indigency and Barangay Certificate." 
   },
   { 
     step: 3, 
     title: "Merit Test", 
-    content: "A PAO lawyer assesses if the case has merit—meaning it has a chance of success and is not intended merely to harass the opposite party.\n\nCriminal Defense: Cases for the accused are generally considered meritorious.\nCivil/Other Cases: Evaluated based on law and evidence." 
+    content: "A PAO lawyer assesses if the case has merit. Criminal defense is generally considered meritorious. Civil/Other cases are evaluated based on law and evidence." 
   },
   { 
     step: 4, 
     title: "Conflict of Interest Check", 
-    content: "The PAO verifies that they do not already represent the opposing party to avoid conflicts of interest." 
+    content: "The PAO verifies that they do not already represent the opposing party." 
   },
   { 
     step: 5, 
     title: "Acceptance", 
-    content: "If the applicant passes both tests, the lawyer will formally accept the case and provide legal representation, counseling, or document drafting (e.g., affidavits, complaints)." 
+    content: "If the applicant passes, the lawyer formally accepts the case for representation, counseling, or document drafting." 
   }
 ];
 
-export const defaultRequirements = generalRequirements;
+export const defaultRequirements = [];
 export const defaultSteps = universalPaoFlow;
 
 export const caseSpecificData: Record<string, { requirements: string[], steps: any[] }> = {
   "Murder": { 
     requirements: [
-      "If COMPLAINANT: Police blotter, Sworn Complaint-Affidavit, Medico-Legal Certificate, Hospital records, Death Certificate, Autopsy report, Photos of injuries, Witness affidavits",
-      "If ACCUSED: Copy of Complaint/Information, Arrest warrant, Subpoena, Bail bond papers, Court notices"
+      "Police blotter", "Sworn Complaint-Affidavit", "Medico-Legal Certificate", "Hospital records", "Death Certificate", "Autopsy report", "Photos of injuries", "Witness affidavits", "Copy of Complaint/Information (If Accused)", "Arrest warrant (If Accused)", "Subpoena (If Accused)", "Bail bond papers (If Accused)"
     ], 
     steps: universalPaoFlow 
   },
   "Homicide": {
     requirements: [
-      "If COMPLAINANT: Police blotter, Sworn Complaint-Affidavit, Medico-Legal Certificate, Hospital records, Death Certificate, Autopsy report, Witness affidavits",
-      "If ACCUSED: Copy of Information, Arrest warrant, Subpoena, Bail documents"
+      "Police blotter", "Sworn Complaint-Affidavit", "Medico-Legal Certificate", "Hospital records", "Death Certificate", "Autopsy report", "Witness affidavits", "Copy of Information (If Accused)", "Arrest warrant (If Accused)"
     ],
     steps: universalPaoFlow
   },
   "Parricide": {
     requirements: [
-      "Marriage Certificate (if spouse)",
-      "Birth Certificate (if parent/child)",
-      "Police blotter",
-      "Sworn Affidavit",
-      "Death Certificate"
+      "Marriage Certificate (if spouse)", "Birth Certificate (if parent/child)", "Police blotter", "Sworn Affidavit", "Death Certificate"
     ],
     steps: universalPaoFlow
   },
   "Infanticide": {
     requirements: [
-      "Birth Certificate of child less than 72 hours old",
-      "Police report",
-      "Medico-legal report (cause of death)",
-      "Witness affidavits"
-    ],
-    steps: universalPaoFlow
-  },
-  "Physical Injuries (Serious, Less Serious, Slight)": {
-    requirements: [
-      "Medical Certificate",
-      "Police blotter",
-      "Photos of injuries",
-      "Sworn Complaint-Affidavit"
-    ],
-    steps: universalPaoFlow
-  },
-  "Violence Against Women and Children (VAWC)": {
-    requirements: [
-      "Police blotter",
-      "Medical Certificate",
-      "Screenshots of threats/messages",
-      "Proof of relationship",
-      "Birth certificate of child",
-      "Barangay Protection Order (if any)"
-    ],
-    steps: universalPaoFlow
-  },
-  "Illegal Detention/Kidnapping": {
-    requirements: [
-      "Police blotter",
-      "Sworn Complaint-Affidavit",
-      "Witness affidavits",
-      "Photos / Evidence of deprivation of liberty",
-      "Arrest report (if involving public officer)"
-    ],
-    steps: universalPaoFlow
-  },
-  "Theft (Arts. 308-311)": {
-    requirements: [
-      "Police report",
-      "Affidavit of loss",
-      "Proof of ownership (receipts, title, OR/CR)",
-      "CCTV footage (if available)",
-      "Witness affidavits"
-    ],
-    steps: universalPaoFlow
-  },
-  "Robbery (Arts. 294-305)": {
-    requirements: [
-      "Police report",
-      "Proof of ownership (receipts, title, OR/CR)",
-      "Medical certificate (if with violence)",
-      "CCTV footage (if available)",
-      "Witness affidavits"
-    ],
-    steps: universalPaoFlow
-  },
-  "Swindling and Estafa (Arts. 315-318)": {
-    requirements: [
-      "Contract or agreement",
-      "Promissory note",
-      "Receipts",
-      "Proof of payment",
-      "Demand letter with proof of receipt",
-      "Messages (SMS/chat screenshots)"
+      "Birth Certificate of child (less than 72 hours old)", "Police report", "Medico-legal report (cause of death)", "Witness affidavits"
     ],
     steps: universalPaoFlow
   },
   "Illegal Possession of Dangerous Drugs (Section 11)": {
-    requirements: ["Arrest report", "Inventory of seized items", "Chemistry report", "Chain of custody documents", "Confiscation receipt"],
+    requirements: ["Arrest report", "Inventory of seized items", "Chemistry report", "Chain of custody documents", "Confiscation receipt", "Charge sheet"],
+    steps: universalPaoFlow
+  },
+  "Illegal Possession of Paraphernalia (Section 12)": {
+    requirements: ["Arrest report", "Inventory of seized items (paraphernalia)", "Chemistry report (if residues found)", "Chain of custody documents", "Confiscation receipt"],
+    steps: universalPaoFlow
+  },
+  "Drug Trafficking / Pushing (Section 5)": {
+    requirements: ["Arrest report / Buy-bust report", "Inventory of seized items", "Chemistry report", "Chain of custody documents", "Confiscation receipt", "Marked money copies (if applicable)"],
+    steps: universalPaoFlow
+  },
+  "Use of Dangerous Drugs (Section 15)": {
+    requirements: ["Drug test result", "Arrest report", "Confiscation receipt", "Recommendation for rehabilitation (if applicable)"],
+    steps: universalPaoFlow
+  },
+  "Drug Cases Involving Minors": {
+    requirements: ["Birth Certificate of minor", "Social worker report", "Arrest report", "Inventory of seized items"],
+    steps: universalPaoFlow
+  },
+  "Drug Plea Bargaining Applications": {
+    requirements: ["Copy of Information", "Plea Bargaining Proposal", "Court Order (if any)", "Evaluation from Prosecutor/Court"],
     steps: universalPaoFlow
   },
   "Annulment of Marriage": {
@@ -259,12 +207,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     ]
   },
   "Bouncing Checks Law (BP 22)": {
-    requirements: [
-      "Original dishonored check",
-      "Bank return slip (insufficient funds)",
-      "Written demand letter",
-      "Proof of receipt of demand letter"
-    ],
+    requirements: ["Original dishonored check", "Bank return slip (insufficient funds)", "Written demand letter", "Proof of receipt of demand letter"],
     steps: universalPaoFlow
   }
 };
@@ -276,10 +219,11 @@ export const categoryDefaults: Record<string, { requirements: string[], steps: a
 };
 
 export const pAONotes = [
-  "✔ PAO mainly handles criminal defense cases",
-  "✔ Civil cases require Indigency + Merit Test",
-  "✔ Some cases (like corporations, high-income clients) are NOT accepted",
-  "✔ Court-appointed cases (Counsel de Oficio) are automatically handled"
+  "✔ Mandatory Prerequisites: Valid ID, Affidavit of Indigency, Barangay Certificate of Indigency, Proof of Income.",
+  "✔ PAO mainly handles criminal defense cases.",
+  "✔ Civil cases require Indigency + Merit Test.",
+  "✔ Some cases (like corporations, high-income clients) are NOT accepted.",
+  "✔ Court-appointed cases (Counsel de Oficio) are automatically handled."
 ];
 
 export const allCaseNames = Object.values(caseCategories)
