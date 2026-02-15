@@ -6,46 +6,100 @@
 export const caseCategories = {
   Criminal: [
     {
-      title: "Revised Penal Code",
-      items: ["Murder", "Homicide", "Parricide", "Infanticide", "Serious Physical Injuries", "Less Serious Physical Injuries", "Slight Physical Injuries", "Theft", "Qualified Theft", "Robbery", "Robbery with Homicide", "Estafa", "Arson", "Malicious Mischief", "Libel", "Slander (Oral Defamation)", "Incriminating an Innocent Person", "Acts of Lasciviousness", "Seduction", "Concubinage", "Adultery", "Direct Assault", "Resistance and Disobedience", "Illegal Possession of Firearms"]
+      title: "Revised Penal Code - Crimes Against Persons",
+      items: ["Murder", "Homicide", "Parricide", "Infanticide", "Serious Physical Injuries", "Less Serious Physical Injuries", "Slight Physical Injuries"]
     },
     {
-      title: "Special Criminal Laws",
-      items: ["Dangerous Drugs (RA 9165)", "VAWC (RA 9262)", "Cybercrime (RA 10175)", "Bouncing Checks (BP 22)", "Child Abuse (RA 7610)", "Anti-Rape Law (RA 8353)"]
+      title: "Revised Penal Code - Crimes Against Property",
+      items: ["Theft", "Qualified Theft", "Robbery (with violence / intimidation)", "Robbery with Homicide", "Estafa (Swindling)", "Arson", "Malicious Mischief"]
+    },
+    {
+      title: "Revised Penal Code - Crimes Against Honor",
+      items: ["Libel", "Slander (Oral Defamation)", "Incriminating an Innocent Person"]
+    },
+    {
+      title: "Revised Penal Code - Crimes Against Chastity",
+      items: ["Acts of Lasciviousness", "Seduction", "Concubinage", "Adultery"]
+    },
+    {
+      title: "Revised Penal Code - Crimes Against Public Order",
+      items: ["Direct Assault", "Resistance and Disobedience", "Illegal Possession of Firearms"]
+    },
+    {
+      title: "Dangerous Drugs Cases (RA 9165)",
+      items: ["Illegal Possession of Drugs", "Illegal Sale of Drugs", "Use of Dangerous Drugs", "Drug Den Operations", "Possession of Drug Paraphernalia", "Drug Planting (as defense)"]
+    },
+    {
+      title: "Violence Against Women & Children (RA 9262)",
+      items: ["Physical abuse", "Psychological abuse", "Economic abuse", "Protection Order cases"]
+    },
+    {
+      title: "Child Protection Cases (RA 7610)",
+      items: ["Child abuse", "Child exploitation", "Child trafficking"]
+    },
+    {
+      title: "Anti-Rape Law (RA 8353)",
+      items: ["Rape by sexual intercourse", "Rape by sexual assault"]
+    },
+    {
+      title: "Cybercrime Cases (RA 10175)",
+      items: ["Online libel", "Identity theft", "Online fraud", "Cybersex", "Computer-related fraud"]
+    },
+    {
+      title: "Bouncing Checks Law (BP 22)",
+      items: ["Issuance of bouncing checks"]
     }
   ],
   Civil: [
     {
+      title: "Family Law Cases",
+      items: ["Annulment of Marriage", "Declaration of Nullity of Marriage", "Legal Separation", "Child Custody", "Child Support", "Adoption (qualified cases)", "Recognition of Foreign Divorce"]
+    },
+    {
       title: "Civil Code Cases",
-      items: ["Collection of Sum of Money", "Breach of Contract", "Damages", "Property Disputes", "Partition of Property", "Unlawful Detainer", "Forcible Entry"]
+      items: ["Breach of Contract", "Collection of Sum of Money", "Damages", "Property Disputes", "Partition of Property"]
+    },
+    {
+      title: "Ejectment Cases",
+      items: ["Unlawful Detainer", "Forcible Entry"]
     },
     {
       title: "Small Claims",
-      items: ["Small Claims Collection"]
-    }
-  ],
-  "Family Law": [
-    {
-      title: "Marriage & Children",
-      items: ["Annulment of Marriage", "Declaration of Nullity", "Legal Separation", "Child Custody", "Child Support", "Adoption", "Recognition of Foreign Divorce"]
+      items: ["Collection of small debts (Small Claims)"]
     }
   ],
   Labor: [
     {
-      title: "Employment Disputes",
-      items: ["Illegal Dismissal", "Constructive Dismissal", "Non-payment of Wages", "Overtime Pay Claims", "Separation Pay", "13th Month Pay Claims"]
+      title: "Labor Code Disputes",
+      items: ["Illegal Dismissal", "Constructive Dismissal", "Non-payment of Wages", "Overtime Pay Claims", "Separation Pay", "13th Month Pay Claims", "Money Claims"]
     }
   ],
   "Special & Social": [
     {
-      title: "Protection & Rights",
-      items: ["Anti-Trafficking", "Anti-Child Pornography", "Anti-Hazing", "Illegal Recruitment", "Juvenile Justice Cases"]
+      title: "Anti-Trafficking (RA 9208)",
+      items: ["Human trafficking", "Forced labor", "Sexual exploitation"]
+    },
+    {
+      title: "Anti-Child Pornography (RA 9775)",
+      items: ["Production/distribution of child pornography"]
+    },
+    {
+      title: "Anti-Hazing Law (RA 11053)",
+      items: ["Hazing incidents in fraternities"]
+    },
+    {
+      title: "Anti-Illegal Recruitment (RA 8042)",
+      items: ["Illegal recruitment", "Recruitment scams"]
+    },
+    {
+      title: "Juvenile Justice (RA 9344)",
+      items: ["Representation of children in conflict with the law"]
     }
   ],
   Administrative: [
     {
-      title: "Quasi-Judicial",
-      items: ["Civil Service Cases", "SSS / GSIS Claims", "DARAB Agrarian Disputes", "PRC Cases", "Barangay Conciliation"]
+      title: "Quasi-Judicial Cases",
+      items: ["Civil Service cases", "SSS / GSIS claims", "DARAB agrarian disputes", "PRC cases", "Barangay conciliation"]
     }
   ]
 };
@@ -68,7 +122,7 @@ export const defaultSteps = [
   { 
     step: 1, 
     title: "Establish Eligibility (Indigency)", 
-    content: "PAO assists individuals who cannot afford private counsel. You must prove you are an indigent person, usually by providing a Certificate of Indigency from the Barangay or DSWD, or your latest income tax return/pay slip." 
+    content: "PAO assists individuals who cannot afford private counsel. You must prove you are an indigent person, usually by providing a Certificate of Indigency from the Barangay Chairman or the Department of Social Welfare and Development (DSWD), or your latest income tax return/pay slip." 
   },
   { 
     step: 2, 
@@ -78,7 +132,7 @@ export const defaultSteps = [
   { 
     step: 3, 
     title: "Document Preparation", 
-    content: "The lawyer assists in drafting the Complaint-Affidavit (detailing facts and parties) and Witness Affidavits. You must submit supporting evidence such as police reports, medical certificates, or photographs." 
+    content: "The lawyer assists in drafting the following:\n\n• Complaint-Affidavit: A sworn statement detailing facts, parties, and evidence.\n• Witness Affidavits: Sworn statements from witnesses.\n• Supporting Evidence: Police reports, medical certificates (for physical injuries), photographs, and relevant documents." 
   },
   { 
     step: 4, 
@@ -94,15 +148,15 @@ export const defaultSteps = [
 
 export const caseSpecificData: Record<string, { requirements: string[], steps: any[] }> = {
   "Annulment of Marriage": {
-    requirements: ["PSA Marriage Certificate", "PSA Birth Certificates of children", "Psychological Evaluation (Article 36 cases)", "Proof of spouse's residence"],
+    requirements: ["PSA Marriage Certificate", "PSA Birth Certificates of children", "Psychological Evaluation (Article 36 cases)", "Proof of spouse's residence", "Affidavit of Indigency"],
     steps: defaultSteps
   },
   "Child Support": {
-    requirements: ["Birth Certificate of child", "Proof of relationship", "Proof of financial capacity of parent", "Proof support is not being given"],
+    requirements: ["Birth Certificate of child", "Proof of relationship", "Proof of financial capacity of parent", "Proof support is not being given", "Barangay Certificate of Indigency"],
     steps: defaultSteps
   },
   "Collection of Sum of Money": {
-    requirements: ["Written contract / Promissory Note", "Receipts / Proof of payment", "Demand Letter (required)", "Proof of non-payment"],
+    requirements: ["Written contract / Promissory Note", "Receipts / Proof of payment", "Demand Letter (required)", "Proof of non-payment", "Cedula"],
     steps: defaultSteps
   },
   "Illegal Dismissal": {
