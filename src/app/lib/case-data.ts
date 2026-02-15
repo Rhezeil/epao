@@ -38,15 +38,15 @@ export const caseCategories = {
       items: ["Illegal Assembly", "Illegal Association", "Tumults & Public Disturbance", "Alarms and Scandals"]
     },
     {
-      title: "💻 IX. CYBERCRIME (SYSTEMS)",
-      items: ["Illegal Access (Hacking)", "Illegal Interception", "Data Interference", "System Interference", "Cybersquatting"]
+      title: "💻 IX. CYBERCRIME (OFFENSES AGAINST SYSTEMS)",
+      items: ["Illegal Access (Hacking)", "Illegal Interception", "Data Interference", "System Interference", "Misuse of Devices", "Cybersquatting"]
     },
     {
       title: "🆔 X. CYBERCRIME (IDENTITY & FORGERY)",
       items: ["Computer-Related Identity Theft", "Computer-Related Forgery", "Computer-Related Fraud"]
     },
     {
-      title: "🔞 XI. CYBERCRIME (CONTENT)",
+      title: "🔞 XI. CYBERCRIME (CONTENT-RELATED)",
       items: ["Cyberlibel", "Cybersex", "Child Pornography (RA 9775)", "Photo/Video Voyeurism (RA 9995)"]
     },
     {
@@ -55,7 +55,7 @@ export const caseCategories = {
     },
     {
       title: "🌍 XIII. RECRUITMENT & TRAFFICKING",
-      items: ["Illegal Recruitment (RA 8042)", "Human Trafficking (RA 9208)"]
+      items: ["Illegal Recruitment (RA 8042)", "Human Trafficking (RA 9208)", "Qualified Trafficking"]
     },
     {
       title: "💍 XIV. CIVIL STATUS CRIMES",
@@ -77,17 +77,17 @@ export const caseCategories = {
     },
     {
       title: "⚖️ IV. SPECIAL PROCEEDINGS",
-      items: ["Correction of Entries (Rule 108)", "Guardianship", "Settlement of Estate", "Habeas Corpus / Data / Amparo"]
+      items: ["Correction of Entries (Rule 108)", "Guardianship", "Settlement of Estate", "Habeas Corpus"]
     }
   ],
   "Labor": [
     {
       title: "🔒 I. DISMISSAL & TENURE",
-      items: ["Illegal Dismissal (Art 279)", "Regularization (Art 280)", "Authorized Causes (Art 283-284)", "Constructive Dismissal"]
+      items: ["Illegal Dismissal (Art 279)", "Regularization (Art 280)", "Just Causes (Art 282)", "Authorized Causes (Art 283-284)", "Constructive Dismissal"]
     },
     {
       title: "💰 II. MONETARY CLAIMS",
-      items: ["Unpaid Wages (Art 103)", "13th Month Pay (PD 851)", "Service Incentive Leave (Art 95)", "Wage Deductions (Art 113)"]
+      items: ["Unpaid Wages (Art 103)", "13th Month Pay (PD 851)", "Service Incentive Leave (Art 95)", "Wage Deductions (Art 113)", "Attorney's Fees (Art 111)"]
     },
     {
       title: "🌍 III. SPECIAL LABOR",
@@ -128,65 +128,100 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   // --- CRIMES AGAINST PERSONS ---
   "Parricide (Art 246)": {
     description: "Killing of one's father, mother, or child (legitimate or illegitimate), or any ascendant or descendant, or spouse (Article 246, RPC).",
-    requirements: ["Birth Certificates (Proof of Relation)", "Marriage Contract (PSA)", "Death Certificate", "Police Investigation Report", "Autopsy/Medico-Legal Report"],
+    requirements: ["PSA Birth Certificate (Proof of Relation)", "PSA Marriage Contract", "Death Certificate", "Police Investigation Report", "Autopsy/Medico-Legal Report"],
+    steps: universalPaoFlow
+  },
+  "Death/Injuries under Exceptional Circumstances (Art 247)": {
+    description: "Killing or injuring a spouse or daughter in the act of sexual intercourse with another, under specific conditions (Article 247, RPC).",
+    requirements: ["Proof of Marriage or Relation", "Police Blotter", "Medico-Legal Certificate", "Witness Affidavits"],
     steps: universalPaoFlow
   },
   "Murder (Art 248)": {
     description: "The unlawful killing of a person with qualifying circumstances such as treachery, price/reward, poison, fire, or evident premeditation (Article 248, RPC).",
-    requirements: ["Police Blotter/Report", "Autopsy Report", "Death Certificate", "Witness Affidavits", "CCTV/Physical Evidence"],
+    requirements: ["Police Investigation Report", "Autopsy/Post-Mortem Report", "Death Certificate", "Witness Affidavits", "CCTV/Physical Evidence"],
     steps: universalPaoFlow
   },
   "Homicide (Art 249)": {
-    description: "The unlawful killing of a person without the qualifying circumstances of murder or parricide (Article 249, RPC).",
+    description: "The unlawful killing of a person without the qualifying circumstances of murder or the relationship requirements of parricide (Article 249, RPC).",
     requirements: ["Police Report", "Death Certificate", "Medico-Legal Certificate", "Witness Statements"],
     steps: universalPaoFlow
   },
+  "Death in Tumultuous Affray (Art 251)": {
+    description: "Occurs when a person is killed during a chaotic, unorganized fight involving several people, and it cannot be determined who specifically caused the death (Article 251, RPC).",
+    requirements: ["Complaint-Affidavit (if filed)", "Subpoena or Warrant (if served)", "Police Report of the incident", "Witness Statements"],
+    steps: universalPaoFlow
+  },
+  "Assistance to Suicide (Art 253)": {
+    description: "Giving assistance to another person to commit suicide (Article 253, RPC).",
+    requirements: ["Police Report", "Suicide Note (if any)", "Witness Statements", "Medico-Legal Report"],
+    steps: universalPaoFlow
+  },
+  "Infanticide (Art 255)": {
+    description: "Killing of a child less than three days old (Article 255, RPC).",
+    requirements: ["Birth Record", "Death Certificate", "Medico-Legal Report", "Police Investigation"],
+    steps: universalPaoFlow
+  },
 
-  // --- VAWC (RA 9262) ---
+  // --- VAWC ---
   "Physical Violence (VAWC - Sec 5a)": {
     description: "Acts causing bodily harm, such as battery, physical assault, threats, or causing fear of harm (Section 5a, RA 9262).",
-    requirements: ["Proof of Relationship (Marriage/Birth Certificate)", "Medico-Legal Certificate", "Photos of Injuries", "Police/Barangay Blotter", "Witness Affidavits"],
+    requirements: ["Proof of Relationship (Marriage/Birth Certificate)", "Medico-Legal Certificate", "Photos of Injuries", "Police/Barangay Blotter"],
     steps: universalPaoFlow
   },
   "Sexual Violence (VAWC - Sec 5b)": {
-    description: "Sexual acts including rape, sexual harassment, acts of lasciviousness, treating someone as a sex object, demeaning remarks, forcing cohabitation with a mistress, or prostituting the woman or child (Section 5b, RA 9262).",
-    requirements: ["Medico-Legal Report", "Psychological Evaluation", "Police Report", "Proof of Relationship", "Witness Affidavits"],
+    description: "Sexual acts including rape, sexual harassment, acts of lasciviousness, or prostituting the woman or child (Section 5b, RA 9262).",
+    requirements: ["Medico-Legal Report", "Psychological Evaluation", "Police Report", "Witness Affidavits"],
     steps: universalPaoFlow
   },
   "Psychological Violence (VAWC - Sec 5h-i)": {
-    description: "Acts causing mental or emotional anguish, such as marital infidelity, intimidation, harassment, stalking, public ridicule, verbal abuse, damage to property, unlawful deprivation of custody or visitation, and causing a child to witness abuse (Section 5h & 5i, RA 9262).",
-    requirements: ["Communication Logs (SMS/Chat/Social Media)", "Psychological Evaluation Report", "Barangay Protection Order (if any)", "Witness Affidavits", "Photos of damaged property (if applicable)"],
+    description: "Acts causing mental or emotional anguish, such as marital infidelity, intimidation, stalking, and public ridicule (Section 5h & 5i, RA 9262).",
+    requirements: ["Screenshots (SMS/Chat)", "Psychological Evaluation Report", "Barangay Protection Order", "Witness Affidavits"],
     steps: universalPaoFlow
   },
   "Economic Abuse (VAWC - Sec 5e-f)": {
-    description: "Acts causing financial dependence, including withdrawal of financial support, preventing work or business, controlling assets, and destroying household property (Section 5e & 5f, RA 9262).",
-    requirements: ["Evidence of Withheld Support", "Bank Statements/Payslips", "Proof of Assets ownership", "Affidavit of Fact", "Business/Employment Records"],
+    description: "Acts causing financial dependence, including withdrawal of financial support or controlling assets (Section 5e & 5f, RA 9262).",
+    requirements: ["Evidence of Withheld Support", "Bank Statements/Payslips", "Proof of Assets", "Affidavit of Fact"],
     steps: universalPaoFlow
   },
 
   // --- CYBERCRIME ---
-  "Cyberlibel": {
-    description: "Libel as defined in Art. 355 of the RPC, committed through a computer system (RA 10175).",
-    requirements: ["Screenshots of Defamatory Post", "URL/Link", "Proof of Account Identity", "Witness Affidavits", "Cybercrime Division Report"],
-    steps: universalPaoFlow
-  },
   "Illegal Access (Hacking)": {
     description: "Unauthorized access to a computer system or network (Section 4a, RA 10175).",
-    requirements: ["IT Audit Log/Report", "Screenshots of Breach", "Evidence of Account Hijacking", "Police Report"],
+    requirements: ["IT Audit Log/Report", "Screenshots of Unauthorized Access", "Police/NBI Cybercrime Report"],
+    steps: universalPaoFlow
+  },
+  "Computer-Related Identity Theft": {
+    description: "Using another person's identifying information without right (Section 4b, RA 10175).",
+    requirements: ["Screenshots of Fake Profile", "Proof of Ownership of Real Identity", "Police Report"],
+    steps: universalPaoFlow
+  },
+  "Cyberlibel": {
+    description: "Libel as defined in Art. 355 of the RPC, committed through a computer system (Section 4c, RA 10175).",
+    requirements: ["Screenshots of Defamatory Post", "URL/Link of Post", "Proof of Identity of Account"],
     steps: universalPaoFlow
   },
 
   // --- LABOR ---
   "Illegal Dismissal (Art 279)": {
-    description: "Dismissal without just or authorized cause and due process (Art 279, Labor Code). Claims reinstatement and backwages.",
+    description: "Dismissal without just or authorized cause and due process (Art 279, Labor Code).",
     requirements: ["Employment Contract", "Notice of Termination", "Latest Payslips", "Company ID", "Witness Affidavits"],
     steps: universalPaoFlow
   },
+  "OFW Claims (POEA)": {
+    description: "Claims for illegal dismissal, death/disability benefits, and violation of POEA contracts (RA 8042).",
+    requirements: ["POEA-approved Contract", "Passport & OEC", "Communication Logs with Agency", "Notice of Termination (if any)"],
+    steps: universalPaoFlow
+  },
 
-  // --- CIVIL ---
-  "Annulment of Marriage (Art 36/45 FC)": {
-    description: "Legal process to declare a marriage null and void from the beginning (Article 36) or voidable (Article 45) under the Family Code.",
-    requirements: ["PSA Marriage Contract", "PSA Birth Certificates of Children", "Psychological Evaluation Report", "Barangay Certificate of Residency", "Witness Affidavits"],
+  // --- TRAFFICKING ---
+  "Human Trafficking (RA 9208)": {
+    description: "Recruitment, transportation, or harboring of persons by means of threat or fraud for exploitation (RA 9208).",
+    requirements: ["Rescue Report (IACAT/Police/NBI)", "Travel Documents", "Affidavit of Victim", "Communication logs"],
+    steps: universalPaoFlow
+  },
+  "Qualified Trafficking": {
+    description: "Trafficking when the victim is a child, committed by a syndicate, or involving public officers (RA 9208).",
+    requirements: ["Proof of Age (Victim's Birth Certificate)", "Evidence of Syndicate (if applicable)", "Official identification of accused"],
     steps: universalPaoFlow
   }
 };
