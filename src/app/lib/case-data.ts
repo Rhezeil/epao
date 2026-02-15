@@ -153,6 +153,28 @@ export const caseCategories = {
         "Premature Marriage (Art. 351)",
         "Performance of Illegal Marriage Ceremony (Art. 352)"
       ]
+    },
+    {
+      title: "📡 XIV. CYBERCRIME (RA 10175 & Special Laws)",
+      items: [
+        "Illegal Access (Hacking)",
+        "Illegal Interception",
+        "Data Interference",
+        "System Interference",
+        "Misuse of Devices",
+        "Cybersquatting",
+        "Computer-related Forgery",
+        "Computer-related Fraud (Online Scams)",
+        "Computer-related Identity Theft",
+        "Cybersex",
+        "Child Pornography (Cyber-related)",
+        "Cyberlibel",
+        "Online Estafa/Swindling",
+        "Online Threats/Coercion",
+        "Photo/Video Voyeurism (RA 9995)",
+        "Violation of Data Privacy Act (RA 10173)",
+        "Financial Account Scamming (AFASA - RA 12010)"
+      ]
     }
   ],
   "Civil": [
@@ -286,29 +308,29 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
 
   // --- VAWC (R.A. 9262) ---
   "Physical Violence (VAWC - Sec. 5a)": {
-    description: "Acts that include bodily or physical harm, battery, or threatening/placing the victim in fear of physical harm.",
+    description: "Acts that include bodily or physical harm, battery, or threatening/placing the victim in fear of physical harm (Sec. 5a, RA 9262).",
     requirements: ["Marriage Certificate / Proof of Relationship", "Birth Certificates of children", "Medico-Legal Certificate", "Photos of injuries", "Sworn Affidavit", "Police Blotter"],
     steps: defaultSteps
   },
   "Sexual Violence (VAWC - Sec. 5b-c)": {
-    description: "Acts of a sexual nature including rape, lasciviousness, sexual harassment, or prostituting the woman or child.",
+    description: "Acts of a sexual nature including rape, lasciviousness, sexual harassment, or prostituting the woman or child (Sec. 5b-c, RA 9262).",
     requirements: ["Marriage Certificate / Proof of Relationship", "Medico-Legal Certificate", "Psychological Evaluation", "Sworn Complaint-Affidavit", "Police Blotter"],
     steps: defaultSteps
   },
   "Psychological Violence (VAWC - Sec. 5h-i)": {
-    description: "Acts causing mental or emotional suffering, including intimidation, harassment, stalking, public ridicule, or marital infidelity.",
+    description: "Acts causing mental or emotional suffering, including intimidation, harassment, stalking, or marital infidelity (Sec. 5h-i, RA 9262).",
     requirements: ["Marriage Certificate / Proof of Relationship", "Psychological Evaluation report", "Screenshots of messages/harassment", "Witness affidavits", "Sworn Affidavit"],
     steps: defaultSteps
   },
   "Economic Abuse (VAWC - Sec. 5e)": {
-    description: "Acts making a woman financially dependent, such as withdrawing support, controlling money/assets, or preventing employment.",
+    description: "Acts making a woman financially dependent, such as withdrawing support or controlling assets (Sec. 5e, RA 9262).",
     requirements: ["Marriage Certificate / Proof of Relationship", "Birth Certificates of children", "Proof of income of partner", "Proof of denial of support", "Sworn Affidavit"],
     steps: defaultSteps
   },
 
   // --- CRIMES AGAINST PROPERTY (RPC) ---
   "Robbery (with violence/intimidation - Art. 294)": {
-    description: "Taking of personal property belonging to another with intent to gain, by means of violence or intimidation against persons. Includes robbery with homicide, rape, physical injuries, or in a band.",
+    description: "Taking of personal property belonging to another with intent to gain, by means of violence or intimidation against persons.",
     requirements: ["Police report", "Affidavit of loss", "Proof of ownership", "Inventory of stolen items", "Witness affidavits", "CCTV footage"],
     steps: defaultSteps
   },
@@ -384,6 +406,36 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["Trust Receipt agreement", "Demand Letter", "Evidence of non-payment", "Contract of sale"],
     steps: defaultSteps
   },
+  "Qualified Estafa (PD 1689)": {
+    description: "Fraud committed by a syndicate or on funds/property, which carries higher penalties.",
+    requirements: ["Proof of syndicate/organized group", "Contract/Agreement", "Receipts", "Demand Letter", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Anti-Cattle Rustling Law (PD 533)": {
+    description: "Theft of large cattle such as cows, carabaos, or horses.",
+    requirements: ["Police report", "Proof of ownership (Cattle certificate)", "Witness affidavits", "Photos of animal"],
+    steps: defaultSteps
+  },
+  "Anti-Agricultural Smuggling (RA 10845)": {
+    description: "Economic sabotage through large-scale illicit trade of agricultural products.",
+    requirements: ["Customs report", "Inventory of seized goods", "Import documents", "Witness statements"],
+    steps: defaultSteps
+  },
+  "Anti-Electricity Pilferage (RA 7832)": {
+    description: "Theft of electricity or tampering with electric transmission lines/materials.",
+    requirements: ["Inspection report from Utility Company", "Photos of tampered meter/lines", "Police blotter", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Anti-Cable Television & Internet Tapping (RA 10088)": {
+    description: "Theft of cable television or internet service through unauthorized tapping.",
+    requirements: ["Inspection report from Service Provider", "Photos of unauthorized connection", "Police report"],
+    steps: defaultSteps
+  },
+  "Unauthorized Installation of Water/Telephone (PD 401)": {
+    description: "Illegal tapping or installation of water or telephone lines.",
+    requirements: ["Utility company report", "Photos of illegal tapping", "Police blotter", "Witness statements"],
+    steps: defaultSteps
+  },
 
   // --- PUBLIC ORDER & SECURITY ---
   "Rebellion or Insurrection": {
@@ -440,6 +492,93 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   "Bigamy (Art. 349)": {
     description: "Contracting a second or subsequent marriage while a previous marriage is still valid and subsisting.",
     requirements: ["Marriage Certificate (1st Marriage)", "Marriage Certificate (2nd Marriage)", "CENOMAR", "Witness affidavits"],
+    steps: defaultSteps
+  },
+
+  // --- CYBERCRIME (RA 10175) ---
+  "Illegal Access (Hacking)": {
+    description: "Unauthorized access to a computer system or network (Section 4a of RA 10175).",
+    requirements: ["Screenshots of unauthorized access", "IP logs (if available)", "Proof of account ownership", "Police blotter from PNP Anti-Cybercrime Group"],
+    steps: defaultSteps
+  },
+  "Illegal Interception": {
+    description: "Unauthorized interception of technical communications (Section 4a of RA 10175).",
+    requirements: ["Evidence of data transmission tapping", "Device logs", "Witness statements", "PNP/NBI Cybercrime report"],
+    steps: defaultSteps
+  },
+  "Data Interference": {
+    description: "Intentionally altering, damaging, or deleting computer data/viruses (Section 4a of RA 10175).",
+    requirements: ["System logs showing alterations", "Evidence of corrupted files", "Forensic computer report", "Police blotter"],
+    steps: defaultSteps
+  },
+  "System Interference": {
+    description: "Intentionally hindering the functioning of a computer system (e.g., DDoS attacks) (Section 4a of RA 10175).",
+    requirements: ["Network traffic logs", "Server uptime records", "Evidence of system downtime", "Incident report from IT/Security"],
+    steps: defaultSteps
+  },
+  "Misuse of Devices": {
+    description: "Producing or selling tools/passwords designed to commit cybercrimes (Section 4a of RA 10175).",
+    requirements: ["Evidence of prohibited tools/software", "Transaction records", "Screenshots of advertisements/sales", "Expert testimony"],
+    steps: defaultSteps
+  },
+  "Cybersquatting": {
+    description: "Registering a domain name in bad faith to profit or destroy reputation (Section 4a of RA 10175).",
+    requirements: ["Proof of domain registration", "Evidence of bad faith/intent to profit", "Prior trademark/copyright proof", "Screenshots of the domain"],
+    steps: defaultSteps
+  },
+  "Computer-related Forgery": {
+    description: "Inputting or altering computer data to create false documents with intent to defraud (Section 4b of RA 10175).",
+    requirements: ["Original and forged data/documents", "System logs showing input/alteration", "Evidence of fraudulent intent", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Computer-related Fraud (Online Scams)": {
+    description: "Unauthorized input or alteration of data for personal gain, such as phishing or online scams (Section 4b of RA 10175).",
+    requirements: ["Screenshots of fraudulent communications", "Transaction records (GCash, Bank)", "URLs of fraudulent sites", "Proof of loss"],
+    steps: defaultSteps
+  },
+  "Computer-related Identity Theft": {
+    description: "Unauthorized acquisition or use of another person's identifying information through a computer (Section 4b of RA 10175).",
+    requirements: ["Proof of identity ownership", "Evidence of unauthorized use", "Screenshots of impersonation", "Police report"],
+    steps: defaultSteps
+  },
+  "Cybersex": {
+    description: "Operating lascivious exhibitions of sexual organs/activity via computer for consideration (Section 4c of RA 10175).",
+    requirements: ["Recorded video/audio evidence", "Transaction records for payments", "IP logs", "Witness statements"],
+    steps: defaultSteps
+  },
+  "Child Pornography (Cyber-related)": {
+    description: "Acts of child pornography committed through a computer system (RA 9775 in relation to RA 10175).",
+    requirements: ["Illegal content evidence", "Device forensic report", "Communication logs", "Birth certificate of minor", "Police/NBI report"],
+    steps: defaultSteps
+  },
+  "Cyberlibel": {
+    description: "Libelous acts committed through a computer system or social media (Section 4c of RA 10175).",
+    requirements: ["Screenshots of defamatory posts/comments", "URLs of the content", "Proof of publication and malice", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Online Estafa/Swindling": {
+    description: "Traditional estafa committed through online platforms, carrying higher penalties (RA 10175 Section 6).",
+    requirements: ["Screenshots of transactions", "Communication logs (Chat/SMS)", "Proof of payment", "Evidence of false pretenses"],
+    steps: defaultSteps
+  },
+  "Online Threats/Coercion": {
+    description: "Threatening or coercing someone through private messages or social media.",
+    requirements: ["Screenshots of threats/coercion", "Proof of sender identity (if known)", "Timeline of harassment", "Police blotter"],
+    steps: defaultSteps
+  },
+  "Photo/Video Voyeurism (RA 9995)": {
+    description: "Recording or distributing sexual content without the consent of the subject (Anti-Photo and Video Voyeurism Act).",
+    requirements: ["The illegal photo/video evidence", "Proof of distribution", "Witness statements", "Device forensic report"],
+    steps: defaultSteps
+  },
+  "Violation of Data Privacy Act (RA 10173)": {
+    description: "Improper processing or unauthorized disclosure of personal data (RA 10173).",
+    requirements: ["Evidence of data leak/misuse", "Proof of unauthorized processing", "Communications from the data controller", "NPC complaint records"],
+    steps: defaultSteps
+  },
+  "Financial Account Scamming (AFASA - RA 12010)": {
+    description: "Targeting mule accounts and online selling of registered SIMs for fraudulent purposes (RA 12010).",
+    requirements: ["Evidence of mule account activity", "SIM registration records", "Transaction logs", "Police/NBI report"],
     steps: defaultSteps
   },
 
