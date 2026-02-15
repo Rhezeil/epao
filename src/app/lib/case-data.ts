@@ -258,7 +258,7 @@ export const caseCategories = {
       ]
     },
     {
-      title: "🌍 III. SPECIAL LABOR CASES",
+      title: "III. SPECIAL LABOR CASES",
       items: [
         "Labor-Only Contracting (Art. 106-109)",
         "Illegal Strikes/Lockouts (Art. 264)",
@@ -271,7 +271,7 @@ export const caseCategories = {
     {
       title: "🏢 Social & Special Laws",
       items: [
-        "Anti-Trafficking (RA 9208)", 
+        "Anti-Trafficking (R.A. 9208)", 
         "Anti-Child Pornography (RA 9775)", 
         "Anti-Hazing (RA 11053)", 
         "Anti-Illegal Recruitment (RA 8042)", 
@@ -497,6 +497,19 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   "Rape (R.A. 8353 / Art. 266-A)": {
     description: "Classified as a crime against persons; involves carnal knowledge or sexual assault through force, threat, or intimidation.",
     requirements: ["Medico-legal Examination", "Sworn Affidavit of victim", "Police Blotter", "Photos of injuries (if any)", "Psychological evaluation"],
+    steps: defaultSteps
+  },
+  "Anti-Trafficking (R.A. 9208)": {
+    description: "Recruitment, transportation, or harboring of persons by means of threat, force, fraud, or deception for exploitation. Includes Child Trafficking (force not required for children) and Qualified Trafficking (syndicate, public officer, or child victim). Victim protection and identity confidentiality are strictly enforced.",
+    requirements: [
+      "Sworn Complaint-Affidavit of victim/witnesses",
+      "Rescue/Spot Report from IACAT, PNP, or NBI",
+      "Birth Certificate of victim (if minor/child)",
+      "Travel Documents, Visas, or Passports (if applicable)",
+      "Medico-Legal Certificate",
+      "Psychological Evaluation report",
+      "Communication logs (SMS, Chat, Social Media)"
+    ],
     steps: defaultSteps
   },
 
