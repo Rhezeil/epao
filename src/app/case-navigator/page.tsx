@@ -333,7 +333,6 @@ function CaseNavigatorContent() {
                 <div className="space-y-10 max-w-5xl mx-auto animate-in fade-in duration-700">
                   <div className="flex items-center justify-between border-b-2 border-primary/5 pb-4">
                     <p className="text-[10px] text-primary font-black uppercase tracking-[0.3em]">Browse Law Areas</p>
-                    <Badge className="text-[10px] border-primary/20 text-primary font-bold px-4 py-1.5 rounded-full bg-white shadow-sm uppercase tracking-widest">Official Standards</Badge>
                   </div>
                   
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
