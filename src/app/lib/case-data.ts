@@ -5,116 +5,56 @@
 export const caseCategories = {
   Criminal: [
     {
-      title: "Crimes against Persons",
-      items: ["Murder", "Homicide", "Physical Injury", "Assault", "Rape", "Sexual Harassment", "Violence Against Women and Children (VAWC)", "Kidnapping", "Abduction"]
+      title: "Revised Penal Code (Persons)",
+      items: ["Murder", "Homicide", "Parricide", "Infanticide", "Serious Physical Injuries", "Less Serious Physical Injuries", "Slight Physical Injuries"]
     },
     {
-      title: "Crimes against Property",
-      items: ["Theft", "Robbery", "Arson", "Estafa / Fraud", "Embezzlement", "Malversation"]
+      title: "Revised Penal Code (Property)",
+      items: ["Theft", "Qualified Theft", "Robbery", "Robbery with Homicide", "Estafa", "Arson", "Malicious Mischief"]
     },
     {
-      title: "Crimes against Public Order",
-      items: ["Rebellion", "Sedition", "Resistance to Public Officials", "Illegal Possession of Firearms"]
+      title: "Revised Penal Code (Honor/Chastity)",
+      items: ["Libel", "Slander", "Acts of Lasciviousness", "Seduction", "Concubinage", "Adultery"]
     },
     {
-      title: "Drug-related Offenses",
-      items: ["Drug Possession", "Drug Trafficking", "Drug Use / Distribution"]
+      title: "Dangerous Drugs (RA 9165)",
+      items: ["Illegal Possession of Drugs", "Illegal Sale of Drugs", "Use of Dangerous Drugs", "Drug Den Operations", "Possession of Drug Paraphernalia"]
     },
     {
-      title: "Special Criminal Cases",
-      items: ["Cybercrime", "Human Trafficking", "White-Collar Crimes", "Juvenile Delinquency"]
+      title: "Special Laws",
+      items: ["VAWC (RA 9262)", "Child Abuse (RA 7610)", "Rape (RA 8353)", "Cybercrime (RA 10175)", "Bouncing Checks (BP 22)"]
     }
   ],
   Civil: [
     {
       title: "Family Law",
-      items: ["Annulment", "Legal Separation", "Divorce (for Muslims)", "Child Custody / Visitation", "Child Support / Alimony", "Adoption", "Paternity / Legitimacy Claims"]
+      items: ["Annulment of Marriage", "Declaration of Nullity", "Legal Separation", "Child Custody", "Child Support", "Adoption", "Recognition of Foreign Divorce"]
     },
     {
-      title: "Property / Real Estate",
-      items: ["Land Disputes", "Boundary Disputes", "Eviction / Ejectment", "Condemnation / Expropriation"]
+      title: "Property & Contracts",
+      items: ["Breach of Contract", "Collection of Sum of Money", "Damages", "Property Disputes", "Partition of Property"]
     },
     {
-      title: "Contract / Business Disputes",
-      items: ["Breach of Contract", "Non-Performance of Contract", "Sale / Lease Disputes", "Partnership / Corporation Disputes", "Loan / Debt Collection"]
-    },
-    {
-      title: "Tort / Civil Wrongs",
-      items: ["Personal Injury", "Medical Malpractice", "Defamation (Libel & Slander)", "Negligence", "Product Liability"]
-    },
-    {
-      title: "Probate / Estate Cases",
-      items: ["Estate Settlement", "Will Contests", "Inheritance Disputes", "Trust Administration"]
+      title: "Ejectment & Small Claims",
+      items: ["Unlawful Detainer", "Forcible Entry", "Small Claims Collection"]
     }
   ],
   Labor: [
     {
-      title: "Labor Disputes",
-      items: ["Wrongful Termination", "Non-payment of Wages", "Illegal Dismissal / Wrongful Termination", "Contract Violations"]
-    },
+      title: "Dismissal & Wages",
+      items: ["Illegal Dismissal", "Constructive Dismissal", "Non-payment of Wages", "Overtime Pay Claims", "Separation Pay", "13th Month Pay"]
+    }
+  ],
+  "Special Legislation": [
     {
-      title: "Workplace & Benefits",
-      items: ["Workplace Injuries / Compensation Claims", "Benefits Disputes (SSS, PhilHealth, Pag-IBIG)"]
-    },
-    {
-      title: "Union / Collective Bargaining",
-      items: ["Union / Collective Bargaining Disputes"]
+      title: "Protection Acts",
+      items: ["Anti-Trafficking", "Anti-Child Pornography", "Anti-Hazing", "Anti-Illegal Recruitment", "Juvenile Justice Cases"]
     }
   ],
   Administrative: [
     {
-      title: "Government Dealings",
-      items: ["Tax / Revenue Disputes", "Immigration / Deportation", "Licensing / Permit Issues", "Environmental / Regulatory Violations"]
-    }
-  ],
-  Constitutional: [
-    {
-      title: "Rights & Writs",
-      items: [
-        "Civil Liberties",
-        "Equality / Anti-Discrimination",
-        "Separation of Powers",
-        "Writ of Habeas Corpus",
-        "Writ of Mandamus",
-        "Writ of Amparo",
-        "Writ of Kalikasan"
-      ]
-    }
-  ],
-  Commercial: [
-    {
-      title: "Business Law",
-      items: [
-        "Corporate / Partnership Disputes",
-        "Intellectual Property",
-        "Bankruptcy / Insolvency",
-        "Contracts / Trade Disputes"
-      ]
-    }
-  ],
-  "Special/Other": [
-    {
-      title: "Miscellaneous",
-      items: [
-        "Juvenile Cases",
-        "Human Rights Cases",
-        "Election Cases",
-        "Online Scams / Cyberlaw",
-        "Consumer Protection"
-      ]
-    }
-  ],
-  Notarization: [
-    {
-      title: "Legal Documents",
-      items: [
-        "Notarization",
-        "Affidavits / Sworn Statements",
-        "Powers of Attorney",
-        "Deed of Sale / Transfer",
-        "Contracts / Agreements",
-        "Certification / Authentication"
-      ]
+      title: "Quasi-Judicial",
+      items: ["Civil Service Cases", "SSS / GSIS Claims", "DARAB Agrarian Disputes", "PRC Cases", "Barangay Conciliation"]
     }
   ]
 };
@@ -123,16 +63,55 @@ export const allCaseNames = Object.values(caseCategories)
   .flatMap(categories => categories.flatMap(cat => cat.items));
 
 export const defaultRequirements = [
-  "Certificate of Indigency from DSWD",
-  "Police blotter / complaint report",
-  "Medico-legal certificate (for injuries or sexual assault)",
-  "Witness information / affidavits",
-  "Any prior related court orders"
+  "Valid Government ID",
+  "Barangay Certificate of Indigency",
+  "Affidavit of Indigency",
+  "Proof of Income (Payslip / DSWD Certificate)",
+  "Police Blotter or Complaint Report",
+  "Court Subpoena or Notice (if any)"
 ];
 
 export const defaultSteps = [
-  { step: 1, title: "Prepare documents", content: "Collect all listed documents including your Certificate of Indigency and case-related papers." },
-  { step: 2, title: "Visit PAO", content: "Go to your nearest PAO District Office with your prepared documents for initial assessment." },
-  { step: 3, title: "Screening interview", content: "A screening officer will verify your indigency and the merit of your case." },
-  { step: 4, title: "Lawyer assignment", content: "Once qualified, you will be assigned a Public Attorney to handle your legal matter." }
+  { step: 1, title: "Initial Consultation", content: "Visit PAO for an interview to determine eligibility based on the Indigency and Merit tests." },
+  { step: 2, title: "Document Submission", content: "Submit all required documents including IDs, proof of indigency, and case-specific evidence." },
+  { step: 3, title: "Case Assessment", content: "A Public Attorney will evaluate the merit of your case and prepare necessary pleadings or affidavits." },
+  { step: 4, title: "Legal Representation", content: "Representation in court hearings, mediation, or administrative proceedings until resolution." }
 ];
+
+/**
+ * Category-specific defaults for seeding and fallback
+ */
+export const categoryDefaults: Record<string, { requirements: string[], steps: any[] }> = {
+  Criminal: {
+    requirements: [
+      "Valid ID",
+      "Barangay Certificate of Indigency",
+      "Proof of Income",
+      "Copy of Complaint / Information",
+      "Arrest Warrant (if available)",
+      "Police Blotter"
+    ],
+    steps: [
+      { step: 1, title: "Interview", content: "Interview by PAO lawyer to check Indigency + Merit Test." },
+      { step: 2, title: "Acceptance", content: "If qualified, the case is accepted and a Control Number is assigned." },
+      { step: 3, title: "Preparation", content: "Lawyer prepares Counter-Affidavits or Pleadings." },
+      { step: 4, title: "Trial", content: "Representation in court hearings and appeals if necessary." }
+    ]
+  },
+  Civil: {
+    requirements: [
+      "Valid ID",
+      "Barangay Certificate of Indigency",
+      "Proof of Income",
+      "Land Title / Tax Dec (for Property)",
+      "Marriage/Birth Cert (for Family)",
+      "Demand Letter / Receipts"
+    ],
+    steps: [
+      { step: 1, title: "Initial Interview", content: "Strict Indigency and Merit tests for civil petitions." },
+      { step: 2, title: "Drafting", content: "Preparation of Complaint or Petition for filing." },
+      { step: 3, title: "Mediation", content: "Mandatory court-annexed mediation if applicable." },
+      { step: 4, title: "Trial", content: "Full trial proceedings until court decision." }
+    ]
+  }
+};
