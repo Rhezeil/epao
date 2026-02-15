@@ -3,8 +3,6 @@
  * Comprehensive documentation and process flows based on official PAO standards.
  */
 
-export const generalRequirements: string[] = [];
-
 export const caseCategories = {
   "Criminal": [
     {
@@ -117,88 +115,102 @@ export const universalPaoFlow = [
   { 
     step: 1, 
     title: "Application and Evaluation", 
-    content: "The client visits the nearest PAO district office (often at the local Hall of Justice) to file a request for legal assistance." 
+    content: "The client visits the nearest PAO district office to file a request for legal assistance." 
   },
   { 
     step: 2, 
     title: "Indigency Test", 
-    content: "The applicant must prove they are indigent. This generally means having a low income and owning no significant real property. Required baseline documents include Affidavit of Indigency and Barangay Certificate." 
+    content: "The applicant must prove they are indigent. This generally means having a low income and owning no significant real property. Required documents: Affidavit of Indigency, Certificate of Income, or ITR." 
   },
   { 
     step: 3, 
     title: "Merit Test", 
-    content: "A PAO lawyer assesses if the case has merit. Criminal defense is generally considered meritorious. Civil/Other cases are evaluated based on law and evidence." 
+    content: "A PAO lawyer assesses if the case has merit—meaning it has a chance of success and is not intended merely to harass the opposite party." 
   },
   { 
     step: 4, 
     title: "Conflict of Interest Check", 
-    content: "The PAO verifies that they do not already represent the opposing party." 
+    content: "The PAO verifies that they do not already represent the opposing party to avoid conflicts of interest." 
   },
   { 
     step: 5, 
     title: "Acceptance", 
-    content: "If the applicant passes, the lawyer formally accepts the case for representation, counseling, or document drafting." 
+    content: "If the applicant passes, the lawyer formally accepts the case and provides representation, counseling, or document drafting." 
   }
 ];
 
-export const defaultRequirements = [];
+export const defaultRequirements: string[] = [];
 export const defaultSteps = universalPaoFlow;
 
-export const caseSpecificData: Record<string, { requirements: string[], steps: any[] }> = {
+export const caseSpecificData: Record<string, { requirements: string[], steps: any[], description?: string }> = {
   "Murder": { 
-    requirements: [
-      "Police blotter", "Sworn Complaint-Affidavit", "Medico-Legal Certificate", "Hospital records", "Death Certificate", "Autopsy report", "Photos of injuries", "Witness affidavits", "Copy of Complaint/Information (If Accused)", "Arrest warrant (If Accused)", "Subpoena (If Accused)", "Bail bond papers (If Accused)"
-    ], 
-    steps: universalPaoFlow 
+    description: "Unlawful killing of a person with qualifying circumstances such as treachery, superior strength, or for reward/price.",
+    requirements: ["Police blotter", "Sworn Complaint-Affidavit", "Medico-Legal Certificate", "Hospital records", "Death Certificate", "Autopsy report", "Witness affidavits", "Information (If Accused)", "Arrest warrant (If Accused)"], 
+    steps: defaultSteps 
   },
   "Homicide": {
-    requirements: [
-      "Police blotter", "Sworn Complaint-Affidavit", "Medico-Legal Certificate", "Hospital records", "Death Certificate", "Autopsy report", "Witness affidavits", "Copy of Information (If Accused)", "Arrest warrant (If Accused)"
-    ],
-    steps: universalPaoFlow
+    description: "Unlawful killing of a person that does not amount to murder, parricide, or infanticide.",
+    requirements: ["Police blotter", "Sworn Complaint-Affidavit", "Medico-Legal Certificate", "Death Certificate", "Autopsy report", "Witness affidavits", "Information (If Accused)"],
+    steps: defaultSteps
   },
   "Parricide": {
-    requirements: [
-      "Marriage Certificate (if spouse)", "Birth Certificate (if parent/child)", "Police blotter", "Sworn Affidavit", "Death Certificate"
-    ],
-    steps: universalPaoFlow
+    description: "The killing of a father, mother, or child (legitimate/illegitimate), or any ascendant/descendant, or spouse.",
+    requirements: ["Marriage Certificate (if spouse)", "Birth Certificate (if parent/child)", "Police blotter", "Death Certificate"],
+    steps: defaultSteps
   },
   "Infanticide": {
-    requirements: [
-      "Birth Certificate of child (less than 72 hours old)", "Police report", "Medico-legal report (cause of death)", "Witness affidavits"
-    ],
-    steps: universalPaoFlow
+    description: "The killing of a child less than three days (72 hours) of age.",
+    requirements: ["Birth Certificate of child", "Police report", "Medico-legal report (cause of death)", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Illegal Detention/Kidnapping": {
+    description: "Unlawful deprivation of liberty, including cases involving unlawful arrest by public officers.",
+    requirements: ["Police blotter", "Sworn affidavit of witness/victim", "CCTV footage (if any)", "Identity documentation of victim"],
+    steps: defaultSteps
   },
   "Illegal Possession of Dangerous Drugs (Section 11)": {
-    requirements: ["Arrest report", "Inventory of seized items", "Chemistry report", "Chain of custody documents", "Confiscation receipt", "Charge sheet"],
-    steps: universalPaoFlow
+    description: "Possession of prohibited substances like methamphetamine ('shabu'), marijuana, or ecstasy without legal authority.",
+    requirements: ["Arrest report", "Inventory of seized items", "Chemistry report", "Chain of custody documents", "Confiscation receipt"],
+    steps: defaultSteps
   },
   "Illegal Possession of Paraphernalia (Section 12)": {
-    requirements: ["Arrest report", "Inventory of seized items (paraphernalia)", "Chemistry report (if residues found)", "Chain of custody documents", "Confiscation receipt"],
-    steps: universalPaoFlow
+    description: "Possession of equipment, instruments, or apparatus intended for smoking, consuming, or injecting dangerous drugs.",
+    requirements: ["Arrest report", "Inventory of seized items (paraphernalia)", "Chemistry report (residues)", "Chain of custody"],
+    steps: defaultSteps
   },
   "Drug Trafficking / Pushing (Section 5)": {
-    requirements: ["Arrest report / Buy-bust report", "Inventory of seized items", "Chemistry report", "Chain of custody documents", "Confiscation receipt", "Marked money copies (if applicable)"],
-    steps: universalPaoFlow
+    description: "Sale, trading, delivery, distribution, or transportation of illegal drugs (non-bailable if evidence is strong).",
+    requirements: ["Buy-bust report", "Inventory of seized items", "Chemistry report", "Marked money copies", "Chain of custody"],
+    steps: defaultSteps
   },
   "Use of Dangerous Drugs (Section 15)": {
-    requirements: ["Drug test result", "Arrest report", "Confiscation receipt", "Recommendation for rehabilitation (if applicable)"],
-    steps: universalPaoFlow
+    description: "Offense for positive drug tests. PAO assists first-time offenders in entering rehabilitation programs.",
+    requirements: ["Drug test result", "Arrest report", "Confiscation receipt", "Recommendation for rehab"],
+    steps: defaultSteps
   },
-  "Drug Cases Involving Minors": {
-    requirements: ["Birth Certificate of minor", "Social worker report", "Arrest report", "Inventory of seized items"],
-    steps: universalPaoFlow
+  "Swindling and Estafa (Arts. 315-318)": {
+    description: "Fraudulent acts or deceits that cause damage or prejudice to another person.",
+    requirements: ["Contract/Agreement", "Promissory note", "Receipts", "Demand letter with proof of receipt", "SMS/Chat logs"],
+    steps: defaultSteps
   },
-  "Drug Plea Bargaining Applications": {
-    requirements: ["Copy of Information", "Plea Bargaining Proposal", "Court Order (if any)", "Evaluation from Prosecutor/Court"],
-    steps: universalPaoFlow
+  "Robbery (Arts. 294-305)": {
+    description: "Taking of personal property belonging to another with intent to gain, by means of violence or intimidation.",
+    requirements: ["Police report", "Affidavit of loss", "Proof of ownership (receipts/titles)", "CCTV footage", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Theft (Arts. 308-311)": {
+    description: "Taking of personal property without consent, with intent to gain, but without violence or intimidation.",
+    requirements: ["Police report", "Proof of ownership", "Inventory of stolen items", "Witness affidavits"],
+    steps: defaultSteps
   },
   "Annulment of Marriage": {
-    requirements: ["PSA Marriage Certificate", "Birth certificates of children", "Psychological report (Art. 36)", "Proof of residency"],
-    steps: universalPaoFlow
+    description: "Legal process to declare a marriage void due to specific grounds like psychological incapacity (Art. 36).",
+    requirements: ["PSA Marriage Certificate", "Birth certificates of children", "Psychological report (if Art. 36)", "Proof of residency"],
+    steps: defaultSteps
   },
   "Illegal Dismissal": {
-    requirements: ["Employment contract", "Payslips", "Termination letter", "Company ID", "Written explanation (if any)"],
+    description: "Unlawful termination of employment without just or authorized cause or without due process.",
+    requirements: ["Employment contract", "Payslips", "Termination letter", "Company ID", "Written explanation"],
     steps: [
       { step: 1, title: "Filing before NLRC", content: "Submission of the complaint to the National Labor Relations Commission." },
       { step: 2, title: "Conciliation", content: "Mandatory conference to explore settlement." },
@@ -207,8 +219,9 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     ]
   },
   "Bouncing Checks Law (BP 22)": {
-    requirements: ["Original dishonored check", "Bank return slip (insufficient funds)", "Written demand letter", "Proof of receipt of demand letter"],
-    steps: universalPaoFlow
+    description: "Issuance of a check without sufficient funds or upon credit to cover the full amount of the check.",
+    requirements: ["Original dishonored check", "Bank return slip", "Written demand letter", "Proof of receipt of demand"],
+    steps: defaultSteps
   }
 };
 
@@ -220,10 +233,10 @@ export const categoryDefaults: Record<string, { requirements: string[], steps: a
 
 export const pAONotes = [
   "✔ Mandatory Prerequisites: Valid ID, Affidavit of Indigency, Barangay Certificate of Indigency, Proof of Income.",
-  "✔ PAO mainly handles criminal defense cases.",
-  "✔ Civil cases require Indigency + Merit Test.",
-  "✔ Some cases (like corporations, high-income clients) are NOT accepted.",
-  "✔ Court-appointed cases (Counsel de Oficio) are automatically handled."
+  "✔ PAO mainly handles criminal defense cases for indigent accused.",
+  "✔ Civil and Labor cases require both Indigency and Merit Tests.",
+  "✔ Wealthy individuals or corporations are NOT qualified for PAO services.",
+  "✔ All services provided by the PAO are completely FREE of charge."
 ];
 
 export const allCaseNames = Object.values(caseCategories)

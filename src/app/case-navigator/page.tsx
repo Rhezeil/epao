@@ -29,7 +29,6 @@ function CaseNavigatorContent() {
 
   const reqDocRef = useMemoFirebase(() => {
     if (!db || !selectedCase) return null;
-    // Sanitize document ID: replace spaces and slashes with hyphens
     const docId = selectedCase.toLowerCase().replace(/[\s/]+/g, '-');
     return doc(db, "caseRequirements", docId);
   }, [db, selectedCase]);
@@ -80,7 +79,8 @@ function CaseNavigatorContent() {
     if (dynamicReqs) {
       return { 
         requirements: dynamicReqs.requirements || [], 
-        steps: dynamicReqs.steps || defaultSteps 
+        steps: dynamicReqs.steps || defaultSteps,
+        description: dynamicReqs.description || caseSpecificData[selectedCase!]?.description
       };
     }
     if (selectedCase && caseSpecificData[selectedCase]) {
@@ -89,7 +89,7 @@ function CaseNavigatorContent() {
     if (selectedCategory && categoryDefaults[selectedCategory]) {
       return categoryDefaults[selectedCategory];
     }
-    return { requirements: defaultRequirements, steps: defaultSteps };
+    return { requirements: defaultRequirements, steps: defaultSteps, description: undefined };
   };
 
   const renderCaseDetails = (caseName: string) => {
@@ -115,7 +115,7 @@ function CaseNavigatorContent() {
                 </div>
                 <CardTitle className="text-lg font-bold text-primary">Case Information</CardTitle>
               </div>
-              <p className="text-xs text-muted-foreground">Detailed guidance for {caseName}.</p>
+              <p className="text-xs text-muted-foreground">Official definition and status.</p>
             </CardHeader>
             <CardContent className="space-y-6 pt-4">
               <div className="space-y-1">
@@ -123,6 +123,14 @@ function CaseNavigatorContent() {
                 <h2 className="text-2xl font-black text-[#1A3B6B] leading-tight">{caseName}</h2>
                 {selectedCategory && <Badge variant="secondary" className="mt-1">{selectedCategory} Matter</Badge>}
               </div>
+
+              {guidance.description && (
+                <div className="bg-primary/5 p-4 rounded-xl border-l-4 border-primary/20">
+                  <p className="text-sm text-[#2E5A99] font-medium leading-relaxed italic">
+                    {guidance.description}
+                  </p>
+                </div>
+              )}
               
               <div className="bg-[#E8F5E9] p-4 rounded-xl border border-green-200">
                 <div className="flex gap-3">
@@ -221,17 +229,17 @@ function CaseNavigatorContent() {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {subCategories.map((cat, idx) => (
-          <div key={idx} className="space-y-2 p-4 bg-white rounded-2xl border border-primary/5 shadow-sm">
+          <div key={idx} className="space-y-1.5 p-4 bg-white rounded-2xl border border-primary/5 shadow-sm">
             <h3 className="text-[10px] font-black text-primary uppercase tracking-widest border-b pb-1.5 mb-2">{cat.title}</h3>
-            <div className="grid grid-cols-1 gap-1">
+            <div className="grid grid-cols-1 gap-0.5">
               {cat.items.map((item: string) => (
                 <div 
                   key={item} 
                   onClick={() => handleCaseClick(item, title)} 
-                  className="text-sm text-[#2E5A99] cursor-pointer hover:bg-primary/5 p-2 rounded-xl flex items-center gap-3 transition-all border border-transparent hover:border-primary/10"
+                  className="text-xs text-[#2E5A99] cursor-pointer hover:bg-primary/5 p-1.5 rounded-lg flex items-center gap-2 transition-all border border-transparent hover:border-primary/10"
                 >
                   <div className="h-1.5 w-1.5 rounded-full bg-primary/40 shrink-0" />
-                  <span className="font-medium leading-snug">{item}</span>
+                  <span className="font-medium leading-tight">{item}</span>
                 </div>
               ))}
             </div>
