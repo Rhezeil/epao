@@ -77,8 +77,26 @@ export const caseCategories = {
       ]
     },
     {
-      title: "💻 V. CYBERCRIME & SPECIAL LAWS",
-      items: ["Online Libel", "Identity Theft", "Anti-Rape Law (RA 8353)", "Child Abuse (RA 7610)"]
+      title: "💜 V. CRIMES AGAINST CHASTITY & SEXUAL VIOLENCE",
+      items: [
+        "Rape (R.A. 8353 / Art. 266-A)",
+        "Acts of Lasciviousness (Art. 336)",
+        "Acts of Lasciviousness under R.A. 7610",
+        "Qualified Seduction (Art. 337)",
+        "Simple Seduction (Art. 338)",
+        "Forcible Abduction (Art. 342)",
+        "Consented Abduction (Art. 343)",
+        "Corruption of Minors (Art. 340)",
+        "Adultery (Art. 333)",
+        "Concubinage (Art. 334)",
+        "White Slave Trade (Art. 341)",
+        "Anti-Sexual Harassment (R.A. 7877)",
+        "Abuses Against Chastity by Public Officers (Art. 245)"
+      ]
+    },
+    {
+      title: "💻 VI. CYBERCRIME & SPECIAL LAWS",
+      items: ["Online Libel", "Identity Theft", "Child Abuse (RA 7610)", "Anti-Hazing (RA 11053)"]
     }
   ],
   "Civil": [
@@ -112,40 +130,20 @@ export const caseCategories = {
 };
 
 export const universalPaoFlow = [
-  { 
-    step: 1, 
-    title: "Application and Evaluation", 
-    content: "The client visits the nearest PAO district office to file a request for legal assistance." 
-  },
-  { 
-    step: 2, 
-    title: "Indigency Test", 
-    content: "The applicant must prove they are indigent. This generally means having a low income and owning no significant real property. Required documents: Affidavit of Indigency, Certificate of Income, or ITR." 
-  },
-  { 
-    step: 3, 
-    title: "Merit Test", 
-    content: "A PAO lawyer assesses if the case has merit—meaning it has a chance of success and is not intended merely to harass the opposite party." 
-  },
-  { 
-    step: 4, 
-    title: "Conflict of Interest Check", 
-    content: "The PAO verifies that they do not already represent the opposing party to avoid conflicts of interest." 
-  },
-  { 
-    step: 5, 
-    title: "Acceptance", 
-    content: "If the applicant passes, the lawyer formally accepts the case and provides representation, counseling, or document drafting." 
-  }
+  { step: 1, title: "Application and Evaluation", content: "The client visits the nearest PAO district office to file a request for legal assistance." },
+  { step: 2, title: "Indigency Test", content: "The applicant must prove they are indigent. This generally means having a low income and owning no significant real property." },
+  { step: 3, title: "Merit Test", content: "A PAO lawyer assesses if the case has merit—meaning it has a chance of success and is not intended merely to harass the opposite party." },
+  { step: 4, title: "Conflict of Interest Check", content: "The PAO verifies that they do not already represent the opposing party to avoid conflicts of interest." },
+  { step: 5, title: "Acceptance", content: "If the applicant passes, the lawyer formally accepts the case and provides representation, counseling, or document drafting." }
 ];
 
-export const defaultRequirements: string[] = [];
 export const defaultSteps = universalPaoFlow;
 
 export const caseSpecificData: Record<string, { requirements: string[], steps: any[], description?: string }> = {
+  // --- CRIMES AGAINST PERSONS ---
   "Murder": { 
     description: "Unlawful killing of a person with qualifying circumstances such as treachery, superior strength, or for reward/price.",
-    requirements: ["Police blotter", "Sworn Complaint-Affidavit", "Medico-Legal Certificate", "Hospital records", "Death Certificate", "Autopsy report", "Witness affidavits", "Information (If Accused)", "Arrest warrant (If Accused)"], 
+    requirements: ["Police blotter", "Sworn Complaint-Affidavit", "Medico-Legal Certificate", "Hospital records", "Death Certificate", "Autopsy report", "Witness affidavits", "Information (If Accused)"], 
     steps: defaultSteps 
   },
   "Homicide": {
@@ -155,7 +153,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   },
   "Parricide": {
     description: "The killing of a father, mother, or child (legitimate/illegitimate), or any ascendant/descendant, or spouse.",
-    requirements: ["Marriage Certificate (if spouse)", "Birth Certificate (if parent/child)", "Police blotter", "Death Certificate"],
+    requirements: ["Marriage Certificate (if spouse)", "Birth Certificate (if parent/child)", "Police blotter", "Death Certificate", "Witness affidavits"],
     steps: defaultSteps
   },
   "Infanticide": {
@@ -165,27 +163,19 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   },
   "Illegal Detention/Kidnapping": {
     description: "Unlawful deprivation of liberty, including cases involving unlawful arrest by public officers.",
-    requirements: ["Police blotter", "Sworn affidavit of witness/victim", "CCTV footage (if any)", "Identity documentation of victim"],
+    requirements: ["Police blotter", "Sworn affidavit of victim/witness", "CCTV footage (if any)", "Identity documentation of victim"],
     steps: defaultSteps
   },
-  "Illegal Possession of Dangerous Drugs (Section 11)": {
-    description: "Possession of prohibited substances like methamphetamine ('shabu'), marijuana, or ecstasy without legal authority.",
-    requirements: ["Arrest report", "Inventory of seized items", "Chemistry report", "Chain of custody documents", "Confiscation receipt"],
+
+  // --- CRIMES AGAINST PROPERTY ---
+  "Theft (Arts. 308-311)": {
+    description: "Taking of personal property belonging to another without consent, with intent to gain, but without violence or intimidation.",
+    requirements: ["Police report", "Affidavit of loss", "Proof of ownership (receipts/titles)", "CCTV footage", "Witness affidavits"],
     steps: defaultSteps
   },
-  "Illegal Possession of Paraphernalia (Section 12)": {
-    description: "Possession of equipment, instruments, or apparatus intended for smoking, consuming, or injecting dangerous drugs.",
-    requirements: ["Arrest report", "Inventory of seized items (paraphernalia)", "Chemistry report (residues)", "Chain of custody"],
-    steps: defaultSteps
-  },
-  "Drug Trafficking / Pushing (Section 5)": {
-    description: "Sale, trading, delivery, distribution, or transportation of illegal drugs (non-bailable if evidence is strong).",
-    requirements: ["Buy-bust report", "Inventory of seized items", "Chemistry report", "Marked money copies", "Chain of custody"],
-    steps: defaultSteps
-  },
-  "Use of Dangerous Drugs (Section 15)": {
-    description: "Offense for positive drug tests. PAO assists first-time offenders in entering rehabilitation programs.",
-    requirements: ["Drug test result", "Arrest report", "Confiscation receipt", "Recommendation for rehab"],
+  "Robbery (Arts. 294-305)": {
+    description: "Taking of personal property belonging to another with intent to gain, by means of violence or intimidation against persons or force upon things.",
+    requirements: ["Police report", "Affidavit of loss", "Proof of ownership", "Inventory of stolen items", "Witness affidavits", "CCTV footage"],
     steps: defaultSteps
   },
   "Swindling and Estafa (Arts. 315-318)": {
@@ -193,16 +183,57 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["Contract/Agreement", "Promissory note", "Receipts", "Demand letter with proof of receipt", "SMS/Chat logs"],
     steps: defaultSteps
   },
-  "Robbery (Arts. 294-305)": {
-    description: "Taking of personal property belonging to another with intent to gain, by means of violence or intimidation.",
-    requirements: ["Police report", "Affidavit of loss", "Proof of ownership (receipts/titles)", "CCTV footage", "Witness affidavits"],
+
+  // --- DRUGS ---
+  "Illegal Possession of Dangerous Drugs (Section 11)": {
+    description: "Possession of prohibited substances like methamphetamine ('shabu'), marijuana, or ecstasy without legal authority.",
+    requirements: ["Arrest report", "Inventory of seized items", "Chemistry report", "Chain of custody documents", "Confiscation receipt"],
     steps: defaultSteps
   },
-  "Theft (Arts. 308-311)": {
-    description: "Taking of personal property without consent, with intent to gain, but without violence or intimidation.",
-    requirements: ["Police report", "Proof of ownership", "Inventory of stolen items", "Witness affidavits"],
+  "Drug Trafficking / Pushing (Section 5)": {
+    description: "Sale, trading, delivery, distribution, or transportation of illegal drugs (non-bailable if evidence is strong).",
+    requirements: ["Buy-bust report", "Inventory of seized items", "Chemistry report", "Marked money copies", "Chain of custody"],
     steps: defaultSteps
   },
+
+  // --- CHASTITY & SEXUAL VIOLENCE ---
+  "Rape (R.A. 8353 / Art. 266-A)": {
+    description: "Classified as a crime against persons. Includes sexual intercourse through force, threat, or when the victim is deprived of reason.",
+    requirements: ["Medico-legal certificate", "Police blotter", "Sworn affidavit", "Birth certificate (if minor)", "Psychological evaluation"],
+    steps: defaultSteps
+  },
+  "Acts of Lasciviousness (Art. 336)": {
+    description: "Engaging in lewd acts with another person under circumstances of force or intimidation.",
+    requirements: ["Sworn affidavit", "Police blotter", "Witness affidavits", "Medico-legal (if applicable)"],
+    steps: defaultSteps
+  },
+  "Adultery (Art. 333)": {
+    description: "Committed by a married woman who shall have sexual intercourse with a man not her husband.",
+    requirements: ["Marriage certificate", "Evidence of sexual intercourse (photos/messages)", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Concubinage (Art. 334)": {
+    description: "Committed by a husband who keeps a mistress in the conjugal dwelling or under scandalous circumstances.",
+    requirements: ["Marriage certificate", "Evidence of mistress (photos/witnesses)", "Proof of cohabitation"],
+    steps: defaultSteps
+  },
+  "Qualified Seduction (Art. 337)": {
+    description: "Seducing a virgin over 12 but under 18 years old, by person in authority or trust.",
+    requirements: ["Birth certificate of minor", "Sworn affidavit", "Proof of relationship/authority", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Corruption of Minors (Art. 340)": {
+    description: "Promoting or facilitating the prostitution or corruption of a minor.",
+    requirements: ["Birth certificate of minor", "Evidence of promotion/facilitation", "Police report", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Abuses Against Chastity by Public Officers (Art. 245)": {
+    description: "Public officers taking advantage of their position to solicit immoral advances from women with pending matters.",
+    requirements: ["Sworn affidavit", "Proof of pending matter", "Official identification of officer", "Witness affidavits"],
+    steps: defaultSteps
+  },
+
+  // --- CIVIL ---
   "Annulment of Marriage": {
     description: "Legal process to declare a marriage void due to specific grounds like psychological incapacity (Art. 36).",
     requirements: ["PSA Marriage Certificate", "Birth certificates of children", "Psychological report (if Art. 36)", "Proof of residency"],
@@ -217,11 +248,6 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
       { step: 3, title: "Position papers", content: "Submission of sworn statements and evidence." },
       { step: 4, title: "Decision", content: "Labor Arbiter's ruling." }
     ]
-  },
-  "Bouncing Checks Law (BP 22)": {
-    description: "Issuance of a check without sufficient funds or upon credit to cover the full amount of the check.",
-    requirements: ["Original dishonored check", "Bank return slip", "Written demand letter", "Proof of receipt of demand"],
-    steps: defaultSteps
   }
 };
 
