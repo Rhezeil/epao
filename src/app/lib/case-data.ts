@@ -25,7 +25,10 @@ export const caseCategories = {
         "Qualified Theft (Art. 310)", 
         "Estafa (Art. 315)", 
         "Arson (Arts. 320–326)", 
-        "Malicious Mischief (Art. 327)"
+        "Malicious Mischief (Art. 327)",
+        "Bouncing Checks (BP 22)", 
+        "Anti-Fencing (PD 1612)",
+        "Electricity Pilferage (RA 7832)"
       ]
     },
     {
@@ -58,10 +61,7 @@ export const caseCategories = {
         "Drug Cases (RA 9165)", 
         "VAWC Criminal (RA 9262)", 
         "Child Abuse (RA 7610)", 
-        "Bouncing Checks (BP 22)", 
-        "Anti-Fencing (PD 1612)", 
         "Cybercrime (RA 10175)",
-        "Electricity Pilferage (RA 7832)",
         "Illegal Recruitment (RA 8042)"
       ]
     },
@@ -154,8 +154,37 @@ export const caseCategories = {
   ],
   "Administrative": [
     {
-      title: "🏛 GOVERNMENT & AGENCY CLAIMS",
-      items: ["CSC Appeals", "SSS / GSIS Claims", "DARAB Cases", "Barangay Conciliation"]
+      title: "🏛 I. DISCIPLINARY (CSC / GOVERNMENT)",
+      items: [
+        "Grave Misconduct (RRACCS)",
+        "Conduct Prejudicial to Service",
+        "Violation of Ethical Standards (RA 6713)",
+        "Administrative Neglect of Duty"
+      ]
+    },
+    {
+      title: "👮 II. DISCIPLINARY (POLICE / PNP)",
+      items: [
+        "PNP Administrative Complaint (RA 6975)",
+        "Police Grave Misconduct",
+        "IAS Disciplinary Proceeding"
+      ]
+    },
+    {
+      title: "⚖️ III. QUASI-JUDICIAL DISPUTES",
+      items: [
+        "Agrarian Dispute (DARAB/RA 6657)",
+        "Immigration / Deportation Case",
+        "NLRC Labor Appeal (Admin)"
+      ]
+    },
+    {
+      title: "🛡️ IV. SPECIAL ADMINISTRATIVE CASES",
+      items: [
+        "Anti-Torture Complaint (RA 9745)",
+        "Election / BEI Service Incident",
+        "Social Welfare Officer Incident (ALSWDOPI)"
+      ]
     }
   ]
 };
@@ -212,29 +241,19 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["Autopsy report", "Medico-legal report", "Police investigation report", "Witness statements", "Weapon recovered"],
     steps: universalPaoFlow
   },
-  "Homicide (Art. 249)": {
-    description: "Killing without qualifying circumstances of murder or parricide.",
-    requirements: ["Death certificate", "Autopsy report", "Witness affidavits"],
-    steps: universalPaoFlow
-  },
   "Physical Injuries (Arts. 262–266)": {
-    description: "Inflicting bodily harm resulting in serious, less serious, or slight injuries.",
-    requirements: ["Medical Certificate (Original/Certified copy)", "Hospital records", "Photos of injuries", "Police blotter"],
+    description: "Inflicting bodily harm resulting in serious, less serious, or slight injuries. Requires medical evidence.",
+    requirements: ["Medical Certificate (Original/Certified copy)", "Hospital records", "Photos of injuries", "Police blotter", "Witness affidavits"],
     steps: universalPaoFlow
   },
   "Abortion (Arts. 256–259)": {
     description: "Prohibited and penalized acts regardless of whether practiced by the woman herself, parents, or medical professionals.",
-    requirements: ["Medical records", "Witness affidavits", "Police report"],
-    steps: universalPaoFlow
-  },
-  "Death in Tumultuous Affray (Art. 251)": {
-    description: "Killing during a chaotic, unorganized fight where the specific killer cannot be determined.",
-    requirements: ["Complaint-Affidavit (if filed)", "Subpoena or Warrant (if served)", "Police blotter", "Autopsy report"],
+    requirements: ["Medical records", "Witness affidavits", "Police report", "Birth certificate (if applicable)"],
     steps: universalPaoFlow
   },
   "Discharge of Firearms (Art. 254 / RA 11926)": {
     description: "Shooting at another without intent to kill, or willful and indiscriminate discharge (as amended by RA 11926).",
-    requirements: ["Police investigation report", "Ballistics report", "Witness affidavits", "Arrest report"],
+    requirements: ["Police investigation report", "Ballistics report", "Witness affidavits", "Arrest report", "Paraffin test (if available)"],
     steps: universalPaoFlow
   },
 
@@ -244,96 +263,46 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["Police blotter report", "Sworn complaint-affidavit", "Medical certificate (if injured)", "Proof of ownership (receipt, title)", "CCTV footage"],
     steps: universalPaoFlow
   },
-  "Theft (Art. 308)": {
-    description: "Taking personal property without owner's consent and without violence.",
-    requirements: ["Police report", "Affidavit of loss", "Proof of ownership", "CCTV footage", "Witness affidavits"],
-    steps: universalPaoFlow
-  },
-  "Qualified Theft (Art. 310)": {
-    description: "Theft with grave abuse of confidence, by domestic servants, or involving specific property.",
-    requirements: ["Employment records", "Proof of trust relationship", "Inventory of stolen items", "Police investigation report"],
-    steps: universalPaoFlow
-  },
   "Estafa (Art. 315)": {
     description: "Defrauding another through abuse of confidence or deceit causing damage.",
     requirements: ["Written contract / agreement", "Promissory note", "Receipts", "Demand letter with proof of receipt", "Bank records / messages"],
     steps: universalPaoFlow
   },
-  "Arson (Arts. 320–326)": {
-    description: "Malicious burning of property.",
-    requirements: ["Bureau of Fire Protection (BFP) report", "Photos of fire damage", "Witness affidavits", "Property title"],
-    steps: universalPaoFlow
-  },
-  "Malicious Mischief (Art. 327)": {
-    description: "Deliberate damage to property of another without intent to gain.",
-    requirements: ["Photos of damaged property", "Repair estimates", "Police blotter", "Witness affidavits"],
+  "Bouncing Checks (BP 22)": {
+    description: "Issuing a check without sufficient funds or against a closed account. A malum prohibitum offense.",
+    requirements: ["Original dishonored check", "Bank return slip (NSF/Closed)", "Written demand letter", "Proof of receipt of demand", "Contract/Obligation proof"],
     steps: universalPaoFlow
   },
 
-  // --- LABOR LAW ---
-  "Illegal Dismissal (Art. 294)": {
-    description: "Employee dismissed without just cause, authorized cause, or due process. Entitled to reinstatement and backwages.",
-    requirements: ["Employment contract", "Appointment letter", "Payslips", "Termination letter", "Notice to Explain (if any)", "Company ID"],
+  // --- ADMINISTRATIVE LAW ---
+  "Grave Misconduct (RRACCS)": {
+    description: "Administrative offense by government employees involving intentional wrongdoing or flagrant disregard of rules.",
+    requirements: ["Sworn complaint-affidavit", "Official service record", "Notice of charge", "Witness affidavits", "Agency memoranda"],
     steps: universalPaoFlow
   },
-  "Just Causes for Termination (Art. 297)": {
-    description: "Termination due to employee's serious misconduct, willful disobedience, gross neglect, or breach of trust.",
-    requirements: ["Notice to Explain", "Written explanation of employee", "Incident reports", "Company rules", "Witness affidavits"],
+  "Violation of Ethical Standards (RA 6713)": {
+    description: "Violation of the Code of Conduct and Ethical Standards for Public Officials and Employees.",
+    requirements: ["SALN (if applicable)", "Official records", "Written complaints", "Proof of violation of ethics", "Service record"],
     steps: universalPaoFlow
   },
-  "Authorized Causes for Termination (Art. 298-299)": {
-    description: "Termination due to business reasons like retrenchment, redundancy, closure, or disease.",
-    requirements: ["Notice of termination", "DOLE notification copy", "Financial statements (if retrenchment)", "Medical certificate (if disease)"],
+  "PNP Administrative Complaint (RA 6975)": {
+    description: "Administrative charges against police officers filed before the IAS or NAPOLCOM.",
+    requirements: ["Police blotter", "Incident report", "Body camera footage (if any)", "Witness affidavits", "Medical report (if physical abuse)"],
     steps: universalPaoFlow
   },
-  "Unlawful Withholding of Wages (Art. 111-113)": {
-    description: "Illegal deductions or non-payment of wages earned by the employee.",
-    requirements: ["Payslips", "Employment contract", "Payroll records", "Computation of unpaid wages"],
+  "Agrarian Dispute (DARAB/RA 6657)": {
+    description: "Disputes involving land tenancy, leasehold, or implementation of agrarian reform laws.",
+    requirements: ["CLOA (Certificate of Land Ownership Award)", "Leasehold contract", "Land title / Tax declaration", "BARC certification", "Photos of land"],
     steps: universalPaoFlow
   },
-  "Non-Payment of 13th Month Pay (PD 851)": {
-    description: "Failure to provide the mandatory 13th month pay to employees who worked at least one month.",
-    requirements: ["Payslips", "Payroll summary", "Computation of 13th month pay"],
+  "Anti-Torture Complaint (RA 9745)": {
+    description: "Administrative or criminal liability of public officers committing torture or other cruel treatments.",
+    requirements: ["Medical report", "Psychological evaluation", "Witness statements", "Police detention records", "Photos of injuries"],
     steps: universalPaoFlow
   },
-  "Service Incentive Leave (SIL)": {
-    description: "Entitlement of 5 days leave with pay for employees with at least one year of service.",
-    requirements: ["Employment records", "Leave records", "Payslips"],
-    steps: universalPaoFlow
-  },
-  "Holiday / Premium Pay": {
-    description: "Payment for work done on holidays or rest days as prescribed by law.",
-    requirements: ["DTR (Daily Time Record)", "Payslips", "Company holiday schedule"],
-    steps: universalPaoFlow
-  },
-  "Night Shift Differential": {
-    description: "Additional 10% compensation for work performed between 10 PM and 6 AM.",
-    requirements: ["DTR showing 10 PM–6 AM work", "Payroll records"],
-    steps: universalPaoFlow
-  },
-  "Separation Pay (Art. 298-299)": {
-    description: "Financial assistance given to employees terminated due to authorized causes.",
-    requirements: ["Termination notice", "Computation of separation pay", "Employment contract"],
-    steps: universalPaoFlow
-  },
-  "Claims for Damages (Labor)": {
-    description: "Claims for moral and exemplary damages due to illegal dismissal or bad faith actions by the employer.",
-    requirements: ["Proof of dismissal", "Proof of bad faith", "Medical certificate (if emotional distress claimed)", "Witness affidavits"],
-    steps: universalPaoFlow
-  },
-  "OFW Money Claims (RA 8042/10022)": {
-    description: "Claims for illegal dismissal or breach of overseas employment contract by recruitment agencies or foreign employers.",
-    requirements: ["POEA-approved contract", "Passport & visa copy", "Deployment papers", "Proof of premature termination", "Payslips"],
-    steps: universalPaoFlow
-  },
-  "Unfair Labor Practice (ULP)": {
-    description: "Acts that violate the right of workers to self-organization or collective bargaining.",
-    requirements: ["Union membership documents", "Termination letters", "Written communications", "Witness affidavits"],
-    steps: universalPaoFlow
-  },
-  "Sexual Harassment (Workplace)": {
-    description: "Acts involving sexual demands or conduct that create an intimidating, hostile, or offensive environment.",
-    requirements: ["Screenshots/messages", "Written complaint", "Witness statements", "HR report", "CCTV (if any)"],
+  "Immigration / Deportation Case": {
+    description: "Administrative proceedings before the Bureau of Immigration regarding visa violations or deportation.",
+    requirements: ["Passport copy", "Visa documents", "Alien Certificate of Registration (ACR)", "Notice of charge", "Affidavit of support/residency"],
     steps: universalPaoFlow
   }
 };
@@ -345,5 +314,5 @@ export const categoryDefaults: Record<string, { requirements: string[], steps: a
   Criminal: { requirements: ["Police Report", "Subpoena"], steps: universalPaoFlow },
   Civil: { requirements: ["PSA Certificates", "Proof of Ownership"], steps: universalPaoFlow },
   Labor: { requirements: ["Company ID", "Payslips", "Contract"], steps: universalPaoFlow },
-  Administrative: { requirements: ["Notice from Agency", "Relevant Evidence"], steps: universalPaoFlow }
+  Administrative: { requirements: ["Official Records", "Sworn Complaint", "Service Record"], steps: universalPaoFlow }
 };
