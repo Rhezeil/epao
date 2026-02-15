@@ -1,105 +1,45 @@
 /**
  * @fileOverview Shared case category data for LexConnect.
- * Detailed requirements and steps based on official PAO guidance.
+ * Comprehensive documentation and process flows based on official PAO standards.
  */
 
 export const caseCategories = {
   Criminal: [
     {
-      title: "Revised Penal Code - Crimes Against Persons",
-      items: ["Murder", "Homicide", "Parricide", "Infanticide", "Serious Physical Injuries", "Less Serious Physical Injuries", "Slight Physical Injuries"]
+      title: "Revised Penal Code (RPC)",
+      items: ["Murder", "Homicide", "Parricide", "Infanticide", "Serious Physical Injuries", "Less Serious Physical Injuries", "Slight Physical Injuries", "Theft", "Qualified Theft", "Robbery", "Estafa (Swindling)", "Arson", "Malicious Mischief", "Libel", "Slander", "Acts of Lasciviousness", "Adultery", "Concubinage", "Direct Assault", "Resistance and Disobedience", "Illegal Possession of Firearms"]
     },
     {
-      title: "Revised Penal Code - Crimes Against Property",
-      items: ["Theft", "Qualified Theft", "Robbery (with violence / intimidation)", "Robbery with Homicide", "Estafa (Swindling)", "Arson", "Malicious Mischief"]
-    },
-    {
-      title: "Revised Penal Code - Crimes Against Honor",
-      items: ["Libel", "Slander (Oral Defamation)", "Incriminating an Innocent Person"]
-    },
-    {
-      title: "Revised Penal Code - Crimes Against Chastity",
-      items: ["Acts of Lasciviousness", "Seduction", "Concubinage", "Adultery"]
-    },
-    {
-      title: "Revised Penal Code - Crimes Against Public Order",
-      items: ["Direct Assault", "Resistance and Disobedience", "Illegal Possession of Firearms"]
-    },
-    {
-      title: "Dangerous Drugs Cases (RA 9165)",
-      items: ["Illegal Possession of Drugs", "Illegal Sale of Drugs", "Use of Dangerous Drugs", "Drug Den Operations", "Possession of Drug Paraphernalia", "Drug Planting (as defense)"]
-    },
-    {
-      title: "Violence Against Women & Children (RA 9262)",
-      items: ["Physical abuse", "Psychological abuse", "Economic abuse", "Protection Order cases"]
-    },
-    {
-      title: "Child Protection Cases (RA 7610)",
-      items: ["Child abuse", "Child exploitation", "Child trafficking"]
-    },
-    {
-      title: "Anti-Rape Law (RA 8353)",
-      items: ["Rape by sexual intercourse", "Rape by sexual assault"]
-    },
-    {
-      title: "Cybercrime Cases (RA 10175)",
-      items: ["Online libel", "Identity theft", "Online fraud", "Cybersex", "Computer-related fraud"]
-    },
-    {
-      title: "Bouncing Checks Law (BP 22)",
-      items: ["Issuance of bouncing checks"]
+      title: "Special Criminal Laws",
+      items: ["Dangerous Drugs (RA 9165)", "VAWC (RA 9262)", "Child Protection (RA 7610)", "Anti-Rape Law (RA 8353)", "Cybercrime (RA 10175)", "Bouncing Checks (BP 22)"]
     }
   ],
   Civil: [
     {
       title: "Family Law Cases",
-      items: ["Annulment of Marriage", "Declaration of Nullity of Marriage", "Legal Separation", "Child Custody", "Child Support", "Adoption (qualified cases)", "Recognition of Foreign Divorce"]
+      items: ["Annulment of Marriage", "Declaration of Nullity of Marriage", "Legal Separation", "Child Custody", "Child Support", "Adoption", "Recognition of Foreign Divorce"]
     },
     {
-      title: "Civil Code Cases",
-      items: ["Breach of Contract", "Collection of Sum of Money", "Damages", "Property Disputes", "Partition of Property"]
-    },
-    {
-      title: "Ejectment Cases",
-      items: ["Unlawful Detainer", "Forcible Entry"]
-    },
-    {
-      title: "Small Claims",
-      items: ["Collection of small debts (Small Claims)"]
+      title: "Property & Money",
+      items: ["Collection of Sum of Money", "Damages", "Property Disputes", "Partition of Property", "Unlawful Detainer (Ejectment)", "Forcible Entry", "Small Claims"]
     }
   ],
   Labor: [
     {
-      title: "Labor Code Disputes",
+      title: "Employment Disputes",
       items: ["Illegal Dismissal", "Constructive Dismissal", "Non-payment of Wages", "Overtime Pay Claims", "Separation Pay", "13th Month Pay Claims", "Money Claims"]
     }
   ],
-  "Special & Social": [
+  "Special Legislation": [
     {
-      title: "Anti-Trafficking (RA 9208)",
-      items: ["Human trafficking", "Forced labor", "Sexual exploitation"]
-    },
-    {
-      title: "Anti-Child Pornography (RA 9775)",
-      items: ["Production/distribution of child pornography"]
-    },
-    {
-      title: "Anti-Hazing Law (RA 11053)",
-      items: ["Hazing incidents in fraternities"]
-    },
-    {
-      title: "Anti-Illegal Recruitment (RA 8042)",
-      items: ["Illegal recruitment", "Recruitment scams"]
-    },
-    {
-      title: "Juvenile Justice (RA 9344)",
-      items: ["Representation of children in conflict with the law"]
+      title: "Social Legislation",
+      items: ["Anti-Trafficking (RA 9208)", "Anti-Child Pornography (RA 9775)", "Anti-Hazing Law (RA 11053)", "Anti-Illegal Recruitment", "Juvenile Justice (RA 9344)"]
     }
   ],
   Administrative: [
     {
-      title: "Quasi-Judicial Cases",
-      items: ["Civil Service cases", "SSS / GSIS claims", "DARAB agrarian disputes", "PRC cases", "Barangay conciliation"]
+      title: "Quasi-Judicial Agencies",
+      items: ["Civil Service Cases", "SSS / GSIS Claims", "DARAB Agrarian Disputes", "PRC Professional Cases", "Barangay Conciliation"]
     }
   ]
 };
@@ -113,82 +53,144 @@ export const generalRequirements = [
   "Barangay Certificate of Indigency",
   "Proof of Income (Payslip / Cert of No Income / DSWD Cert)",
   "Community Tax Certificate (Cedula)",
-  "All relevant evidence (contracts, receipts, police reports, etc.)"
+  "Relevant evidence (contracts, receipts, police reports, etc.)"
 ];
 
-export const defaultRequirements = generalRequirements;
-
-export const defaultSteps = [
-  { 
-    step: 1, 
-    title: "Establish Eligibility (Indigency)", 
-    content: "PAO assists individuals who cannot afford private counsel. You must prove you are an indigent person, usually by providing a Certificate of Indigency from the Barangay Chairman or the Department of Social Welfare and Development (DSWD), or your latest income tax return/pay slip." 
-  },
-  { 
-    step: 2, 
-    title: "Initial Consultation", 
-    content: "Meet with a public attorney to discuss the merits of your case. The PAO will evaluate the case to ensure it is not frivolous or without legal basis." 
-  },
-  { 
-    step: 3, 
-    title: "Document Preparation", 
-    content: "The lawyer assists in drafting the following:\n\n• Complaint-Affidavit: A sworn statement detailing facts, parties, and evidence.\n• Witness Affidavits: Sworn statements from witnesses.\n• Supporting Evidence: Police reports, medical certificates (for physical injuries), photographs, and relevant documents." 
-  },
-  { 
-    step: 4, 
-    title: "Filing the Case", 
-    content: "The PAO lawyer will assist in filing the complaint with the appropriate prosecutor's office (for criminal cases) or court." 
-  },
-  { 
-    step: 5, 
-    title: "Preliminary Investigation", 
-    content: "For criminal complaints, the prosecutor will conduct a preliminary investigation to determine if there is probable cause to file a case in court." 
-  }
+export const universalPaoFlow = [
+  { step: 1, title: "Client Interview", content: "Initial consultation with a public attorney to gather facts." },
+  { step: 2, title: "Indigency Test", content: "Verification of financial status to qualify for free assistance." },
+  { step: 3, title: "Merit Test", content: "Legal evaluation to ensure the case has basis and isn't frivolous." },
+  { step: 4, title: "Document Completion", content: "Submission of all required forms and supporting evidence." },
+  { step: 5, title: "Case Acceptance", content: "Formal approval of the case by the District Head or lawyer." },
+  { step: 6, title: "Case Number Assignment", content: "The case is officially logged into the PAO monitoring system." },
+  { step: 7, title: "Filing Before Proper Body", content: "Submitting the complaint/petition to the Prosecutor, Court, or Agency." },
+  { step: 8, title: "Hearing / Trial", content: "Legal representation during mediation, conferences, and court trials." },
+  { step: 9, title: "Decision", content: "Receiving the official judgment or resolution from the court/agency." }
 ];
+
+export const defaultSteps = universalPaoFlow;
 
 export const caseSpecificData: Record<string, { requirements: string[], steps: any[] }> = {
+  // --- CRIMINAL (RPC) ---
+  "Murder": {
+    requirements: [
+      "FOR COMPLAINANT: Police Blotter, Sworn Affidavit, Medico-Legal, Witness Affidavits",
+      "FOR ACCUSED: Copy of Complaint, Arrest Warrant (if any), Subpoena, Bail Documents",
+      "Valid ID & Indigency Documents"
+    ],
+    steps: universalPaoFlow
+  },
+  "Theft": {
+    requirements: [
+      "FOR COMPLAINANT: Police Report, List of missing items/value, CCTV/Witnesses",
+      "FOR ACCUSED: Copy of Complaint, Subpoena",
+      "Valid ID & Indigency Documents"
+    ],
+    steps: universalPaoFlow
+  },
+  
+  // --- SPECIAL CRIMINAL ---
+  "Dangerous Drugs (RA 9165)": {
+    requirements: ["Arrest Report", "Chemistry Report (PDEA/PNP)", "Confiscation Receipt / Inventory", "Charge Sheet (Information)", "Subpoena"],
+    steps: [
+      { step: 1, title: "Inquest Representation", content: "PAO assists during the summary investigation by the prosecutor." },
+      { step: 2, title: "Bail Hearing", content: "Application for temporary liberty (if the quantity allows)." },
+      { step: 3, title: "Pre-Trial", content: "Simplification of issues and marking of evidence." },
+      { step: 4, title: "Trial", content: "Strict verification of the chain of custody of evidence." },
+      { step: 5, title: "Judgment", content: "Decision by the Regional Trial Court (RTC)." }
+    ]
+  },
+  "VAWC (RA 9262)": {
+    requirements: ["Police Blotter", "Medical Certificate / Psychological Eval", "Screenshots of messages / Photos", "Proof of Relationship (Marriage/Birth Cert)", "Birth Certificate of children"],
+    steps: [
+      { step: 1, title: "Filing of Complaint", content: "Submission to the Prosecutor or filing a Protection Order petition." },
+      { step: 2, title: "Application for Protection Order", content: "Requesting a TPO (Temporary) or PPO (Permanent) for safety." },
+      { step: 3, title: "Prosecutor Investigation", content: "Determining probable cause for criminal charges." },
+      { step: 4, title: "Criminal Case Filing", content: "Filing the information in a Family Court." },
+      { step: 5, title: "Trial", content: "Presentation of evidence and testimony." }
+    ]
+  },
+  "Cybercrime (RA 10175)": {
+    requirements: ["Screenshots of online activity", "URL Links", "Digital evidence (saved files)", "Police / NBI Cybercrime report", "Affidavit of Complainant"],
+    steps: [
+      { step: 1, title: "Complaint Filing", content: "Filing with the Specialized Cybercrime Prosecutor." },
+      { step: 2, title: "Digital Evidence Evaluation", content: "Forensic verification of screenshots and digital trails." },
+      { step: 3, title: "Prosecutor Resolution", content: "Determination of probable cause." },
+      { step: 4, title: "RTC Cybercrime Court Trial", content: "Full trial in a court designated for cyber offenses." }
+    ]
+  },
+  "Bouncing Checks (BP 22)": {
+    requirements: ["Original Dishonored Check", "Bank Return Slip", "Written Demand Letter (with Registry Receipt)", "Proof of receipt of Demand Letter"],
+    steps: universalPaoFlow
+  },
+
+  // --- CIVIL / FAMILY ---
   "Annulment of Marriage": {
-    requirements: ["PSA Marriage Certificate", "PSA Birth Certificates of children", "Psychological Evaluation (Article 36 cases)", "Proof of spouse's residence", "Affidavit of Indigency"],
-    steps: defaultSteps
+    requirements: ["PSA Marriage Certificate", "PSA Birth Certificates of children", "Psychological Evaluation Report (for Article 36)", "IDs of both spouses", "Affidavit of Indigency"],
+    steps: [
+      { step: 1, title: "Case Evaluation", content: "Strict merit test to see if legal grounds for annulment exist." },
+      { step: 2, title: "Filing Petition", content: "Submitting the case to the Family Court." },
+      { step: 3, title: "Court Hearings", content: "Collusion investigation and pre-trial." },
+      { step: 4, title: "Trial", content: "Presentation of psychologists and witnesses." },
+      { step: 5, title: "Decision", content: "Judgment and subsequent registration with Civil Registry." }
+    ]
   },
   "Child Support": {
-    requirements: ["Birth Certificate of child", "Proof of relationship", "Proof of financial capacity of parent", "Proof support is not being given", "Barangay Certificate of Indigency"],
-    steps: defaultSteps
-  },
-  "Collection of Sum of Money": {
-    requirements: ["Written contract / Promissory Note", "Receipts / Proof of payment", "Demand Letter (required)", "Proof of non-payment", "Cedula"],
-    steps: defaultSteps
-  },
-  "Illegal Dismissal": {
-    requirements: ["Employment contract", "Termination letter", "Payslips", "Company ID", "Notice to Explain"],
+    requirements: ["Child's Birth Certificate", "Proof of Parentage / Relationship", "Proof of parent's income (if available)", "Evidence that support is not being given"],
     steps: [
-      { step: 1, title: "Establish Eligibility", content: "Prove indigent status as per standard PAO guidelines." },
-      { step: 2, title: "Initial Consultation", content: "Presentation of employment records to the public attorney." },
-      { step: 3, title: "Filing before NLRC", content: "The initial complaint is filed before the National Labor Relations Commission." },
-      { step: 4, title: "Mandatory Conciliation", content: "A conference is held to attempt a settlement between employer and employee." },
-      { step: 5, title: "Position Papers", content: "Submission of sworn statements and evidence for the Labor Arbiter's decision." }
+      { step: 1, title: "Demand Letter", content: "Written request to the other parent for support." },
+      { step: 2, title: "Petition Filing", content: "Filing in the Family Court." },
+      { step: 3, title: "Hearing", content: "Mediation and presentation of child's needs." },
+      { step: 4, title: "Court Order", content: "Issuance of the Support Order." }
+    ]
+  },
+  "Small Claims": {
+    requirements: ["Contract / IOU / Promissory Note", "Receipts", "Demand Letter", "Filled out Statement of Claim Form"],
+    steps: [
+      { step: 1, title: "Filing Form", content: "Submitting the standardized claim form to the MTC." },
+      { step: 2, title: "Hearing", content: "Summary hearing where lawyers are not allowed to appear for the parties." },
+      { step: 3, title: "Decision", content: "Final judgment usually issued on the same day." }
+    ]
+  },
+
+  // --- LABOR ---
+  "Illegal Dismissal": {
+    requirements: ["Employment Contract", "Latest Payslips", "Termination / Dismissal Letter", "Company ID", "Notice to Explain (if any)"],
+    steps: [
+      { step: 1, title: "Filing before NLRC", content: "Submitting the initial complaint (SENA)." },
+      { step: 2, title: "Conciliation", content: "Mandatory meetings to try and reach a settlement." },
+      { step: 3, title: "Position Papers", content: "Drafting and submitting sworn statements of facts and evidence." },
+      { step: 4, title: "Decision", content: "Judgment by the Labor Arbiter." }
+    ]
+  },
+
+  // --- SPECIAL LEGISLATION ---
+  "Juvenile Justice (RA 9344)": {
+    requirements: ["Minor's PSA Birth Certificate", "Police Report / Intake Form", "Social Worker Assessment Report"],
+    steps: [
+      { step: 1, title: "Social Worker Assessment", content: "Evaluating the child's discernment." },
+      { step: 2, title: "Diversion Proceedings", content: "Alternative community-based resolutions without court filing." },
+      { step: 3, title: "Court Proceedings", content: "Representation in Family Court if diversion is not applicable." }
     ]
   }
 };
 
 export const categoryDefaults: Record<string, { requirements: string[], steps: any[] }> = {
   Criminal: {
-    requirements: [
-      "Police Blotter / Complaint Report",
-      "Medical Certificate (if injuries)",
-      "Witness Affidavits",
-      "Copy of Complaint/Information (if already filed)",
-      "Bail Documents (if applicable)"
-    ],
-    steps: defaultSteps
+    requirements: ["Police Blotter / Complaint", "Subpoena / Court Order", "Valid ID & Indigency Documents"],
+    steps: universalPaoFlow
   },
   Civil: {
-    requirements: [
-      "Demand Letter (Sent before filing)",
-      "Contracts or Written Agreements",
-      "Land Titles / Tax Decs (for property cases)",
-      "Receipts / Proof of Damages"
-    ],
-    steps: defaultSteps
+    requirements: ["Contracts / Written Agreements", "Demand Letter", "Land Titles / Deeds (if property)", "Receipts / Evidence of Damage"],
+    steps: universalPaoFlow
+  },
+  Labor: {
+    requirements: ["Proof of Employment (ID/Payslips)", "Dismissal Notice", "Company Records"],
+    steps: [
+      { step: 1, title: "NLRC / SENA filing", content: "The initial step for labor disputes." },
+      { step: 2, title: "Conciliation", content: "Attempting settlement." },
+      { step: 3, title: "Position Paper", content: "Submission of evidence." },
+      { step: 4, title: "Decision", content: "Arbiter's ruling." }
+    ]
   }
 };
