@@ -37,12 +37,17 @@ export const caseCategories = {
     {
       title: "🛠 III. PROPERTY CRIMES (Special Laws)",
       items: [
-        "Anti-Fencing Law (PD 1612)",
-        "Anti-Cattle Rustling Law (PD 533)",
         "New Anti-Carnapping Act (RA 10883)",
+        "Anti-Cattle Rustling Law (PD 533)",
+        "Forestry Code & Timber Smuggling (PD 705/330)",
+        "Anti-Fencing Law (PD 1612)",
         "Bouncing Checks Law (BP 22)",
         "Trust Receipts Law (PD 115)",
+        "Qualified Estafa (PD 1689)",
+        "Anti-Arson Law (PD 1613)",
         "Anti-Electricity Pilferage (RA 7832)",
+        "Anti-Cable Television & Internet Tapping (RA 10088)",
+        "Unauthorized Installation of Water/Telephone (PD 401)",
         "Anti-Agricultural Smuggling (RA 10845)",
         "Illegal Fishing (RA 8550)"
       ]
@@ -234,6 +239,68 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   "Malicious Mischief (Art. 327-331)": {
     description: "Deliberately destroying or damaging another’s property for vengeance, hatred, or mere pleasure.",
     requirements: ["Police report", "Photos of damage", "Damage estimate", "Witness affidavits"],
+    steps: defaultSteps
+  },
+
+  // --- PROPERTY CRIMES (SPECIAL LAWS) ---
+  "New Anti-Carnapping Act (RA 10883)": {
+    description: "The taking, with intent to gain, of a motor vehicle belonging to another without the latter's consent, or by means of violence against or intimidation of persons, or by using force upon things.",
+    requirements: ["LTO Certificate of Registration", "Official Receipt of vehicle", "Police alarm report", "Affidavit of loss", "Stolen vehicle details"],
+    steps: defaultSteps
+  },
+  "Anti-Cattle Rustling Law (PD 533)": {
+    description: "The taking, with intent to gain, of large cattle without the consent of the owner, whether or not the same be done with or without violence against or intimidation of persons or force upon things.",
+    requirements: ["Certificate of Ownership of Large Cattle", "Police report", "Witness affidavits", "Proof of animal registration"],
+    steps: defaultSteps
+  },
+  "Forestry Code & Timber Smuggling (PD 705/330)": {
+    description: "Illegal cutting, gathering, collecting, or removing timber or other forest products from any forest land without authority.",
+    requirements: ["DENR apprehension report", "Inventory of seized logs", "Photos of site", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Anti-Fencing Law (PD 1612)": {
+    description: "The act of any person who, with intent to gain for himself or for another, shall buy, receive, possess, keep, acquire, conceal, sell or dispose of, or shall buy and sell, or in any other manner deal in any article, item, object or anything of value which he knows, or should be known to him, to have been derived from the proceeds of the crime of robbery or theft.",
+    requirements: ["Police report of original theft/robbery", "Inventory of recovered items", "Proof of purchase/receipt (if applicable)", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Bouncing Checks Law (BP 22)": {
+    description: "The making or drawing and issuance of any check to apply on account or for value, knowing at the time of issue that he does not have sufficient funds in or credit with the drawee bank for the payment of such check in full upon its presentment.",
+    requirements: ["Original Bounced Check", "Return Slip from Bank", "Notice of Dishonor", "Proof of receipt of Notice", "Demand Letter"],
+    steps: defaultSteps
+  },
+  "Trust Receipts Law (PD 115)": {
+    description: "Failure to turn over the proceeds of the sale of the goods, documents or instruments released under a trust receipt to the extent of the amount owing to the entruster or as appears in the trust receipt or to return said goods, documents or instruments if they were not sold.",
+    requirements: ["Trust Receipt Agreement", "Proof of delivery of goods", "Demand letter", "Bank records of non-payment"],
+    steps: defaultSteps
+  },
+  "Qualified Estafa (PD 1689)": {
+    description: "Estafa committed by a syndicate consisting of five or more persons with the intention of carrying out the unlawful or illegal act, transaction, enterprise or scheme, and the fraud results in the misappropriation of moneys contributed by stockholders, or members of rural banks, cooperatives, or farmers' associations.",
+    requirements: ["Proof of investment/contribution", "SEC/CDA Registration of entity", "Affidavits of multiple victims", "Audit reports"],
+    steps: defaultSteps
+  },
+  "Anti-Arson Law (PD 1613)": {
+    description: "Destructive burning of property including those used for public service or those where people usually congregate.",
+    requirements: ["BFP Fire report", "Damage assessment", "Proof of ownership", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Anti-Electricity Pilferage (RA 7832)": {
+    description: "Illegal use of electricity such as tapping, tampering with meters, or using jumpers.",
+    requirements: ["Utility company (Meralco/etc) Inspection Report", "Photos of jumper/tapping", "Billing history", "Apprehension report"],
+    steps: defaultSteps
+  },
+  "Anti-Cable Television & Internet Tapping (RA 10088)": {
+    description: "Illegal intercepting, receiving, or using any signal or service being emitted, transmitted, or distributed by any cable television system or cable internet system.",
+    requirements: ["Service provider report", "Photos of illegal connection", "Subscription contract (if existing)", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Unauthorized Installation of Water/Telephone (PD 401)": {
+    description: "Unauthorized installation of water, electrical, or telephone connections, or tampering of water/electric meters or socialized housing water meters.",
+    requirements: ["Water/Telco inspection report", "Photos of unauthorized connection", "Billing discrepancy records"],
+    steps: defaultSteps
+  },
+  "Anti-Agricultural Smuggling (RA 10845)": {
+    description: "Large-scale agricultural smuggling as economic sabotage, involving sugar, corn, pork, poultry, etc. with value of at least 1M pesos.",
+    requirements: ["Customs / BOC apprehension report", "Inventory of seized products", "Import documents (or lack thereof)", "Market value assessment"],
     steps: defaultSteps
   },
 
