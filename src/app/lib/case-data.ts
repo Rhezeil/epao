@@ -16,60 +16,88 @@ export const caseCategories = {
     },
     {
       title: "🟠 III. CRIMES AGAINST PROPERTY",
-      items: ["Robbery", "Theft", "Qualified Theft", "Estafa", "Malicious Mischief", "Anti-Fencing (PD 1612)"]
+      items: ["Robbery", "Theft", "Qualified Theft", "Estafa", "Malicious Mischief"]
     },
     {
       title: "🛡️ IV. PROPERTY CRIMES (SPECIAL LAWS)",
-      items: ["Carnapping (RA 10883)", "Trust Receipts (PD 115)", "Bouncing Checks (BP 22)", "Qualified Estafa (PD 1689)", "Cattle Rustling (PD 533)", "Agricultural Smuggling (RA 10845)", "Utility Pilferage (RA 7832)", "Arson (PD 1613)"]
+      items: ["Carnapping (RA 10883)", "Anti-Fencing (PD 1612)", "Bouncing Checks (BP 22)", "Arson (PD 1613)", "Anti-Electricity Pilferage (RA 7832)"]
     },
     {
-      title: "⚖️ V. PUBLIC ORDER & AUTHORITY",
-      items: ["Rebellion", "Coup d'état", "Sedition", "Direct Assault", "Resistance & Disobedience", "Illegal Assembly"]
+      title: "⚖️ V. PUBLIC ORDER (STATE SECURITY)",
+      items: ["Rebellion", "Insurrection", "Coup d'état", "Sedition", "Conspiracy to Commit Rebellion"]
     },
     {
-      title: "💻 VI. CYBERCRIME (RA 10175)",
-      items: ["Illegal Access", "Computer Fraud", "Identity Theft", "Cyberlibel", "Cybersex", "Voyeurism (RA 9995)"]
+      title: "👮 VI. PUBLIC ORDER (AUTHORITY)",
+      items: ["Direct Assault", "Indirect Assault", "Resistance & Disobedience", "Disloyalty of Public Officers"]
     },
     {
-      title: "📦 VII. SPECIAL PENAL LAWS",
-      items: ["Firearms Possession (RA 10591)", "Dangerous Drugs (RA 9165)", "Human Trafficking (RA 9208)", "Illegal Recruitment", "Anti-Graft (RA 3019)"]
+      title: "📢 VII. PUBLIC ORDER (DISTURBANCES)",
+      items: ["Illegal Assembly", "Illegal Association", "Tumults & Public Disturbance", "Alarms and Scandals"]
     },
     {
-      title: "💍 VIII. CIVIL STATUS CRIMES",
+      title: "💻 VIII. CYBERCRIME (SYSTEMS)",
+      items: ["Illegal Access (Hacking)", "Illegal Interception", "Data Interference", "System Interference", "Cybersquatting"]
+    },
+    {
+      title: "🆔 IX. CYBERCRIME (IDENTITY & FORGERY)",
+      items: ["Computer-Related Identity Theft", "Computer-Related Forgery", "Computer-Related Fraud"]
+    },
+    {
+      title: "🔞 X. CYBERCRIME (CONTENT)",
+      items: ["Cyberlibel", "Cybersex", "Child Pornography (RA 9775)", "Photo/Video Voyeurism (RA 9995)"]
+    },
+    {
+      title: "📦 XI. SPECIAL PENAL LAWS (DRUGS & ARMS)",
+      items: ["Dangerous Drugs (RA 9165)", "Firearms Possession (RA 10591)", "Explosives Possession (RA 9516)"]
+    },
+    {
+      title: "🌍 XII. RECRUITMENT & TRAFFICKING",
+      items: ["Illegal Recruitment (RA 8042)", "Human Trafficking (RA 9208)"]
+    },
+    {
+      title: "💍 XIII. CIVIL STATUS CRIMES",
       items: ["Bigamy", "Simulation of Birth", "Usurpation of Civil Status", "Premature Marriage"]
+    },
+    {
+      title: "🚗 XIV. TRAFFIC & MISC",
+      items: ["Reckless Imprudence (Art 365)", "Anti-Graft (RA 3019)", "Illegal Gambling (PD 1602)"]
     }
   ],
   "Civil": [
     {
       title: "📖 I. FAMILY RELATIONS",
-      items: ["Annulment of Marriage", "Nullity of Marriage", "Support", "Custody of Children", "Adoption"]
+      items: ["Annulment of Marriage", "Nullity of Marriage", "Legal Separation", "Support", "Custody of Children", "Adoption"]
     },
     {
-      title: "🏠 II. PROPERTY & CONTRACTS",
-      items: ["Unlawful Detainer", "Forcible Entry", "Collection of Sum of Money", "Breach of Contract", "Damages"]
+      title: "🏠 II. PROPERTY & LAND",
+      items: ["Unlawful Detainer", "Forcible Entry", "Recovery of Possession", "Partition", "Easements"]
     },
     {
-      title: "📜 III. SPECIAL PROCEEDINGS",
-      items: ["Correction of Entries", "Guardianship", "Settlement of Estate", "Habeas Corpus"]
+      title: "📜 III. OBLIGATIONS & CONTRACTS",
+      items: ["Breach of Contract", "Collection of Sum of Money", "Damages (Quasi-Delicts)"]
+    },
+    {
+      title: "⚖️ IV. SPECIAL PROCEEDINGS",
+      items: ["Correction of Entries", "Guardianship", "Settlement of Estate", "Habeas Corpus / Data / Amparo"]
     }
   ],
   "Labor": [
     {
-      title: "🔒 I. TERMINATION & TENURE",
-      items: ["Illegal Dismissal", "Constructive Dismissal", "Regularization", "Retrenchment Dispute"]
+      title: "🔒 I. DISMISSAL & TENURE",
+      items: ["Illegal Dismissal (Art 279)", "Constructive Dismissal", "Regularization (Art 280)", "Closure / Redundancy (Art 283)"]
     },
     {
       title: "💰 II. MONETARY CLAIMS",
-      items: ["Unpaid Wages", "13th Month Pay", "Service Incentive Leave", "Illegal Deductions"]
+      items: ["Unpaid Wages (Art 103)", "13th Month Pay (PD 851)", "Service Incentive Leave", "Illegal Deductions (Art 113)"]
     },
     {
-      title: "🌍 III. OFW & SPECIAL CASES",
-      items: ["OFW Claims", "Labor-Only Contracting", "Retaliatory Measures"]
+      title: "🌍 III. SPECIAL LABOR",
+      items: ["Labor-Only Contracting", "OFW Claims (POEA)", "Illegal Strikes", "Retaliatory Measures"]
     }
   ],
   "Administrative": [
     {
-      title: "🏛 GOVERNMENT & QUASI-JUDICIAL",
+      title: "🏛 GOVERNMENT",
       items: ["Civil Service Cases", "SSS / GSIS Claims", "DARAB Cases", "Barangay Conciliation"]
     }
   ]
@@ -77,7 +105,7 @@ export const caseCategories = {
 
 export const standardPaoDocs = [
   "Affidavit of Indigency (PAO Form)",
-  " Latest Income Tax Return (ITR) or BIR Certification of Exemption",
+  "Latest Income Tax Return (ITR) or BIR Certification of Exemption",
   "Barangay Certificate of Indigency (stating purpose)",
   "Social Case Study (if available from DSWD)",
   "Valid Government-issued ID (Original & 3 Photocopies)"
@@ -92,91 +120,98 @@ export const universalPaoFlow = [
 ];
 
 export const caseSpecificData: Record<string, { requirements: string[], steps: any[], description: string }> = {
-  // --- CRIMINAL: PERSONS ---
+  // PERSONS
   "Murder": {
     description: "The unlawful killing of a person with qualifying circumstances such as treachery or premeditation (Art. 248, RPC).",
-    requirements: ["Police Investigation Report", "Autopsy/Medico-Legal Report", "Death Certificate", "Sworn Witness Affidavits", "Police Blotter"],
+    requirements: ["Police Investigation Report", "Autopsy/Medico-Legal Report", "Death Certificate", "Sworn Witness Affidavits"],
     steps: universalPaoFlow
   },
-  // --- CRIMINAL: VAWC ---
+  // VAWC
   "Physical Violence (VAWC)": {
-    description: "Acts causing bodily harm or threatening physical harm (Sec. 5a, RA 9262). Includes Battery and Placing in Fear.",
-    requirements: ["Marriage Contract / Proof of Relationship", "Medico-Legal Certificate", "Photos of Injuries", "Police Blotter", "Barangay Protection Order (if any)"],
+    description: "Acts causing bodily harm or threatening physical harm (Sec. 5a, RA 9262). Includes battery and placing in fear.",
+    requirements: ["Marriage Contract / Proof of Relationship", "Medico-Legal Certificate", "Photos of Injuries", "Police Blotter"],
     steps: universalPaoFlow
   },
   "Psychological Violence (VAWC)": {
-    description: "Acts causing mental or emotional suffering, including intimidation, stalking, or marital infidelity (Sec. 5h-i, RA 9262).",
-    requirements: ["Psychological Evaluation Report", "Screenshots of Threats/Harassment", "Witness Affidavits", "Proof of Relationship"],
+    description: "Acts causing mental or emotional suffering, including intimidation, harassment, or marital infidelity (Sec. 5h-i, RA 9262).",
+    requirements: ["Psychological Evaluation Report", "Screenshots of Threats/Harassment", "Witness Affidavits"],
     steps: universalPaoFlow
   },
   "Economic Abuse (VAWC)": {
     description: "Acts making a woman financially dependent, such as withdrawing support or controlling money (Sec. 5e, RA 9262).",
-    requirements: ["Proof of Financial Denial", "Marriage Contract", "Birth Certificates of Children", "Affidavit of Fact"],
+    requirements: ["Proof of Financial Denial", "Marriage Contract", "Birth Certificates of Children"],
     steps: universalPaoFlow
   },
-  // --- CRIMINAL: PUBLIC ORDER ---
+  // PUBLIC ORDER
   "Rebellion": {
     description: "Rising publicly and taking arms against the Government for the purpose of overthrowing it (Art. 134, RPC).",
-    requirements: ["Intelligence/Arrest Report", "Photos/Videos of Armed Gathering", "Seized Firearms/Logistics Inventory", "Witness Affidavits"],
+    requirements: ["Arrest Report", "Photos/Videos of Armed Gathering", "Seized Logistics Inventory", "Witness Affidavits"],
     steps: universalPaoFlow
   },
   "Direct Assault": {
     description: "Employing force or intimidation against persons in authority or their agents (Art. 148, RPC).",
-    requirements: ["Incident/Police Report", "Witness Statements", "Medico-Legal (if injured)", "Proof of Authority Status of Victim"],
+    requirements: ["Incident/Police Report", "Witness Statements", "Proof of Authority Status of Victim"],
     steps: universalPaoFlow
   },
-  // --- CRIMINAL: PROPERTY SPECIAL ---
-  "Carnapping (RA 10883)": {
-    description: "Theft/taking of a motor vehicle with or without use of force, or through intimidation (RA 10883).",
-    requirements: ["LTO Certificate of Registration & OR", "Police Alarm/Flash Report", "Affidavit of Loss/Taking", "CCTV Footage (if any)"],
-    steps: universalPaoFlow
-  },
-  "Bouncing Checks (BP 22)": {
-    description: "Issuing a check without sufficient funds or failing to maintain funds (BP Blg 22).",
-    requirements: ["Original Bounced Check", "Notice of Dishonor (Demand Letter)", "Registry Return Receipt (Proof of Demand)", "Bank Certification of Dishonor"],
-    steps: universalPaoFlow
-  },
-  // --- CRIMINAL: CYBERCRIME ---
-  "Identity Theft": {
-    description: "Unauthorized use of another person's identifying information (Sec. 4b, RA 10175).",
-    requirements: ["Screenshots of Fake Profile/Activity", "URLs/Links", "Government ID of Victim", "Affidavit of Denial"],
-    steps: universalPaoFlow
-  },
+  // CYBERCRIME
   "Cyberlibel": {
-    description: "Defamation committed through a computer system or social media (RA 10175).",
-    requirements: ["Screenshots of Defamatory Post/Comments", "URL of the content", "Proof of Publication/Reach", "Witness Affidavits"],
+    description: "Libel committed through a computer system or social media (RA 10175).",
+    requirements: ["Screenshots of Defamatory Post", "URL/Link to content", "Proof of Publication", "Witness Affidavits"],
     steps: universalPaoFlow
   },
-  // --- CIVIL ---
+  "Computer-Related Identity Theft": {
+    description: "Unauthorized use of another person's identifying information via computer (Sec. 4b, RA 10175).",
+    requirements: ["Screenshots of Fake Profile", "URLs/Links", "Government ID of Victim", "Affidavit of Denial"],
+    steps: universalPaoFlow
+  },
+  // SPECIAL PENAL
+  "Dangerous Drugs (RA 9165)": {
+    description: "Offenses involving the possession, sale, or use of prohibited drugs (RA 9165).",
+    requirements: ["Inventory of Seized Items", "Drug Test Results", "Chemistry Report", "Arrest/Buy-Bust Report"],
+    steps: universalPaoFlow
+  },
+  "Firearms Possession (RA 10591)": {
+    description: "Possessing unlicensed, unregistered, or altered firearms (RA 10591).",
+    requirements: ["Police Alarm Report", "Seized Firearm Documentation", "Ballistics Report", "Certification of No License"],
+    steps: universalPaoFlow
+  },
+  "Human Trafficking (RA 9208)": {
+    description: "Recruitment or transportation of persons by force or fraud for exploitation (RA 9208).",
+    requirements: ["Rescue/Police Report", "Communication Logs", "Travel Documents", "Witness Affidavits"],
+    steps: universalPaoFlow
+  },
+  // CIVIL STATUS
+  "Bigamy": {
+    description: "Contracting a second marriage while a previous marriage is still valid (Art. 349, RPC).",
+    requirements: ["First Marriage Contract", "Second Marriage Contract", "CENOMAR", "Witness Affidavits"],
+    steps: universalPaoFlow
+  },
+  // TRAFFIC
+  "Reckless Imprudence (Art 365)": {
+    description: "Negligence resulting in death, injury, or property damage (Art. 365, RPC).",
+    requirements: ["Police Accident Report", "Medico-Legal / Death Certificate", "Appraisal of Property Damage", "Witness Statements"],
+    steps: universalPaoFlow
+  },
+  // CIVIL
   "Annulment of Marriage": {
-    description: "Legal cancellation of marriage based on grounds like fraud or lack of consent (Art. 45, Family Code).",
-    requirements: ["PSA Marriage Contract", "PSA Birth Certificates of Children", "Barangay Residency Certificate", "CENOMAR", "Psychological Evaluation (if applicable)"],
-    steps: universalPaoFlow
-  },
-  "Support": {
-    description: "Compelling a parent or spouse to provide for sustenance and medical needs (Art. 194, Family Code).",
-    requirements: ["PSA Birth Certificate of Child", "Marriage Contract", "Proof of Need (Tuition, Medical Bills)", "Proof of Respondent's Income (if known)"],
+    description: "Cancellation of marriage based on grounds like psychological incapacity (Art. 36/45, Family Code).",
+    requirements: ["PSA Marriage Contract", "PSA Birth Certificates of Children", "CENOMAR", "Psychological Evaluation"],
     steps: universalPaoFlow
   },
   "Collection of Sum of Money": {
     description: "Claims for debts or unpaid loans. Handled under Small Claims if under P1M.",
-    requirements: ["Promissory Note / Contract", "Demand Letter with Proof of Receipt", "Statement of Account", "Barangay Certificate to File Action"],
+    requirements: ["Promissory Note / Contract", "Demand Letter with Proof of Receipt", "Statement of Account", "Barangay Cert to File Action"],
     steps: universalPaoFlow
   },
-  // --- LABOR ---
-  "Illegal Dismissal": {
-    description: "Termination without just/authorized cause or due process (Art. 279, Labor Code).",
-    requirements: ["Employment Contract / Appointment Letter", "Notice of Termination", "Latest Payslips & Company ID", "Affidavit of Witnesses"],
+  // LABOR
+  "Illegal Dismissal (Art 279)": {
+    description: "Termination without just cause or due process (Art. 279, Labor Code).",
+    requirements: ["Employment Contract", "Notice of Termination", "Latest Payslips", "Witness Affidavits"],
     steps: universalPaoFlow
   },
-  "13th Month Pay": {
-    description: "Claim for mandatory benefit for employees rendering at least 1 month service (PD 851).",
-    requirements: ["Company ID", "Latest Payslips", "Employment Records", "Affidavit of Non-Payment"],
-    steps: universalPaoFlow
-  },
-  "OFW Claims": {
+  "OFW Claims (POEA)": {
     description: "Assistance for OFWs regarding illegal dismissal or unpaid benefits under POEA contracts.",
-    requirements: ["POEA-approved Contract", "Passport & Visa", "Overseas Employment Certificate (OEC)", "Communication Logs with Agency"],
+    requirements: ["POEA-approved Contract", "Passport & Visa", "OEC", "Communication Logs with Agency"],
     steps: universalPaoFlow
   }
 };

@@ -241,7 +241,7 @@ function CaseNavigatorContent() {
                               <div className="h-8 w-8 rounded-lg bg-primary text-white text-xs font-black flex items-center justify-center shrink-0 shadow-md">
                                 {step.step || idx + 1}
                               </div>
-                              <span className="text-sm font-bold text-[#1A3B6B] leading-tight">{step.title}</span>
+                              <span className="text-sm font-bold text-[#1A3B6B] text-left leading-tight">{step.title}</span>
                             </div>
                           </AccordionTrigger>
                           <AccordionContent className="text-xs text-[#2E5A99] pb-4 leading-relaxed font-medium whitespace-pre-line px-1">
