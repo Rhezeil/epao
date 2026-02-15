@@ -15,11 +15,11 @@ export const caseCategories = {
   "Criminal": [
     {
       title: "🔴 Crimes Against Persons",
-      items: ["Murder", "Homicide", "Parricide", "Infanticide", "Physical Injuries"]
+      items: ["Murder", "Homicide", "Parricide", "Infanticide", "Physical Injuries (Serious, Less Serious, Slight)"]
     },
     {
       title: "🟠 Crimes Against Property",
-      items: ["Theft", "Qualified Theft", "Robbery", "Robbery with Homicide", "Estafa", "Arson", "Malicious Mischief"]
+      items: ["Theft", "Qualified Theft", "Robbery (with violence / intimidation)", "Robbery with Homicide", "Estafa (Swindling)", "Arson", "Malicious Mischief"]
     },
     {
       title: "🟡 Crimes Against Honor",
@@ -30,8 +30,41 @@ export const caseCategories = {
       items: ["Acts of Lasciviousness", "Seduction", "Adultery", "Concubinage"]
     },
     {
-      title: "🔵 Crimes Against Public Order",
-      items: ["Direct Assault", "Resistance and Disobedience", "Illegal Possession of Firearms"]
+      title: "🔵 Rebellion, Insurrection, and Coup d'état",
+      items: [
+        "Rebellion or Insurrection (Art. 134)",
+        "Coup d'état (Art. 134-A)",
+        "Conspiracy and Proposal to Commit Coup d'état, Rebellion, or Insurrection (Art. 136)",
+        "Inciting to Rebellion or Insurrection (Art. 138)"
+      ]
+    },
+    {
+      title: "🔵 Sedition and Public Disturbances",
+      items: [
+        "Sedition (Art. 139)",
+        "Conspiracy to Commit Sedition (Art. 141)",
+        "Inciting to Sedition (Art. 142)",
+        "Illegal Assemblies (Art. 146)",
+        "Illegal Associations (Art. 147)",
+        "Tumults and Other Disturbances of Public Order (Art. 153)"
+      ]
+    },
+    {
+      title: "🔵 Assaults, Resistance, and Disobedience",
+      items: [
+        "Direct Assaults (Art. 148)",
+        "Indirect Assaults (Art. 149)",
+        "Resistance and Disobedience to a Person in Authority or Agents (Art. 151)"
+      ]
+    },
+    {
+      title: "🔵 Public Disorders and Evasion of Service",
+      items: [
+        "Alarms and Scandals (Art. 155)",
+        "Delivering Prisoners from Jail (Art. 156)",
+        "Evasion of Service of Sentence (Art. 157)",
+        "Violation of Conditional Pardon (Art. 159)"
+      ]
     },
     {
       title: "2️⃣ Dangerous Drugs Cases (RA 9165)",
@@ -111,12 +144,12 @@ export const universalPaoFlow = [
   { 
     step: 2, 
     title: "Indigency Test", 
-    content: "The applicant must prove they are indigent. This generally means having a low income (set thresholds apply depending on location) and owning no significant real property. Required documents include Affidavit of Indigency, Certificate of Income, or ITR." 
+    content: "The applicant must prove they are indigent. This generally means having a low income (set thresholds apply depending on location, e.g., Metro Manila vs. other areas) and owning no significant real property. Required documents may include an Affidavit of Indigency, Certificate of Income, or Income Tax Return." 
   },
   { 
     step: 3, 
     title: "Merit Test", 
-    content: "A PAO lawyer assesses if the case has merit—meaning it has a chance of success and is not intended merely to harass the opposite party.\n\n- Criminal Defense: Generally considered meritorious.\n- Civil/Other: Evaluated based on law and evidence." 
+    content: "A PAO lawyer assesses if the case has merit—meaning it has a chance of success and is not intended merely to harass the opposite party.\n\nCriminal Defense: Cases for the accused are generally considered meritorious.\nCivil/Other Cases: Evaluated based on law and evidence." 
   },
   { 
     step: 4, 
@@ -126,8 +159,15 @@ export const universalPaoFlow = [
   { 
     step: 5, 
     title: "Acceptance", 
-    content: "If the applicant passes both tests, the lawyer will formally accept the case and provide representation, counseling, or document drafting." 
+    content: "If the applicant passes both tests, the lawyer will formally accept the case and provide legal representation, counseling, or document drafting (e.g., affidavits, complaints)." 
   }
+];
+
+export const generalRequirements = [
+  "Valid Government ID",
+  "Affidavit of Indigency",
+  "Barangay Certificate of Indigency",
+  "Proof of income / Certificate of No Income"
 ];
 
 export const defaultRequirements = generalRequirements;
@@ -142,9 +182,8 @@ export const drugCaseProcess = [
 ];
 
 export const caseSpecificData: Record<string, { requirements: string[], steps: any[] }> = {
-  // --- Criminal: Accused Context ---
   "Murder": { 
-    requirements: ["Copy of Complaint/Information", "Arrest warrant", "Subpoena", "Bail bond papers", ...generalRequirements], 
+    requirements: ["Police blotter", "Sworn Complaint-Affidavit", "Medico-Legal Certificate", "Hospital records", "Death Certificate", "Autopsy report", "Photos of injuries", "Witness affidavits", ...generalRequirements], 
     steps: universalPaoFlow 
   },
   "Illegal Possession of Dangerous Drugs (Section 11)": {
@@ -187,6 +226,14 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
       { step: 3, title: "Position papers", content: "Submission of sworn statements and evidence." },
       { step: 4, title: "Decision", content: "Labor Arbiter's ruling." }
     ]
+  },
+  "Direct Assaults (Art. 148)": {
+    requirements: ["Police report", "Arrest report", "Witness affidavits", "Medical certificate (if injury)", ...generalRequirements],
+    steps: universalPaoFlow
+  },
+  "Resistance and Disobedience to a Person in Authority or Agents (Art. 151)": {
+    requirements: ["Police report", "Arrest report", "Witness affidavits", ...generalRequirements],
+    steps: universalPaoFlow
   }
 };
 
