@@ -20,8 +20,8 @@ export const caseCategories = {
       items: ["Annulment of Marriage", "Declaration of Nullity of Marriage", "Legal Separation", "Child Custody", "Child Support", "Adoption", "Recognition of Foreign Divorce"]
     },
     {
-      title: "Property & Money",
-      items: ["Collection of Sum of Money", "Damages", "Property Disputes", "Partition of Property", "Unlawful Detainer (Ejectment)", "Forcible Entry", "Small Claims"]
+      title: "Civil Code Cases",
+      items: ["Breach of Contract", "Collection of Sum of Money", "Damages", "Property Disputes", "Partition of Property", "Unlawful Detainer (Ejectment)", "Forcible Entry", "Small Claims"]
     }
   ],
   Labor: [
@@ -53,8 +53,13 @@ export const generalRequirements = [
   "Barangay Certificate of Indigency",
   "Proof of Income (Payslip / Cert of No Income / DSWD Cert)",
   "Community Tax Certificate (Cedula)",
-  "Relevant evidence (contracts, receipts, police reports, etc.)"
+  "Relevant evidence (contracts, receipts, police reports, etc.)",
+  "Demand letter (if required)",
+  "Subpoena / Court Notice (if already filed)"
 ];
+
+// Alias for compatibility with older imports
+export const defaultRequirements = generalRequirements;
 
 export const universalPaoFlow = [
   { step: 1, title: "Client Interview", content: "Initial consultation with a public attorney to gather facts." },
@@ -68,33 +73,24 @@ export const universalPaoFlow = [
   { step: 9, title: "Decision", content: "Receiving the official judgment or resolution from the court/agency." }
 ];
 
+// Alias for compatibility with older imports
 export const defaultSteps = universalPaoFlow;
 
 export const caseSpecificData: Record<string, { requirements: string[], steps: any[] }> = {
-  // --- CRIMINAL (RPC) ---
+  // --- CRIMINAL ---
   "Murder": {
     requirements: [
-      "FOR COMPLAINANT: Police Blotter, Sworn Affidavit, Medico-Legal, Witness Affidavits",
-      "FOR ACCUSED: Copy of Complaint, Arrest Warrant (if any), Subpoena, Bail Documents",
+      "ACCUSED: Copy of Complaint, Arrest Warrant, Subpoena, Bail Documents",
+      "VICTIM: Police Blotter, Sworn Affidavit, Medico-Legal, Witness Affidavits",
       "Valid ID & Indigency Documents"
     ],
     steps: universalPaoFlow
   },
-  "Theft": {
-    requirements: [
-      "FOR COMPLAINANT: Police Report, List of missing items/value, CCTV/Witnesses",
-      "FOR ACCUSED: Copy of Complaint, Subpoena",
-      "Valid ID & Indigency Documents"
-    ],
-    steps: universalPaoFlow
-  },
-  
-  // --- SPECIAL CRIMINAL ---
   "Dangerous Drugs (RA 9165)": {
     requirements: ["Arrest Report", "Chemistry Report (PDEA/PNP)", "Confiscation Receipt / Inventory", "Charge Sheet (Information)", "Subpoena"],
     steps: [
       { step: 1, title: "Inquest Representation", content: "PAO assists during the summary investigation by the prosecutor." },
-      { step: 2, title: "Bail Hearing", content: "Application for temporary liberty (if the quantity allows)." },
+      { step: 2, title: "Bail Hearing", content: "Application for temporary liberty (if allowed)." },
       { step: 3, title: "Pre-Trial", content: "Simplification of issues and marking of evidence." },
       { step: 4, title: "Trial", content: "Strict verification of the chain of custody of evidence." },
       { step: 5, title: "Judgment", content: "Decision by the Regional Trial Court (RTC)." }
@@ -111,7 +107,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     ]
   },
   "Cybercrime (RA 10175)": {
-    requirements: ["Screenshots of online activity", "URL Links", "Digital evidence (saved files)", "Police / NBI Cybercrime report", "Affidavit of Complainant"],
+    requirements: ["Screenshots of online activity", "URL Links", "Digital evidence", "Police / NBI Cybercrime report", "Affidavit of Complainant"],
     steps: [
       { step: 1, title: "Complaint Filing", content: "Filing with the Specialized Cybercrime Prosecutor." },
       { step: 2, title: "Digital Evidence Evaluation", content: "Forensic verification of screenshots and digital trails." },
@@ -119,12 +115,6 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
       { step: 4, title: "RTC Cybercrime Court Trial", content: "Full trial in a court designated for cyber offenses." }
     ]
   },
-  "Bouncing Checks (BP 22)": {
-    requirements: ["Original Dishonored Check", "Bank Return Slip", "Written Demand Letter (with Registry Receipt)", "Proof of receipt of Demand Letter"],
-    steps: universalPaoFlow
-  },
-
-  // --- CIVIL / FAMILY ---
   "Annulment of Marriage": {
     requirements: ["PSA Marriage Certificate", "PSA Birth Certificates of children", "Psychological Evaluation Report (for Article 36)", "IDs of both spouses", "Affidavit of Indigency"],
     steps: [
@@ -135,25 +125,6 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
       { step: 5, title: "Decision", content: "Judgment and subsequent registration with Civil Registry." }
     ]
   },
-  "Child Support": {
-    requirements: ["Child's Birth Certificate", "Proof of Parentage / Relationship", "Proof of parent's income (if available)", "Evidence that support is not being given"],
-    steps: [
-      { step: 1, title: "Demand Letter", content: "Written request to the other parent for support." },
-      { step: 2, title: "Petition Filing", content: "Filing in the Family Court." },
-      { step: 3, title: "Hearing", content: "Mediation and presentation of child's needs." },
-      { step: 4, title: "Court Order", content: "Issuance of the Support Order." }
-    ]
-  },
-  "Small Claims": {
-    requirements: ["Contract / IOU / Promissory Note", "Receipts", "Demand Letter", "Filled out Statement of Claim Form"],
-    steps: [
-      { step: 1, title: "Filing Form", content: "Submitting the standardized claim form to the MTC." },
-      { step: 2, title: "Hearing", content: "Summary hearing where lawyers are not allowed to appear for the parties." },
-      { step: 3, title: "Decision", content: "Final judgment usually issued on the same day." }
-    ]
-  },
-
-  // --- LABOR ---
   "Illegal Dismissal": {
     requirements: ["Employment Contract", "Latest Payslips", "Termination / Dismissal Letter", "Company ID", "Notice to Explain (if any)"],
     steps: [
@@ -163,8 +134,6 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
       { step: 4, title: "Decision", content: "Judgment by the Labor Arbiter." }
     ]
   },
-
-  // --- SPECIAL LEGISLATION ---
   "Juvenile Justice (RA 9344)": {
     requirements: ["Minor's PSA Birth Certificate", "Police Report / Intake Form", "Social Worker Assessment Report"],
     steps: [
