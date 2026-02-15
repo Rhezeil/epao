@@ -28,7 +28,8 @@ export default function CaseRequirementsManager() {
     
     try {
       const promises = allCaseNames.map(caseName => {
-        const id = caseName.toLowerCase().replace(/\s+/g, '-');
+        // Replace spaces and slashes with hyphens to avoid invalid document paths
+        const id = caseName.toLowerCase().replace(/[\s/]+/g, '-');
         const docRef = doc(db, "caseRequirements", id);
         return setDocumentNonBlocking(docRef, {
           caseName: caseName,
@@ -66,7 +67,8 @@ export default function CaseRequirementsManager() {
   const handleSaveIndividual = () => {
     if (!db || !selectedCase) return;
 
-    const id = selectedCase.toLowerCase().replace(/\s+/g, '-');
+    // Replace spaces and slashes with hyphens to avoid invalid document paths
+    const id = selectedCase.toLowerCase().replace(/[\s/]+/g, '-');
     const docRef = doc(db, "caseRequirements", id);
 
     setDocumentNonBlocking(docRef, {

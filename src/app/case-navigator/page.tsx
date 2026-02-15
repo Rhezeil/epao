@@ -1,3 +1,4 @@
+
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -28,7 +29,9 @@ function CaseNavigatorContent() {
 
   const reqDocRef = useMemoFirebase(() => {
     if (!db || !selectedCase) return null;
-    return doc(db, "caseRequirements", selectedCase.toLowerCase().replace(/\s+/g, '-'));
+    // Replace spaces and slashes with hyphens to avoid invalid document paths
+    const docId = selectedCase.toLowerCase().replace(/[\s/]+/g, '-');
+    return doc(db, "caseRequirements", docId);
   }, [db, selectedCase]);
 
   const { data: dynamicReqs, isLoading: isReqLoading } = useDoc(reqDocRef);
@@ -317,7 +320,7 @@ function CaseNavigatorContent() {
                        <Card className="bg-amber-50 border border-amber-100 rounded-3xl p-8">
                          <div className="space-y-4">
                            <h3 className="text-xl font-black text-amber-900 flex items-center gap-2">
-                             <AlertCircle className="h-5 w-5" /> Important Notes
+                             <AlertCircle className="h-5 v-5" /> Important Notes
                            </h3>
                            <ul className="space-y-2">
                              {pAONotes.map((note, i) => (
