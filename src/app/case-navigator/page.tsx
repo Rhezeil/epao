@@ -339,6 +339,7 @@ function CaseNavigatorContent() {
                           {category === 'Civil' && <FileText className="h-8 w-8" />}
                           {category === 'Labor' && <Briefcase className="h-8 w-8" />}
                           {category === 'Administrative' && <Info className="h-8 w-8" />}
+                          {category === 'Quasi-Judicial' && <Gavel className="h-8 w-8" />}
                         </div>
                         <span className="text-center text-sm leading-tight tracking-tight">{category}</span>
                       </button>
