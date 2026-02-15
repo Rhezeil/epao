@@ -264,7 +264,7 @@ function CaseNavigatorContent() {
         <Button variant="outline" size="icon" onClick={() => setSelectedCategory(null)} className="h-12 w-12 rounded-xl text-primary border-primary/20 bg-white shadow-md hover:scale-105 transition-transform">
           <ArrowLeft className="h-6 w-6" />
         </Button>
-        <h2 className="text-2xl font-black text-primary font-headline tracking-tight">{title} Cases</h2>
+        <h2 className="text-2xl font-black text-primary font-headline tracking-tight">{title}</h2>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {subCategories.map((cat, idx) => (
