@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Compass, HelpCircle, Search, ArrowLeft, X, CheckCircle2, FileText, Info, ListChecks, CalendarCheck, Loader2 } from "lucide-react";
+import { Compass, HelpCircle, Search, ArrowLeft, X, CheckCircle2, FileText, Info, ListChecks, CalendarCheck, Loader2, AlertCircle } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
 import { cn } from "@/lib/utils";
@@ -146,9 +146,17 @@ function CaseNavigatorContent() {
               </div>
               <CardTitle className="text-lg font-bold text-primary">Required Documents</CardTitle>
             </div>
-            <p className="text-xs text-muted-foreground">Standard checklist for this category.</p>
+            <p className="text-xs text-muted-foreground">Checklist for this specific category.</p>
           </CardHeader>
           <CardContent className="space-y-3 pt-4">
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+              <div className="flex gap-2">
+                <Info className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                <p className="text-[10px] text-blue-800 leading-tight">
+                  <span className="font-bold">General Requirements:</span> Valid ID, Indigency Cert, Proof of Income, and Cedula are always required.
+                </p>
+              </div>
+            </div>
             {isReqLoading ? (
               <div className="flex justify-center py-4"><Loader2 className="animate-spin h-5 w-5 text-primary" /></div>
             ) : (
@@ -170,7 +178,7 @@ function CaseNavigatorContent() {
               </div>
               <CardTitle className="text-lg font-bold text-primary">Process Flow</CardTitle>
             </div>
-            <p className="text-xs text-muted-foreground">What to expect at the PAO office.</p>
+            <p className="text-xs text-muted-foreground">Steps involved in this case type.</p>
           </CardHeader>
           <CardContent className="pt-4">
             <Accordion type="single" collapsible className="w-full space-y-2">
