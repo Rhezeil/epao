@@ -212,7 +212,7 @@ function CaseNavigatorContent() {
                           </div>
                         ))
                       )}
-                      {guidance.requirements.length === 0 && !isReqLoading && (
+                      {(!guidance.requirements || guidance.requirements.length === 0) && !isReqLoading && (
                         <p className="text-xs text-muted-foreground italic text-center py-8">Standard requirements apply for this case.</p>
                       )}
                     </CardContent>
