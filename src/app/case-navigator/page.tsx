@@ -199,7 +199,7 @@ function CaseNavigatorContent() {
                 <div className="p-1.5 bg-primary/10 rounded-lg">
                   <Info className="h-5 w-5 text-primary" />
                 </div>
-                <CardTitle className="text-lg font-bold text-primary">Universal PAO Flow</CardTitle>
+                <CardTitle className="text-lg font-bold text-primary">Steps to File a Complaint</CardTitle>
               </div>
               <p className="text-xs text-muted-foreground">The 9-step legal process.</p>
             </CardHeader>
@@ -333,18 +333,7 @@ function CaseNavigatorContent() {
                       ))}
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-6 mt-12">
-                       <Card className="bg-primary text-primary-foreground border-none rounded-3xl p-8">
-                         <div className="space-y-4">
-                           <h3 className="text-xl font-black">Universal PAO Flow</h3>
-                           <p className="text-xs text-primary-foreground/80 leading-relaxed">
-                             Follow our 9-step roadmap for public legal assistance.
-                           </p>
-                           <Button variant="secondary" onClick={() => handleCaseClick("Murder", "Criminal")} className="w-full font-bold">
-                             View Universal Process
-                           </Button>
-                         </div>
-                       </Card>
+                    <div className="mt-12">
                        <Card className="bg-amber-50 border border-amber-100 rounded-3xl p-8">
                          <div className="space-y-4">
                            <h3 className="text-xl font-black text-amber-900 flex items-center gap-2">
