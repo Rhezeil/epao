@@ -1,150 +1,65 @@
-
 {
   "entities": {
     "User": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "User",
-      "type": "object",
       "description": "Represents a Client record.",
+      "type": "object",
       "properties": {
-        "id": {
-          "type": "string"
-        },
-        "mobileNumber": {
-          "type": "string",
-          "description": "The primary identifier for client accounts."
-        },
-        "email": {
-          "type": "string",
-          "format": "email",
-          "description": "Virtual email used for auth compatibility."
-        },
-        "role": {
-          "type": "string",
-          "enum": ["client"]
-        },
-        "profileId": {
-          "type": "string"
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "mobileNumber": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["client"] },
+        "profileId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "mobileNumber", "role"]
     },
     "AccessControlRule": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "AccessControlRule",
-      "type": "object",
       "description": "Represents an administrator's record.",
+      "type": "object",
       "properties": {
-        "id": {
-          "type": "string"
-        },
-        "email": {
-          "type": "string",
-          "format": "email"
-        },
-        "role": {
-          "type": "string",
-          "enum": ["admin"]
-        },
-        "firstName": {
-          "type": "string"
-        },
-        "lastName": {
-          "type": "string"
-        },
-        "permission": {
-          "type": "string"
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["admin"] },
+        "permission": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "role", "email"]
     },
     "LawyerRecord": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "LawyerRecord",
+      "description": "Represents a Lawyer's record.",
       "type": "object",
-      "description": "Represents a Lawyer's record in the dedicated collection.",
       "properties": {
-        "id": {
-          "type": "string"
-        },
-        "email": {
-          "type": "string",
-          "format": "email"
-        },
-        "role": {
-          "type": "string",
-          "enum": ["lawyer"]
-        },
-        "profileId": {
-          "type": "string"
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["lawyer"] },
+        "profileId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "role", "email"]
     },
     "Profile": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Profile",
-      "type": "object",
       "description": "Personal details for any user type.",
+      "type": "object",
       "properties": {
-        "id": {
-          "type": "string"
-        },
-        "firstName": {
-          "type": "string"
-        },
-        "lastName": {
-          "type": "string"
-        },
-        "phoneNumber": {
-          "type": "string"
-        },
-        "address": {
-          "type": "string"
-        }
+        "id": { "type": "string" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "address": { "type": "string" }
       },
       "required": ["id", "firstName", "lastName"]
     },
-    "LawyerAuthorization": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "LawyerAuthorization",
-      "type": "object",
-      "description": "Whitelist record for authorizing a lawyer email.",
-      "properties": {
-        "email": {
-          "type": "string",
-          "format": "email"
-        },
-        "password": {
-          "type": "string",
-          "description": "Initial temporary password for the account."
-        },
-        "authorizedAt": {
-          "type": "string",
-          "format": "date-time"
-        }
-      },
-      "required": ["email", "password"]
-    },
     "CaseRequirement": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "CaseRequirement",
+      "description": "Dynamic requirements and process roadmap for specific cases.",
       "type": "object",
-      "description": "Dynamic requirements for specific case types.",
       "properties": {
         "caseName": { "type": "string" },
+        "description": { "type": "string" },
         "requirements": { "type": "array", "items": { "type": "string" } },
         "steps": { 
           "type": "array", 
@@ -160,10 +75,9 @@
       }
     },
     "Appointment": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Appointment",
-      "type": "object",
       "description": "Client consultation booking record.",
+      "type": "object",
       "properties": {
         "id": { "type": "string" },
         "clientId": { "type": "string" },
@@ -182,63 +96,29 @@
     "providers": ["password"]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/users/{userId}",
-        "definition": {
-          "entityName": "User",
-          "schema": { "$ref": "#/backend/entities/User" },
-          "description": "Client account records."
-        }
-      },
-      {
-        "path": "/users/{userId}/profile/profile",
-        "definition": {
-          "entityName": "Profile",
-          "schema": { "$ref": "#/backend/entities/Profile" },
-          "description": "User profile data."
-        }
-      },
-      {
-        "path": "/roleAdmin/{userId}",
-        "definition": {
-          "entityName": "AccessControlRule",
-          "schema": { "$ref": "#/backend/entities/AccessControlRule" },
-          "description": "Admin-only account records."
-        }
-      },
-      {
-        "path": "/roleLawyer/{userId}",
-        "definition": {
-          "entityName": "LawyerRecord",
-          "schema": { "$ref": "#/backend/entities/LawyerRecord" },
-          "description": "Lawyer-only account records."
-        }
-      },
-      {
-        "path": "/lawyersEmail/{emailId}",
-        "definition": {
-          "entityName": "LawyerAuthorization",
-          "schema": { "$ref": "#/backend/entities/LawyerAuthorization" },
-          "description": "Authorized lawyer email whitelist."
-        }
-      },
-      {
-        "path": "/caseRequirements/{caseName}",
-        "definition": {
-          "entityName": "CaseRequirement",
-          "schema": { "$ref": "#/backend/entities/CaseRequirement" },
-          "description": "Specific case documentation and process requirements."
-        }
-      },
-      {
-        "path": "/appointments/{appointmentId}",
-        "definition": {
-          "entityName": "Appointment",
-          "schema": { "$ref": "#/backend/entities/Appointment" },
-          "description": "Consultation and legal service bookings."
-        }
-      }
-    ]
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Client account records."
+    },
+    "/users/{userId}/profile/profile": {
+      "schema": "Profile",
+      "description": "User profile data."
+    },
+    "/roleAdmin/{userId}": {
+      "schema": "AccessControlRule",
+      "description": "Admin-only account records."
+    },
+    "/roleLawyer/{userId}": {
+      "schema": "LawyerRecord",
+      "description": "Lawyer-only account records."
+    },
+    "/caseRequirements/{caseName}": {
+      "schema": "CaseRequirement",
+      "description": "Specific case documentation and process requirements."
+    },
+    "/appointments/{appointmentId}": {
+      "schema": "Appointment",
+      "description": "Consultation and legal service bookings."
+    }
   }
 }

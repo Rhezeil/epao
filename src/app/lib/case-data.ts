@@ -21,7 +21,7 @@ export const caseCategories = {
       ]
     },
     {
-      title: "🩹 II. PHYSICAL INJURIES",
+      title: "🩹 II. PHYSICAL INJURIES (Revised Penal Code)",
       items: [
         "Mutilation (Art 262)", 
         "Serious Physical Injuries (Art 263)", 
@@ -113,10 +113,10 @@ export const caseCategories = {
 
 export const standardPaoDocs = [
   "Certificate of Indigency (from Barangay Chairman or DSWD)",
-  "Latest Income Tax Return (ITR), pay slip, or proof of income",
-  "Valid Government-issued ID (Original & Photocopy)",
-  "Initial Case Documents (Complaint, Summons, or Police Report)",
-  "Merit Test compliance (Verified during interview)"
+  "Latest Income Tax Return (ITR), pay slip, or Proof of No Income",
+  "Valid Government-issued ID (SSS, PhilHealth, Voter's, etc.)",
+  "Case-Related Documents (Complaints, summons, or police reports)",
+  "Merit Test compliance (Determined during lawyer interview)"
 ];
 
 export const universalPaoFlow = [
@@ -173,7 +173,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   },
   "Death in Tumultuous Affray (Art 251)": {
     description: "Occurs when a person is killed during a chaotic, unorganized fight involving several people (labo-labo), and the specific killer cannot be identified.",
-    requirements: ["Complaint-Affidavit (if filed in court)", "Subpoena or Warrant of Arrest (if already served)", "Police Report of the chaotic incident", "Witness Statements confirming the affray"],
+    requirements: ["Complaint-Affidavit (if already filed)", "Subpoena or Warrant of Arrest (if served)", "Police Report of the chaotic incident", "Witness Statements confirming the affray"],
     steps: universalPaoFlow
   },
   "Assistance to Suicide (Art 253)": {
@@ -182,7 +182,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     steps: universalPaoFlow
   },
   "Discharge of Firearms (Art 254)": {
-    description: "As amended by RA 11926. Includes shooting at another without intent to kill, or willful and indiscriminate discharge of any firearm regardless of target.",
+    description: "Under Art. 254, as amended by RA 11926: Shooting at another without intent to kill, or willful and indiscriminate discharge of any firearm regardless of target.",
     requirements: ["Police Investigation Report", "Firearm Ballistics Report", "Witness Affidavits", "Notice of Inquest", "Gun License Status (if any)"],
     steps: [
       { step: 1, title: "Inquest Assistance", content: "Immediate PAO assistance after arrest to determine legality of detention and presence of probable cause." },
@@ -195,8 +195,13 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     steps: universalPaoFlow
   },
   "Abortion (Art 256-259)": {
-    description: "Strictly prohibited and penalized under Articles 256-259 RPC, whether intentional or unintentional, practiced by the woman, parents, or medical professionals.",
+    description: "Abortion is prohibited and penalized under Articles 256-259 RPC, whether intentional or unintentional, practiced by the woman, parents, or medical professionals.",
     requirements: ["Medico-Legal Report", "Police Investigation Report", "Hospital Records (if any)", "Witness Statements"],
+    steps: universalPaoFlow
+  },
+  "Responsibility in Duel (Art 260)": {
+    description: "Killing or injuring an opponent in a duel. Both participants and seconds may be held liable under the RPC.",
+    requirements: ["Police Report", "Witness Statements", "Duel Challenge/Agreement evidence", "Medico-Legal Report"],
     steps: universalPaoFlow
   },
 

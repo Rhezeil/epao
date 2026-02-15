@@ -22,7 +22,7 @@ import {
   Briefcase,
   Layers,
   ClipboardList,
-  User, // Ensure User is imported for the icon
+  User,
   Gavel
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";

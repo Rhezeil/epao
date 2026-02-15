@@ -1,4 +1,3 @@
-
 rules_version = '2';
 
 service cloud.firestore {
@@ -17,23 +16,6 @@ service cloud.firestore {
     function isAdmin() {
       return isSignedIn() && (
         exists(/databases/$(database)/documents/roleAdmin/$(request.auth.uid)) ||
-        (request.auth.token.email != null && request.auth.token.email.lower() == "admin@epao.com")
-      );
-    }
-
-    function isAuthorizedLawyer() {
-      return isSignedIn() && (
-        request.auth.uid == "ygkXuNUWJrbffovhXBtr6r1o5vr2" || 
-        (request.auth.token.email != null && (
-          request.auth.token.email.lower().split('@')[1] == 'lawyers.com' ||
-          exists(/databases/$(database)/documents/lawyersEmail/$(request.auth.token.email.lower()))
-        ))
-      );
-    }
-
-    function isSystemAdmin() {
-      return isSignedIn() && (
-        request.auth.uid == "fs4k8QifPHSmUdshxh1NLweHSj73" || 
         (request.auth.token.email != null && request.auth.token.email.lower() == "admin@epao.com")
       );
     }
@@ -66,18 +48,13 @@ service cloud.firestore {
       allow update: if isOwner(userId);
     }
 
-    match /lawyersEmail/{emailId} {
-      allow get: if true;
-      allow list, write: if isAdmin();
-    }
-
     match /caseRequirements/{caseName} {
       allow get: if true;
       allow list, write: if isAdmin();
     }
 
     match /appointments/{appointmentId} {
-      allow get: if true; // Public access for reference code search
+      allow get: if true;
       allow create: if isSignedIn();
       allow update, delete, list: if isAdmin() || (isSignedIn() && resource.data.clientId == request.auth.uid);
     }
