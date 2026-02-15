@@ -23,13 +23,15 @@ import {
   AlertCircle,
   Briefcase,
   Layers,
-  ClipboardList
+  ClipboardList,
+  User,
+  Gavel
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
 import { cn } from "@/lib/utils";
-import { useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
-import { doc, collection, query, where, limit } from "firebase/firestore";
+import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { doc } from "firebase/firestore";
 import { caseCategories, categoryDefaults, caseSpecificData, pAONotes, standardPaoDocs, universalPaoFlow } from "@/app/lib/case-data";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -118,12 +120,11 @@ function CaseNavigatorContent() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* COLUMN 1: INFORMATION */}
           <Card className="border-none shadow-xl bg-white/70 backdrop-blur-md rounded-[2.5rem] overflow-hidden flex flex-col">
             <CardHeader className="pb-4 bg-primary/5">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-primary text-white rounded-xl shadow-md">
-                  <FileText className="h-5 w-5" />
+                  <Gavel className="h-5 w-5" />
                 </div>
                 <CardTitle className="text-xl font-bold text-primary">Case Profile</CardTitle>
               </div>
@@ -167,7 +168,6 @@ function CaseNavigatorContent() {
             </CardContent>
           </Card>
 
-          {/* COLUMN 2 & 3: SEPARATED REQUIREMENTS AND PROCESS */}
           <div className="lg:col-span-2 space-y-6">
             <Tabs defaultValue="requirements" className="w-full">
               <TabsList className="grid w-full grid-cols-2 bg-white/50 p-1 rounded-2xl border-2 border-primary/5 shadow-inner h-14">
@@ -181,7 +181,6 @@ function CaseNavigatorContent() {
 
               <TabsContent value="requirements" className="mt-6">
                 <div className="grid md:grid-cols-2 gap-6">
-                  {/* Eligibility Docs */}
                   <Card className="border-none shadow-lg bg-white/80 backdrop-blur-md rounded-3xl overflow-hidden">
                     <CardHeader className="bg-amber-50/50 pb-4 border-b border-amber-100">
                       <CardTitle className="text-sm font-black text-amber-900 uppercase tracking-widest flex items-center gap-2">
@@ -198,7 +197,6 @@ function CaseNavigatorContent() {
                     </CardContent>
                   </Card>
 
-                  {/* Case Specific Docs */}
                   <Card className="border-none shadow-lg bg-white/80 backdrop-blur-md rounded-3xl overflow-hidden">
                     <CardHeader className="bg-primary/5 pb-4 border-b border-primary/10">
                       <CardTitle className="text-sm font-black text-primary uppercase tracking-widest flex items-center gap-2">
