@@ -47,7 +47,6 @@ export const caseCategories = {
       items: [
         "New Anti-Carnapping Act (RA 10883)",
         "Anti-Cattle Rustling Law (PD 533)",
-        "Forestry Code & Timber Smuggling (PD 705/330)",
         "Anti-Fencing Law (PD 1612)",
         "Bouncing Checks Law (BP 22)",
         "Trust Receipts Law (PD 115)",
@@ -132,7 +131,8 @@ export const caseCategories = {
       items: [
         "Illegal Possession of Firearms (RA 10591)",
         "Illegal Possession of Explosives (RA 9516)",
-        "Unlawful Manufacture of Explosives"
+        "Unlawful Manufacture of Explosives",
+        "Illegal Possession of Ammunition (PD 1866)"
       ]
     },
     {
@@ -175,6 +175,17 @@ export const caseCategories = {
         "Violation of Data Privacy Act (RA 10173)",
         "Financial Account Scamming (AFASA - RA 12010)"
       ]
+    },
+    {
+      title: "⚖️ XV. MISCELLANEOUS SPECIAL PENAL LAWS",
+      items: [
+        "Anti-Graft and Corrupt Practices Act (RA 3019)",
+        "Anti-Money Laundering Act (RA 9160)",
+        "Illegal Gambling (PD 1602 / RA 9287)",
+        "Anti-Illegal Recruitment (RA 8042)",
+        "Forestry Code (PD 705) & Timber Smuggling",
+        "Juvenile Justice (RA 9344) / CICL"
+      ]
     }
   ],
   "Civil": [
@@ -216,7 +227,8 @@ export const caseCategories = {
         "Guardianship", 
         "Correction of Entries in the Civil Registry", 
         "Settlement of Estate", 
-        "Writ of Habeas Data/Amparo"
+        "Writ of Habeas Data/Amparo",
+        "Habeas Corpus"
       ]
     }
   ],
@@ -241,7 +253,8 @@ export const caseCategories = {
         "Unlawful Wage Deductions (Art. 113)",
         "13th Month Pay (P.D. 851)",
         "Underpayment of Wages",
-        "Non-payment of Overtime/Holiday Pay"
+        "Non-payment of Overtime/Holiday Pay",
+        "Attorney's Fees (Art. 111)"
       ]
     },
     {
@@ -257,7 +270,13 @@ export const caseCategories = {
   "Special Legislation": [
     {
       title: "🏢 Social & Special Laws",
-      items: ["Anti-Trafficking (RA 9208)", "Anti-Child Pornography (RA 9775)", "Anti-Hazing (RA 11053)", "Anti-Illegal Recruitment", "Juvenile Justice (RA 9344)"]
+      items: [
+        "Anti-Trafficking (RA 9208)", 
+        "Anti-Child Pornography (RA 9775)", 
+        "Anti-Hazing (RA 11053)", 
+        "Anti-Illegal Recruitment (RA 8042)", 
+        "Juvenile Justice (RA 9344) / CICL"
+      ]
     }
   ],
   "Administrative": [
@@ -436,6 +455,11 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["Utility company report", "Photos of illegal tapping", "Police blotter", "Witness statements"],
     steps: defaultSteps
   },
+  "Anti-Fencing Law (PD 1612)": {
+    description: "Knowingly buying, keeping, or selling stolen property.",
+    requirements: ["Police report on original theft", "Recovery report", "Inventory of seized items", "Witness affidavits"],
+    steps: defaultSteps
+  },
 
   // --- PUBLIC ORDER & SECURITY ---
   "Rebellion or Insurrection": {
@@ -482,6 +506,11 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["Police Arrest Report", "Inventory of Seized Items", "Firearms License Verification", "Chemistry/Ballistics report"],
     steps: defaultSteps
   },
+  "Illegal Possession of Ammunition (PD 1866)": {
+    description: "Possession of ammunition without proper license or authority.",
+    requirements: ["Arrest report", "Inventory of seized ammunition", "Certification from FEO"],
+    steps: defaultSteps
+  },
   "Reckless Imprudence Resulting in Homicide": {
     description: "Voluntary act without malice but lacking precaution, resulting in death (Art. 365 RPC).",
     requirements: ["Police Accident Report", "Death Certificate", "Driver's License", "Vehicle Registration", "Witness affidavits"],
@@ -501,168 +530,58 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["Screenshots of unauthorized access", "IP logs (if available)", "Proof of account ownership", "Police blotter from PNP Anti-Cybercrime Group"],
     steps: defaultSteps
   },
-  "Illegal Interception": {
-    description: "Unauthorized interception of technical communications (Section 4a of RA 10175).",
-    requirements: ["Evidence of data transmission tapping", "Device logs", "Witness statements", "PNP/NBI Cybercrime report"],
-    steps: defaultSteps
-  },
-  "Data Interference": {
-    description: "Intentionally altering, damaging, or deleting computer data/viruses (Section 4a of RA 10175).",
-    requirements: ["System logs showing alterations", "Evidence of corrupted files", "Forensic computer report", "Police blotter"],
-    steps: defaultSteps
-  },
-  "System Interference": {
-    description: "Intentionally hindering the functioning of a computer system (e.g., DDoS attacks) (Section 4a of RA 10175).",
-    requirements: ["Network traffic logs", "Server uptime records", "Evidence of system downtime", "Incident report from IT/Security"],
-    steps: defaultSteps
-  },
-  "Misuse of Devices": {
-    description: "Producing or selling tools/passwords designed to commit cybercrimes (Section 4a of RA 10175).",
-    requirements: ["Evidence of prohibited tools/software", "Transaction records", "Screenshots of advertisements/sales", "Expert testimony"],
-    steps: defaultSteps
-  },
-  "Cybersquatting": {
-    description: "Registering a domain name in bad faith to profit or destroy reputation (Section 4a of RA 10175).",
-    requirements: ["Proof of domain registration", "Evidence of bad faith/intent to profit", "Prior trademark/copyright proof", "Screenshots of the domain"],
-    steps: defaultSteps
-  },
-  "Computer-related Forgery": {
-    description: "Inputting or altering computer data to create false documents with intent to defraud (Section 4b of RA 10175).",
-    requirements: ["Original and forged data/documents", "System logs showing input/alteration", "Evidence of fraudulent intent", "Witness affidavits"],
-    steps: defaultSteps
-  },
-  "Computer-related Fraud (Online Scams)": {
-    description: "Unauthorized input or alteration of data for personal gain, such as phishing or online scams (Section 4b of RA 10175).",
-    requirements: ["Screenshots of fraudulent communications", "Transaction records (GCash, Bank)", "URLs of fraudulent sites", "Proof of loss"],
-    steps: defaultSteps
-  },
-  "Computer-related Identity Theft": {
-    description: "Unauthorized acquisition or use of another person's identifying information through a computer (Section 4b of RA 10175).",
-    requirements: ["Proof of identity ownership", "Evidence of unauthorized use", "Screenshots of impersonation", "Police report"],
-    steps: defaultSteps
-  },
-  "Cybersex": {
-    description: "Operating lascivious exhibitions of sexual organs/activity via computer for consideration (Section 4c of RA 10175).",
-    requirements: ["Recorded video/audio evidence", "Transaction records for payments", "IP logs", "Witness statements"],
-    steps: defaultSteps
-  },
-  "Child Pornography (Cyber-related)": {
-    description: "Acts of child pornography committed through a computer system (RA 9775 in relation to RA 10175).",
-    requirements: ["Illegal content evidence", "Device forensic report", "Communication logs", "Birth certificate of minor", "Police/NBI report"],
-    steps: defaultSteps
-  },
   "Cyberlibel": {
-    description: "Libelous acts committed through a computer system or social media (Section 4c of RA 10175).",
+    description: "Libel as defined in Art. 355 of the Revised Penal Code, committed through a computer system or social media.",
     requirements: ["Screenshots of defamatory posts/comments", "URLs of the content", "Proof of publication and malice", "Witness affidavits"],
     steps: defaultSteps
   },
   "Online Estafa/Swindling": {
-    description: "Traditional estafa committed through online platforms, carrying higher penalties (RA 10175 Section 6).",
+    description: "Traditional estafa committed through online platforms, such as fake sellers or investment scams.",
     requirements: ["Screenshots of transactions", "Communication logs (Chat/SMS)", "Proof of payment", "Evidence of false pretenses"],
     steps: defaultSteps
   },
-  "Online Threats/Coercion": {
-    description: "Threatening or coercing someone through private messages or social media.",
-    requirements: ["Screenshots of threats/coercion", "Proof of sender identity (if known)", "Timeline of harassment", "Police blotter"],
+
+  // --- MISCELLANEOUS SPECIAL PENAL LAWS ---
+  "Anti-Graft and Corrupt Practices Act (RA 3019)": {
+    description: "Criminal prosecution of public officers and private individuals for corruption.",
+    requirements: ["Sworn Complaint-Affidavit", "Evidence of official function", "Financial records", "Witness statements"],
     steps: defaultSteps
   },
-  "Photo/Video Voyeurism (RA 9995)": {
-    description: "Recording or distributing sexual content without the consent of the subject (Anti-Photo and Video Voyeurism Act).",
-    requirements: ["The illegal photo/video evidence", "Proof of distribution", "Witness statements", "Device forensic report"],
+  "Anti-Money Laundering Act (RA 9160)": {
+    description: "Prosecution of crimes where proceeds of unlawful activities are integrated into the financial system.",
+    requirements: ["Bank statements", "Evidence of predicate crime", "Transaction records", "Financial Investigation Report"],
     steps: defaultSteps
   },
-  "Violation of Data Privacy Act (RA 10173)": {
-    description: "Improper processing or unauthorized disclosure of personal data (RA 10173).",
-    requirements: ["Evidence of data leak/misuse", "Proof of unauthorized processing", "Communications from the data controller", "NPC complaint records"],
+  "Illegal Gambling (PD 1602 / RA 9287)": {
+    description: "Engaging in unauthorized gambling activities such as jueteng.",
+    requirements: ["Police arrest report", "Seized gambling paraphernalia", "Witness affidavits"],
     steps: defaultSteps
   },
-  "Financial Account Scamming (AFASA - RA 12010)": {
-    description: "Targeting mule accounts and online selling of registered SIMs for fraudulent purposes (RA 12010).",
-    requirements: ["Evidence of mule account activity", "SIM registration records", "Transaction logs", "Police/NBI report"],
+  "Anti-Illegal Recruitment (RA 8042)": {
+    description: "Recruitment activities without the required license or authority from the POEA.",
+    requirements: ["Deployment records", "Passport & Visa copies", "Proof of remittance", "POEA certification"],
+    steps: defaultSteps
+  },
+  "Juvenile Justice (RA 9344) / CICL": {
+    description: "Legal assistance to minors accused of crimes (Children in Conflict with the Law).",
+    requirements: ["Birth Certificate of Minor", "Social Case Study Report", "Police Blotter", "Parent/Guardian identification"],
     steps: defaultSteps
   },
 
   // --- CIVIL LAW ---
   "Declaration of Nullity of Marriage": {
     description: "Declaration that a marriage was void from the beginning (e.g., Art. 36 Psychological Incapacity).",
-    requirements: ["PSA Marriage Contract", "PSA Birth Certificates of children", "Psychological Evaluation Report (if Art. 36)", "Barangay Certificate of Residence", "Witness affidavits"],
+    requirements: ["PSA Marriage Contract", "PSA Birth Certificates of children", "Psychological Evaluation Report", "Barangay Certificate of Residence"],
     steps: defaultSteps
   },
   "Support": {
-    description: "Everything indispensable for sustenance, dwelling, clothing, and medical attendance (Art. 194-208 Family Code).",
-    requirements: ["PSA Birth Certificate of child", "Proof of financial need", "Proof of respondent's income (if available)", "Affidavit of dependency"],
+    description: "Everything indispensable for sustenance, dwelling, clothing, and medical attendance.",
+    requirements: ["PSA Birth Certificate of child", "Proof of financial need", "Proof of respondent's income"],
     steps: defaultSteps
   },
-  "Collection of Sum of Money": {
-    description: "Claims for debts, unpaid loans, or services rendered (Small Claims up to P1M).",
-    requirements: ["Promissory Note or Acknowledgment Receipt", "Statement of Account", "Demand Letter with proof of service", "Proof of partial payments"],
-    steps: defaultSteps
-  },
-
-  // --- LABOR LAW ---
-  "Illegal Dismissal (Art. 279)": {
-    description: "Protection for employees dismissed without just or authorized cause. Claims include reinstatement and full backwages.",
-    requirements: ["Employment Contract", "Notice of Termination (if any)", "Payslips", "SSS/PhilHealth records", "Company ID", "Witness affidavits"],
-    steps: defaultSteps
-  },
-  "Regular and Casual Employment (Art. 280)": {
-    description: "Distinguishing employment types to determine entitlement to regularization and separation pay.",
-    requirements: ["Employment Contract", "Appointment Letter", "Performance Reviews", "Proof of work duration", "Payslips"],
-    steps: defaultSteps
-  },
-  "Termination by Employer (Art. 282)": {
-    description: "Disputes regarding dismissal based on serious misconduct, willful disobedience, gross neglect of duty, or fraud.",
-    requirements: ["Notice of Termination", "Notice of Hearing/Explanation", "Company Rules/Handbook", "Payslips", "Counter-affidavit"],
-    steps: defaultSteps
-  },
-  "Closure of Business/Disease (Art. 283-284)": {
-    description: "Disputes regarding authorized causes such as retrenchment, redundancy, or closure of business.",
-    requirements: ["Notice of Closure to DOLE", "Termination Notice", "Financial Statements of Company (if retrenchment)", "Medical Certificate (if disease)"],
-    steps: defaultSteps
-  },
-  "Constructive Dismissal": {
-    description: "When continued employment is rendered impossible, unreasonable, or unlikely, forcing the employee to quit.",
-    requirements: ["Resignation Letter (if forced)", "Evidence of harassment/demotion", "Proof of floating status (>6 months)", "Witness affidavits"],
-    steps: defaultSteps
-  },
-  "Illegal Suspension": {
-    description: "Employees suspended without valid cause or proper procedure beyond the legal limit of 30 days.",
-    requirements: ["Notice of Suspension", "Explanation/Counter-statement", "Company ID", "Payslips"],
-    steps: defaultSteps
-  },
-  "Service Incentive Leave (Art. 95)": {
-    description: "Claims for five (5) days of leave with pay for employees who rendered at least one year of service.",
-    requirements: ["Payslips", "Employment Contract", "Service Records", "Company ID"],
-    steps: defaultSteps
-  },
-  "Time of Payment of Wages (Art. 103)": {
-    description: "Claims for unpaid or delayed wages according to the legally mandated schedule.",
-    requirements: ["Payslips", "Timesheets/Logbooks", "Employment Contract", "Demand Letter"],
-    steps: defaultSteps
-  },
-  "Unlawful Wage Deductions (Art. 113)": {
-    description: "Prohibits unauthorized deductions from wages such as 'cash bonds' or 'company losses' without consent.",
-    requirements: ["Payslips showing deductions", "Notice of deduction", "Employment Contract", "Company ID"],
-    steps: defaultSteps
-  },
-  "13th Month Pay (P.D. 851)": {
-    description: "Mandatory benefit for all rank-and-file employees who rendered at least one month of service during the calendar year.",
-    requirements: ["Payslips", "Proof of employment duration", "Company ID", "DOLE complaint (if already filed)"],
-    steps: defaultSteps
-  },
-  "Underpayment of Wages": {
-    description: "Claims for wages below the legally mandated minimum wage for the region.",
-    requirements: ["Payslips", "Timesheets", "Regional Wage Order info", "Company ID"],
-    steps: defaultSteps
-  },
-  "Labor-Only Contracting (Art. 106-109)": {
-    description: "Cases where employees claim regular employment with the principal employer due to prohibited contracting practices.",
-    requirements: ["Contract with Agency", "Company ID of Principal", "Daily Time Records", "Directives from Principal supervisors"],
-    steps: defaultSteps
-  },
-  "OFW Cases (Illegal Dismissal/Benefits)": {
-    description: "Claims for illegal dismissal, death/disability benefits, and violations of POEA contracts for overseas workers.",
-    requirements: ["POEA Contract", "OWIA/Deployment records", "Passport & Visa copies", "Proof of remittance", "Medical reports (if disability)"],
+  "Habeas Corpus": {
+    description: "A legal proceeding to secure the release of a person who has been illegally detained.",
+    requirements: ["Sworn Petition", "Evidence of illegal detention", "Witness affidavits"],
     steps: defaultSteps
   }
 };
