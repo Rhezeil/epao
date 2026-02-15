@@ -6,7 +6,7 @@
 export const caseCategories = {
   Criminal: [
     {
-      title: "1️⃣ Crimes Under the Revised Penal Code (Act No. 3815)",
+      title: "1️⃣ Crimes Under the Revised Penal Code",
       items: [
         "Murder", "Homicide", "Parricide", "Infanticide", 
         "Physical Injuries (Serious, Less Serious, Slight)",
@@ -118,15 +118,31 @@ export const generalRequirements = [
 ];
 
 export const universalPaoFlow = [
-  { step: 1, title: "Client Interview", content: "Initial consultation with a public attorney to gather facts." },
-  { step: 2, title: "Indigency Test", content: "Verification of financial status to qualify for free assistance." },
-  { step: 3, title: "Merit Test", content: "Legal evaluation to ensure the case has basis and isn't frivolous." },
-  { step: 4, title: "Document Completion", content: "Submission of all required forms and supporting evidence." },
-  { step: 5, title: "Case Acceptance", content: "Formal approval of the case by the District Head or lawyer." },
-  { step: 6, title: "Case Number Assignment", content: "The case is officially logged into the PAO monitoring system." },
-  { step: 7, title: "Filing Before Proper Body", content: "Submitting the complaint/petition to the Prosecutor, Court, or Agency." },
-  { step: 8, title: "Hearing / Trial", content: "Legal representation during mediation, conferences, and court trials." },
-  { step: 9, title: "Decision", content: "Receiving the official judgment or resolution from the court/agency." }
+  { 
+    step: 1, 
+    title: "Application and Evaluation", 
+    content: "The client visits the nearest PAO district office (often at the local Hall of Justice) to file a request for legal assistance." 
+  },
+  { 
+    step: 2, 
+    title: "Indigency Test", 
+    content: "The applicant must prove they are indigent. This generally means having a low income (set thresholds apply depending on location, e.g., Metro Manila vs. other areas) and owning no significant real property. Required documents may include an Affidavit of Indigency, Certificate of Income, or Income Tax Return." 
+  },
+  { 
+    step: 3, 
+    title: "Merit Test", 
+    content: "A PAO lawyer assesses if the case has merit—meaning it has a chance of success and is not intended merely to harass the opposite party.\n\n• Criminal Defense: Cases for the accused are generally considered meritorious.\n• Civil/Other Cases: Evaluated based on law and evidence." 
+  },
+  { 
+    step: 4, 
+    title: "Conflict of Interest Check", 
+    content: "The PAO verifies that they do not already represent the opposing party to avoid conflicts of interest." 
+  },
+  { 
+    step: 5, 
+    title: "Acceptance", 
+    content: "If the applicant passes both tests, the lawyer will formally accept the case and provide legal representation, counseling, or document drafting (e.g., affidavits, complaints)." 
+  }
 ];
 
 export const defaultRequirements = generalRequirements;
@@ -165,15 +181,6 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
       { step: 3, title: "Filing Petition", content: "Submitting to Family Court." },
       { step: 4, title: "Trial", content: "Presentation of witnesses and experts." },
       { step: 5, title: "Decision", content: "Judgment and Civil Registry registration." }
-    ]
-  },
-  "VAWC (RA 9262)": {
-    requirements: ["Police Blotter", "Medical Certificate", "Screenshots / Messages", "Proof of Relationship", "Birth Certificate of children"],
-    steps: [
-      { step: 1, title: "Filing of Complaint", content: "Submission to Prosecutor or for Protection Order." },
-      { step: 2, title: "Application for Protection Order", content: "TPO or PPO request." },
-      { step: 3, title: "Investigation", content: "Prosecutor determination of probable cause." },
-      { step: 4, title: "Trial", content: "Criminal proceedings in Family Court." }
     ]
   }
 };
