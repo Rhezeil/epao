@@ -28,7 +28,7 @@ export const caseCategories = {
     {
       title: "🟠 III. CRIMES AGAINST PROPERTY (RPC Title Ten)",
       items: [
-        "Robbery (with violence/intimidation of persons - Art. 294)",
+        "Robbery (with violence/intimidation - Art. 294)",
         "Robbery (with force upon things - Art. 299 & 302)",
         "Brigandage (Art. 306)",
         "Theft (Art. 308)",
@@ -200,8 +200,36 @@ export const caseCategories = {
   ],
   "Labor": [
     {
-      title: "👷 Employment Disputes",
-      items: ["Illegal Dismissal", "Constructive Dismissal", "Non-payment of Wages", "Overtime Pay Claims", "Separation Pay", "13th Month Pay"]
+      title: "🔒 I. ILLEGAL DISMISSAL & SECURITY OF TENURE",
+      items: [
+        "Illegal Dismissal (Art. 279)",
+        "Regular and Casual Employment (Art. 280)",
+        "Termination by Employer (Art. 282)",
+        "Closure of Business/Disease (Art. 283-284)",
+        "Constructive Dismissal",
+        "Illegal Suspension"
+      ]
+    },
+    {
+      title: "💰 II. LABOR STANDARDS (MONETARY CLAIMS)",
+      items: [
+        "Service Incentive Leave (Art. 95)",
+        "Payment by Results (Art. 101)",
+        "Time of Payment of Wages (Art. 103)",
+        "Unlawful Wage Deductions (Art. 113)",
+        "13th Month Pay (P.D. 851)",
+        "Underpayment of Wages",
+        "Non-payment of Overtime/Holiday Pay"
+      ]
+    },
+    {
+      title: "🌍 III. SPECIAL LABOR CASES",
+      items: [
+        "Labor-Only Contracting (Art. 106-109)",
+        "Illegal Strikes/Lockouts (Art. 264)",
+        "Retaliatory Measures (Art. 118)",
+        "OFW Cases (Illegal Dismissal/Benefits)"
+      ]
     }
   ],
   "Special Legislation": [
@@ -279,7 +307,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   },
 
   // --- CRIMES AGAINST PROPERTY (RPC) ---
-  "Robbery (with violence/intimidation of persons - Art. 294)": {
+  "Robbery (with violence/intimidation - Art. 294)": {
     description: "Taking of personal property belonging to another with intent to gain, by means of violence or intimidation against persons. Includes robbery with homicide, rape, physical injuries, or in a band.",
     requirements: ["Police report", "Affidavit of loss", "Proof of ownership", "Inventory of stolen items", "Witness affidavits", "CCTV footage"],
     steps: defaultSteps
@@ -340,7 +368,24 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     steps: defaultSteps
   },
 
-  // --- CRIMES AGAINST STATE SECURITY (PUBLIC ORDER) ---
+  // --- SPECIAL PROPERTY LAWS ---
+  "New Anti-Carnapping Act (RA 10883)": {
+    description: "Theft/taking of a motor vehicle with intent to gain, without the owner's consent.",
+    requirements: ["Police blotter", "OR/CR of vehicle", "Affidavit of loss", "Purchase documents", "CCTV/Witness statements"],
+    steps: defaultSteps
+  },
+  "Bouncing Checks Law (BP 22)": {
+    description: "Issuing checks without sufficient funds or failing to maintain funds after issuance.",
+    requirements: ["Original Bounced Check", "Notice of Dishonor (Demand Letter)", "Registry return receipt", "Affidavit of complainant"],
+    steps: defaultSteps
+  },
+  "Trust Receipts Law (PD 115)": {
+    description: "Failure to turn over proceeds or return goods held in trust to the entrustee.",
+    requirements: ["Trust Receipt agreement", "Demand Letter", "Evidence of non-payment", "Contract of sale"],
+    steps: defaultSteps
+  },
+
+  // --- PUBLIC ORDER & SECURITY ---
   "Rebellion or Insurrection": {
     description: "Rising publicly and taking up arms against the Government for the purpose of removing allegiance or power.",
     requirements: ["Arrest report", "Witness affidavits", "Intelligence reports", "Media/Video evidence"],
@@ -351,122 +396,21 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["After-operation reports", "Arrest records", "Evidence of organized planning", "Witness affidavits"],
     steps: defaultSteps
   },
-  "Conspiracy and Proposal to Commit Rebellion/Coup d'état": {
-    description: "Agreeing and deciding to rise publicly and take up arms against the Government.",
-    requirements: ["Intelligence reports", "Proof of meetings/agreement", "Witness affidavits", "Digital evidence"],
-    steps: defaultSteps
-  },
-  "Disloyalty of Public Officers/Employees": {
-    description: "Failure of public officers to resist or prevent rebellion/insurrection.",
-    requirements: ["Employment records", "Duty logs", "Evidence of non-resistance", "Witness affidavits"],
-    steps: defaultSteps
-  },
   "Sedition": {
     description: "Rising publicly and tumultuously to prevent the execution of laws or to inflict hate upon public officers.",
     requirements: ["Police report", "Photos/Videos of incident", "Witness affidavits", "Media reports"],
     steps: defaultSteps
   },
-  "Conspiracy to Commit Sedition": {
-    description: "Agreement and decision to rise publicly and tumultuously for seditious purposes.",
-    requirements: ["Proof of agreement", "Witness affidavits", "Surveillance reports"],
-    steps: defaultSteps
-  },
-  "Inciting to Rebellion or Sedition": {
-    description: "Inciting others to commit rebellion or sedition through speeches, writing, or proclamations.",
-    requirements: ["Copies of written materials", "Recordings of speeches", "Witness affidavits", "Digital evidence"],
-    steps: defaultSteps
-  },
-
-  // --- CRIMES AGAINST AUTHORITY ---
   "Direct Assault": {
     description: "Employing force or intimidation against persons in authority or their agents while in the performance of official duties.",
     requirements: ["Police blotter", "Medico-legal (if injured)", "Sworn statement of officer", "Witness affidavits"],
     steps: defaultSteps
   },
-  "Indirect Assault": {
-    description: "Making or delivering gifts or offering presents to persons in authority.",
-    requirements: ["Proof of offer/gift", "Officer's affidavit", "Witness statements"],
-    steps: defaultSteps
-  },
-  "Resistance and Disobedience to a Person in Authority": {
-    description: "Serious or light disobedience to the lawful orders of a person in authority.",
-    requirements: ["Sworn statement of officer", "Evidence of lawful order", "Police report", "Witness affidavits"],
-    steps: defaultSteps
-  },
-  "Acts Against Parliamentary Immunity": {
-    description: "Violating the immunity of legislators to prevent them from attending sessions or performing duties.",
-    requirements: ["Official complaint from legislator", "Evidence of restraint/violation", "Witness affidavits"],
-    steps: defaultSteps
-  },
 
-  // --- PUBLIC DISORDER ---
-  "Illegal Assemblies": {
-    description: "Organizing meetings where persons are armed for terrorism or for purposes against the law.",
-    requirements: ["Police report", "Photos/Videos of assembly", "Seized weapons inventory", "Witness affidavits"],
-    steps: defaultSteps
-  },
-  "Illegal Associations": {
-    description: "Associations organized for purposes contrary to public morals or to commit crimes.",
-    requirements: ["Constitution/Bylaws of association", "Evidence of illegal activities", "Arrest reports", "Witness affidavits"],
-    steps: defaultSteps
-  },
-  "Tumults and Other Disturbances": {
-    description: "Causing public chaos or tumultuous disturbances of public order.",
-    requirements: ["Police blotter", "Media reports", "Witness affidavits", "Photos/Videos of chaos"],
-    steps: defaultSteps
-  },
-  "Unlawful Utterances, Alarms, and Scandals": {
-    description: "Creating panic, firing guns in public, or creating noise that breaks public peace.",
-    requirements: ["Police report", "Shell casings (if applicable)", "Witness affidavits", "Audio/Video recordings"],
-    steps: defaultSteps
-  },
-  "Delivering Prisoners from Jail/Evasion of Service of Sentence": {
-    description: "Assisting in the escape of prisoners or evading the service of a final sentence.",
-    requirements: ["Jail records", "Incident report", "CCTV footage", "Witness affidavits", "Arrest warrant"],
-    steps: defaultSteps
-  },
-
-  // --- DRUGS ---
-  "Illegal Possession of Dangerous Drugs (Section 11)": {
-    description: "Possession of prohibited substances like methamphetamine ('shabu') or marijuana without legal authority.",
-    requirements: ["Arrest report", "Inventory of seized items", "Chemistry report", "Chain of custody documents", "Confiscation receipt"],
-    steps: defaultSteps
-  },
-  "Illegal Possession of Paraphernalia (Section 12)": {
-    description: "Possession of equipment or instruments intended for smoking, consuming, or producing dangerous drugs.",
-    requirements: ["Inventory of seized paraphernalia", "Arrest report", "Chemistry report", "Witness affidavits"],
-    steps: defaultSteps
-  },
-  "Drug Trafficking / Pushing (Section 5)": {
-    description: "Sale, trading, transportation, or distribution of dangerous drugs.",
-    requirements: ["Buy-bust operation records", "Marked money copies", "Inventory of drugs", "Chemistry report", "Police affidavits"],
-    steps: defaultSteps
-  },
-  "Use of Dangerous Drugs (Section 15)": {
-    description: "Using prohibited substances, often leading to mandatory rehabilitation for first-time offenders.",
-    requirements: ["Drug test results (Positive)", "Confirmatory test result", "Police report", "Psychological evaluation"],
-    steps: defaultSteps
-  },
-  "Drug Cases Involving Minors": {
-    description: "Violations of RA 9165 involving minors, requiring specialized handling by the PAO.",
-    requirements: ["Birth Certificate of Minor", "DSWD Social Case Study", "Arrest report", "Police blotter"],
-    steps: defaultSteps
-  },
-  "Drug Plea Bargaining Applications": {
-    description: "Facilitating plea deals for lesser offenses based on the Supreme Court's Plea Bargaining Framework.",
-    requirements: ["Motion for Plea Bargaining", "Prosecution recommendation", "Drug test result", "Court order"],
-    steps: defaultSteps
-  },
-
-  // --- CHASTITY ---
+  // --- CHASTITY & SEXUAL VIOLENCE ---
   "Adultery (Art. 333)": {
     description: "Sexual infidelity committed by a married woman and her paramour.",
     requirements: ["Marriage Certificate", "Evidence of infidelity (Photos/Messages)", "Witness affidavits", "Sworn complaint"],
-    steps: defaultSteps
-  },
-  "Concubinage (Art. 334)": {
-    description: "Sexual infidelity committed by a married man by keeping a mistress or cohabiting.",
-    requirements: ["Marriage Certificate", "Proof of cohabitation", "Witness affidavits", "Sworn complaint"],
     steps: defaultSteps
   },
   "Acts of Lasciviousness (Art. 336)": {
@@ -474,152 +418,112 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["Medico-legal report", "Sworn complaint of victim", "Witness affidavits", "Psychological evaluation"],
     steps: defaultSteps
   },
-  "Qualified Seduction (Art. 337)": {
-    description: "Seducing a virgin over 12 but under 18 years old.",
-    requirements: ["Birth Certificate of victim", "Sworn complaint", "Witness affidavits"],
-    steps: defaultSteps
-  },
-  "Simple Seduction (Art. 338)": {
-    description: "Seducing a woman over 12 but under 18 years old, who is not a virgin, through deceit.",
-    requirements: ["Birth Certificate of victim", "Sworn complaint", "Witness affidavits"],
-    steps: defaultSteps
-  },
-  "Forcible Abduction (Art. 342)": {
-    description: "Abducting a woman against her will with lewd designs.",
-    requirements: ["Police report", "Sworn complaint", "Witness affidavits"],
-    steps: defaultSteps
-  },
-  "Consented Abduction (Art. 343)": {
-    description: "Abducting a virgin over 12 but under 18 years old with her consent.",
-    requirements: ["Birth Certificate of victim", "Sworn complaint", "Witness affidavits"],
-    steps: defaultSteps
-  },
-  "Corruption of Minors (Art. 340)": {
-    description: "Promoting or facilitating the prostitution or corruption of a minor.",
-    requirements: ["Birth Certificate of minor", "Proof of illegal acts", "Witness affidavits"],
-    steps: defaultSteps
-  },
-  "White Slave Trade (Art. 341)": {
-    description: "Engaging in the business of prostitution.",
-    requirements: ["Police report", "Witness affidavits", "Surveillance evidence"],
-    steps: defaultSteps
-  },
-  "Abuses Against Chastity by Public Officers (Art. 245)": {
-    description: "Public officers soliciting indecent advances from women with matters pending before them.",
-    requirements: ["Proof of public office", "Evidence of solicitation/indecent advances", "Witness affidavits"],
+  "Rape (R.A. 8353 / Art. 266-A)": {
+    description: "Classified as a crime against persons; involves carnal knowledge or sexual assault through force, threat, or intimidation.",
+    requirements: ["Medico-legal Examination", "Sworn Affidavit of victim", "Police Blotter", "Photos of injuries (if any)", "Psychological evaluation"],
     steps: defaultSteps
   },
 
-  // --- CIVIL LAW: FAMILY RELATIONS ---
+  // --- FIREARMS & TRAFFIC ---
+  "Illegal Possession of Firearms (RA 10591)": {
+    description: "Possessing unlicensed, unregistered, or altered firearms (loose firearms).",
+    requirements: ["Police Arrest Report", "Inventory of Seized Items", "Firearms License Verification", "Chemistry/Ballistics report"],
+    steps: defaultSteps
+  },
+  "Reckless Imprudence Resulting in Homicide": {
+    description: "Voluntary act without malice but lacking precaution, resulting in death (Art. 365 RPC).",
+    requirements: ["Police Accident Report", "Death Certificate", "Driver's License", "Vehicle Registration", "Witness affidavits"],
+    steps: defaultSteps
+  },
+
+  // --- CIVIL STATUS ---
+  "Bigamy (Art. 349)": {
+    description: "Contracting a second or subsequent marriage while a previous marriage is still valid and subsisting.",
+    requirements: ["Marriage Certificate (1st Marriage)", "Marriage Certificate (2nd Marriage)", "CENOMAR", "Witness affidavits"],
+    steps: defaultSteps
+  },
+
+  // --- CIVIL LAW ---
   "Declaration of Nullity of Marriage": {
     description: "Declaration that a marriage was void from the beginning (e.g., Art. 36 Psychological Incapacity).",
     requirements: ["PSA Marriage Contract", "PSA Birth Certificates of children", "Psychological Evaluation Report (if Art. 36)", "Barangay Certificate of Residence", "Witness affidavits"],
     steps: defaultSteps
   },
-  "Annulment of Marriage": {
-    description: "A valid marriage that is canceled due to grounds existing at the time of celebration (e.g., Art. 45).",
-    requirements: ["PSA Marriage Contract", "Evidence of grounds (e.g., medical cert for impotence)", "Witness affidavits", "PSA Birth Certificates of children"],
-    steps: defaultSteps
-  },
-  "Legal Separation": {
-    description: "Separation of bed and board while the marriage bond remains (Art. 55 Family Code).",
-    requirements: ["PSA Marriage Contract", "Evidence of grounds (e.g., proof of infidelity/violence)", "Witness affidavits"],
-    steps: defaultSteps
-  },
   "Support": {
-    description: "Everything indispensable for sustenance, dwelling, clothing, and medical attendance (Art. 194 Family Code).",
+    description: "Everything indispensable for sustenance, dwelling, clothing, and medical attendance (Art. 194-208 Family Code).",
     requirements: ["PSA Birth Certificate of child", "Proof of financial need", "Proof of respondent's income (if available)", "Affidavit of dependency"],
-    steps: defaultSteps
-  },
-  "Custody of Children": {
-    description: "Determination of who will have physical and legal custody of minors (Art. 211-213 Family Code).",
-    requirements: ["PSA Birth Certificate of child", "Social Case Study (from DSWD)", "Barangay Clearance", "Witness affidavits regarding parent's fitness"],
-    steps: defaultSteps
-  },
-  "Adoption": {
-    description: "Creation of a parent-child relationship by law through domestic adoption proceedings.",
-    requirements: ["PSA Birth Certificate of child", "PSA Birth Certificate of adopter", "Home Study Report (from DSWD)", "Marriage Contract of adopters", "NBI Clearance"],
-    steps: defaultSteps
-  },
-  "Recognition of Foreign Divorce": {
-    description: "Judicial recognition of a divorce decree obtained abroad by a foreign spouse (Art. 26 Family Code).",
-    requirements: ["Authenticated Foreign Divorce Decree", "Foreign Law on Divorce (duly authenticated)", "PSA Marriage Contract", "Proof of foreign citizenship of spouse"],
-    steps: defaultSteps
-  },
-
-  // --- CIVIL LAW: PROPERTY AND LAND DISPUTES ---
-  "Forcible Entry": {
-    description: "Recovery of possession when one is deprived through force, intimidation, strategy, or stealth.",
-    requirements: ["Land Title or Tax Declaration", "Proof of prior physical possession", "Police blotter or affidavit regarding entry", "Barangay Certificate to File Action"],
-    steps: defaultSteps
-  },
-  "Unlawful Detainer": {
-    description: "Recovery of possession when possession was initially legal but became illegal after notice to vacate.",
-    requirements: ["Land Title or Tax Declaration", "Demand Letter to vacate with proof of receipt", "Lease Contract (if any)", "Barangay Certificate to File Action"],
-    steps: defaultSteps
-  },
-  "Recovery of Possession": {
-    description: "Accion Publiciana: A plenary action to recover the right of possession when dispossession lasts more than a year.",
-    requirements: ["Certified True Copy of Land Title", "Tax Declaration", "Proof of ownership/right to possess", "Survey plan (if applicable)"],
-    steps: defaultSteps
-  },
-  "Recovery of Ownership": {
-    description: "Accion Reivindicatoria: An action to recover ownership of real property.",
-    requirements: ["Original or Certified Land Title", "History of ownership documents", "Tax Declaration", "Proof of boundaries"],
-    steps: defaultSteps
-  },
-  "Partition": {
-    description: "Action to divide shared property among co-owners (Art. 494-495 Civil Code).",
-    requirements: ["Certified True Copy of Land Title", "Tax Declaration", "List of co-owners", "Death certificate of original owner (if inheritance)"],
-    steps: defaultSteps
-  },
-  "Easements": {
-    description: "Disputes regarding rights of way or other encumbrances on property.",
-    requirements: ["Land Title", "Sketch plan showing easement area", "Proof of necessity", "Witness affidavits"],
-    steps: defaultSteps
-  },
-
-  // --- CIVIL LAW: OBLIGATIONS AND CONTRACTS ---
-  "Breach of Contract": {
-    description: "Failure to fulfill contractual obligations due to fraud, negligence, or delay (Art. 1170 Civil Code).",
-    requirements: ["Original Contract or Agreement", "Proof of violation", "Demand letter", "Evidence of damages incurred"],
     steps: defaultSteps
   },
   "Collection of Sum of Money": {
     description: "Claims for debts, unpaid loans, or services rendered (Small Claims up to P1M).",
-    requirements: ["Promissory Note or Acknowledgment Receipt", "Statement of Account", "Demand Letter with proof of service", "Proof of partial payments (if any)"],
-    steps: defaultSteps
-  },
-  "Damages": {
-    description: "Claims for moral, exemplary, or nominal damages due to quasi-delicts or breach of contract (Art. 2176-2194).",
-    requirements: ["Evidence of injury or loss", "Proof of negligence or fault", "Medical certs/receipts for actual damages", "Witness affidavits"],
-    steps: defaultSteps
-  },
-  "Small Claims": {
-    description: "Simplified judicial process for payment of money claims not exceeding P1,000,000.",
-    requirements: ["Verified Statement of Claim", "Promissory Note/Contract", "Demand Letter", "Affidavit of Non-Forum Shopping"],
+    requirements: ["Promissory Note or Acknowledgment Receipt", "Statement of Account", "Demand Letter with proof of service", "Proof of partial payments"],
     steps: defaultSteps
   },
 
-  // --- CIVIL LAW: SPECIAL PROCEEDINGS ---
-  "Guardianship": {
-    description: "Appointment of a guardian for the person or property of a minor or incompetent.",
-    requirements: ["PSA Birth Certificate of ward", "Medical Certificate (if incompetent)", "List of properties of ward", "Affidavit of fitness of guardian"],
+  // --- LABOR LAW ---
+  "Illegal Dismissal (Art. 279)": {
+    description: "Protection for employees dismissed without just or authorized cause. Claims include reinstatement and full backwages.",
+    requirements: ["Employment Contract", "Notice of Termination (if any)", "Payslips", "SSS/PhilHealth records", "Company ID", "Witness affidavits"],
     steps: defaultSteps
   },
-  "Correction of Entries in the Civil Registry": {
-    description: "Petitions to correct birth, marriage, or death certificates (Rule 108 / RA 9048).",
-    requirements: ["PSA Copy of document to be corrected", "Baptismal Certificate", "School Records (Form 137)", "Affidavit of Discrepancy", "NBI/Police Clearance"],
+  "Regular and Casual Employment (Art. 280)": {
+    description: "Distinguishing employment types to determine entitlement to regularization and separation pay.",
+    requirements: ["Employment Contract", "Appointment Letter", "Performance Reviews", "Proof of work duration", "Payslips"],
     steps: defaultSteps
   },
-  "Settlement of Estate": {
-    description: "Summary settlement of small estates or judicial partition of inheritance.",
-    requirements: ["PSA Death Certificate of deceased", "PSA Birth/Marriage certs of heirs", "List of properties/assets", "Last Will (if any)"],
+  "Termination by Employer (Art. 282)": {
+    description: "Disputes regarding dismissal based on serious misconduct, willful disobedience, gross neglect of duty, or fraud.",
+    requirements: ["Notice of Termination", "Notice of Hearing/Explanation", "Company Rules/Handbook", "Payslips", "Counter-affidavit"],
     steps: defaultSteps
   },
-  "Writ of Habeas Data/Amparo": {
-    description: "Protection of privacy, safety, and liberty against threats or extralegal killings.",
-    requirements: ["Sworn statement of victim/petitioner", "Evidence of threat or harassment", "Witness affidavits", "Police reports"],
+  "Closure of Business/Disease (Art. 283-284)": {
+    description: "Disputes regarding authorized causes such as retrenchment, redundancy, or closure of business.",
+    requirements: ["Notice of Closure to DOLE", "Termination Notice", "Financial Statements of Company (if retrenchment)", "Medical Certificate (if disease)"],
+    steps: defaultSteps
+  },
+  "Constructive Dismissal": {
+    description: "When continued employment is rendered impossible, unreasonable, or unlikely, forcing the employee to quit.",
+    requirements: ["Resignation Letter (if forced)", "Evidence of harassment/demotion", "Proof of floating status (>6 months)", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Illegal Suspension": {
+    description: "Employees suspended without valid cause or proper procedure beyond the legal limit of 30 days.",
+    requirements: ["Notice of Suspension", "Explanation/Counter-statement", "Company ID", "Payslips"],
+    steps: defaultSteps
+  },
+  "Service Incentive Leave (Art. 95)": {
+    description: "Claims for five (5) days of leave with pay for employees who rendered at least one year of service.",
+    requirements: ["Payslips", "Employment Contract", "Service Records", "Company ID"],
+    steps: defaultSteps
+  },
+  "Time of Payment of Wages (Art. 103)": {
+    description: "Claims for unpaid or delayed wages according to the legally mandated schedule.",
+    requirements: ["Payslips", "Timesheets/Logbooks", "Employment Contract", "Demand Letter"],
+    steps: defaultSteps
+  },
+  "Unlawful Wage Deductions (Art. 113)": {
+    description: "Prohibits unauthorized deductions from wages such as 'cash bonds' or 'company losses' without consent.",
+    requirements: ["Payslips showing deductions", "Notice of deduction", "Employment Contract", "Company ID"],
+    steps: defaultSteps
+  },
+  "13th Month Pay (P.D. 851)": {
+    description: "Mandatory benefit for all rank-and-file employees who rendered at least one month of service during the calendar year.",
+    requirements: ["Payslips", "Proof of employment duration", "Company ID", "DOLE complaint (if already filed)"],
+    steps: defaultSteps
+  },
+  "Underpayment of Wages": {
+    description: "Claims for wages below the legally mandated minimum wage for the region.",
+    requirements: ["Payslips", "Timesheets", "Regional Wage Order info", "Company ID"],
+    steps: defaultSteps
+  },
+  "Labor-Only Contracting (Art. 106-109)": {
+    description: "Cases where employees claim regular employment with the principal employer due to prohibited contracting practices.",
+    requirements: ["Contract with Agency", "Company ID of Principal", "Daily Time Records", "Directives from Principal supervisors"],
+    steps: defaultSteps
+  },
+  "OFW Cases (Illegal Dismissal/Benefits)": {
+    description: "Claims for illegal dismissal, death/disability benefits, and violations of POEA contracts for overseas workers.",
+    requirements: ["POEA Contract", "OWIA/Deployment records", "Passport & Visa copies", "Proof of remittance", "Medical reports (if disability)"],
     steps: defaultSteps
   }
 };
@@ -627,7 +531,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
 export const categoryDefaults: Record<string, { requirements: string[], steps: any[] }> = {
   Criminal: { requirements: ["Court Subpoena", "Arrest Record", "Copy of Complaint"], steps: universalPaoFlow },
   Civil: { requirements: ["Relevant contracts", "Demand letter", "Proof of claim"], steps: universalPaoFlow },
-  Labor: { requirements: ["Employment records", "Payslips", "ID card"], steps: universalPaoFlow }
+  Labor: { requirements: ["Employment records", "Payslips", "Notice of Dismissal", "Company ID"], steps: universalPaoFlow }
 };
 
 export const pAONotes = [
