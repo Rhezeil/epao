@@ -29,7 +29,7 @@ function CaseNavigatorContent() {
 
   const reqDocRef = useMemoFirebase(() => {
     if (!db || !selectedCase) return null;
-    // Replace spaces and slashes with hyphens to avoid invalid document paths
+    // Sanitize document ID: replace spaces and slashes with hyphens
     const docId = selectedCase.toLowerCase().replace(/[\s/]+/g, '-');
     return doc(db, "caseRequirements", docId);
   }, [db, selectedCase]);
@@ -120,7 +120,7 @@ function CaseNavigatorContent() {
             <CardContent className="space-y-6 pt-4">
               <div className="space-y-1">
                 <p className="text-xs font-bold text-primary uppercase tracking-wider">Case Type</p>
-                <h2 className="text-2xl font-black text-[#1A3B6B]">{caseName}</h2>
+                <h2 className="text-2xl font-black text-[#1A3B6B] leading-tight">{caseName}</h2>
                 {selectedCategory && <Badge variant="secondary" className="mt-1">{selectedCategory} Matter</Badge>}
               </div>
               
@@ -212,26 +212,26 @@ function CaseNavigatorContent() {
   }
 
   const renderCategoryListView = (title: string, subCategories: any[]) => (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm" onClick={() => setSelectedCategory(null)} className="p-0 h-8 w-8 text-primary">
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <h2 className="text-xl font-bold text-primary font-headline tracking-tight">{title}</h2>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {subCategories.map((cat, idx) => (
-          <div key={idx} className="space-y-3 p-6 bg-white rounded-2xl border border-primary/5 shadow-sm">
-            <h3 className="text-xs font-black text-primary uppercase tracking-widest border-b pb-2 mb-4">{cat.title}</h3>
-            <div className="grid grid-cols-1 gap-2">
+          <div key={idx} className="space-y-2 p-4 bg-white rounded-2xl border border-primary/5 shadow-sm">
+            <h3 className="text-[10px] font-black text-primary uppercase tracking-widest border-b pb-1.5 mb-2">{cat.title}</h3>
+            <div className="grid grid-cols-1 gap-1">
               {cat.items.map((item: string) => (
                 <div 
                   key={item} 
                   onClick={() => handleCaseClick(item, title)} 
-                  className="text-sm text-[#2E5A99] cursor-pointer hover:bg-primary/5 p-3 rounded-xl flex items-center gap-3 transition-all border border-transparent hover:border-primary/10"
+                  className="text-sm text-[#2E5A99] cursor-pointer hover:bg-primary/5 p-2 rounded-xl flex items-center gap-3 transition-all border border-transparent hover:border-primary/10"
                 >
-                  <div className="h-2 w-2 rounded-full bg-primary/40 shrink-0" />
-                  <span className="font-medium">{item}</span>
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary/40 shrink-0" />
+                  <span className="font-medium leading-snug">{item}</span>
                 </div>
               ))}
             </div>
@@ -273,7 +273,7 @@ function CaseNavigatorContent() {
         </div>
 
         <Card className="border-none bg-white/40 backdrop-blur-md shadow-sm rounded-3xl overflow-hidden min-h-[500px]">
-          <CardContent className="p-10">
+          <CardContent className="p-6 md:p-8 lg:p-10">
             {selectedCase ? renderCaseDetails(selectedCase) : mode === "manage" ? (
                <div className="text-center py-20">
                  <h2 className="text-2xl font-bold">Manage Appointment</h2>
@@ -320,7 +320,7 @@ function CaseNavigatorContent() {
                        <Card className="bg-amber-50 border border-amber-100 rounded-3xl p-8">
                          <div className="space-y-4">
                            <h3 className="text-xl font-black text-amber-900 flex items-center gap-2">
-                             <AlertCircle className="h-5 v-5" /> Important Notes
+                             <AlertCircle className="h-5 w-5" /> Important Notes
                            </h3>
                            <ul className="space-y-2">
                              {pAONotes.map((note, i) => (
