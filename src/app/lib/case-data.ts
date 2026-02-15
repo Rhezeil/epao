@@ -18,32 +18,37 @@ export const caseCategories = {
       ]
     },
     {
-      title: "🟠 II. CRIMES AGAINST PROPERTY",
+      title: "🟠 II. CRIMES AGAINST PROPERTY (RPC Title Ten)",
       items: [
-        "Robbery (Arts. 294-305)",
-        "Brigandage (Arts. 306-307)",
-        "Theft (Arts. 308-311)",
-        "Usurpation (Arts. 312-313)",
-        "Fraudulent Insolvency (Art. 314)",
-        "Swindling and Estafa (Arts. 315-318)",
-        "Removal, Sale, or Pledge of Mortgaged Property",
-        "Arson and Destruction (Arts. 320-326)",
-        "Malicious Mischief (Arts. 327-331)",
+        "Robbery (with violence/intimidation of persons - Art. 294)",
+        "Robbery (with force upon things - Art. 299 & 302)",
+        "Brigandage (Art. 306)",
+        "Theft (Art. 308)",
+        "Qualified Theft (Art. 310)",
+        "Usurpation of Real Rights (Art. 312)",
+        "Altering Boundaries (Art. 313)",
+        "Swindling/Estafa (Art. 315)",
+        "Other Forms of Swindling (Art. 316)",
+        "Removal, Sale, or Pledge of Mortgaged Property (Art. 319)",
+        "Arson (Art. 320-323)",
+        "Malicious Mischief (Art. 327-331)"
+      ]
+    },
+    {
+      title: "🛠 III. PROPERTY CRIMES (Special Laws)",
+      items: [
         "Anti-Fencing Law (PD 1612)",
         "Anti-Cattle Rustling Law (PD 533)",
         "New Anti-Carnapping Act (RA 10883)",
         "Bouncing Checks Law (BP 22)",
         "Trust Receipts Law (PD 115)",
         "Anti-Electricity Pilferage (RA 7832)",
-        "Anti-Cable/Internet Tapping (RA 10515)",
         "Anti-Agricultural Smuggling (RA 10845)",
-        "Timber Smuggling (PD 330/705)",
-        "Illegal Fishing (RA 8550)",
-        "Unauthorized Water/Phone Install (PD 401)"
+        "Illegal Fishing (RA 8550)"
       ]
     },
     {
-      title: "🔵 III. CRIMES AGAINST PUBLIC ORDER",
+      title: "🔵 IV. CRIMES AGAINST PUBLIC ORDER",
       items: [
         "Rebellion or Insurrection (Art. 134)",
         "Coup d'état (Art. 134-A)",
@@ -65,7 +70,7 @@ export const caseCategories = {
       ]
     },
     {
-      title: "📦 IV. DANGEROUS DRUGS CASES (RA 9165)",
+      title: "📦 V. DANGEROUS DRUGS CASES (RA 9165)",
       items: [
         "Illegal Possession of Dangerous Drugs (Section 11)",
         "Illegal Possession of Paraphernalia (Section 12)",
@@ -77,26 +82,29 @@ export const caseCategories = {
       ]
     },
     {
-      title: "💜 V. CRIMES AGAINST CHASTITY & SEXUAL VIOLENCE",
+      title: "💜 VI. CRIMES AGAINST CHASTITY",
       items: [
-        "Rape (R.A. 8353 / Art. 266-A)",
+        "Adultery (Art. 333)",
+        "Concubinage (Art. 334)",
         "Acts of Lasciviousness (Art. 336)",
-        "Acts of Lasciviousness under R.A. 7610",
         "Qualified Seduction (Art. 337)",
         "Simple Seduction (Art. 338)",
         "Forcible Abduction (Art. 342)",
         "Consented Abduction (Art. 343)",
         "Corruption of Minors (Art. 340)",
-        "Adultery (Art. 333)",
-        "Concubinage (Art. 334)",
         "White Slave Trade (Art. 341)",
-        "Anti-Sexual Harassment (R.A. 7877)",
         "Abuses Against Chastity by Public Officers (Art. 245)"
       ]
     },
     {
-      title: "💻 VI. CYBERCRIME & SPECIAL LAWS",
-      items: ["Online Libel", "Identity Theft", "Child Abuse (RA 7610)", "Anti-Hazing (RA 11053)"]
+      title: "💻 VII. SEXUAL VIOLENCE & SPECIAL LAWS",
+      items: [
+        "Rape (R.A. 8353 / Art. 266-A)",
+        "Acts of Lasciviousness under R.A. 7610",
+        "Violence Against Women and Children (R.A. 9262)",
+        "Anti-Trafficking (R.A. 9208)",
+        "Anti-Sexual Harassment (R.A. 7877)"
+      ]
     }
   ],
   "Civil": [
@@ -152,7 +160,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     steps: defaultSteps
   },
   "Parricide": {
-    description: "The killing of a father, mother, or child (legitimate/illegitimate), or any ascendant/descendant, or spouse.",
+    description: "The killing of a father, mother, or child (whether legitimate or illegitimate), or any of the ascendants or descendants, or the spouse.",
     requirements: ["Marriage Certificate (if spouse)", "Birth Certificate (if parent/child)", "Police blotter", "Death Certificate", "Witness affidavits"],
     steps: defaultSteps
   },
@@ -167,20 +175,65 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     steps: defaultSteps
   },
 
-  // --- CRIMES AGAINST PROPERTY ---
-  "Theft (Arts. 308-311)": {
-    description: "Taking of personal property belonging to another without consent, with intent to gain, but without violence or intimidation.",
-    requirements: ["Police report", "Affidavit of loss", "Proof of ownership (receipts/titles)", "CCTV footage", "Witness affidavits"],
-    steps: defaultSteps
-  },
-  "Robbery (Arts. 294-305)": {
-    description: "Taking of personal property belonging to another with intent to gain, by means of violence or intimidation against persons or force upon things.",
+  // --- CRIMES AGAINST PROPERTY (RPC) ---
+  "Robbery (with violence/intimidation of persons - Art. 294)": {
+    description: "Taking of personal property belonging to another with intent to gain, by means of violence or intimidation against persons. Includes robbery with homicide, rape, or band.",
     requirements: ["Police report", "Affidavit of loss", "Proof of ownership", "Inventory of stolen items", "Witness affidavits", "CCTV footage"],
     steps: defaultSteps
   },
-  "Swindling and Estafa (Arts. 315-318)": {
-    description: "Fraudulent acts or deceits that cause damage or prejudice to another person.",
+  "Robbery (with force upon things - Art. 299 & 302)": {
+    description: "Taking of property by breaking into an inhabited house, public building, or private building using force upon things.",
+    requirements: ["Police report", "Affidavit of loss", "Proof of ownership", "Photos of forced entry", "Inventory of stolen items", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Brigandage (Art. 306)": {
+    description: "Robbery committed by a band of more than three armed persons on the highway to commit robbery or kidnap for ransom.",
+    requirements: ["Police report", "Witness affidavits", "Arrest report", "Evidence of band organization"],
+    steps: defaultSteps
+  },
+  "Theft (Art. 308)": {
+    description: "Taking personal property belonging to another without consent, with intent to gain, but without violence or intimidation.",
+    requirements: ["Police report", "Affidavit of loss", "Proof of ownership (receipts/titles)", "CCTV footage", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Qualified Theft (Art. 310)": {
+    description: "Theft committed by a domestic servant, or with grave abuse of confidence, or involving specific items like motor vehicles or coconuts.",
+    requirements: ["Employment contract/ID", "Police report", "Affidavit of loss", "Proof of ownership", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Usurpation of Real Rights (Art. 312)": {
+    description: "Taking possession of real property or claiming real rights through violence or intimidation against persons.",
+    requirements: ["Land Title (TCT/OCT)", "Tax declaration", "Sworn affidavit of victim", "Police blotter", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Altering Boundaries (Art. 313)": {
+    description: "Moving landmarks or boundary lines of properties with intent to gain or cause damage.",
+    requirements: ["Land Title", "Survey Plan", "Photos of landmark alteration", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Swindling/Estafa (Art. 315)": {
+    description: "Defrauding another through unfaithfulness, abuse of confidence, or false pretenses causing damage or prejudice.",
     requirements: ["Contract/Agreement", "Promissory note", "Receipts", "Demand letter with proof of receipt", "SMS/Chat logs"],
+    steps: defaultSteps
+  },
+  "Other Forms of Swindling (Art. 316)": {
+    description: "Includes selling or mortgaging property as free from encumbrances when it is actually encumbered.",
+    requirements: ["Certified true copy of Title", "Contract of sale/mortgage", "Proof of prior encumbrance", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Removal, Sale, or Pledge of Mortgaged Property (Art. 319)": {
+    description: "Removing, selling, or pledging mortgaged property to another without the written consent of the mortgagee.",
+    requirements: ["Chattel Mortgage Contract", "Proof of sale/pledge", "Affidavit of mortgagee", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Arson (Art. 320-323)": {
+    description: "Intentional burning of property. Includes destructive arson of inhabited buildings.",
+    requirements: ["Fire investigation report (BFP)", "Property title / proof of ownership", "Damage assessment report", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Malicious Mischief (Art. 327-331)": {
+    description: "Deliberately destroying or damaging another’s property for vengeance, hatred, or mere pleasure.",
+    requirements: ["Police report", "Photos of damage", "Damage estimate", "Witness affidavits"],
     steps: defaultSteps
   },
 
@@ -193,6 +246,11 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   "Drug Trafficking / Pushing (Section 5)": {
     description: "Sale, trading, delivery, distribution, or transportation of illegal drugs (non-bailable if evidence is strong).",
     requirements: ["Buy-bust report", "Inventory of seized items", "Chemistry report", "Marked money copies", "Chain of custody"],
+    steps: defaultSteps
+  },
+  "Drug Cases Involving Minors": {
+    description: "Violations of the Dangerous Drugs Act where the offender is a minor, requiring specialized juvenile justice handling.",
+    requirements: ["Birth certificate of minor", "Social worker report", "Police/Arrest report", "Chemistry report"],
     steps: defaultSteps
   },
 
@@ -209,12 +267,12 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   },
   "Adultery (Art. 333)": {
     description: "Committed by a married woman who shall have sexual intercourse with a man not her husband.",
-    requirements: ["Marriage certificate", "Evidence of sexual intercourse (photos/messages)", "Witness affidavits"],
+    requirements: ["PSA Marriage certificate", "Evidence of sexual intercourse (photos/messages)", "Witness affidavits"],
     steps: defaultSteps
   },
   "Concubinage (Art. 334)": {
     description: "Committed by a husband who keeps a mistress in the conjugal dwelling or under scandalous circumstances.",
-    requirements: ["Marriage certificate", "Evidence of mistress (photos/witnesses)", "Proof of cohabitation"],
+    requirements: ["PSA Marriage certificate", "Evidence of mistress (photos/witnesses)", "Proof of cohabitation"],
     steps: defaultSteps
   },
   "Qualified Seduction (Art. 337)": {
