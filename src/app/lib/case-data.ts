@@ -15,7 +15,7 @@ export const caseCategories = {
     },
     {
       title: "💜 III. VAWC & DOMESTIC ABUSE (R.A. 9262)",
-      items: ["Physical Violence (VAWC)", "Sexual Violence (VAWC)", "Psychological Violence (VAWC)", "Economic Abuse (VAWC)"]
+      items: ["Physical Violence (VAWC - Sec 5a)", "Sexual Violence (VAWC - Sec 5b)", "Psychological Violence (VAWC - Sec 5h-i)", "Economic Abuse (VAWC - Sec 5e-f)"]
     },
     {
       title: "🟠 IV. CRIMES AGAINST PROPERTY",
@@ -23,7 +23,7 @@ export const caseCategories = {
     },
     {
       title: "🛡️ V. PROPERTY CRIMES (SPECIAL LAWS)",
-      items: ["Carnapping (RA 10883)", "Anti-Fencing (PD 1612)", "Bouncing Checks (BP 22)", "Arson (PD 1613)", "Anti-Electricity Pilferage (RA 7832)"]
+      items: ["BP Blg. 22 (Anti-Bouncing Checks)", "PD 1612 (Anti-Fencing)", "RA 7832 (Anti-Electricity Pilferage)"]
     },
     {
       title: "⚖️ VI. PUBLIC ORDER (STATE SECURITY)",
@@ -125,15 +125,10 @@ export const pAONotes = [
 ];
 
 export const caseSpecificData: Record<string, { requirements: string[], steps: any[], description: string }> = {
-  // --- CRIMES AGAINST PERSONS (Destruction of Life) ---
+  // --- CRIMES AGAINST PERSONS ---
   "Parricide (Art 246)": {
     description: "Killing of one's father, mother, or child (legitimate or illegitimate), or any ascendant or descendant, or spouse (Article 246, RPC).",
     requirements: ["Birth Certificates (Proof of Relation)", "Marriage Contract (PSA)", "Death Certificate", "Police Investigation Report", "Autopsy/Medico-Legal Report"],
-    steps: universalPaoFlow
-  },
-  "Death/Injuries under Exceptional Circumstances (Art 247)": {
-    description: "Killing or injuring a spouse or daughter in the act of sexual intercourse with another, under specific legal conditions (Article 247, RPC).",
-    requirements: ["Marriage Contract", "Birth Certificate of Daughter", "Police Report", "Witness Statements", "Medico-Legal Report"],
     steps: universalPaoFlow
   },
   "Murder (Art 248)": {
@@ -146,78 +141,26 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["Police Report", "Death Certificate", "Medico-Legal Certificate", "Witness Statements"],
     steps: universalPaoFlow
   },
-  "Death in Tumultuous Affray (Art 251)": {
-    description: "A person is killed in a chaotic fight (labo-labo), and the specific killer cannot be identified (Article 251, RPC).",
-    requirements: ["Police Incident Report", "Medico-Legal Report", "List of Participants (if known)", "Witness Statements"],
-    steps: universalPaoFlow
-  },
-  "Assistance to Suicide (Art 253)": {
-    description: "Giving assistance to another to commit suicide (Article 253, RPC).",
-    requirements: ["Police Investigation Report", "Suicide Note (if any)", "Witness Statements", "Digital Evidence/Communication"],
-    steps: universalPaoFlow
-  },
-  "Discharge of Firearms (Art 254)": {
-    description: "Shooting at another with a firearm, if not considered a higher crime like homicide (Article 254, RPC).",
-    requirements: ["Police Blotter", "Ballistics Report", "Paraffin Test (if available)", "Witness Statements"],
-    steps: universalPaoFlow
-  },
-  "Infanticide (Art 255)": {
-    description: "The killing of a child less than three days old (Article 255, RPC).",
-    requirements: ["Birth Certificate of Infant", "Death Certificate", "Autopsy/Medico-Legal Report", "Police Report"],
-    steps: universalPaoFlow
-  },
-  "Abortion (Art 256-259)": {
-    description: "Intentional or unintentional abortion, including abortion practiced by a physician, midwife, or the woman herself (Articles 256-259, RPC).",
-    requirements: ["Medical Records", "Physician's Certificate", "Witness Statements", "Physical Evidence"],
-    steps: universalPaoFlow
-  },
-  "Responsibility in Duel (Art 260)": {
-    description: "Killing or injuring an opponent in a duel (Article 260, RPC).",
-    requirements: ["Police Report", "Death/Injury Certificate", "Witness Statements (Seconds/Participants)"],
-    steps: universalPaoFlow
-  },
-
-  // --- PHYSICAL INJURIES ---
-  "Mutilation (Art 262)": {
-    description: "Intentionally depriving a person of a part of their body (Article 262, RPC).",
-    requirements: ["Medico-Legal Certificate", "Photos of Injuries", "Police Report", "Witness Statements"],
-    steps: universalPaoFlow
-  },
-  "Serious Physical Injuries (Art 263)": {
-    description: "Injuries causing insanity, imbecility, impotence, blindness, or incapacity for labor for more than 90 days (Article 263, RPC).",
-    requirements: ["Detailed Medical Certificate", "Doctor's Testimony/Affidavit", "Police Report", "Hospital Records"],
-    steps: universalPaoFlow
-  },
-  "Less Serious Physical Injuries (Art 265)": {
-    description: "Injuries incapacitating the victim for labor or requiring medical assistance for 10-29 days (Article 265, RPC).",
-    requirements: ["Medical Certificate (10-29 days)", "Police Blotter", "Witness Affidavits"],
-    steps: universalPaoFlow
-  },
-  "Slight Physical Injuries (Art 266)": {
-    description: "Injuries causing incapacity for 1-9 days or simple maltreatment (Article 266, RPC).",
-    requirements: ["Medical Certificate (1-9 days)", "Police Blotter", "Witness Statements"],
-    steps: universalPaoFlow
-  },
 
   // --- VAWC (RA 9262) ---
-  "Physical Violence (VAWC)": {
-    description: "Acts causing or threatening physical harm, or inflicting bodily injury resulting in distress (Section 5a-d, RA 9262).",
-    requirements: ["Proof of Relationship", "Medico-Legal Certificate", "Photos of Injuries", "Police/Barangay Blotter"],
+  "Physical Violence (VAWC - Sec 5a)": {
+    description: "Acts causing bodily harm, such as battery, physical assault, threats, or causing fear of harm (Section 5a, RA 9262).",
+    requirements: ["Proof of Relationship (Marriage/Birth Certificate)", "Medico-Legal Certificate", "Photos of Injuries", "Police/Barangay Blotter", "Witness Affidavits"],
     steps: universalPaoFlow
   },
-  "Sexual Violence (VAWC)": {
-    description: "Includes rape, harassment, indecent acts, or treating a woman/child as a sex object (Section 5g, RA 9262).",
-    requirements: ["Proof of Relation", "Medico-Legal Report", "Psychological Evaluation", "Police Report", "Witness Affidavits"],
+  "Sexual Violence (VAWC - Sec 5b)": {
+    description: "Sexual acts including rape, sexual harassment, acts of lasciviousness, treating someone as a sex object, demeaning remarks, forcing cohabitation with a mistress, or prostituting the woman or child (Section 5b, RA 9262).",
+    requirements: ["Medico-Legal Report", "Psychological Evaluation", "Police Report", "Proof of Relationship", "Witness Affidavits"],
     steps: universalPaoFlow
   },
-  "Psychological Violence (VAWC)": {
-    description: "Acts causing mental/emotional anguish, verbal abuse, stalking, or threatening custody (Section 5h-i, RA 9262).",
-    requirements: ["Communication Logs (SMS/Chat)", "Psychological Evaluation", "Barangay Protection Order (if any)", "Witness Affidavits"],
+  "Psychological Violence (VAWC - Sec 5h-i)": {
+    description: "Acts causing mental or emotional anguish, such as marital infidelity, intimidation, harassment, stalking, public ridicule, verbal abuse, damage to property, unlawful deprivation of custody or visitation, and causing a child to witness abuse (Section 5h & 5i, RA 9262).",
+    requirements: ["Communication Logs (SMS/Chat/Social Media)", "Psychological Evaluation Report", "Barangay Protection Order (if any)", "Witness Affidavits", "Photos of damaged property (if applicable)"],
     steps: universalPaoFlow
   },
-  "Economic Abuse (VAWC)": {
-    description: "Depriving financial support, controlling finances, or preventing the victim from working (Section 5e, RA 9262).",
-    requirements: ["Bank Statements", "Evidence of Withheld Support", "Employment Records", "Affidavit of Fact"],
+  "Economic Abuse (VAWC - Sec 5e-f)": {
+    description: "Acts causing financial dependence, including withdrawal of financial support, preventing work or business, controlling assets, and destroying household property (Section 5e & 5f, RA 9262).",
+    requirements: ["Evidence of Withheld Support", "Bank Statements/Payslips", "Proof of Assets ownership", "Affidavit of Fact", "Business/Employment Records"],
     steps: universalPaoFlow
   },
 
@@ -233,22 +176,10 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     steps: universalPaoFlow
   },
 
-  // --- TRAFFICKING ---
-  "Human Trafficking (RA 9208)": {
-    description: "Recruitment, transportation, or harboring of persons by means of threat, force, fraud, or deception for exploitation (RA 9208 as amended).",
-    requirements: ["Rescue Report (IACAT/Police/NBI)", "Travel Documents/Visa", "Communication Logs (SMS/Online)", "Witness Affidavits", "Medical/Psychological Evaluation"],
-    steps: universalPaoFlow
-  },
-
   // --- LABOR ---
   "Illegal Dismissal (Art 279)": {
     description: "Dismissal without just or authorized cause and due process (Art 279, Labor Code). Claims reinstatement and backwages.",
     requirements: ["Employment Contract", "Notice of Termination", "Latest Payslips", "Company ID", "Witness Affidavits"],
-    steps: universalPaoFlow
-  },
-  "Wage Deductions (Art 113)": {
-    description: "Prohibits unauthorized deductions from wages (Article 113, Labor Code).",
-    requirements: ["Payslips showing deductions", "Company Policy Handbook", "Employment Contract", "Grievance Records"],
     steps: universalPaoFlow
   },
 
@@ -256,11 +187,6 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   "Annulment of Marriage (Art 36/45 FC)": {
     description: "Legal process to declare a marriage null and void from the beginning (Article 36) or voidable (Article 45) under the Family Code.",
     requirements: ["PSA Marriage Contract", "PSA Birth Certificates of Children", "Psychological Evaluation Report", "Barangay Certificate of Residency", "Witness Affidavits"],
-    steps: universalPaoFlow
-  },
-  "Collection of Sum of Money": {
-    description: "Claims for debts, unpaid loans, or services rendered (Small Claims or Civil Actions).",
-    requirements: ["Promissory Note/Contract", "Demand Letter with Proof of Receipt", "Bank Transfer/Check Copies", "Witness Affidavits"],
     steps: universalPaoFlow
   }
 };
