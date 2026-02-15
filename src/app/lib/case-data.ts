@@ -165,8 +165,33 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
       { step: 3, title: "Trial", content: "Defense focusing on lack of intent or illegal search/seizure." }
     ]
   },
+  "Infanticide (Art 255)": {
+    description: "The killing of a child less than three days (72 hours) old.",
+    requirements: ["PSA Birth Certificate of Child", "Autopsy Report", "Police Report", "Witness Affidavits"],
+    steps: universalPaoFlow
+  },
+  "Abortion (Art 256-259)": {
+    description: "Abortion is strictly prohibited and penalized in the Philippines under Articles 256-259 RPC, whether intentional or unintentional, and whether practiced by the woman, her parents, a physician, or a midwife. PAO provides legal assistance to indigent persons facing these criminal charges.",
+    requirements: ["Medico-Legal Report/Medical Certificate", "Police Investigation Report", "Hospital Records (if applicable)", "Witness Statements"],
+    steps: [
+      { step: 1, title: "Legal Consultation", content: "Determine the specific Article (256-259) being charged." },
+      { step: 2, title: "Defense Strategy", content: "Identifying lack of intent or medical necessity if applicable for unintentional cases." },
+      { step: 3, title: "Bail Application", content: "Assisting in bail procedures if the charge allows it." },
+      { step: 4, title: "Trial Support", content: "Representation in all court hearings." }
+    ]
+  },
+  "Responsibility in Duel (Art 260)": {
+    description: "Killing or injuring an opponent in a formal duel.",
+    requirements: ["Police Report", "Witness Statements", "Medico-Legal Report"],
+    steps: universalPaoFlow
+  },
 
   // --- CRIMES AGAINST PERSONS: PHYSICAL INJURIES ---
+  "Mutilation (Art 262)": {
+    description: "Intentionally depriving a person of a part of their body.",
+    requirements: ["Medical Certificate", "Police Blotter", "Photos of Injury"],
+    steps: universalPaoFlow
+  },
   "Serious Physical Injuries (Art 263)": {
     description: "Injuries causing insanity, imbecility, impotence, blindness, or incapacity for labor for more than 90 days. Handled under standard DOJ procedures.",
     requirements: ["Medical Certificate (Original/Certified Copy)", "Police Report/Blotter", "Witness Affidavits", "Photographs of Injuries", "Medical Receipts (for damages)"],
