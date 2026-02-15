@@ -7,7 +7,8 @@ export const generalRequirements = [
   "Valid Government ID",
   "Affidavit of Indigency",
   "Barangay Certificate of Indigency",
-  "Proof of income / Certificate of No Income"
+  "Proof of income / Certificate of No Income",
+  "Community Tax Certificate (Cedula)"
 ];
 
 export const caseCategories = {
@@ -18,11 +19,11 @@ export const caseCategories = {
     },
     {
       title: "🟠 Crimes Against Property",
-      items: ["Theft", "Robbery", "Estafa", "Arson", "Malicious Mischief"]
+      items: ["Theft", "Qualified Theft", "Robbery", "Robbery with Homicide", "Estafa", "Arson", "Malicious Mischief"]
     },
     {
       title: "🟡 Crimes Against Honor",
-      items: ["Libel", "Slander"]
+      items: ["Libel", "Slander (Oral Defamation)", "Incriminating an Innocent Person"]
     },
     {
       title: "🟢 Crimes Against Chastity",
@@ -30,15 +31,21 @@ export const caseCategories = {
     },
     {
       title: "🔵 Crimes Against Public Order",
-      items: ["Direct Assault", "Illegal Possession of Firearms"]
+      items: ["Direct Assault", "Resistance and Disobedience", "Illegal Possession of Firearms"]
     },
     {
       title: "2️⃣ Dangerous Drugs Cases (RA 9165)",
-      items: ["Illegal Possession of Drugs", "Illegal Sale of Drugs", "Use of Dangerous Drugs"]
+      items: [
+        "Illegal Possession of Dangerous Drugs (Section 11)",
+        "Illegal Sale, Trading, Administration, Dispensation, Delivery, Distribution, and Transportation (Section 5)",
+        "Possession of Equipment, Instrument, Apparatus, and Other Paraphernalia (Section 12)",
+        "Use of Dangerous Drugs (Section 15)",
+        "Cultivation of Marijuana (Section 16)"
+      ]
     },
     {
       title: "3️⃣ VAWC Cases (RA 9262)",
-      items: ["Physical abuse", "Psychological abuse", "Economic abuse", "Protection Order"]
+      items: ["Physical abuse", "Psychological abuse", "Economic abuse", "Protection Order cases"]
     },
     {
       title: "4️⃣ Child Protection (RA 7610)",
@@ -50,7 +57,7 @@ export const caseCategories = {
     },
     {
       title: "6️⃣ Cybercrime (RA 10175)",
-      items: ["Online libel", "Identity theft", "Online fraud"]
+      items: ["Online libel", "Identity theft", "Online fraud", "Cybersex", "Computer-related fraud"]
     },
     {
       title: "7️⃣ Bouncing Checks (BP 22)",
@@ -60,21 +67,25 @@ export const caseCategories = {
   "Civil": [
     {
       title: "📖 Family Law Cases",
-      items: ["Annulment of Marriage", "Legal Separation", "Child Support", "Child Custody", "Adoption", "Recognition of Foreign Divorce"]
+      items: ["Annulment of Marriage", "Declaration of Nullity of Marriage", "Legal Separation", "Child Custody", "Child Support", "Adoption (qualified cases)", "Recognition of Foreign Divorce"]
     },
     {
       title: "📖 Civil Code Cases",
       items: ["Collection of Sum of Money", "Breach of Contract", "Damages", "Property Disputes", "Partition of Property"]
     },
     {
-      title: "📖 Ejectment & Small Claims",
-      items: ["Unlawful Detainer", "Forcible Entry", "Small Claims"]
+      title: "📖 Ejectment Cases",
+      items: ["Unlawful Detainer", "Forcible Entry"]
+    },
+    {
+      title: "📖 Small Claims",
+      items: ["Small Claims Collection"]
     }
   ],
   "Labor": [
     {
       title: "👷 Employment Disputes",
-      items: ["Illegal Dismissal", "Non-payment of Wages", "13th Month / Separation Pay"]
+      items: ["Illegal Dismissal", "Constructive Dismissal", "Non-payment of Wages", "Overtime Pay Claims", "Separation Pay", "13th Month Pay Claims", "Money Claims"]
     }
   ],
   "Special Legislation": [
@@ -100,7 +111,7 @@ export const universalPaoFlow = [
   { 
     step: 2, 
     title: "Indigency Test", 
-    content: "The applicant must prove they are indigent. This generally means having a low income and owning no significant real property. Required documents include Affidavit of Indigency, Certificate of Income, or ITR." 
+    content: "The applicant must prove they are indigent. This generally means having a low income (set thresholds apply depending on location) and owning no significant real property. Required documents include Affidavit of Indigency, Certificate of Income, or ITR." 
   },
   { 
     step: 3, 
@@ -122,31 +133,43 @@ export const universalPaoFlow = [
 export const defaultRequirements = generalRequirements;
 export const defaultSteps = universalPaoFlow;
 
+export const drugCaseProcess = [
+  { step: 1, title: "Inquest representation", content: "Immediate legal assistance during the inquest proceeding following arrest." },
+  { step: 2, title: "Bail hearing", content: "Petition for bail if the offense is bailable or if evidence of guilt is not strong." },
+  { step: 3, title: "Pre-trial", content: "Stipulation of facts and identification of issues." },
+  { step: 4, title: "Trial", content: "Presentation of evidence and witnesses." },
+  { step: 5, title: "Judgment", content: "Court's final decision on the case." }
+];
+
 export const caseSpecificData: Record<string, { requirements: string[], steps: any[] }> = {
   // --- Criminal: Accused Context ---
   "Murder": { 
     requirements: ["Copy of Complaint/Information", "Arrest warrant", "Subpoena", "Bail bond papers", ...generalRequirements], 
     steps: universalPaoFlow 
   },
-  "Theft": { 
-    requirements: ["Police report", "Affidavit of loss", "Proof of ownership (receipts, OR/CR)", "CCTV footage (if any)", ...generalRequirements], 
-    steps: universalPaoFlow 
-  },
-  "Estafa": { 
-    requirements: ["Contract or agreement", "Promissory note", "Receipts", "Demand letter with proof of receipt", "Screenshots (SMS/Chat)", ...generalRequirements], 
-    steps: universalPaoFlow 
-  },
-  "Libel": { 
-    requirements: ["Copy of defamatory statement", "Newspaper clipping / screenshot", "Certification of publication", ...generalRequirements], 
-    steps: universalPaoFlow 
-  },
-  "VAWC": { 
-    requirements: ["Police blotter", "Sworn affidavit", "Marriage certificate / Proof of relationship", "Birth certificate of child", "Medical certificate", "Screenshots of threats", ...generalRequirements], 
-    steps: universalPaoFlow 
-  },
-  "Illegal Possession of Drugs": {
+  "Illegal Possession of Dangerous Drugs (Section 11)": {
     requirements: ["Arrest report", "Inventory of seized items", "Chemistry report", "Chain of custody documents", "Confiscation receipt", ...generalRequirements],
-    steps: universalPaoFlow
+    steps: drugCaseProcess
+  },
+  "Illegal Sale, Trading, Administration, Dispensation, Delivery, Distribution, and Transportation (Section 5)": {
+    requirements: ["Buy-bust operation report", "Inventory of seized items", "Chemistry report", "Chain of custody documents", "Arrest report", ...generalRequirements],
+    steps: drugCaseProcess
+  },
+  "Possession of Equipment, Instrument, Apparatus, and Other Paraphernalia (Section 12)": {
+    requirements: ["Arrest report", "Inventory of seized paraphernalia", "Chemistry report on residue", "Chain of custody documents", ...generalRequirements],
+    steps: drugCaseProcess
+  },
+  "Use of Dangerous Drugs (Section 15)": {
+    requirements: ["Drug test result", "Arrest report", "Affidavit of arrest", ...generalRequirements],
+    steps: [
+      { step: 1, title: "Assessment", content: "Evaluation of whether the offender is a first-time user." },
+      { step: 2, title: "Rehabilitation Application", content: "Assisting first-time offenders in entering rehabilitation programs rather than serving prison time." },
+      { step: 3, title: "Court Monitoring", content: "Monitoring of compliance with the rehab program." }
+    ]
+  },
+  "Cultivation of Marijuana (Section 16)": {
+    requirements: ["Police report on plantation site", "Photos of seized plants", "Laboratory report", "Arrest report", ...generalRequirements],
+    steps: drugCaseProcess
   },
   "Annulment of Marriage": {
     requirements: ["PSA Marriage Certificate", "Birth certificates of children", "Psychological report (Art. 36)", "Proof of residency", ...generalRequirements],
@@ -156,25 +179,14 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["Birth certificate", "Proof of relationship", "Proof of financial capacity of parent", "Demand letter for support", ...generalRequirements],
     steps: universalPaoFlow
   },
-  "Collection of Sum of Money": {
-    requirements: ["Written contract", "Promissory note", "Receipts", "Demand letter", ...generalRequirements],
-    steps: universalPaoFlow
-  },
   "Illegal Dismissal": {
     requirements: ["Employment contract", "Payslips", "Termination letter", "Company ID", "Written explanation (if any)", ...generalRequirements],
-    steps: universalPaoFlow
-  },
-  "Anti-Trafficking": {
-    requirements: ["Recruitment contract", "Receipts", "Travel documents", "Witness affidavit", ...generalRequirements],
-    steps: universalPaoFlow
-  },
-  "Juvenile Justice Cases": {
-    requirements: ["Birth certificate (minor)", "Police report", "Social worker report", ...generalRequirements],
-    steps: universalPaoFlow
-  },
-  "Civil Service Cases": {
-    requirements: ["Notice of charge", "Employment records", "Written explanation", ...generalRequirements],
-    steps: universalPaoFlow
+    steps: [
+      { step: 1, title: "Filing before NLRC", content: "Submission of the complaint to the National Labor Relations Commission." },
+      { step: 2, title: "Conciliation", content: "Mandatory conference to explore settlement." },
+      { step: 3, title: "Position papers", content: "Submission of sworn statements and evidence." },
+      { step: 4, title: "Decision", content: "Labor Arbiter's ruling." }
+    ]
   }
 };
 
