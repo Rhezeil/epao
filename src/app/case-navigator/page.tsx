@@ -91,14 +91,14 @@ function CaseNavigatorContent() {
       return { 
         requirements: dynamicReqs.requirements || [], 
         steps: dynamicReqs.steps || universalPaoFlow,
-        description: dynamicReqs.description || caseSpecificData[selectedCase!]?.description
+        description: dynamicReqs.description || (caseSpecificData[selectedCase!]?.description)
       };
     }
     if (selectedCase && caseSpecificData[selectedCase]) {
       return caseSpecificData[selectedCase];
     }
     if (selectedCategory && categoryDefaults[selectedCategory]) {
-      return categoryDefaults[selectedCategory];
+      return { ...categoryDefaults[selectedCategory], description: undefined };
     }
     return { requirements: [], steps: universalPaoFlow, description: undefined };
   };

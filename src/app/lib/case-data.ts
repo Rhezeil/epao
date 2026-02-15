@@ -156,6 +156,15 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["Police Report", "Suicide Note (if any)", "Witness Statements", "Medico-Legal Report"],
     steps: universalPaoFlow
   },
+  "Discharge of Firearms (Art 254)": {
+    description: "Illegal Discharge of Firearms (Art. 254, RPC as amended by RA 11926). Committed by shooting at another without intent to kill, or willful/indiscriminate discharge.",
+    requirements: ["Police Investigation Report", "Paraffin Test Results (if available)", "Firearm Ballistics Report", "Witness Affidavits", "Notice of Inquest"],
+    steps: [
+      { step: 1, title: "Inquest Proceeding", content: "Immediate PAO assistance after arrest to determine legality of detention." },
+      { step: 2, title: "Preliminary Investigation", content: "Filing counter-affidavits to refute charges of indiscriminate firing." },
+      { step: 3, title: "Trial Proper", content: "Defense strategies focusing on lack of intent or illegal search/seizure." }
+    ]
+  },
   "Infanticide (Art 255)": {
     description: "Killing of a child less than three days old (Article 255, RPC).",
     requirements: ["Birth Record", "Death Certificate", "Medico-Legal Report", "Police Investigation"],
