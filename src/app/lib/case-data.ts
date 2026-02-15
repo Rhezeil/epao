@@ -157,12 +157,45 @@ export const caseCategories = {
   ],
   "Civil": [
     {
-      title: "📖 Family Law Cases",
-      items: ["Annulment of Marriage", "Declaration of Nullity", "Legal Separation", "Child Custody", "Child Support", "Adoption", "Recognition of Foreign Divorce"]
+      title: "📖 I. FAMILY RELATIONS CASES",
+      items: [
+        "Declaration of Nullity of Marriage", 
+        "Annulment of Marriage", 
+        "Legal Separation", 
+        "Support", 
+        "Custody of Children", 
+        "Adoption",
+        "Recognition of Foreign Divorce"
+      ]
     },
     {
-      title: "📖 Civil Code & Property",
-      items: ["Collection of Sum of Money", "Breach of Contract", "Damages", "Property Disputes", "Partition of Property", "Unlawful Detainer", "Forcible Entry", "Small Claims"]
+      title: "🏠 II. PROPERTY AND LAND DISPUTES",
+      items: [
+        "Forcible Entry", 
+        "Unlawful Detainer", 
+        "Recovery of Possession", 
+        "Recovery of Ownership", 
+        "Partition", 
+        "Easements"
+      ]
+    },
+    {
+      title: "📝 III. OBLIGATIONS AND CONTRACTS",
+      items: [
+        "Breach of Contract", 
+        "Collection of Sum of Money", 
+        "Damages", 
+        "Small Claims"
+      ]
+    },
+    {
+      title: "⚖️ IV. SPECIAL PROCEEDINGS AND OTHERS",
+      items: [
+        "Guardianship", 
+        "Correction of Entries in the Civil Registry", 
+        "Settlement of Estate", 
+        "Writ of Habeas Data/Amparo"
+      ]
     }
   ],
   "Labor": [
@@ -441,75 +474,152 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["Medico-legal report", "Sworn complaint of victim", "Witness affidavits", "Psychological evaluation"],
     steps: defaultSteps
   },
-  "Rape (R.A. 8353 / Art. 266-A)": {
-    description: "Sexual assault classified as a crime against persons. Includes qualified rape cases.",
-    requirements: ["Medico-legal report (Sexual Abuse Exam)", "Sworn complaint-affidavit", "Psychological evaluation", "Police blotter", "Clothing evidence"],
+  "Qualified Seduction (Art. 337)": {
+    description: "Seducing a virgin over 12 but under 18 years old.",
+    requirements: ["Birth Certificate of victim", "Sworn complaint", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Simple Seduction (Art. 338)": {
+    description: "Seducing a woman over 12 but under 18 years old, who is not a virgin, through deceit.",
+    requirements: ["Birth Certificate of victim", "Sworn complaint", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Forcible Abduction (Art. 342)": {
+    description: "Abducting a woman against her will with lewd designs.",
+    requirements: ["Police report", "Sworn complaint", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Consented Abduction (Art. 343)": {
+    description: "Abducting a virgin over 12 but under 18 years old with her consent.",
+    requirements: ["Birth Certificate of victim", "Sworn complaint", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Corruption of Minors (Art. 340)": {
+    description: "Promoting or facilitating the prostitution or corruption of a minor.",
+    requirements: ["Birth Certificate of minor", "Proof of illegal acts", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "White Slave Trade (Art. 341)": {
+    description: "Engaging in the business of prostitution.",
+    requirements: ["Police report", "Witness affidavits", "Surveillance evidence"],
+    steps: defaultSteps
+  },
+  "Abuses Against Chastity by Public Officers (Art. 245)": {
+    description: "Public officers soliciting indecent advances from women with matters pending before them.",
+    requirements: ["Proof of public office", "Evidence of solicitation/indecent advances", "Witness affidavits"],
     steps: defaultSteps
   },
 
-  // --- FIREARMS & EXPLOSIVES ---
-  "Illegal Possession of Firearms (RA 10591)": {
-    description: "Possessing unlicensed, unregistered, or altered firearms (loose firearms). This includes small arms, Class A, and Class B Light Weapons. RA 8294 establishes that illegal possession is an aggravating circumstance when another crime is committed.",
-    requirements: ["Police report", "Inventory of seized firearms/ammunition", "Certification from FEU (Firearms and Explosives Office)", "Ballistics report", "Photos of evidence", "Witness affidavits"],
+  // --- CIVIL LAW: FAMILY RELATIONS ---
+  "Declaration of Nullity of Marriage": {
+    description: "Declaration that a marriage was void from the beginning (e.g., Art. 36 Psychological Incapacity).",
+    requirements: ["PSA Marriage Contract", "PSA Birth Certificates of children", "Psychological Evaluation Report (if Art. 36)", "Barangay Certificate of Residence", "Witness affidavits"],
     steps: defaultSteps
   },
-  "Illegal Possession of Explosives (RA 9516)": {
-    description: "Unlawful possession or manufacture of explosives, incendiary devices, or hand grenades. Usually carries the penalty of reclusión perpetua.",
-    requirements: ["BFP or Police Incident Report", "Inventory of seized explosives/paraphernalia", "Chemical Analysis/Certification from FEU", "Photos of evidence", "Witness affidavits"],
+  "Annulment of Marriage": {
+    description: "A valid marriage that is canceled due to grounds existing at the time of celebration (e.g., Art. 45).",
+    requirements: ["PSA Marriage Contract", "Evidence of grounds (e.g., medical cert for impotence)", "Witness affidavits", "PSA Birth Certificates of children"],
     steps: defaultSteps
   },
-  "Unlawful Manufacture of Explosives": {
-    description: "The illegal creation or assembly of explosive devices or incendiary materials without government authorization.",
-    requirements: ["Inventory of seized materials", "Chemical Analysis report", "Arrest report", "Photos of laboratory/site", "Witness affidavits"],
+  "Legal Separation": {
+    description: "Separation of bed and board while the marriage bond remains (Art. 55 Family Code).",
+    requirements: ["PSA Marriage Contract", "Evidence of grounds (e.g., proof of infidelity/violence)", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Support": {
+    description: "Everything indispensable for sustenance, dwelling, clothing, and medical attendance (Art. 194 Family Code).",
+    requirements: ["PSA Birth Certificate of child", "Proof of financial need", "Proof of respondent's income (if available)", "Affidavit of dependency"],
+    steps: defaultSteps
+  },
+  "Custody of Children": {
+    description: "Determination of who will have physical and legal custody of minors (Art. 211-213 Family Code).",
+    requirements: ["PSA Birth Certificate of child", "Social Case Study (from DSWD)", "Barangay Clearance", "Witness affidavits regarding parent's fitness"],
+    steps: defaultSteps
+  },
+  "Adoption": {
+    description: "Creation of a parent-child relationship by law through domestic adoption proceedings.",
+    requirements: ["PSA Birth Certificate of child", "PSA Birth Certificate of adopter", "Home Study Report (from DSWD)", "Marriage Contract of adopters", "NBI Clearance"],
+    steps: defaultSteps
+  },
+  "Recognition of Foreign Divorce": {
+    description: "Judicial recognition of a divorce decree obtained abroad by a foreign spouse (Art. 26 Family Code).",
+    requirements: ["Authenticated Foreign Divorce Decree", "Foreign Law on Divorce (duly authenticated)", "PSA Marriage Contract", "Proof of foreign citizenship of spouse"],
     steps: defaultSteps
   },
 
-  // --- TRAFFIC & RECKLESS IMPRUDENCE ---
-  "Reckless Imprudence Resulting in Homicide": {
-    description: "A voluntary act without malice, but lacking precaution (negligence), resulting in death. Often involves motor vehicle accidents where the driver failed to exercise due diligence.",
-    requirements: ["Police Accident Report (Sketch & Narrative)", "Death Certificate", "Driver's License & Vehicle Registration", "Insurance documents", "Witness affidavits", "CCTV/Photos of accident site"],
+  // --- CIVIL LAW: PROPERTY AND LAND DISPUTES ---
+  "Forcible Entry": {
+    description: "Recovery of possession when one is deprived through force, intimidation, strategy, or stealth.",
+    requirements: ["Land Title or Tax Declaration", "Proof of prior physical possession", "Police blotter or affidavit regarding entry", "Barangay Certificate to File Action"],
     steps: defaultSteps
   },
-  "Reckless Imprudence Resulting in Physical Injuries": {
-    description: "A negligent act resulting in serious, less serious, or slight physical harm to another person due to lack of precaution.",
-    requirements: ["Police Accident Report", "Medico-Legal Certificate", "Driver's License & Vehicle Registration", "Witness affidavits", "CCTV/Photos"],
+  "Unlawful Detainer": {
+    description: "Recovery of possession when possession was initially legal but became illegal after notice to vacate.",
+    requirements: ["Land Title or Tax Declaration", "Demand Letter to vacate with proof of receipt", "Lease Contract (if any)", "Barangay Certificate to File Action"],
     steps: defaultSteps
   },
-  "Reckless Imprudence Resulting in Damage to Property": {
-    description: "A negligent act resulting in damage to the property of another, such as crashing into a building or another vehicle.",
-    requirements: ["Police Accident Report", "Estimated Cost of Repair/Damage Appraisal", "Proof of ownership (OR/CR)", "Photos of damage", "Witness affidavits"],
+  "Recovery of Possession": {
+    description: "Accion Publiciana: A plenary action to recover the right of possession when dispossession lasts more than a year.",
+    requirements: ["Certified True Copy of Land Title", "Tax Declaration", "Proof of ownership/right to possess", "Survey plan (if applicable)"],
+    steps: defaultSteps
+  },
+  "Recovery of Ownership": {
+    description: "Accion Reivindicatoria: An action to recover ownership of real property.",
+    requirements: ["Original or Certified Land Title", "History of ownership documents", "Tax Declaration", "Proof of boundaries"],
+    steps: defaultSteps
+  },
+  "Partition": {
+    description: "Action to divide shared property among co-owners (Art. 494-495 Civil Code).",
+    requirements: ["Certified True Copy of Land Title", "Tax Declaration", "List of co-owners", "Death certificate of original owner (if inheritance)"],
+    steps: defaultSteps
+  },
+  "Easements": {
+    description: "Disputes regarding rights of way or other encumbrances on property.",
+    requirements: ["Land Title", "Sketch plan showing easement area", "Proof of necessity", "Witness affidavits"],
     steps: defaultSteps
   },
 
-  // --- CRIMES AGAINST CIVIL STATUS ---
-  "Simulation of Births (Art. 347)": {
-    description: "Deceptively making it appear a child was born to a person not their biological mother, or swapping children to alter their status.",
-    requirements: ["Birth Certificate", "Hospital/Clinic records", "Sworn Statement of biological mother/witnesses", "DNA test results (if available)"],
+  // --- CIVIL LAW: OBLIGATIONS AND CONTRACTS ---
+  "Breach of Contract": {
+    description: "Failure to fulfill contractual obligations due to fraud, negligence, or delay (Art. 1170 Civil Code).",
+    requirements: ["Original Contract or Agreement", "Proof of violation", "Demand letter", "Evidence of damages incurred"],
     steps: defaultSteps
   },
-  "Usurpation of Civil Status (Art. 348)": {
-    description: "Using another person’s name, title, or status (e.g., pretending to be a legal spouse) with the intent to defraud.",
-    requirements: ["Proof of identity", "Documents showing the used name/status", "Evidence of fraudulent intent", "Witness affidavits"],
+  "Collection of Sum of Money": {
+    description: "Claims for debts, unpaid loans, or services rendered (Small Claims up to P1M).",
+    requirements: ["Promissory Note or Acknowledgment Receipt", "Statement of Account", "Demand Letter with proof of service", "Proof of partial payments (if any)"],
     steps: defaultSteps
   },
-  "Bigamy (Art. 349)": {
-    description: "Contracting a second or subsequent marriage while a previous marriage is still valid and subsisting.",
-    requirements: ["Certified True Copy of 1st Marriage Contract", "Certified True Copy of 2nd Marriage Contract", "CENOMAR showing multiple entries", "Witness affidavits"],
+  "Damages": {
+    description: "Claims for moral, exemplary, or nominal damages due to quasi-delicts or breach of contract (Art. 2176-2194).",
+    requirements: ["Evidence of injury or loss", "Proof of negligence or fault", "Medical certs/receipts for actual damages", "Witness affidavits"],
     steps: defaultSteps
   },
-  "Marriage Contracted Against Provisions of Law (Art. 350)": {
-    description: "Contracting a marriage without legal authority or violating legal requirements, punishable under special laws.",
-    requirements: ["Marriage Certificate", "Proof of lack of authority of solemnizing officer", "Witness affidavits"],
+  "Small Claims": {
+    description: "Simplified judicial process for payment of money claims not exceeding P1,000,000.",
+    requirements: ["Verified Statement of Claim", "Promissory Note/Contract", "Demand Letter", "Affidavit of Non-Forum Shopping"],
     steps: defaultSteps
   },
-  "Premature Marriage (Art. 351)": {
-    description: "A widow or woman marrying within 301 days after the dissolution of a previous marriage before delivery, to avoid confusion of paternity.",
-    requirements: ["Death Certificate of husband or Annulment Decree", "New Marriage Certificate", "Medical certificate (pregnancy status)"],
+
+  // --- CIVIL LAW: SPECIAL PROCEEDINGS ---
+  "Guardianship": {
+    description: "Appointment of a guardian for the person or property of a minor or incompetent.",
+    requirements: ["PSA Birth Certificate of ward", "Medical Certificate (if incompetent)", "List of properties of ward", "Affidavit of fitness of guardian"],
     steps: defaultSteps
   },
-  "Performance of Illegal Marriage Ceremony (Art. 352)": {
-    description: "A priest or solemnizing officer who knowingly performs a marriage ceremony that is illegal.",
-    requirements: ["Marriage Certificate", "Proof of knowledge of illegality", "License of the solemnizing officer", "Witness affidavits"],
+  "Correction of Entries in the Civil Registry": {
+    description: "Petitions to correct birth, marriage, or death certificates (Rule 108 / RA 9048).",
+    requirements: ["PSA Copy of document to be corrected", "Baptismal Certificate", "School Records (Form 137)", "Affidavit of Discrepancy", "NBI/Police Clearance"],
+    steps: defaultSteps
+  },
+  "Settlement of Estate": {
+    description: "Summary settlement of small estates or judicial partition of inheritance.",
+    requirements: ["PSA Death Certificate of deceased", "PSA Birth/Marriage certs of heirs", "List of properties/assets", "Last Will (if any)"],
+    steps: defaultSteps
+  },
+  "Writ of Habeas Data/Amparo": {
+    description: "Protection of privacy, safety, and liberty against threats or extralegal killings.",
+    requirements: ["Sworn statement of victim/petitioner", "Evidence of threat or harassment", "Witness affidavits", "Police reports"],
     steps: defaultSteps
   }
 };
