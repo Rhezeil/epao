@@ -112,8 +112,8 @@ export const caseCategories = {
 };
 
 export const standardPaoDocs = [
-  "Certificate of Indigency (from Barangay Chairman or DSWD)",
-  "Latest Income Tax Return (ITR), pay slip, or Proof of No Income",
+  "Certificate of Indigency from Barangay Chairman or DSWD",
+  "Latest ITR, pay slip, or Certificate of No Income",
   "Valid Government-issued ID (SSS, PhilHealth, Voter's, etc.)",
   "Case-Related Documents (Complaints, summons, or police reports)",
   "Merit Test compliance (Determined during lawyer interview)"
@@ -128,28 +128,95 @@ export const universalPaoFlow = [
   { 
     step: 2, 
     title: "Submit Requirements", 
-    content: "Provide proof of indigency (Barangay/DSWD Certificate), valid ID, and documents related to the case for initial screening." 
+    content: "Provide proof of indigency (e.g., Certificate of Indigency, ITR, or Pay Slip), Valid ID, and documents related to the case (e.g., complaint, subpoena)." 
   },
   { 
     step: 3, 
-    title: "Interview & Evaluation", 
-    content: "A public attorney will interview you to perform the Indigency Test (financial check) and the Merit Test (legal basis check)." 
+    title: "Client Interview & Evaluation", 
+    content: "A public attorney will interview you to determine if the case has merit (Merit Test) and if you qualify for assistance (Indigency Test)." 
   },
   { 
     step: 4, 
-    title: "Acceptance & Assignment", 
-    content: "Upon approval, a lawyer is officially assigned to your case for counseling, mediation, or full court representation." 
+    title: "Acceptance & Case Assignment", 
+    content: "Upon approval, a lawyer is officially assigned to your case to provide counseling, mediation, or full court representation." 
   }
 ];
 
 export const pAONotes = [
   "Indigency Test: Your net income must meet the agency's regional threshold.",
-  "Merit Test: PAO handles cases where the cause is valid and has a legal basis.",
+  "Merit Test: The case must not be frivolous and must have legal basis.",
   "Conflict of Interest: PAO cannot represent opposing parties in the same matter.",
-  "Free Service: All legal services provided by PAO are free of charge."
+  "Free Service: All legal services provided by PAO are free of charge.",
+  "Eligibility: Must provide proof of indigency and valid government ID."
 ];
 
 export const caseSpecificData: Record<string, { requirements: string[], steps: any[], description: string }> = {
+  // --- CRIMES AGAINST PROPERTY ---
+  "Robbery": {
+    description: "Robbery (Art 293) involves taking personal property belonging to another with intent to gain through violence, intimidation, or force. Related: Art 294 (Violence/Intimidation), Art 295 (with Homicide), Art 299-302 (Inhabited/Uninhabited places).",
+    requirements: [
+      "Police Blotter Report",
+      "Sworn Complaint-Affidavit",
+      "Medical Certificate (if violence was used)",
+      "Proof of Ownership (Receipt, OR/CR, Title)",
+      "CCTV Footage (if available)",
+      "Witness Affidavits",
+      "Photos of the Crime Scene",
+      "Arrest Report (if suspect was caught)"
+    ],
+    steps: universalPaoFlow
+  },
+  "Theft": {
+    description: "Theft (Art 308) is the taking of personal property belonging to another without consent, without violence, and with intent to gain.",
+    requirements: [
+      "Police Report",
+      "Affidavit of Loss",
+      "Proof of Ownership (Receipt, Purchase Agreement)",
+      "CCTV Footage",
+      "Witness Affidavits",
+      "Recovery Receipt (if items were recovered)"
+    ],
+    steps: universalPaoFlow
+  },
+  "Qualified Theft": {
+    description: "Qualified Theft (Art 310) is theft committed by a domestic servant, with grave abuse of confidence, or involving motor vehicles, mail, large cattle, etc. Penalties are higher than ordinary theft.",
+    requirements: [
+      "Employment Records (if domestic servant)",
+      "Proof of Trust Relationship (Contract, ID)",
+      "Proof of Ownership",
+      "CCTV Footage",
+      "Inventory of Stolen Items",
+      "Police Investigation Report"
+    ],
+    steps: universalPaoFlow
+  },
+  "Estafa": {
+    description: "Estafa (Art 315) occurs when a person defrauds another through abuse of confidence or deceit, causing damage. Common types: abuse of confidence, deceit, or bouncing checks (BP 22).",
+    requirements: [
+      "Written Contract or Agreement",
+      "Promissory Note",
+      "Receipts or Proof of Payment",
+      "Demand Letter with Proof of Receipt",
+      "Screenshots / Chat Messages",
+      "Bank Records",
+      "Witness Affidavits",
+      "Dishonored Check & Bank Return Slip (if check involved)"
+    ],
+    steps: universalPaoFlow
+  },
+  "Malicious Mischief": {
+    description: "Malicious Mischief (Art 327) is the deliberate damage to the property of another without intent to gain.",
+    requirements: [
+      "Photos of Damaged Property",
+      "Repair Estimates",
+      "Police Blotter",
+      "Witness Affidavits",
+      "CCTV Footage",
+      "Proof of Ownership"
+    ],
+    steps: universalPaoFlow
+  },
+
   // --- CRIMES AGAINST PERSONS: DESTRUCTION OF LIFE ---
   "Parricide (Art 246)": {
     description: "Killing of one's father, mother, or child (legitimate or illegitimate), or any ascendant or descendant, or spouse. Penalized with Reclusion Perpetua to Death.",
@@ -172,8 +239,13 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     steps: universalPaoFlow
   },
   "Death in Tumultuous Affray (Art 251)": {
-    description: "Occurs when a person is killed during a chaotic, unorganized fight involving several people (labo-labo), and the specific killer cannot be identified.",
-    requirements: ["Complaint-Affidavit (if already filed)", "Subpoena or Warrant of Arrest (if served)", "Police Report of the chaotic incident", "Witness Statements confirming the affray"],
+    description: "Death in Tumultuous Affray (Article 251 RPC) occurs when a person is killed during a chaotic, unorganized fight involving several people, and it cannot be determined who specifically caused the death.",
+    requirements: [
+      "Complaint-Affidavit (if already filed)",
+      "Subpoena or Warrant of Arrest (if served)",
+      "Police Report of the chaotic incident",
+      "Witness Statements confirming the affray"
+    ],
     steps: universalPaoFlow
   },
   "Assistance to Suicide (Art 253)": {
@@ -182,8 +254,14 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     steps: universalPaoFlow
   },
   "Discharge of Firearms (Art 254)": {
-    description: "Under Art. 254, as amended by RA 11926: Shooting at another without intent to kill, or willful and indiscriminate discharge of any firearm regardless of target.",
-    requirements: ["Police Investigation Report", "Firearm Ballistics Report", "Witness Affidavits", "Notice of Inquest", "Gun License Status (if any)"],
+    description: "Illegal Discharge of Firearms (Article 254 RPC, as amended by RA 11926) involves shooting at another without intent to kill, or willful and indiscriminate discharge regardless of target.",
+    requirements: [
+      "Police Investigation Report",
+      "Firearm Ballistics Report",
+      "Witness Affidavits",
+      "Notice of Inquest (if arrested)",
+      "Gun License Status (if any)"
+    ],
     steps: [
       { step: 1, title: "Inquest Assistance", content: "Immediate PAO assistance after arrest to determine legality of detention and presence of probable cause." },
       ...universalPaoFlow.slice(1)
@@ -212,13 +290,13 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     steps: universalPaoFlow
   },
   "Serious Physical Injuries (Art 263)": {
-    description: "Injuries causing insanity, imbecility, impotence, blindness, or incapacity for labor for more than 90 days.",
-    requirements: ["Detailed Medical Certificate (90+ days healing)", "Police Report/Blotter", "Witness Affidavits", "Photographs of Injuries"],
+    description: "Injuries causing insanity, imbecility, impotence, blindness, or incapacity for labor for more than 90 days (Section 1-4).",
+    requirements: ["Medical Certificate (Nature, extent, duration of healing)", "Police Report/Blotter", "Witness Affidavits", "Photographs of Injuries", "Certificate to File Action (from Barangay)"],
     steps: universalPaoFlow
   },
   "Less Serious Physical Injuries (Art 265)": {
     description: "Injuries incapacitating the victim for labor or requiring medical assistance for 10 to 29 days.",
-    requirements: ["Medical Certificate stating 10-29 days healing", "Police Blotter", "Witness Affidavits"],
+    requirements: ["Medical Certificate stating 10-29 days healing", "Police Blotter", "Witness Affidavits", "Certificate to File Action"],
     steps: universalPaoFlow
   },
   "Slight Physical Injuries (Art 266)": {
@@ -229,23 +307,23 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
 
   // --- VAWC (RA 9262) ---
   "Physical Violence (VAWC - Sec 5a)": {
-    description: "Acts causing bodily harm, battery, physical assault, or threats. Section 5a of R.A. 9262.",
-    requirements: ["Proof of Relation (Marriage/Birth Cert)", "Medico-Legal Certificate", "Photos of Injuries", "Police/Barangay Blotter"],
+    description: "Acts causing bodily harm, such as battery, physical assault, threats, or causing fear of harm. Section 5a of R.A. 9262.",
+    requirements: ["Proof of Relation (Marriage/Birth Cert)", "Medico-Legal Certificate", "Photos of Injuries", "Police/Barangay Blotter", "Affidavits"],
     steps: universalPaoFlow
   },
   "Sexual Violence (VAWC - Sec 5b)": {
-    description: "Sexual acts including rape, harassment, acts of lasciviousness, or prostituting the woman or child. Section 5b of R.A. 9262.",
-    requirements: ["Medico-Legal Report", "Psychological Evaluation", "Police Report", "Witness Affidavits"],
+    description: "Sexual acts including rape, sexual harassment, acts of lasciviousness, treating someone as a sex object, or prostituting the woman or child. Section 5b of R.A. 9262.",
+    requirements: ["Medico-Legal Report", "Psychological Evaluation", "Police Report", "Witness Affidavits", "Screenshots (if applicable)"],
     steps: universalPaoFlow
   },
   "Psychological Violence (VAWC - Sec 5h-i)": {
-    description: "Acts causing mental/emotional anguish: infidelity, intimidation, stalking, or deprivation of custody. Section 5h & 5i of R.A. 9262.",
-    requirements: ["Screenshots (SMS/Chat)", "Psychological Evaluation Report", "Barangay Protection Order (BPO)", "Witness Affidavits"],
+    description: "Acts causing mental or emotional anguish: marital infidelity, intimidation, harassment, stalking, public ridicule, or deprivation of custody. Section 5h & 5i of R.A. 9262.",
+    requirements: ["Screenshots (SMS/Chat)", "Psychological Evaluation Report", "Barangay Protection Order (BPO)", "Witness Affidavits", "Proof of Harassment"],
     steps: universalPaoFlow
   },
   "Economic Abuse (VAWC - Sec 5e-f)": {
-    description: "Acts causing financial dependence: withdrawal of support or preventing work. Section 5e & 5f of R.A. 9262.",
-    requirements: ["Evidence of Withheld Support", "Bank Statements/Payslips", "Affidavit of Fact"],
+    description: "Acts causing financial dependence: withdrawal of financial support, preventing work, controlling assets, or destroying property. Section 5e & 5f of R.A. 9262.",
+    requirements: ["Evidence of Withheld Support", "Bank Statements/Payslips", "Affidavit of Fact", "Proof of Property Damage", "Employment Records"],
     steps: universalPaoFlow
   }
 };
