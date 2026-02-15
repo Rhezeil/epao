@@ -103,10 +103,10 @@ export const caseCategories = {
 };
 
 export const standardPaoDocs = [
-  "Affidavit of Indigency (PAO Form)",
+  "Certificate of Indigency (from Barangay, DSWD, or MSWD)",
   "Latest Income Tax Return (ITR) or BIR Certification of Exemption",
-  "Barangay Certificate of Indigency (stating purpose: Legal Assistance)",
-  "Valid Government-issued ID (Original & 3 Photocopies)"
+  "Valid Government-issued ID (Original & 3 Photocopies)",
+  "Case Narrative (Written account for the affidavit)"
 ];
 
 export const universalPaoFlow = [
@@ -118,119 +118,110 @@ export const universalPaoFlow = [
 ];
 
 export const pAONotes = [
-  "Indigency Test: Your net income must not exceed the threshold (e.g., P14,000 to P24,000 depending on location).",
-  "Merit Test: PAO handles cases where the client's cause appears to be valid and supported by evidence.",
+  "Indigency Test: Your net income must not exceed the threshold (varies by location).",
+  "Merit Test: PAO handles cases where the cause is valid and supported by evidence.",
   "Conflict of Interest: PAO cannot represent both parties in the same case.",
   "Public Service: All legal services provided by PAO are free of charge."
 ];
 
 export const caseSpecificData: Record<string, { requirements: string[], steps: any[], description: string }> = {
-  // --- CRIMES AGAINST PERSONS ---
+  // --- CRIMES AGAINST PERSONS: DESTRUCTION OF LIFE ---
   "Parricide (Art 246)": {
-    description: "Killing of one's father, mother, or child (legitimate or illegitimate), or any ascendant or descendant, or spouse (Article 246, RPC).",
-    requirements: ["PSA Birth Certificate (Proof of Relation)", "PSA Marriage Contract", "Death Certificate", "Police Investigation Report", "Autopsy/Medico-Legal Report"],
+    description: "The killing of one's father, mother, or child (legitimate or illegitimate), or any ascendant or descendant, or spouse. This is a higher crime than murder or homicide due to the familial relationship.",
+    requirements: ["PSA Birth Certificate (Proof of Relation)", "PSA Marriage Contract (if spouse)", "Death Certificate", "Police Investigation Report", "Autopsy/Medico-Legal Report"],
     steps: universalPaoFlow
   },
   "Death/Injuries under Exceptional Circumstances (Art 247)": {
-    description: "Killing or injuring a spouse or daughter in the act of sexual intercourse with another, under specific conditions (Article 247, RPC).",
-    requirements: ["Proof of Marriage or Relation", "Police Blotter", "Medico-Legal Certificate", "Witness Affidavits"],
+    description: "Killing or injuring a spouse or daughter in the act of sexual intercourse with another, or immediately thereafter, while in the act of surprised betrayal.",
+    requirements: ["Proof of Marriage (PSA Contract)", "Police Blotter of the Incident", "Medico-Legal Certificate", "Witness Affidavits"],
     steps: universalPaoFlow
   },
   "Murder (Art 248)": {
-    description: "The unlawful killing of a person with qualifying circumstances such as treachery, price/reward, poison, fire, or evident premeditation (Article 248, RPC).",
+    description: "The unlawful killing of a person with qualifying circumstances such as treachery, price/reward, poison, fire, or evident premeditation. Penalized with Reclusion Perpetua.",
     requirements: ["Police Investigation Report", "Autopsy/Post-Mortem Report", "Death Certificate", "Witness Affidavits", "CCTV/Physical Evidence"],
     steps: universalPaoFlow
   },
   "Homicide (Art 249)": {
-    description: "The unlawful killing of a person without the qualifying circumstances of murder or the relationship requirements of parricide (Article 249, RPC).",
+    description: "The unlawful killing of a person without the qualifying circumstances of murder and without the relationship elements of parricide.",
     requirements: ["Police Report", "Death Certificate", "Medico-Legal Certificate", "Witness Statements"],
     steps: universalPaoFlow
   },
   "Death in Tumultuous Affray (Art 251)": {
-    description: "Occurs when a person is killed during a chaotic, unorganized fight involving several people, and it cannot be determined who specifically caused the death (Article 251, RPC).",
-    requirements: ["Complaint-Affidavit (if filed)", "Subpoena or Warrant (if served)", "Police Report of the incident", "Witness Statements"],
+    description: "Occurs when a person is killed during a chaotic, unorganized fight involving several people (labo-labo), and the specific killer cannot be identified.",
+    requirements: ["Complaint-Affidavit (if filed)", "Subpoena or Warrant (if served)", "Police Report of the chaotic incident", "Witness Statements confirming the affray"],
     steps: universalPaoFlow
   },
   "Assistance to Suicide (Art 253)": {
-    description: "Giving assistance to another person to commit suicide (Article 253, RPC).",
+    description: "Giving assistance to another person to commit suicide. If the person dies, the penalty is higher.",
     requirements: ["Police Report", "Suicide Note (if any)", "Witness Statements", "Medico-Legal Report"],
     steps: universalPaoFlow
   },
   "Discharge of Firearms (Art 254)": {
-    description: "Illegal Discharge of Firearms (Art. 254, RPC as amended by RA 11926). Committed by shooting at another without intent to kill, or willful/indiscriminate discharge.",
-    requirements: ["Police Investigation Report", "Paraffin Test Results (if available)", "Firearm Ballistics Report", "Witness Affidavits", "Notice of Inquest"],
+    description: "As amended by RA 11926. Involves shooting at another without intent to kill, or willful and indiscriminate discharge of any firearm.",
+    requirements: ["Police Investigation Report", "Firearm Ballistics Report", "Witness Affidavits", "Notice of Inquest"],
     steps: [
       { step: 1, title: "Inquest Proceeding", content: "Immediate PAO assistance after arrest to determine legality of detention." },
-      { step: 2, title: "Preliminary Investigation", content: "Filing counter-affidavits to refute charges of indiscriminate firing." },
-      { step: 3, title: "Trial Proper", content: "Defense strategies focusing on lack of intent or illegal search/seizure." }
+      { step: 2, title: "Preliminary Investigation", content: "Filing counter-affidavits to refute charges of intent or indiscriminate firing." },
+      { step: 3, title: "Trial", content: "Defense focusing on lack of intent or illegal search/seizure." }
     ]
   },
-  "Infanticide (Art 255)": {
-    description: "Killing of a child less than three days old (Article 255, RPC).",
-    requirements: ["Birth Record", "Death Certificate", "Medico-Legal Report", "Police Investigation"],
+
+  // --- CRIMES AGAINST PERSONS: PHYSICAL INJURIES ---
+  "Serious Physical Injuries (Art 263)": {
+    description: "Injuries causing insanity, imbecility, impotence, blindness, or incapacity for labor for more than 90 days. Handled under standard DOJ procedures.",
+    requirements: ["Medical Certificate (Original/Certified Copy)", "Police Report/Blotter", "Witness Affidavits", "Photographs of Injuries", "Medical Receipts (for damages)"],
+    steps: [
+      { step: 1, title: "Barangay Conciliation", content: "Attempted settlement if parties reside in same municipality (if applicable)." },
+      { step: 2, title: "Filing of Complaint", content: "Submission of Complaint-Affidavit and Evidence to the Prosecutor." },
+      { step: 3, title: "Preliminary Investigation", content: "Prosecutor determines probable cause for court filing." }
+    ]
+  },
+  "Less Serious Physical Injuries (Art 265)": {
+    description: "Injuries incapacitating the victim for labor or requiring medical assistance for 10 to 29 days.",
+    requirements: ["Medical Certificate stating 10-29 days healing", "Police Blotter", "Witness Affidavits", "Photographs"],
+    steps: universalPaoFlow
+  },
+  "Slight Physical Injuries (Art 266)": {
+    description: "Injuries causing incapacity for 1 to 9 days or maltreatment without injury.",
+    requirements: ["Medical Certificate stating 1-9 days healing", "Police Blotter", "Certificate to File Action (from Barangay)"],
     steps: universalPaoFlow
   },
 
-  // --- VAWC ---
+  // --- VAWC (RA 9262) ---
   "Physical Violence (VAWC - Sec 5a)": {
-    description: "Acts causing bodily harm, such as battery, physical assault, threats, or causing fear of harm (Section 5a, RA 9262).",
-    requirements: ["Proof of Relationship (Marriage/Birth Certificate)", "Medico-Legal Certificate", "Photos of Injuries", "Police/Barangay Blotter"],
+    description: "Acts causing bodily harm, battery, or physical assault against a woman or her child. Section 5a of R.A. 9262.",
+    requirements: ["Proof of Relation (Marriage/Birth Cert)", "Medico-Legal Certificate", "Photos of Injuries", "Police/Barangay Blotter"],
     steps: universalPaoFlow
   },
   "Sexual Violence (VAWC - Sec 5b)": {
-    description: "Sexual acts including rape, sexual harassment, acts of lasciviousness, or prostituting the woman or child (Section 5b, RA 9262).",
+    description: "Sexual acts including rape, sexual harassment, acts of lasciviousness, or prostituting the woman/child. Section 5b of R.A. 9262.",
     requirements: ["Medico-Legal Report", "Psychological Evaluation", "Police Report", "Witness Affidavits"],
     steps: universalPaoFlow
   },
   "Psychological Violence (VAWC - Sec 5h-i)": {
-    description: "Acts causing mental or emotional anguish, such as marital infidelity, intimidation, stalking, and public ridicule (Section 5h & 5i, RA 9262).",
-    requirements: ["Screenshots (SMS/Chat)", "Psychological Evaluation Report", "Barangay Protection Order", "Witness Affidavits"],
+    description: "Acts causing mental anguish, such as marital infidelity, intimidation, harassment, or stalking. Section 5h & 5i of R.A. 9262.",
+    requirements: ["Screenshots (SMS/Chat)", "Psychological Evaluation Report", "Barangay Protection Order (BPO)", "Witness Affidavits"],
     steps: universalPaoFlow
   },
   "Economic Abuse (VAWC - Sec 5e-f)": {
-    description: "Acts causing financial dependence, including withdrawal of financial support or controlling assets (Section 5e & 5f, RA 9262).",
-    requirements: ["Evidence of Withheld Support", "Bank Statements/Payslips", "Proof of Assets", "Affidavit of Fact"],
-    steps: universalPaoFlow
-  },
-
-  // --- CYBERCRIME ---
-  "Illegal Access (Hacking)": {
-    description: "Unauthorized access to a computer system or network (Section 4a, RA 10175).",
-    requirements: ["IT Audit Log/Report", "Screenshots of Unauthorized Access", "Police/NBI Cybercrime Report"],
-    steps: universalPaoFlow
-  },
-  "Computer-Related Identity Theft": {
-    description: "Using another person's identifying information without right (Section 4b, RA 10175).",
-    requirements: ["Screenshots of Fake Profile", "Proof of Ownership of Real Identity", "Police Report"],
-    steps: universalPaoFlow
-  },
-  "Cyberlibel": {
-    description: "Libel as defined in Art. 355 of the RPC, committed through a computer system (Section 4c, RA 10175).",
-    requirements: ["Screenshots of Defamatory Post", "URL/Link of Post", "Proof of Identity of Account"],
-    steps: universalPaoFlow
-  },
-
-  // --- LABOR ---
-  "Illegal Dismissal (Art 279)": {
-    description: "Dismissal without just or authorized cause and due process (Art 279, Labor Code).",
-    requirements: ["Employment Contract", "Notice of Termination", "Latest Payslips", "Company ID", "Witness Affidavits"],
-    steps: universalPaoFlow
-  },
-  "OFW Claims (POEA)": {
-    description: "Claims for illegal dismissal, death/disability benefits, and violation of POEA contracts (RA 8042).",
-    requirements: ["POEA-approved Contract", "Passport & OEC", "Communication Logs with Agency", "Notice of Termination (if any)"],
+    description: "Acts causing financial dependence, including withdrawal of support or controlling assets. Section 5e & 5f of R.A. 9262.",
+    requirements: ["Evidence of Withheld Support", "Bank Statements/Payslips", "Affidavit of Fact"],
     steps: universalPaoFlow
   },
 
   // --- TRAFFICKING ---
   "Human Trafficking (RA 9208)": {
-    description: "Recruitment, transportation, or harboring of persons by means of threat or fraud for exploitation (RA 9208).",
-    requirements: ["Rescue Report (IACAT/Police/NBI)", "Travel Documents", "Affidavit of Victim", "Communication logs"],
-    steps: universalPaoFlow
+    description: "Recruitment, transportation, or harboring of persons by means of threat, force, fraud, or deception for exploitation (e.g., forced labor, slavery).",
+    requirements: ["Rescue Report (IACAT/Police/NBI)", "Travel Documents (Passport/VISA)", "Affidavit of Victim", "Communication Logs"],
+    steps: [
+      { step: 1, title: "Rescue & Protective Custody", content: "Immediate coordination with DSWD and law enforcement." },
+      { step: 2, title: "Confidentiality Protocol", content: "Ensuring the victim's identity is strictly protected under RA 9208." },
+      { step: 3, title: "Prosecution", content: "PAO assists in filing cases for qualified or simple trafficking." }
+    ]
   },
   "Qualified Trafficking": {
-    description: "Trafficking when the victim is a child, committed by a syndicate, or involving public officers (RA 9208).",
-    requirements: ["Proof of Age (Victim's Birth Certificate)", "Evidence of Syndicate (if applicable)", "Official identification of accused"],
+    description: "Trafficking penalized with life imprisonment when the victim is a child, committed by a syndicate, or involving public officers.",
+    requirements: ["Proof of Age (Victim's Birth Cert)", "Evidence of Syndicate", "Official ID of Accused (if public officer)"],
     steps: universalPaoFlow
   }
 };
