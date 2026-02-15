@@ -1,42 +1,23 @@
 /**
  * @fileOverview Shared case category data for LexConnect.
+ * Detailed requirements and steps based on official PAO guidance.
  */
 
 export const caseCategories = {
   Criminal: [
     {
-      title: "Crimes Against Persons",
-      items: ["Murder", "Homicide", "Parricide", "Infanticide", "Serious Physical Injuries", "Less Serious Physical Injuries", "Slight Physical Injuries"]
+      title: "Revised Penal Code",
+      items: ["Murder", "Homicide", "Parricide", "Infanticide", "Serious Physical Injuries", "Less Serious Physical Injuries", "Slight Physical Injuries", "Theft", "Qualified Theft", "Robbery", "Robbery with Homicide", "Estafa", "Arson", "Malicious Mischief", "Libel", "Slander (Oral Defamation)", "Incriminating an Innocent Person", "Acts of Lasciviousness", "Seduction", "Concubinage", "Adultery", "Direct Assault", "Resistance and Disobedience", "Illegal Possession of Firearms"]
     },
     {
-      title: "Crimes Against Property",
-      items: ["Theft", "Qualified Theft", "Robbery", "Robbery with Homicide", "Estafa", "Arson", "Malicious Mischief"]
-    },
-    {
-      title: "Crimes Against Honor",
-      items: ["Libel", "Slander (Oral Defamation)", "Incriminating an Innocent Person"]
-    },
-    {
-      title: "Crimes Against Chastity",
-      items: ["Acts of Lasciviousness", "Seduction", "Concubinage", "Adultery"]
-    },
-    {
-      title: "Crimes Against Public Order",
-      items: ["Direct Assault", "Resistance and Disobedience", "Illegal Possession of Firearms"]
-    },
-    {
-      title: "Dangerous Drugs (RA 9165)",
-      items: ["Illegal Possession of Drugs", "Illegal Sale of Drugs", "Use of Dangerous Drugs", "Drug Den Operations", "Possession of Drug Paraphernalia", "Drug Planting"]
+      title: "Special Criminal Laws",
+      items: ["Dangerous Drugs (RA 9165)", "VAWC (RA 9262)", "Cybercrime (RA 10175)", "Bouncing Checks (BP 22)", "Child Abuse (RA 7610)", "Anti-Rape Law (RA 8353)"]
     }
   ],
   Civil: [
     {
-      title: "Collection & Property",
-      items: ["Collection of Sum of Money", "Breach of Contract", "Damages", "Property Disputes", "Partition of Property"]
-    },
-    {
-      title: "Ejectment",
-      items: ["Unlawful Detainer", "Forcible Entry"]
+      title: "Civil Code Cases",
+      items: ["Collection of Sum of Money", "Breach of Contract", "Damages", "Property Disputes", "Partition of Property", "Unlawful Detainer", "Forcible Entry"]
     },
     {
       title: "Small Claims",
@@ -55,10 +36,10 @@ export const caseCategories = {
       items: ["Illegal Dismissal", "Constructive Dismissal", "Non-payment of Wages", "Overtime Pay Claims", "Separation Pay", "13th Month Pay Claims"]
     }
   ],
-  "Special Laws": [
+  "Special & Social": [
     {
       title: "Protection & Rights",
-      items: ["VAWC (RA 9262)", "Cybercrime (RA 10175)", "Illegal Recruitment", "Anti-Trafficking", "Anti-Child Pornography", "Anti-Hazing", "Juvenile Justice Cases"]
+      items: ["Anti-Trafficking", "Anti-Child Pornography", "Anti-Hazing", "Illegal Recruitment", "Juvenile Justice Cases"]
     }
   ],
   Administrative: [
@@ -72,113 +53,136 @@ export const caseCategories = {
 export const allCaseNames = Object.values(caseCategories)
   .flatMap(categories => categories.flatMap(cat => cat.items));
 
-export const defaultRequirements = [
+export const generalRequirements = [
   "Valid Government ID",
   "Affidavit of Indigency",
   "Barangay Certificate of Indigency",
-  "Proof of Income (Payslip / Certificate of No Income / DSWD Certificate)",
+  "Proof of Income (Payslip / Cert of No Income / DSWD Cert)",
   "Community Tax Certificate (Cedula)",
   "All relevant evidence (contracts, receipts, police reports, etc.)"
 ];
+
+export const defaultRequirements = generalRequirements;
 
 export const defaultSteps = [
   { 
     step: 1, 
     title: "Establish Eligibility (Indigency Test)", 
-    content: "You must prove you are an indigent person, usually by providing a Certificate of Indigency from the Barangay Chairman or the Department of Social Welfare and Development (DSWD), or your latest income tax return/pay slip." 
+    content: "Prove indigent status via Barangay/DSWD Certificate or ITR/Payslip." 
   },
   { 
     step: 2, 
-    title: "Locate the Nearest PAO Office", 
-    content: "Find the nearest district office (usually located within city/provincial halls or courts)." 
+    title: "Locate Nearest PAO Office", 
+    content: "Visit the district office assigned to your city or provincial hall." 
   },
   { 
     step: 3, 
-    title: "Initial Consultation & Evaluation", 
-    content: "Present your case to a public attorney. The PAO will evaluate the case for merit (ensure it is not frivolous or without legal basis)." 
+    title: "Initial Consultation", 
+    content: "A lawyer will evaluate your case for legal merit (ensuring it is not frivolous)." 
   },
   { 
     step: 4, 
     title: "Submit Documents", 
-    content: "Submit necessary documents (e.g., police report for criminal cases, demand letter for civil cases)." 
+    content: "Provide all evidence related to your case." 
   },
   { 
     step: 5, 
     title: "Case Assignment", 
-    content: "Once accepted, a public attorney will be assigned to handle the drafting of affidavits, complaints, or other required legal documents to initiate the lawsuit." 
+    content: "If accepted, an attorney is assigned to draft pleadings or represent you in court." 
   }
 ];
 
 /**
- * Category-specific defaults for seeding and fallback
+ * Granular data for specific case types
  */
+export const caseSpecificData: Record<string, { requirements: string[], steps: any[] }> = {
+  "Annulment of Marriage": {
+    requirements: ["PSA Marriage Certificate", "PSA Birth Certificates of children", "Psychological Evaluation (Article 36 cases)", "Proof of spouse's residence"],
+    steps: [
+      { step: 1, title: "Merit Evaluation", content: "Strict evaluation of grounds for annulment." },
+      { step: 2, title: "Psychological Assessment", content: "Client must undergo evaluation (usually shoulders cost)." },
+      { step: 3, title: "Petition Drafting", content: "Lawyer prepares the formal petition." },
+      { step: 4, title: "Trial", content: "Court hearings with witnesses and experts." },
+      { step: 5, title: "Registration", content: "Final court order is registered with the Civil Registry." }
+    ]
+  },
+  "Child Support": {
+    requirements: ["Birth Certificate of child", "Proof of relationship", "Proof of financial capacity of parent", "Proof support is not being given"],
+    steps: [
+      { step: 1, title: "Consultation", content: "Review of relationship and financial proof." },
+      { step: 2, title: "Demand Letter", content: "Lawyer sends a formal demand to the other parent." },
+      { step: 3, title: "Petition Filing", content: "Filing for Support in Family Court." },
+      { step: 4, title: "Hearing", content: "Presentation of child's needs and parent's capacity." },
+      { step: 5, title: "Order", content: "Court issues order for monthly support." }
+    ]
+  },
+  "Collection of Sum of Money": {
+    requirements: ["Written contract / Promissory Note", "Receipts / Proof of payment", "Demand Letter (required)", "Proof of non-payment"],
+    steps: [
+      { step: 1, title: "Document Review", content: "Review of the debt proof and demand letter." },
+      { step: 2, title: "Complaint Drafting", content: "Lawyer prepares the formal complaint." },
+      { step: 3, title: "Mediation", content: "Mandatory court-annexed mediation attempt." },
+      { step: 4, title: "Trial", content: "Presentation of debt evidence in court." },
+      { step: 5, title: "Decision", content: "Judge issues ruling on the money claim." }
+    ]
+  },
+  "Illegal Dismissal": {
+    requirements: ["Employment contract", "Termination letter", "Payslips", "Company ID", "Notice to Explain"],
+    steps: [
+      { step: 1, title: "NLRC Filing", content: "Initial complaint filed before the NLRC." },
+      { step: 2, title: "Conciliation", content: "Mandatory conference to settle the dispute." },
+      { step: 3, title: "Position Papers", content: "Submission of sworn statements and evidence." },
+      { step: 4, title: "Decision", content: "Labor Arbiter issues a decision." },
+      { step: 5, title: "Appeal", content: "Optional appeal to the NLRC Commission." }
+    ]
+  }
+};
+
 export const categoryDefaults: Record<string, { requirements: string[], steps: any[] }> = {
   Criminal: {
     requirements: [
-      "Valid Government ID",
-      "Affidavit of Indigency",
-      "Barangay Certificate of Indigency",
-      "Proof of Income",
       "Police Blotter / Complaint Report",
       "Medical Certificate (if injuries)",
-      "Witness Affidavits"
+      "Witness Affidavits",
+      "Copy of Complaint/Information (if already filed)",
+      "Bail Documents (if applicable)"
     ],
     steps: [
-      { step: 1, title: "Initial Interview", content: "Go to PAO for an initial interview and indigency verification." },
-      { step: 2, title: "Merit Test", content: "Lawyer evaluates the case merit for filing or defense." },
-      { step: 3, title: "Document Preparation", content: "Lawyer prepares Complaint-Affidavit or Counter-Affidavit." },
-      { step: 4, title: "Prosecutor Filing", content: "Case is filed at the Prosecutor's Office for preliminary investigation." },
-      { step: 5, title: "Trial Representation", content: "Representation during court hearings and trial proceedings." }
+      { step: 1, title: "Initial Interview", content: "Review of the complaint or arrest circumstances." },
+      { step: 2, title: "Indigency & Merit Test", content: "Checking financial status and legal basis." },
+      { step: 3, title: "Pleading Preparation", content: "Drafting Counter-Affidavits or Complaints." },
+      { step: 4, title: "Prosecutor Filing", content: "Representation during preliminary investigation." },
+      { step: 5, title: "Court Representation", content: "Defense or prosecution assistance during trial." }
     ]
   },
   Civil: {
     requirements: [
-      "Valid Government ID",
-      "Affidavit of Indigency",
-      "Barangay Certificate of Indigency",
-      "Written Contract / Promissory Note",
-      "Demand Letter (Required before filing)",
-      "Proof of Ownership (Land Title / Tax Dec for property cases)"
+      "Demand Letter (Sent before filing)",
+      "Contracts or Written Agreements",
+      "Land Titles / Tax Decs (for property cases)",
+      "Receipts / Proof of Damages"
     ],
     steps: [
-      { step: 1, title: "Consultation", content: "Present case documents and proof of demand to the lawyer." },
-      { step: 2, title: "Indigency & Merit Test", content: "Verification of financial status and legal basis for the claim." },
-      { step: 3, title: "Drafting Complaint", content: "Lawyer drafts the formal complaint or petition." },
-      { step: 4, title: "Mediation", content: "Attempts at mandatory court-annexed mediation." },
-      { step: 5, title: "Trial & Decision", content: "Formal court proceedings followed by a judge's decision." }
+      { step: 1, title: "Demand Check", content: "Verifying if a formal demand was already made." },
+      { step: 2, title: "Complaint Preparation", content: "Drafting the civil complaint or petition." },
+      { step: 3, title: "Filing & Summons", content: "Initiating the case in proper court." },
+      { step: 4, title: "Mediation", content: "Mandatory settlement negotiation phase." },
+      { step: 5, title: "Trial", content: "Formal presentation of evidence." }
     ]
   },
   "Family Law": {
     requirements: [
-      "Valid Government ID",
-      "Affidavit of Indigency",
       "PSA Marriage Certificate",
-      "PSA Birth Certificates of children",
-      "Proof of parent's income (for Support cases)",
-      "Psychological Evaluation (for Annulment/Nullity - client shoulders cost)"
+      "PSA Birth Certificates",
+      "Evidence of Abuse (for VAWC cases)",
+      "Proof of relationship and financial capacity"
     ],
     steps: [
-      { step: 1, title: "Case Evaluation", content: "Legal consultation and strict merit test for family-related petitions." },
-      { step: 2, title: "Psychological Assessment", content: "Mandatory for Article 36 annulment cases (at client's expense)." },
-      { step: 3, title: "Petition Drafting", content: "Preparation of the formal petition for support, custody, or annulment." },
-      { step: 4, title: "Family Court Filing", content: "Filing and initial hearings in specialized Family Courts." },
-      { step: 5, title: "Registration", content: "Official registration of court decisions with the Civil Registry." }
-    ]
-  },
-  Labor: {
-    requirements: [
-      "Valid Government ID",
-      "Employment Contract / Company ID",
-      "Termination Letter (if dismissed)",
-      "Payslips",
-      "Notice to Explain (if any)"
-    ],
-    steps: [
-      { step: 1, title: "NLRC Filing", content: "Initial filing of the complaint before the NLRC or DOLE." },
-      { step: 2, title: "Mandatory Conciliation", content: "Compulsory conference to reach a settlement between parties." },
-      { step: 3, title: "Position Papers", content: "Submission of sworn position papers and supporting evidence." },
-      { step: 4, title: "Decision", content: "Issuance of the labor arbiter's decision." },
-      { step: 5, title: "Appeal", content: "Filing an appeal if the decision is unfavorable." }
+      { step: 1, title: "Legal Evaluation", content: "Strict merit test for family petitions." },
+      { step: 2, title: "Petition Drafting", content: "Preparation of support, custody, or nullity papers." },
+      { step: 3, title: "Family Court Filing", content: "Initiating proceedings in specialized courts." },
+      { step: 4, title: "Hearing", content: "Attendance at pre-trial and trial dates." },
+      { step: 5, title: "Order/Decision", content: "Resolution of family status or support obligations." }
     ]
   }
 };

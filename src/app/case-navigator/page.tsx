@@ -7,17 +7,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Compass, HelpCircle, Search, ArrowLeft, X, CheckCircle2, FileText, Info, ListChecks, CalendarCheck, Loader2, AlertCircle } from "lucide-react";
+import { Compass, Search, ArrowLeft, X, CheckCircle2, FileText, Info, ListChecks, CalendarCheck, Loader2, ShieldCheck } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
 import { cn } from "@/lib/utils";
 import { useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
 import { doc, collection, query, where, limit } from "firebase/firestore";
-import { caseCategories, defaultRequirements, defaultSteps, categoryDefaults } from "@/app/lib/case-data";
+import { caseCategories, defaultRequirements, defaultSteps, categoryDefaults, caseSpecificData, generalRequirements } from "@/app/lib/case-data";
 import { Badge } from "@/components/ui/badge";
 
 function CaseNavigatorContent() {
-  const { role, user } = useAuth();
+  const { role } = useAuth();
   const db = useFirestore();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -76,133 +76,151 @@ function CaseNavigatorContent() {
     setSearchQuery("");
   };
 
-  const getFallbackRequirements = () => {
-    if (selectedCategory && categoryDefaults[selectedCategory]) {
-      return categoryDefaults[selectedCategory].requirements;
+  const getEffectiveData = () => {
+    // Priority: Firestore > Case Specific > Category Defaults > Global Defaults
+    if (dynamicReqs) {
+      return { 
+        requirements: dynamicReqs.requirements || [], 
+        steps: dynamicReqs.steps || defaultSteps 
+      };
     }
-    return defaultRequirements;
+    if (selectedCase && caseSpecificData[selectedCase]) {
+      return caseSpecificData[selectedCase];
+    }
+    if (selectedCategory && categoryDefaults[selectedCategory]) {
+      return categoryDefaults[selectedCategory];
+    }
+    return { requirements: defaultRequirements, steps: defaultSteps };
   };
 
-  const getFallbackSteps = () => {
-    if (selectedCategory && categoryDefaults[selectedCategory]) {
-      return categoryDefaults[selectedCategory].steps;
-    }
-    return defaultSteps;
-  };
+  const renderCaseDetails = (caseName: string) => {
+    const guidance = getEffectiveData();
+    
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <Button variant="ghost" size="sm" onClick={() => setSelectedCase(null)} className="text-primary gap-1">
+            <ArrowLeft className="h-4 w-4" /> Back to Categories
+          </Button>
+          <Button variant="ghost" size="sm" onClick={handleClear} className="flex items-center gap-1 text-muted-foreground">
+            <X className="h-4 w-4" /> Clear Search
+          </Button>
+        </div>
 
-  const renderCaseDetails = (caseName: string) => (
-    <div className="space-y-6">
-      <div className="flex justify-end">
-        <Button variant="ghost" size="sm" onClick={handleClear} className="flex items-center gap-1 text-muted-foreground">
-          <X className="h-4 w-4" /> Clear Search
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="border-none shadow-none bg-white/50 backdrop-blur-sm">
-          <CardHeader className="pb-2">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="p-1.5 bg-primary/10 rounded-lg">
-                <FileText className="h-5 w-5 text-primary" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="border-none shadow-none bg-white/50 backdrop-blur-sm">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="p-1.5 bg-primary/10 rounded-lg">
+                  <FileText className="h-5 w-5 text-primary" />
+                </div>
+                <CardTitle className="text-lg font-bold text-primary">Case Information</CardTitle>
               </div>
-              <CardTitle className="text-lg font-bold text-primary">Case Information</CardTitle>
-            </div>
-            <p className="text-xs text-muted-foreground">Details for the selected case type.</p>
-          </CardHeader>
-          <CardContent className="space-y-6 pt-4">
-            <div className="space-y-1">
-              <p className="text-xs font-bold text-primary uppercase">Case Type</p>
-              <h2 className="text-2xl font-bold text-[#1A3B6B]">{caseName}</h2>
-              {selectedCategory && <Badge variant="secondary" className="mt-1">{selectedCategory} Case</Badge>}
-            </div>
-            
-            <div className="bg-[#E8F5E9] p-4 rounded-xl border border-green-200">
-              <div className="flex gap-3">
-                <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
-                <div className="space-y-1">
-                  <p className="text-sm font-bold text-green-800 leading-tight">PAO Assistance Available</p>
-                  <p className="text-xs text-green-700 leading-snug">
-                    Indigent Filipinos are eligible for legal representation in this case type.
-                  </p>
+              <p className="text-xs text-muted-foreground">Details for the selected case type.</p>
+            </CardHeader>
+            <CardContent className="space-y-6 pt-4">
+              <div className="space-y-1">
+                <p className="text-xs font-bold text-primary uppercase">Case Type</p>
+                <h2 className="text-2xl font-bold text-[#1A3B6B]">{caseName}</h2>
+                {selectedCategory && <Badge variant="secondary" className="mt-1">{selectedCategory} Case</Badge>}
+              </div>
+              
+              <div className="bg-[#E8F5E9] p-4 rounded-xl border border-green-200">
+                <div className="flex gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold text-green-800 leading-tight">PAO Assistance Available</p>
+                    <p className="text-xs text-green-700 leading-snug">
+                      Indigent Filipinos are eligible for legal representation in this case type if it passes the Merit Test.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <Button 
-              className="w-full h-12 bg-primary hover:bg-[#1A3B6B] text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg"
-              onClick={() => router.push(`/dashboard/client/book-appointment?caseType=${encodeURIComponent(caseName)}&category=${encodeURIComponent(selectedCategory || 'General')}`)}
-            >
-              <CalendarCheck className="h-5 w-5" />
-              Book a Consultation
-            </Button>
-          </CardContent>
-        </Card>
+              <Button 
+                className="w-full h-12 bg-primary hover:bg-[#1A3B6B] text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg"
+                onClick={() => router.push(`/dashboard/client/book-appointment?caseType=${encodeURIComponent(caseName)}&category=${encodeURIComponent(selectedCategory || 'General')}`)}
+              >
+                <CalendarCheck className="h-5 w-5" />
+                Book a Consultation
+              </Button>
+            </CardContent>
+          </Card>
 
-        <Card className="border-none shadow-none bg-white/50 backdrop-blur-sm">
-          <CardHeader className="pb-2">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="p-1.5 bg-primary/10 rounded-lg">
-                <ListChecks className="h-5 w-5 text-primary" />
-              </div>
-              <CardTitle className="text-lg font-bold text-primary">Required Documents</CardTitle>
-            </div>
-            <p className="text-xs text-muted-foreground">Checklist for this specific category.</p>
-          </CardHeader>
-          <CardContent className="space-y-3 pt-4">
-            <div className="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-lg">
-              <div className="flex gap-2">
-                <Info className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
-                <p className="text-[10px] text-blue-800 leading-tight">
-                  <span className="font-bold">General Requirements:</span> Valid ID, Indigency Cert, Proof of Income, and Cedula are always required.
-                </p>
-              </div>
-            </div>
-            {isReqLoading ? (
-              <div className="flex justify-center py-4"><Loader2 className="animate-spin h-5 w-5 text-primary" /></div>
-            ) : (
-              (dynamicReqs?.requirements || getFallbackRequirements()).map((doc: string, idx: number) => (
-                <div key={idx} className="flex gap-3 items-start">
-                  <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-                  <span className="text-sm text-[#2E5A99] font-medium leading-tight">{doc}</span>
+          <Card className="border-none shadow-none bg-white/50 backdrop-blur-sm">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="p-1.5 bg-primary/10 rounded-lg">
+                  <ListChecks className="h-5 w-5 text-primary" />
                 </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-none bg-white/50 backdrop-blur-sm">
-          <CardHeader className="pb-2">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="p-1.5 bg-primary/10 rounded-lg">
-                <Info className="h-5 w-5 text-primary" />
+                <CardTitle className="text-lg font-bold text-primary">Required Documents</CardTitle>
               </div>
-              <CardTitle className="text-lg font-bold text-primary">Process Flow</CardTitle>
-            </div>
-            <p className="text-xs text-muted-foreground">Steps involved in this case type.</p>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <Accordion type="single" collapsible className="w-full space-y-2">
-              {(dynamicReqs?.steps || getFallbackSteps()).map((step: any, idx: number) => (
-                <AccordionItem key={idx} value={`step-${idx}`} className="border rounded-xl bg-white px-4">
-                  <AccordionTrigger className="hover:no-underline py-4">
-                    <div className="flex items-center gap-3 text-left">
-                      <div className="h-6 w-6 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center shrink-0">
-                        {step.step || idx + 1}
-                      </div>
-                      <span className="text-sm font-bold text-primary">{step.title}</span>
+              <p className="text-xs text-muted-foreground">Checklist for this specific category.</p>
+            </CardHeader>
+            <CardContent className="space-y-3 pt-4">
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                <div className="flex gap-2">
+                  <Info className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-blue-800 font-bold uppercase tracking-wider">General Requirements (Mandatory)</p>
+                    <ul className="text-[10px] text-blue-800 list-disc pl-3">
+                      {generalRequirements.slice(0, 4).map((r, i) => <li key={i}>{r}</li>)}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {isReqLoading ? (
+                <div className="flex justify-center py-4"><Loader2 className="animate-spin h-5 w-5 text-primary" /></div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-[10px] font-bold text-primary uppercase mb-2">Case-Specific Documents</p>
+                  {guidance.requirements.map((doc: string, idx: number) => (
+                    <div key={idx} className="flex gap-3 items-start">
+                      <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                      <span className="text-sm text-[#2E5A99] font-medium leading-tight">{doc}</span>
                     </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="text-xs text-muted-foreground pb-4 leading-relaxed">
-                    {step.content}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </CardContent>
-        </Card>
+                  ))}
+                  {guidance.requirements.length === 0 && <p className="text-xs text-muted-foreground italic">No specific documents listed beyond general requirements.</p>}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-none shadow-none bg-white/50 backdrop-blur-sm">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="p-1.5 bg-primary/10 rounded-lg">
+                  <Info className="h-5 w-5 text-primary" />
+                </div>
+                <CardTitle className="text-lg font-bold text-primary">Process Flow</CardTitle>
+              </div>
+              <p className="text-xs text-muted-foreground">Steps involved in this case type.</p>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <Accordion type="single" collapsible className="w-full space-y-2">
+                {guidance.steps.map((step: any, idx: number) => (
+                  <AccordionItem key={idx} value={`step-${idx}`} className="border rounded-xl bg-white px-4">
+                    <AccordionTrigger className="hover:no-underline py-4">
+                      <div className="flex items-center gap-3 text-left">
+                        <div className="h-6 w-6 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                          {step.step || idx + 1}
+                        </div>
+                        <span className="text-sm font-bold text-primary">{step.title}</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="text-xs text-muted-foreground pb-4 leading-relaxed">
+                      {step.content}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 
   const renderCategoryListView = (title: string, data: any[]) => (
     <div className="space-y-6">
@@ -298,7 +316,7 @@ function CaseNavigatorContent() {
             ePAO Case Requirements & Navigator
           </h1>
           <p className="text-sm text-muted-foreground leading-tight max-w-2xl mx-auto">
-            Find the legal requirements for your specific case and book a PAO consultation.
+            Find the accurate legal requirements for your specific case and book a PAO consultation.
           </p>
         </div>
 
@@ -352,7 +370,7 @@ function CaseNavigatorContent() {
         <Card className="bg-primary/5 border-dashed border-primary/20">
           <CardContent className="p-4">
             <div className="flex items-start gap-4">
-              <Info className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+              <ShieldCheck className="h-5 w-5 text-primary mt-0.5 shrink-0" />
               <div className="flex-1 space-y-1">
                 <p className="text-xs text-primary font-bold">Public Attorney's Office (PAO) Jurisdiction</p>
                 <p className="text-xs text-muted-foreground leading-normal">
