@@ -42,7 +42,6 @@ function CaseNavigatorContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedCase, setSelectedCase] = useState<string | null>(null);
-  const [mode, setMode] = useState<"explore" | "manage">("explore");
 
   const reqDocRef = useMemoFirebase(() => {
     if (!db || !selectedCase) return null;
@@ -51,15 +50,6 @@ function CaseNavigatorContent() {
   }, [db, selectedCase]);
 
   const { data: dynamicReqs, isLoading: isReqLoading } = useDoc(reqDocRef);
-
-  useEffect(() => {
-    const modeParam = searchParams.get("mode");
-    if (modeParam === "manage") {
-      setMode("manage");
-    } else {
-      setMode("explore");
-    }
-  }, [searchParams]);
 
   const categories = Object.keys(caseCategories);
 

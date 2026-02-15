@@ -1,6 +1,6 @@
 /**
  * @fileOverview Refined legal database for LexConnect.
- * Standardized documentation and process flows based on official PAO standards.
+ * Standardized documentation and process flows based on official PAO and DOJ standards.
  */
 
 export const caseCategories = {
@@ -56,7 +56,7 @@ export const caseCategories = {
       title: "🛡️ VI. SPECIAL CRIMINAL LAWS",
       items: [
         "Drug Cases (RA 9165)", 
-        "VAWC (RA 9262)", 
+        "VAWC Criminal (RA 9262)", 
         "Child Abuse (RA 7610)", 
         "Bouncing Checks (BP 22)", 
         "Illegal Recruitment (RA 8042)", 
@@ -75,44 +75,51 @@ export const caseCategories = {
   ],
   "Civil": [
     {
-      title: "📖 I. FAMILY LAW CASES",
+      title: "📖 I. FAMILY RELATIONS AND PERSONS",
       items: [
-        "Declaration of Nullity of Marriage (Art. 35-38/36)",
-        "Annulment of Voidable Marriage (Art. 45-47)",
-        "Legal Separation (Art. 55-67)",
+        "Declaration of Nullity of Marriage (Art. 36)",
+        "Annulment of Marriage (Arts. 45–47)",
+        "Support - Child or Spouse (Arts. 194–208)",
         "Child Custody (Art. 213)",
-        "Support (Art. 194-208)",
-        "Adoption (RA 11642)",
-        "Recognition of Foreign Divorce (Art. 26)"
+        "VAWC Civil Protection Order (RA 9262)",
+        "Habeas Corpus - Custody of Minor",
+        "Declaration of Presumptive Death (Art. 41)"
       ]
     },
     {
-      title: "🏠 II. CIVIL CODE CASES",
+      title: "🏠 II. PROPERTY AND LAND DISPUTES",
+      items: [
+        "Unlawful Detainer / Forcible Entry (Rule 70)",
+        "Quieting of Title / Reconveyance",
+        "Partition of Property (Art. 494)",
+        "Easement / Right of Way (Art. 649)",
+        "Foreclosure of Mortgage Defense"
+      ]
+    },
+    {
+      title: "💰 III. OBLIGATIONS, CONTRACTS, AND DAMAGES",
       items: [
         "Breach of Contract (Art. 1159)",
         "Collection of Sum of Money",
-        "Damages (Art. 2195-2235)",
-        "Property Disputes (Accion Publiciana/Reivindicatoria)",
-        "Partition of Property (Art. 494-501)",
-        "Quieting of Title (Art. 476-481)",
-        "Ejectment (Forcible Entry / Unlawful Detainer)"
+        "Damages (Tort / Quasi-Delict Art. 2176)",
+        "Defamation Civil Damages (Arts. 19-21)"
       ]
     },
     {
-      title: "💰 III. SMALL CLAIMS CASES",
-      items: ["Collection of Small Debts"]
+      title: "📜 IV. SPECIAL PROCEEDINGS",
+      items: [
+        "Guardianship (Rules 92–97)",
+        "Settlement of Estate (Rule 74)",
+        "Change of Name (Rule 103)",
+        "Correction of Entry (Rule 108 / RA 9048)"
+      ]
     },
     {
-      title: "🛡️ IV. SPECIAL CIVIL ACTIONS",
-      items: ["Habeas Data", "Writ of Amparo"]
-    },
-    {
-      title: "📜 V. SUCCESSION & ESTATE MATTERS",
-      items: ["Settlement of Estate", "Declaration of Heirship"]
-    },
-    {
-      title: "🖊️ VI. OTHER CIVIL MATTERS",
-      items: ["Change of Name", "Correction of Entries"]
+      title: "🛡️ V. OTHER SPECIAL CIVIL ACTIONS",
+      items: [
+        "Interpleader (Rule 62)",
+        "Declaratory Relief (Rule 63)"
+      ]
     }
   ],
   "Labor": [
@@ -138,7 +145,7 @@ export const standardPaoDocs = [
   "OR Certificate of Indigency from DSWD/MSWD",
   "Latest ITR, pay slip, or Certificate of No Income",
   "Valid Government-issued ID (SSS, PhilHealth, Voter's, etc.)",
-  "Relevant Case Documents (Complaint, Summons, Police Report)"
+  "Merit Test: The case must not be frivolous and must have legal basis."
 ];
 
 export const universalPaoFlow = [
@@ -150,7 +157,7 @@ export const universalPaoFlow = [
   { 
     step: 2, 
     title: "Submit Requirements", 
-    content: "Provide proof of indigency (e.g., Certificate of Indigency, Income Tax Return, or Pay Slip), Valid ID, and documents related to the case (e.g., complaint, subpoena)." 
+    content: "Provide proof of indigency (e.g., Certificate of Indigency, ITR, or Pay Slip), Valid ID, and documents related to the case (e.g., complaint, subpoena)." 
   },
   { 
     step: 3, 
@@ -196,39 +203,39 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   },
   "Abortion (Arts. 256–259)": {
     description: "Prohibited acts penalized under Articles 256-259 RPC, whether practiced by the woman herself or others.",
-    requirements: ["Medical records", "Witness affidavits", "Police report"],
+    requirements: ["Medical records", "Witness affidavits", "Police report", "Sworn statements from involved parties"],
     steps: universalPaoFlow
   },
   "Death in Tumultuous Affray (Art. 251)": {
-    description: "Occurs when a person is killed during a chaotic fight involving several people and the specific killer cannot be determined.",
-    requirements: ["Police blotter", "Autopsy report", "Witness affidavits", "Warrant of arrest (if served)"],
+    description: "Killing during a chaotic fight involving several people where the specific killer cannot be determined.",
+    requirements: ["Complaint-Affidavit", "Subpoena or Warrant of Arrest (if served)", "Police blotter", "Autopsy report", "Witness affidavits"],
     steps: universalPaoFlow
   },
   "Discharge of Firearms (Art. 254 / RA 11926)": {
     description: "Shooting at another without intent to kill, or willful and indiscriminate discharge of any firearm.",
-    requirements: ["Police investigation report", "Ballistics report (if any)", "Witness affidavits", "Paraffin test results (if available)"],
+    requirements: ["Police investigation report", "Ballistics report", "Paraffin test results (if available)", "Witness affidavits", "Seizure receipt of firearm"],
     steps: universalPaoFlow
   },
 
   // --- CRIMES AGAINST PROPERTY ---
   "Robbery (Arts. 293–294)": {
     description: "Taking personal property with intent to gain through violence, intimidation, or force.",
-    requirements: ["Police report", "Sworn complaint-affidavit", "Medical certificate (if injured)", "Proof of ownership", "CCTV footage"],
+    requirements: ["Police blotter report", "Sworn complaint-affidavit", "Medical certificate (if injured)", "Proof of ownership (receipt, title)", "CCTV footage", "Witness affidavits"],
     steps: universalPaoFlow
   },
   "Theft (Art. 308)": {
     description: "Taking personal property without consent and without violence, with intent to gain.",
-    requirements: ["Affidavit of loss", "Proof of ownership (receipts)", "CCTV footage", "Witness affidavits"],
+    requirements: ["Police report", "Affidavit of loss", "Proof of ownership", "CCTV footage", "Witness affidavits"],
     steps: universalPaoFlow
   },
   "Qualified Theft (Art. 310)": {
     description: "Theft committed with grave abuse of confidence, by domestic servants, or involving specific property.",
-    requirements: ["Employment records", "Proof of trust relationship", "Inventory of stolen items", "Police investigation report"],
+    requirements: ["Employment records", "Proof of trust relationship", "Inventory of stolen items", "Police investigation report", "CCTV"],
     steps: universalPaoFlow
   },
   "Estafa (Art. 315)": {
     description: "Defrauding another through abuse of confidence or deceit causing damage.",
-    requirements: ["Contract / agreement", "Promissory note", "Receipts / Proof of payment", "Demand letter with proof of receipt", "Bank records", "Screenshots / chat messages"],
+    requirements: ["Written contract / agreement", "Promissory note", "Receipts / Proof of payment", "Demand letter with proof of receipt", "Bank records", "Screenshots / chat messages"],
     steps: universalPaoFlow
   },
   "Arson (Arts. 320–326)": {
@@ -238,19 +245,19 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   },
   "Malicious Mischief (Art. 327)": {
     description: "Deliberate damage to property of another without intent to gain.",
-    requirements: ["Photos of damaged property", "Repair estimates", "Police blotter", "Witness affidavits"],
+    requirements: ["Photos of damaged property", "Repair estimates", "Police blotter", "Witness affidavits", "CCTV footage"],
     steps: universalPaoFlow
   },
 
-  // --- PUBLIC ORDER ---
+  // --- CRIMES AGAINST PUBLIC ORDER ---
   "Rebellion (Art. 134)": {
     description: "Rising publicly and taking arms against the government to remove allegiance or deprive powers.",
-    requirements: ["Intelligence reports", "Firearms seized", "Witness testimony", "Arrest report"],
+    requirements: ["Intelligence reports", "Firearms seized", "Witness testimony", "Arrest report", "Videos/photos"],
     steps: universalPaoFlow
   },
   "Coup d'état (Art. 134-A)": {
     description: "Swift attack by military/police or civilians against government authority to seize power.",
-    requirements: ["Military/Police reports", "Weapons seized", "Intelligence records", "Witness testimony"],
+    requirements: ["Military/Police reports", "Weapons seized", "Intelligence records", "Communications (orders/messages)"],
     steps: universalPaoFlow
   },
   "Sedition (Art. 139)": {
@@ -258,31 +265,36 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["Rally videos", "Social media posts", "Police dispersal report", "Witness affidavits"],
     steps: universalPaoFlow
   },
+  "Conspiracy to Commit Rebellion (Art. 136)": {
+    description: "Agreement between two or more persons to commit rebellion.",
+    requirements: ["Recorded communications", "Meetings documentation", "Confessions", "Witness testimony"],
+    steps: universalPaoFlow
+  },
 
-  // --- SPECIAL LAWS ---
+  // --- SPECIAL CRIMINAL LAWS ---
   "Drug Cases (RA 9165)": {
     description: "Violations of the Comprehensive Dangerous Drugs Act (Sale, Possession, or Use).",
     requirements: ["Chemistry report", "Seizure inventory", "Chain of custody documentation", "Arrest report"],
     steps: universalPaoFlow
   },
-  "VAWC (RA 9262)": {
-    description: "Covers Physical (5a), Sexual (5b), Psychological (5h/i), and Economic (5e/f) violence against women and children.",
-    requirements: ["Police blotter", "Marriage/Birth certificate (proof of relation)", "Screenshots of threats", "Medical report / Medico-legal"],
+  "VAWC Criminal (RA 9262)": {
+    description: "Criminal aspect of Violence Against Women and Their Children (Physical, Sexual, Psychological, Economic).",
+    requirements: ["Police blotter", "Marriage/Birth certificate", "Screenshots of threats", "Medical report / Medico-legal", "Affidavit of victim"],
     steps: universalPaoFlow
   },
   "Bouncing Checks (BP 22)": {
-    description: "Issuing a check without sufficient funds or drawing against a closed account. Malum prohibitum offense.",
+    description: "Issuing a check without sufficient funds or drawing against a closed account.",
     requirements: ["Original dishonored check", "Bank return slip", "Written demand letter", "Proof of receipt of demand letter"],
     steps: universalPaoFlow
   },
   "Anti-Fencing (PD 1612)": {
     description: "Buying, possessing, or selling property knowing it was stolen.",
-    requirements: ["Proof property was stolen", "Proof of possession by accused", "Receipt of sale (if any)"],
+    requirements: ["Police report of original theft", "Proof property was stolen", "Proof of possession by accused", "Sale receipts"],
     steps: universalPaoFlow
   },
   "Electricity Pilferage (RA 7832)": {
     description: "Illegal use of electricity, jumper connections, or tampering with electric meters.",
-    requirements: ["Inspection report by electric company", "Photographs of illegal connection", "Meter tampering report"],
+    requirements: ["Inspection report by electric company", "Photographs of illegal connection", "Meter tampering report", "Affidavit of inspecting officer"],
     steps: universalPaoFlow
   },
   "Cybercrime (RA 10175)": {
@@ -291,77 +303,89 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     steps: universalPaoFlow
   },
 
-  // --- CIVIL FAMILY LAW ---
-  "Declaration of Nullity of Marriage (Art. 35-38/36)": {
-    description: "Covers marriages void from the beginning (Arts. 35-38) or due to Psychological Incapacity (Art. 36).",
-    requirements: ["PSA Marriage Certificate", "PSA Birth Certificates of children", "Psychological evaluation report (for Art. 36)", "Proof of residency"],
+  // --- FAMILY RELATIONS AND PERSONS ---
+  "Declaration of Nullity of Marriage (Art. 36)": {
+    description: "Marriage void from the beginning due to psychological incapacity or other grounds under Arts. 35-38.",
+    requirements: ["PSA Marriage Certificate", "PSA Birth Certificates of children", "Psychological evaluation report", "Proof of residency", "Witness affidavits"],
     steps: universalPaoFlow
   },
-  "Annulment of Voidable Marriage (Art. 45-47)": {
-    description: "Marriages valid until annulled due to fraud, intimidation, or other grounds under Arts. 45-47.",
-    requirements: ["Marriage certificate", "Evidence of ground (medical report, proof of fraud)", "Witness affidavits"],
+  "Annulment of Marriage (Arts. 45–47)": {
+    description: "Voidable marriages due to fraud, intimidation, impotence, or lack of consent.",
+    requirements: ["Marriage certificate", "Medical report (impotence/incapacity)", "Evidence of fraud or force", "Witness statements"],
     steps: universalPaoFlow
   },
-  "Legal Separation (Art. 55-67)": {
-    description: "Separation of bed and board without dissolving the marriage bond.",
-    requirements: ["Marriage certificate", "Evidence of ground (abuse, infidelity)", "Police reports (if applicable)"],
+  "Support - Child or Spouse (Arts. 194–208)": {
+    description: "Legal obligation to provide financial support for sustenance and welfare.",
+    requirements: ["Birth certificate", "Proof of relationship", "Proof of respondent’s income", "Demand letter", "Receipts of expenses"],
     steps: universalPaoFlow
   },
   "Child Custody (Art. 213)": {
     description: "Determination of custody for minor children based on the best interest of the child.",
-    requirements: ["Birth certificate of child", "Social worker report", "Proof of neglect/abuse (if applicable)", "School records"],
+    requirements: ["Birth certificate", "School records", "Proof of neglect/abuse", "Social worker report"],
     steps: universalPaoFlow
   },
-  "Support (Art. 194-208)": {
-    description: "Financial support for sustenance, education, and medical care for children or spouse.",
-    requirements: ["Birth certificate", "Proof of relationship", "Proof of financial capacity of respondent", "Demand letter"],
+  "VAWC Civil Protection Order (RA 9262)": {
+    description: "Petition for TPO/PPO and damages in cases of domestic violence.",
+    requirements: ["Police blotter", "Medical certificate", "Screenshots/messages", "Marriage certificate / Birth certificates"],
     steps: universalPaoFlow
   },
-  "Adoption (RA 11642)": {
-    description: "Domestic administrative adoption process to legally establish parent-child relationship.",
-    requirements: ["Birth certificate of child", "Consent of biological parents", "DSWD case study report", "Home study report"],
+  "Habeas Corpus - Custody of Minor": {
+    description: "Illegal detention or wrongful custody of a minor child.",
+    requirements: ["Birth certificate", "Proof of custody rights", "Affidavit of illegal detention", "Police report"],
     steps: universalPaoFlow
   },
-  "Recognition of Foreign Divorce (Art. 26)": {
-    description: "Petition to recognize a divorce decree obtained abroad by a Filipino-Foreign spouse.",
-    requirements: ["Foreign divorce decree", "Marriage certificate", "Proof of foreign law", "PSA Marriage Certificate with annotation request"],
+  "Declaration of Presumptive Death (Art. 41)": {
+    description: "Judicial declaration for remarrying when a spouse has been absent for 4 years.",
+    requirements: ["Marriage certificate", "Proof of absence", "Police certification", "Affidavits of diligent search"],
     steps: universalPaoFlow
   },
 
-  // --- OTHER CIVIL CODE ---
+  // --- PROPERTY AND LAND DISPUTES ---
+  "Unlawful Detainer / Forcible Entry (Rule 70)": {
+    description: "Recovery of physical possession of property within one year of unlawful deprivation.",
+    requirements: ["Land title (TCT/OCT)", "Lease contract", "Demand to vacate letter", "Tax declaration"],
+    steps: universalPaoFlow
+  },
+  "Quieting of Title / Reconveyance": {
+    description: "Removing cloud over title or reclaiming ownership through judicial action.",
+    requirements: ["Land title", "Deed of sale", "Tax declaration", "Evidence of fraud (if reconveyance)"],
+    steps: universalPaoFlow
+  },
+  "Partition of Property (Art. 494)": {
+    description: "Division of common property among co-owners.",
+    requirements: ["Title", "Proof of co-ownership", "Death certificate (if inheritance)"],
+    steps: universalPaoFlow
+  },
+  "Easement / Right of Way (Art. 649)": {
+    description: "Right of access for landlocked property to public highway.",
+    requirements: ["Land title", "Survey plan", "Proof property is landlocked", "Demand letter"],
+    steps: universalPaoFlow
+  },
+  "Foreclosure of Mortgage Defense": {
+    description: "Defense against extrajudicial or judicial foreclosure of real estate mortgage.",
+    requirements: ["Loan agreement", "Promissory note", "Mortgage contract", "Notice of foreclosure"],
+    steps: universalPaoFlow
+  },
+
+  // --- OBLIGATIONS AND CONTRACTS ---
   "Breach of Contract (Art. 1159)": {
-    description: "Action for damages or specific performance when one party fails to fulfill obligations.",
+    description: "Failure to comply with contractual obligations without valid excuse.",
     requirements: ["Written contract", "Proof of breach", "Demand letter", "Receipts"],
     steps: universalPaoFlow
   },
   "Collection of Sum of Money": {
-    description: "Civil action to recover a specific amount of money owed.",
+    description: "Action to recover unpaid loans or monetary debts.",
     requirements: ["Promissory note", "Loan agreement", "Receipts", "Demand letter"],
     steps: universalPaoFlow
   },
-  "Damages (Art. 2195-2235)": {
-    description: "Action to recover monetary compensation for injury, loss, or harm.",
-    requirements: ["Medical bills / receipts", "Proof of injury/loss", "Police report", "Witness affidavits"],
+  "Damages (Tort / Quasi-Delict Art. 2176)": {
+    description: "Civil action for damages caused by fault or negligence.",
+    requirements: ["Police report", "Medical certificate", "Receipts", "Photos", "Witness affidavits"],
     steps: universalPaoFlow
   },
-  "Property Disputes (Accion Publiciana/Reivindicatoria)": {
-    description: "Recovery of possession (Publiciana) or ownership (Reivindicatoria) of real property.",
-    requirements: ["Land Title (TCT/OCT)", "Tax Declaration", "Deed of Sale", "Survey plan"],
-    steps: universalPaoFlow
-  },
-  "Partition of Property (Art. 494-501)": {
-    description: "Division of common property among co-owners.",
-    requirements: ["Title", "Proof of co-ownership", "Death certificate (if inheritance)", "Tax declarations"],
-    steps: universalPaoFlow
-  },
-  "Quieting of Title (Art. 476-481)": {
-    description: "Action to remove a cloud or doubt on real property title.",
-    requirements: ["Land title", "Deed of sale", "Evidence of cloud on title"],
-    steps: universalPaoFlow
-  },
-  "Ejectment (Forcible Entry / Unlawful Detainer)": {
-    description: "Summary action to recover possession of property within one year of entry or demand.",
-    requirements: ["Title / Lease contract", "Demand to vacate letter", "Proof of ownership", "Barangay certification"],
+  "Defamation Civil Damages (Arts. 19-21)": {
+    description: "Civil action for damages resulting from libel or slanderous remarks.",
+    requirements: ["Copy of defamatory statement", "Screenshot with URL", "Witness affidavits"],
     steps: universalPaoFlow
   }
 };
