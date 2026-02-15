@@ -56,11 +56,12 @@ export const caseCategories = {
         "Anti-Cable Television & Internet Tapping (RA 10088)",
         "Unauthorized Installation of Water/Telephone (PD 401)",
         "Anti-Agricultural Smuggling (RA 10845)",
-        "Illegal Fishing (RA 8550)"
+        "Illegal Fishing (RA 8550)",
+        "Forestry Code (PD 705) & Timber Smuggling"
       ]
     },
     {
-      title: "🔵 V. CRIMES AGAINST STATE SECURITY",
+      title: "🔵 V. CRIMES AGAINST STATE SECURITY & PUBLIC ORDER",
       items: [
         "Rebellion or Insurrection",
         "Coup d'état",
@@ -68,30 +69,19 @@ export const caseCategories = {
         "Disloyalty of Public Officers/Employees",
         "Sedition",
         "Conspiracy to Commit Sedition",
-        "Inciting to Rebellion or Sedition"
-      ]
-    },
-    {
-      title: "🛡 VI. CRIMES AGAINST AUTHORITY",
-      items: [
+        "Inciting to Rebellion or Sedition",
+        "Illegal Assemblies",
+        "Illegal Associations",
         "Direct Assault",
         "Indirect Assault",
         "Resistance and Disobedience to a Person in Authority",
-        "Acts Against Parliamentary Immunity"
-      ]
-    },
-    {
-      title: "📢 VII. PUBLIC DISORDER",
-      items: [
-        "Illegal Assemblies",
-        "Illegal Associations",
         "Tumults and Other Disturbances",
         "Unlawful Utterances, Alarms, and Scandals",
         "Delivering Prisoners from Jail/Evasion of Service of Sentence"
       ]
     },
     {
-      title: "📦 VIII. DANGEROUS DRUGS CASES (RA 9165)",
+      title: "📦 VI. DANGEROUS DRUGS CASES (RA 9165)",
       items: [
         "Illegal Possession of Dangerous Drugs (Section 11)",
         "Illegal Possession of Paraphernalia (Section 12)",
@@ -103,8 +93,9 @@ export const caseCategories = {
       ]
     },
     {
-      title: "💖 IX. CRIMES AGAINST CHASTITY (RPC)",
+      title: "💖 VII. CRIMES AGAINST CHASTITY & SEXUAL VIOLENCE",
       items: [
+        "Rape (R.A. 8353 / Art. 266-A)",
         "Adultery (Art. 333)",
         "Concubinage (Art. 334)",
         "Acts of Lasciviousness (Art. 336)",
@@ -114,20 +105,13 @@ export const caseCategories = {
         "Consented Abduction (Art. 343)",
         "Corruption of Minors (Art. 340)",
         "White Slave Trade (Art. 341)",
-        "Abuses Against Chastity by Public Officers (Art. 245)"
+        "Anti-Trafficking in Persons (R.A. 9208)",
+        "Anti-Sexual Harassment (R.A. 7877)",
+        "Anti-Photo and Video Voyeurism (RA 9995)"
       ]
     },
     {
-      title: "💻 X. SEXUAL VIOLENCE & SPECIAL LAWS",
-      items: [
-        "Rape (R.A. 8353 / Art. 266-A)",
-        "Acts of Lasciviousness under R.A. 7610",
-        "Anti-Trafficking (R.A. 9208)",
-        "Anti-Sexual Harassment (R.A. 7877)"
-      ]
-    },
-    {
-      title: "🔫 XI. FIREARMS & EXPLOSIVES LAWS (RA 10591 & RA 9516)",
+      title: "🔫 VIII. FIREARMS & EXPLOSIVES LAWS",
       items: [
         "Illegal Possession of Firearms (RA 10591)",
         "Illegal Possession of Explosives (RA 9516)",
@@ -136,7 +120,7 @@ export const caseCategories = {
       ]
     },
     {
-      title: "🚗 XII. TRAFFIC LAWS & RECKLESS IMPRUDENCE (Art. 365)",
+      title: "🚗 IX. TRAFFIC LAWS & RECKLESS IMPRUDENCE",
       items: [
         "Reckless Imprudence Resulting in Homicide",
         "Reckless Imprudence Resulting in Physical Injuries",
@@ -144,7 +128,7 @@ export const caseCategories = {
       ]
     },
     {
-      title: "📜 XIII. CRIMES AGAINST CIVIL STATUS (RPC)",
+      title: "📜 X. CRIMES AGAINST CIVIL STATUS (RPC)",
       items: [
         "Simulation of Births (Art. 347)",
         "Usurpation of Civil Status (Art. 348)",
@@ -155,36 +139,33 @@ export const caseCategories = {
       ]
     },
     {
-      title: "📡 XIV. CYBERCRIME (RA 10175 & Special Laws)",
+      title: "📡 XI. CYBERCRIME (RA 10175)",
       items: [
+        "Cyberlibel",
         "Illegal Access (Hacking)",
+        "Computer-related Identity Theft",
+        "Computer-related Fraud (Online Scams)",
+        "Online Estafa/Swindling",
+        "Computer-related Forgery",
         "Illegal Interception",
         "Data Interference",
         "System Interference",
         "Misuse of Devices",
         "Cybersquatting",
-        "Computer-related Forgery",
-        "Computer-related Fraud (Online Scams)",
-        "Computer-related Identity Theft",
         "Cybersex",
-        "Child Pornography (Cyber-related)",
-        "Cyberlibel",
-        "Online Estafa/Swindling",
-        "Online Threats/Coercion",
-        "Photo/Video Voyeurism (RA 9995)",
-        "Violation of Data Privacy Act (RA 10173)",
-        "Financial Account Scamming (AFASA - RA 12010)"
+        "Child Pornography (Cyber-related)"
       ]
     },
     {
-      title: "⚖️ XV. MISCELLANEOUS SPECIAL PENAL LAWS",
+      title: "⚖️ XII. MISCELLANEOUS SPECIAL PENAL LAWS",
       items: [
         "Anti-Graft and Corrupt Practices Act (RA 3019)",
         "Anti-Money Laundering Act (RA 9160)",
         "Illegal Gambling (PD 1602 / RA 9287)",
         "Anti-Illegal Recruitment (RA 8042)",
-        "Forestry Code (PD 705) & Timber Smuggling",
-        "Juvenile Justice (RA 9344) / CICL"
+        "Juvenile Justice (RA 9344) / CICL",
+        "Anti-Financial Account Scamming (AFASA - RA 12010)",
+        "Violation of Data Privacy Act (RA 10173)"
       ]
     }
   ],
@@ -217,12 +198,11 @@ export const caseCategories = {
       items: [
         "Breach of Contract", 
         "Collection of Sum of Money", 
-        "Damages", 
-        "Small Claims"
+        "Damages (Quasi-Delicts)"
       ]
     },
     {
-      title: "⚖️ IV. SPECIAL PROCEEDINGS AND OTHERS",
+      title: "⚖️ IV. SPECIAL PROCEEDINGS",
       items: [
         "Guardianship", 
         "Correction of Entries in the Civil Registry", 
@@ -234,7 +214,7 @@ export const caseCategories = {
   ],
   "Labor": [
     {
-      title: "🔒 I. ILLEGAL DISMISSAL & SECURITY OF TENURE",
+      title: "🔒 I. ILLEGAL DISMISSAL & TENURE",
       items: [
         "Illegal Dismissal (Art. 279)",
         "Regular and Casual Employment (Art. 280)",
@@ -253,8 +233,7 @@ export const caseCategories = {
         "Unlawful Wage Deductions (Art. 113)",
         "13th Month Pay (P.D. 851)",
         "Underpayment of Wages",
-        "Non-payment of Overtime/Holiday Pay",
-        "Attorney's Fees (Art. 111)"
+        "Non-payment of Overtime/Holiday Pay"
       ]
     },
     {
@@ -267,21 +246,9 @@ export const caseCategories = {
       ]
     }
   ],
-  "Special Legislation": [
-    {
-      title: "🏢 Social & Special Laws",
-      items: [
-        "Anti-Trafficking (R.A. 9208)", 
-        "Anti-Child Pornography (RA 9775)", 
-        "Anti-Hazing (RA 11053)", 
-        "Anti-Illegal Recruitment (RA 8042)", 
-        "Juvenile Justice (RA 9344) / CICL"
-      ]
-    }
-  ],
   "Administrative": [
     {
-      title: "🏛 Quasi-Judicial",
+      title: "🏛 QUASI-JUDICIAL & ADMINISTRATIVE",
       items: ["Civil Service Cases", "SSS / GSIS Claims", "DARAB Cases", "PRC Cases", "Barangay Conciliation"]
     }
   ]
@@ -337,7 +304,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     steps: defaultSteps
   },
   "Psychological Violence (VAWC - Sec. 5h-i)": {
-    description: "Acts causing mental or emotional suffering, including intimidation, harassment, stalking, or marital infidelity (Sec. 5h-i, RA 9262).",
+    description: "Acts causing mental or emotional suffering, including intimidation, harassment, stalking, public ridicule, or marital infidelity (Sec. 5h-i, RA 9262).",
     requirements: ["Marriage Certificate / Proof of Relationship", "Psychological Evaluation report", "Screenshots of messages/harassment", "Witness affidavits", "Sworn Affidavit"],
     steps: defaultSteps
   },
@@ -349,12 +316,12 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
 
   // --- CRIMES AGAINST PROPERTY (RPC) ---
   "Robbery (with violence/intimidation - Art. 294)": {
-    description: "Taking of personal property belonging to another with intent to gain, by means of violence or intimidation against persons.",
+    description: "Taking of personal property belonging to another with intent to gain, by means of violence or intimidation against persons (Art. 294).",
     requirements: ["Police report", "Affidavit of loss", "Proof of ownership", "Inventory of stolen items", "Witness affidavits", "CCTV footage"],
     steps: defaultSteps
   },
   "Robbery (with force upon things - Art. 299 & 302)": {
-    description: "Taking of property by breaking into an inhabited house, public building, or private building using force upon things.",
+    description: "Taking of property by breaking into an inhabited house, public building, or private building using force upon things (Art. 299/302).",
     requirements: ["Police report", "Affidavit of loss", "Photos of forced entry", "Inventory of stolen items", "Witness affidavits"],
     steps: defaultSteps
   },
@@ -369,7 +336,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     steps: defaultSteps
   },
   "Qualified Theft (Art. 310)": {
-    description: "Theft committed by a domestic servant, or with grave abuse of confidence, or involving specific items.",
+    description: "Theft committed by a domestic servant, or with grave abuse of confidence, or involving specific items (Art. 310).",
     requirements: ["Employment records", "Police report", "Affidavit of loss", "Proof of ownership", "Witness affidavits"],
     steps: defaultSteps
   },
@@ -384,7 +351,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     steps: defaultSteps
   },
   "Swindling/Estafa (Art. 315)": {
-    description: "Defrauding another through unfaithfulness, abuse of confidence, or false pretenses causing damage or prejudice.",
+    description: "Defrauding another through unfaithfulness, abuse of confidence, or false pretenses (Art. 315 RPC).",
     requirements: ["Contract/Agreement", "Promissory note", "Receipts", "Demand letter with proof of receipt", "SMS/Chat logs"],
     steps: defaultSteps
   },
@@ -399,7 +366,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     steps: defaultSteps
   },
   "Arson (Art. 320-323)": {
-    description: "Intentional burning of property, including destructive arson.",
+    description: "Intentional burning of property, including destructive arson (Revised Penal Code Articles 320-323).",
     requirements: ["Bureau of Fire Protection (BFP) report", "Photos of site", "Sworn Affidavit of witnesses", "Affidavit of loss"],
     steps: defaultSteps
   },
@@ -411,12 +378,12 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
 
   // --- SPECIAL PROPERTY LAWS ---
   "New Anti-Carnapping Act (RA 10883)": {
-    description: "Theft/taking of a motor vehicle with intent to gain, without the owner's consent.",
+    description: "Theft/taking of a motor vehicle with intent to gain, without the owner's consent (RA 10883).",
     requirements: ["Police blotter", "OR/CR of vehicle", "Affidavit of loss", "Purchase documents", "CCTV/Witness statements"],
     steps: defaultSteps
   },
   "Bouncing Checks Law (BP 22)": {
-    description: "Issuing checks without sufficient funds or failing to maintain funds after issuance.",
+    description: "Issuing checks without sufficient funds or failing to maintain funds after issuance (BP Blg 22).",
     requirements: ["Original Bounced Check", "Notice of Dishonor (Demand Letter)", "Registry return receipt", "Affidavit of complainant"],
     steps: defaultSteps
   },
@@ -426,7 +393,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     steps: defaultSteps
   },
   "Qualified Estafa (PD 1689)": {
-    description: "Fraud committed by a syndicate or on funds/property, which carries higher penalties.",
+    description: "Fraud committed by a syndicate or on funds/property, which carries higher penalties (PD 1689).",
     requirements: ["Proof of syndicate/organized group", "Contract/Agreement", "Receipts", "Demand Letter", "Witness affidavits"],
     steps: defaultSteps
   },
@@ -460,10 +427,20 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["Police report on original theft", "Recovery report", "Inventory of seized items", "Witness affidavits"],
     steps: defaultSteps
   },
+  "Anti-Arson Law (PD 1613)": {
+    description: "Special law covering destructive arson and other forms of burning property.",
+    requirements: ["BFP Fire Investigation Report", "Photos of damage", "Witness affidavits", "Proof of ownership/occupancy"],
+    steps: defaultSteps
+  },
+  "Forestry Code (PD 705) & Timber Smuggling": {
+    description: "Illegal cutting, transporting, or possession of timber or other forest products (PD 705).",
+    requirements: ["DENR seizure report", "Inventory of logs", "Witness statements", "Arrest report"],
+    steps: defaultSteps
+  },
 
   // --- PUBLIC ORDER & SECURITY ---
   "Rebellion or Insurrection": {
-    description: "Rising publicly and taking up arms against the Government for the purpose of removing allegiance or power.",
+    description: "Rising publicly and taking up arms against the Government (Art. 134 RPC).",
     requirements: ["Arrest report", "Witness affidavits", "Intelligence reports", "Media/Video evidence"],
     steps: defaultSteps
   },
@@ -478,50 +455,62 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     steps: defaultSteps
   },
   "Direct Assault": {
-    description: "Employing force or intimidation against persons in authority or their agents while in the performance of official duties.",
+    description: "Employing force or intimidation against persons in authority or their agents during official duties.",
     requirements: ["Police blotter", "Medico-legal (if injured)", "Sworn statement of officer", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Resistance and Disobedience to a Person in Authority": {
+    description: "Willful failure to comply with a lawful order of a person in authority (Art. 151 RPC).",
+    requirements: ["Police report", "Sworn statement of officer", "Witness affidavits"],
     steps: defaultSteps
   },
 
   // --- CHASTITY & SEXUAL VIOLENCE ---
-  "Adultery (Art. 333)": {
-    description: "Sexual infidelity committed by a married woman and her paramour.",
-    requirements: ["Marriage Certificate", "Evidence of infidelity (Photos/Messages)", "Witness affidavits", "Sworn complaint"],
-    steps: defaultSteps
-  },
-  "Acts of Lasciviousness (Art. 336)": {
-    description: "Engaging in lewd acts with another person under circumstances of force or intimidation.",
-    requirements: ["Medico-legal report", "Sworn complaint of victim", "Witness affidavits", "Psychological evaluation"],
-    steps: defaultSteps
-  },
   "Rape (R.A. 8353 / Art. 266-A)": {
     description: "Classified as a crime against persons; involves carnal knowledge or sexual assault through force, threat, or intimidation.",
     requirements: ["Medico-legal Examination", "Sworn Affidavit of victim", "Police Blotter", "Photos of injuries (if any)", "Psychological evaluation"],
     steps: defaultSteps
   },
-  "Anti-Trafficking (R.A. 9208)": {
-    description: "Recruitment, transportation, or harboring of persons by means of threat, force, fraud, or deception for exploitation. Includes Child Trafficking (force not required for children) and Qualified Trafficking (syndicate, public officer, or child victim). Victim protection and identity confidentiality are strictly enforced.",
-    requirements: [
-      "Sworn Complaint-Affidavit of victim/witnesses",
-      "Rescue/Spot Report from IACAT, PNP, or NBI",
-      "Birth Certificate of victim (if minor/child)",
-      "Travel Documents, Visas, or Passports (if applicable)",
-      "Medico-Legal Certificate",
-      "Psychological Evaluation report",
-      "Communication logs (SMS, Chat, Social Media)"
-    ],
+  "Adultery (Art. 333)": {
+    description: "Sexual infidelity committed by a married woman and her paramour.",
+    requirements: ["Marriage Certificate", "Evidence of infidelity (Photos/Messages)", "Witness affidavits", "Sworn complaint"],
+    steps: defaultSteps
+  },
+  "Concubinage (Art. 334)": {
+    description: "Infidelity by a married man who keeps a mistress in the conjugal dwelling or under scandalous circumstances.",
+    requirements: ["Marriage Certificate", "Evidence of mistress (Photos/Witnesses)", "Sworn complaint"],
+    steps: defaultSteps
+  },
+  "Acts of Lasciviousness (Art. 336)": {
+    description: "Engaging in lewd acts with another person under force, threat, or intimidation.",
+    requirements: ["Medico-legal report", "Sworn complaint of victim", "Witness affidavits", "Psychological evaluation"],
+    steps: defaultSteps
+  },
+  "Qualified Seduction (Art. 337)": {
+    description: "Seducing a virgin over 12 but under 18 years old.",
+    requirements: ["Birth Certificate of minor", "Evidence of seduction/deceit", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Anti-Trafficking in Persons (R.A. 9208)": {
+    description: "Recruitment or exploitation of persons via threat, force, fraud, or deception (RA 9208 as amended).",
+    requirements: ["Rescue Report (PNP/NBI/IACAT)", "Sworn Affidavit of victim", "Communication logs", "Travel documents"],
+    steps: defaultSteps
+  },
+  "Anti-Sexual Harassment (R.A. 7877)": {
+    description: "Demanding sexual favors in work, education, or training environments (RA 7877).",
+    requirements: ["Sworn Complaint-Affidavit", "Evidence of work/school relation", "Witness statements"],
     steps: defaultSteps
   },
 
   // --- FIREARMS & TRAFFIC ---
   "Illegal Possession of Firearms (RA 10591)": {
-    description: "Possessing unlicensed, unregistered, or altered firearms (loose firearms).",
+    description: "Possessing unlicensed, unregistered, or altered firearms (loose firearms) under RA 10591.",
     requirements: ["Police Arrest Report", "Inventory of Seized Items", "Firearms License Verification", "Chemistry/Ballistics report"],
     steps: defaultSteps
   },
-  "Illegal Possession of Ammunition (PD 1866)": {
-    description: "Possession of ammunition without proper license or authority.",
-    requirements: ["Arrest report", "Inventory of seized ammunition", "Certification from FEO"],
+  "Illegal Possession of Explosives (RA 9516)": {
+    description: "Unlawful possession or manufacture of explosives or incendiary devices (RA 9516).",
+    requirements: ["Arrest report", "Inventory of seized explosives", "Ballistics/Chemical report"],
     steps: defaultSteps
   },
   "Reckless Imprudence Resulting in Homicide": {
@@ -532,69 +521,69 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
 
   // --- CIVIL STATUS ---
   "Bigamy (Art. 349)": {
-    description: "Contracting a second or subsequent marriage while a previous marriage is still valid and subsisting.",
+    description: "Contracting a second marriage while a previous marriage is still valid and subsisting.",
     requirements: ["Marriage Certificate (1st Marriage)", "Marriage Certificate (2nd Marriage)", "CENOMAR", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Simulation of Births (Art. 347)": {
+    description: "Making it appear a child was born to a person not their biological mother.",
+    requirements: ["Birth Certificate", "Hospital records", "Witness affidavits", "DNA test (if available)"],
     steps: defaultSteps
   },
 
   // --- CYBERCRIME (RA 10175) ---
-  "Illegal Access (Hacking)": {
-    description: "Unauthorized access to a computer system or network (Section 4a of RA 10175).",
-    requirements: ["Screenshots of unauthorized access", "IP logs (if available)", "Proof of account ownership", "Police blotter from PNP Anti-Cybercrime Group"],
+  "Cyberlibel": {
+    description: "Libel committed through a computer system or social media (RA 10175).",
+    requirements: ["Screenshots of defamatory posts", "URLs of the content", "Proof of publication and malice", "Witness affidavits"],
     steps: defaultSteps
   },
-  "Cyberlibel": {
-    description: "Libel as defined in Art. 355 of the Revised Penal Code, committed through a computer system or social media.",
-    requirements: ["Screenshots of defamatory posts/comments", "URLs of the content", "Proof of publication and malice", "Witness affidavits"],
+  "Illegal Access (Hacking)": {
+    description: "Unauthorized access to a computer system or network (RA 10175).",
+    requirements: ["Screenshots of unauthorized access", "IP logs (if available)", "Proof of account ownership"],
     steps: defaultSteps
   },
   "Online Estafa/Swindling": {
-    description: "Traditional estafa committed through online platforms, such as fake sellers or investment scams.",
-    requirements: ["Screenshots of transactions", "Communication logs (Chat/SMS)", "Proof of payment", "Evidence of false pretenses"],
-    steps: defaultSteps
-  },
-
-  // --- MISCELLANEOUS SPECIAL PENAL LAWS ---
-  "Anti-Graft and Corrupt Practices Act (RA 3019)": {
-    description: "Criminal prosecution of public officers and private individuals for corruption.",
-    requirements: ["Sworn Complaint-Affidavit", "Evidence of official function", "Financial records", "Witness statements"],
-    steps: defaultSteps
-  },
-  "Anti-Money Laundering Act (RA 9160)": {
-    description: "Prosecution of crimes where proceeds of unlawful activities are integrated into the financial system.",
-    requirements: ["Bank statements", "Evidence of predicate crime", "Transaction records", "Financial Investigation Report"],
-    steps: defaultSteps
-  },
-  "Illegal Gambling (PD 1602 / RA 9287)": {
-    description: "Engaging in unauthorized gambling activities such as jueteng.",
-    requirements: ["Police arrest report", "Seized gambling paraphernalia", "Witness affidavits"],
-    steps: defaultSteps
-  },
-  "Anti-Illegal Recruitment (RA 8042)": {
-    description: "Recruitment activities without the required license or authority from the POEA.",
-    requirements: ["Deployment records", "Passport & Visa copies", "Proof of remittance", "POEA certification"],
-    steps: defaultSteps
-  },
-  "Juvenile Justice (RA 9344) / CICL": {
-    description: "Legal assistance to minors accused of crimes (Children in Conflict with the Law).",
-    requirements: ["Birth Certificate of Minor", "Social Case Study Report", "Police Blotter", "Parent/Guardian identification"],
+    description: "Fraud committed through online platforms, such as fake sellers or phishing.",
+    requirements: ["Screenshots of transactions", "Communication logs (Chat/SMS)", "Proof of payment (GCash/Bank)"],
     steps: defaultSteps
   },
 
   // --- CIVIL LAW ---
   "Declaration of Nullity of Marriage": {
-    description: "Declaration that a marriage was void from the beginning (e.g., Art. 36 Psychological Incapacity).",
+    description: "Declaration that a marriage was void from the beginning (e.g., Art. 36 Family Code).",
     requirements: ["PSA Marriage Contract", "PSA Birth Certificates of children", "Psychological Evaluation Report", "Barangay Certificate of Residence"],
     steps: defaultSteps
   },
   "Support": {
-    description: "Everything indispensable for sustenance, dwelling, clothing, and medical attendance.",
+    description: "Everything indispensable for sustenance, dwelling, and medical attendance (Articles 194-208 Family Code).",
     requirements: ["PSA Birth Certificate of child", "Proof of financial need", "Proof of respondent's income"],
     steps: defaultSteps
   },
-  "Habeas Corpus": {
-    description: "A legal proceeding to secure the release of a person who has been illegally detained.",
-    requirements: ["Sworn Petition", "Evidence of illegal detention", "Witness affidavits"],
+  "Forcible Entry": {
+    description: "Summary proceeding to recover possession of land taken by force, threat, or stealth.",
+    requirements: ["Proof of prior physical possession", "Police report on entry", "Demand letter", "Witness affidavits"],
+    steps: defaultSteps
+  },
+  "Collection of Sum of Money": {
+    description: "Claims for debts or unpaid loans, often processed under Small Claims Rules.",
+    requirements: ["Promissory Note/Contract", "Demand Letter with proof of receipt", "Small Claims forms"],
+    steps: defaultSteps
+  },
+
+  // --- LABOR LAW ---
+  "Illegal Dismissal (Art. 279)": {
+    description: "Dismissal of an employee without just cause or due process (Art. 279 Labor Code).",
+    requirements: ["Employment Contract", "Notice of Dismissal (if any)", "Payslips", "Company ID"],
+    steps: defaultSteps
+  },
+  "13th Month Pay (P.D. 851)": {
+    description: "Claims for mandatory 13th-month pay for employees who rendered at least 1 month service.",
+    requirements: ["Employment record", "Payslips", "Proof of non-payment"],
+    steps: defaultSteps
+  },
+  "OFW Cases (Illegal Dismissal/Benefits)": {
+    description: "Claims for illegal dismissal, death/disability benefits under POEA contracts.",
+    requirements: ["POEA Contract", "Deployment record", "Passport/Visa copies", "Notice of termination"],
     steps: defaultSteps
   }
 };
@@ -602,7 +591,8 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
 export const categoryDefaults: Record<string, { requirements: string[], steps: any[] }> = {
   Criminal: { requirements: ["Court Subpoena", "Arrest Record", "Copy of Complaint"], steps: universalPaoFlow },
   Civil: { requirements: ["Relevant contracts", "Demand letter", "Proof of claim"], steps: universalPaoFlow },
-  Labor: { requirements: ["Employment records", "Payslips", "Notice of Dismissal", "Company ID"], steps: universalPaoFlow }
+  Labor: { requirements: ["Employment records", "Payslips", "Notice of Dismissal", "Company ID"], steps: universalPaoFlow },
+  Administrative: { requirements: ["Agency notice", "ID card", "Evidence of claim"], steps: universalPaoFlow }
 };
 
 export const pAONotes = [
