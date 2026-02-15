@@ -32,19 +32,23 @@ export const caseCategories = {
     {
       title: "💜 III. VAWC & DOMESTIC ABUSE (R.A. 9262)",
       items: [
-        "Physical Violence (VAWC - Sec 5a)", 
-        "Sexual Violence (VAWC - Sec 5b)", 
-        "Psychological Violence (VAWC - Sec 5h-i)", 
-        "Economic Abuse (VAWC - Sec 5e-f)"
+        "Physical Violence (Section 5a)", 
+        "Sexual Violence (Section 5b)", 
+        "Psychological Violence (Section 5h & 5i)", 
+        "Economic Abuse (Section 5e & 5f)"
       ]
     },
     {
-      title: "🟠 IV. CRIMES AGAINST PROPERTY",
+      title: "🟠 IV. CRIMES AGAINST PROPERTY (RPC)",
       items: ["Robbery", "Theft", "Qualified Theft", "Estafa", "Malicious Mischief"]
     },
     {
       title: "🛡️ V. PROPERTY CRIMES (SPECIAL LAWS)",
-      items: ["BP Blg. 22 (Anti-Bouncing Checks)", "PD 1612 (Anti-Fencing)", "RA 7832 (Anti-Electricity Pilferage)"]
+      items: [
+        "BP Blg. 22 (Anti-Bouncing Checks)", 
+        "PD 1612 (Anti-Fencing)", 
+        "RA 7832 (Anti-Electricity Pilferage)"
+      ]
     },
     {
       title: "⚖️ VI. PUBLIC ORDER (STATE SECURITY)",
@@ -151,9 +155,9 @@ export const pAONotes = [
 ];
 
 export const caseSpecificData: Record<string, { requirements: string[], steps: any[], description: string }> = {
-  // --- CRIMES AGAINST PROPERTY ---
+  // --- CRIMES AGAINST PROPERTY (RPC) ---
   "Robbery": {
-    description: "Robbery (Art 293) involves taking personal property belonging to another with intent to gain through violence, intimidation, or force. Related: Art 294 (Violence/Intimidation), Art 295 (with Homicide), Art 299-302 (Inhabited/Uninhabited places).",
+    description: "Robbery (Art 293) involves taking personal property with intent to gain through violence, intimidation, or force. Related: Art 294 (Violence), Art 295 (with Homicide), Art 299-302 (Inhabited/Uninhabited places).",
     requirements: [
       "Police Blotter Report",
       "Sworn Complaint-Affidavit",
@@ -161,8 +165,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
       "Proof of Ownership (Receipt, OR/CR, Title)",
       "CCTV Footage (if available)",
       "Witness Affidavits",
-      "Photos of the Crime Scene",
-      "Arrest Report (if suspect was caught)"
+      "Photos of the Crime Scene"
     ],
     steps: universalPaoFlow
   },
@@ -173,34 +176,29 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
       "Affidavit of Loss",
       "Proof of Ownership (Receipt, Purchase Agreement)",
       "CCTV Footage",
-      "Witness Affidavits",
-      "Recovery Receipt (if items were recovered)"
+      "Witness Affidavits"
     ],
     steps: universalPaoFlow
   },
   "Qualified Theft": {
-    description: "Qualified Theft (Art 310) is theft committed by a domestic servant, with grave abuse of confidence, or involving motor vehicles, mail, large cattle, etc. Penalties are higher than ordinary theft.",
+    description: "Qualified Theft (Art 310) is committed by a domestic servant, with grave abuse of confidence, or involving motor vehicles, large cattle, etc. Penalties are higher.",
     requirements: [
       "Employment Records (if domestic servant)",
       "Proof of Trust Relationship (Contract, ID)",
       "Proof of Ownership",
-      "CCTV Footage",
-      "Inventory of Stolen Items",
       "Police Investigation Report"
     ],
     steps: universalPaoFlow
   },
   "Estafa": {
-    description: "Estafa (Art 315) occurs when a person defrauds another through abuse of confidence or deceit, causing damage. Common types: abuse of confidence, deceit, or bouncing checks (BP 22).",
+    description: "Estafa (Art 315) occurs when a person defrauds another through abuse of confidence or deceit. Common types: abuse of confidence, deceit, or bouncing checks.",
     requirements: [
       "Written Contract or Agreement",
       "Promissory Note",
       "Receipts or Proof of Payment",
       "Demand Letter with Proof of Receipt",
       "Screenshots / Chat Messages",
-      "Bank Records",
-      "Witness Affidavits",
-      "Dishonored Check & Bank Return Slip (if check involved)"
+      "Dishonored Check & Bank Return Slip (if applicable)"
     ],
     steps: universalPaoFlow
   },
@@ -211,8 +209,44 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
       "Repair Estimates",
       "Police Blotter",
       "Witness Affidavits",
-      "CCTV Footage",
       "Proof of Ownership"
+    ],
+    steps: universalPaoFlow
+  },
+
+  // --- PROPERTY CRIMES (SPECIAL LAWS) ---
+  "BP Blg. 22 (Anti-Bouncing Checks)": {
+    description: "Anti-Bouncing Checks Law. Punishes issuing a check that is dishonored due to insufficient funds or drawn against a closed account. It is a malum prohibitum offense (intent to defraud not required).",
+    requirements: [
+      "Original dishonored check",
+      "Bank return slip (stamped NSF / Closed Account)",
+      "Written demand letter",
+      "Proof of receipt of demand letter (Registry return receipt)",
+      "Proof of underlying obligation (Contract, receipts)"
+    ],
+    steps: universalPaoFlow
+  },
+  "PD 1612 (Anti-Fencing)": {
+    description: "Anti-Fencing Law of 1979. Punishes buying, possessing, or selling property knowing it was stolen. Possession of stolen property creates a presumption of fencing.",
+    requirements: [
+      "Police report of original theft/robbery",
+      "Proof property was stolen",
+      "Proof accused possessed/sold item",
+      "Receipts of sale",
+      "Witness testimony",
+      "CCTV footage"
+    ],
+    steps: universalPaoFlow
+  },
+  "RA 7832 (Anti-Electricity Pilferage)": {
+    description: "Anti-Electricity Pilferage Act of 1994. Punishes illegal use of electricity, jumper connections, meter tampering, or stealing transmission lines.",
+    requirements: [
+      "Inspection report by electric company",
+      "Photographs of illegal connection",
+      "Disconnection notice",
+      "Meter tampering report",
+      "Affidavit of inspecting officer",
+      "Technical report"
     ],
     steps: universalPaoFlow
   },
@@ -306,23 +340,23 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   },
 
   // --- VAWC (RA 9262) ---
-  "Physical Violence (VAWC - Sec 5a)": {
+  "Physical Violence (Section 5a)": {
     description: "Acts causing bodily harm, such as battery, physical assault, threats, or causing fear of harm. Section 5a of R.A. 9262.",
     requirements: ["Proof of Relation (Marriage/Birth Cert)", "Medico-Legal Certificate", "Photos of Injuries", "Police/Barangay Blotter", "Affidavits"],
     steps: universalPaoFlow
   },
-  "Sexual Violence (VAWC - Sec 5b)": {
-    description: "Sexual acts including rape, sexual harassment, acts of lasciviousness, treating someone as a sex object, or prostituting the woman or child. Section 5b of R.A. 9262.",
+  "Sexual Violence (Section 5b)": {
+    description: "Sexual acts including rape, sexual harassment, acts of lasciviousness, treating someone as a sex object, demeaning remarks, forcing cohabitation with a mistress, or prostituting the woman or child. Section 5b of R.A. 9262.",
     requirements: ["Medico-Legal Report", "Psychological Evaluation", "Police Report", "Witness Affidavits", "Screenshots (if applicable)"],
     steps: universalPaoFlow
   },
-  "Psychological Violence (VAWC - Sec 5h-i)": {
-    description: "Acts causing mental or emotional anguish: marital infidelity, intimidation, harassment, stalking, public ridicule, or deprivation of custody. Section 5h & 5i of R.A. 9262.",
+  "Psychological Violence (Section 5h & 5i)": {
+    description: "Acts causing mental or emotional anguish, such as marital infidelity, intimidation, harassment, stalking, public ridicule, verbal abuse, damage to property, unlawful deprivation of custody or visitation, and causing a child to witness abuse. Section 5h & 5i of R.A. 9262.",
     requirements: ["Screenshots (SMS/Chat)", "Psychological Evaluation Report", "Barangay Protection Order (BPO)", "Witness Affidavits", "Proof of Harassment"],
     steps: universalPaoFlow
   },
-  "Economic Abuse (VAWC - Sec 5e-f)": {
-    description: "Acts causing financial dependence: withdrawal of financial support, preventing work, controlling assets, or destroying property. Section 5e & 5f of R.A. 9262.",
+  "Economic Abuse (Section 5e & 5f)": {
+    description: "Acts causing financial dependence, including withdrawal of financial support, preventing work or business, controlling assets, and destroying household property. Section 5e & 5f of R.A. 9262.",
     requirements: ["Evidence of Withheld Support", "Bank Statements/Payslips", "Affidavit of Fact", "Proof of Property Damage", "Employment Records"],
     steps: universalPaoFlow
   }
