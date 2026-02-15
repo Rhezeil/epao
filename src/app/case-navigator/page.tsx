@@ -47,7 +47,7 @@ function CaseNavigatorContent() {
 
   const reqDocRef = useMemoFirebase(() => {
     if (!db || !selectedCase) return null;
-    const docId = selectedCase.toLowerCase().replace(/[\s/]+/g, '-');
+    const docId = selectedCase.toLowerCase().replace(/[\s/]+/g, '-').replace(/[()]+/g, '');
     return doc(db, "caseRequirements", docId);
   }, [db, selectedCase]);
 
@@ -213,7 +213,7 @@ function CaseNavigatorContent() {
                         ))
                       )}
                       {(!guidance.requirements || guidance.requirements.length === 0) && !isReqLoading && (
-                        <p className="text-xs text-muted-foreground italic text-center py-8">Standard requirements apply for this case.</p>
+                        <p className="text-xs text-muted-foreground italic text-center py-8">Standard evidence requirements apply for this case.</p>
                       )}
                     </CardContent>
                   </Card>
@@ -325,24 +325,7 @@ function CaseNavigatorContent() {
         </div>
 
         <div className="min-h-[500px]">
-          {selectedCase ? renderCaseDetails(selectedCase) : mode === "manage" ? (
-             <div className="flex flex-col items-center justify-center py-16 text-center animate-in zoom-in-95">
-               <div className="p-6 bg-primary/5 rounded-[3rem] mb-6 shadow-inner border border-primary/5">
-                 <CalendarCheck className="h-12 w-12 text-primary" />
-               </div>
-               <h2 className="text-2xl font-black text-primary tracking-tight">Manage Appointment</h2>
-               <p className="text-sm text-muted-foreground mt-2 font-semibold">Enter your reference code PAO-XXXXXX to continue.</p>
-               <div className="mt-8 w-full max-w-sm flex flex-col gap-4">
-                  <Input 
-                    placeholder="PAO-123456" 
-                    className="h-16 text-2xl font-black text-center tracking-[0.2em] rounded-2xl border-2 focus:border-primary border-primary/10 shadow-lg" 
-                    value={refCode} 
-                    onChange={(e) => setRefCode(e.target.value)} 
-                  />
-                  <Button className="h-12 text-base font-bold rounded-xl shadow-lg" onClick={() => router.push('/case-navigator?mode=manage')}>Track Appointment</Button>
-               </div>
-             </div>
-          ) : (
+          {selectedCase ? renderCaseDetails(selectedCase) : (
             <div className="space-y-12">
               {selectedCategory ? (
                 renderCategoryListView(selectedCategory, (caseCategories as any)[selectedCategory])
@@ -352,7 +335,7 @@ function CaseNavigatorContent() {
                     <p className="text-[10px] text-primary font-black uppercase tracking-[0.3em]">Browse Law Areas</p>
                   </div>
                   
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                     {categories.map((category) => (
                       <button
                         key={category}
@@ -366,7 +349,6 @@ function CaseNavigatorContent() {
                           {category === 'Criminal' && <Scale className="h-8 w-8" />}
                           {category === 'Civil' && <FileText className="h-8 w-8" />}
                           {category === 'Labor' && <Briefcase className="h-8 w-8" />}
-                          {category === 'Special Legislation' && <ShieldCheck className="h-8 w-8" />}
                           {category === 'Administrative' && <Info className="h-8 w-8" />}
                         </div>
                         <span className="text-center text-sm leading-tight tracking-tight">{category}</span>
@@ -379,9 +361,9 @@ function CaseNavigatorContent() {
                        <div className="space-y-8">
                          <div className="text-center space-y-1">
                            <h3 className="text-xl font-black text-amber-900 flex items-center justify-center gap-3">
-                             <AlertCircle className="h-6 w-6" /> Important Reminders
+                             <AlertCircle className="h-6 w-6" /> Important PAO Reminders
                            </h3>
-                           <p className="text-amber-800/60 font-bold uppercase tracking-widest text-[10px]">Public Attorney's Office Guidelines</p>
+                           <p className="text-amber-800/60 font-bold uppercase tracking-widest text-[10px]">Standard Operating Guidelines</p>
                          </div>
                          <div className="grid md:grid-cols-2 gap-4">
                            {pAONotes.map((note, i) => (
