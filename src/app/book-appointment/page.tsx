@@ -12,6 +12,7 @@ import { Calendar as CalendarIcon, Clock, CheckCircle, ArrowRight, Loader2, Shie
 import { useFirestore, setDocumentNonBlocking } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 function BookAppointmentContent() {
   const router = useRouter();

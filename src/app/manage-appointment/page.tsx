@@ -6,12 +6,13 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
 import { collection, query, where, doc } from "firebase/firestore";
-import { Search, Calendar, MapPin, XCircle, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Search, Calendar, XCircle, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 export default function ManageAppointmentPage() {
   const [refCode, setRefCode] = useState("");
