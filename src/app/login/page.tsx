@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
@@ -38,6 +39,7 @@ function LoginContent() {
   const redirectPath = searchParams.get('redirect');
 
   useEffect(() => {
+    // If user is already signed in via auth persistence, initialize them
     if (auth.currentUser && !isLoading) {
       checkAndInitializeUser(auth.currentUser);
     }
@@ -70,18 +72,20 @@ function LoginContent() {
       // 2. Check Existing Lawyer Record
       const lawyerDocRef = doc(db, "roleLawyer", user.uid);
       const lawyerDoc = await getDoc(lawyerDocRef);
+      // Also check the authorized email whitelist
       const lawyerAuthDoc = await getDoc(doc(db, "lawyersEmail", normalizedEmail));
       const isAuthorizedLawyer = lawyerDoc.exists() || lawyerAuthDoc.exists() || normalizedEmail.endsWith("@lawyers.com");
 
       if (isAuthorizedLawyer) {
-        setDocumentNonBlocking(lawyerDocRef, {
-          id: user.uid,
-          email: normalizedEmail,
-          role: "lawyer",
-          profileId: "profile",
-          lastLoginAt: new Date().toISOString()
-        }, { merge: true });
-
+        if (!lawyerDoc.exists()) {
+          setDocumentNonBlocking(lawyerDocRef, {
+            id: user.uid,
+            email: normalizedEmail,
+            role: "lawyer",
+            profileId: "profile",
+            createdAt: new Date().toISOString()
+          }, { merge: true });
+        }
         router.push(redirectPath || `/dashboard/lawyer`);
         return;
       }
@@ -101,14 +105,18 @@ function LoginContent() {
         }, { merge: true });
       }
 
-      // FINAL REDIRECT: Prioritize the 'redirect' query parameter
       if (redirectPath) {
         router.push(decodeURIComponent(redirectPath));
       } else {
         router.push(`/dashboard/client`);
       }
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Sync Error", description: error.message || "Failed to synchronize your role records." });
+      console.error("Initialization error:", error);
+      toast({ 
+        variant: "destructive", 
+        title: "Access Error", 
+        description: "Your account is active, but we couldn't verify your dashboard permissions." 
+      });
     } finally {
       setIsLoading(false);
     }
@@ -143,6 +151,7 @@ function LoginContent() {
       let finalIdentifier = identifier.trim();
       let finalPassword = password;
 
+      // Handle mobile-based accounts
       if (/^\d{10,11}$/.test(finalIdentifier)) {
         finalIdentifier = `${finalIdentifier}@epao.mobile`;
         if (useOtp) {
@@ -156,7 +165,11 @@ function LoginContent() {
       const userCredential = await signInWithEmailAndPassword(auth, finalIdentifier, finalPassword);
       await checkAndInitializeUser(userCredential.user);
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Login failed", description: error.message });
+      let errorMsg = error.message;
+      if (error.code === 'auth/user-not-found') errorMsg = "Account not found. Please register first.";
+      if (error.code === 'auth/wrong-password') errorMsg = "Incorrect password. Please try again.";
+      
+      toast({ variant: "destructive", title: "Login failed", description: errorMsg });
       setIsLoading(false);
     }
   };
@@ -171,6 +184,7 @@ function LoginContent() {
     setPassword(demoAccounts[role].password);
     setUseOtp(false);
     setStep(1);
+    toast({ title: `${role.toUpperCase()} selected`, description: "Click 'Sign In' to access the dashboard." });
   };
 
   return (
@@ -221,14 +235,17 @@ function LoginContent() {
                     {!useOtp ? (
                       <div className="space-y-2">
                         <Label htmlFor="password" title="Password" className="text-xs font-black uppercase text-primary/60 ml-1">Secure Password</Label>
-                        <Input 
-                          id="password" 
-                          type="password" 
-                          value={password} 
-                          onChange={(e) => setPassword(e.target.value)} 
-                          required 
-                          className="h-12 rounded-2xl border-primary/20 bg-white/50 focus-visible:ring-primary/20"
-                        />
+                        <div className="relative">
+                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/30" />
+                          <Input 
+                            id="password" 
+                            type="password" 
+                            value={password} 
+                            onChange={(e) => setPassword(e.target.value)} 
+                            required 
+                            className="h-12 pl-12 rounded-2xl border-primary/20 bg-white/50 focus-visible:ring-primary/20"
+                          />
+                        </div>
                       </div>
                     ) : null}
 
@@ -236,7 +253,7 @@ function LoginContent() {
                       {isLoading ? <Loader2 className="animate-spin mr-2 h-6 w-6" /> : "Sign In"}
                     </Button>
 
-                    {/^\d{10,11}$/.test(identifier.trim()) && (
+                    {/^\d{10,11}$/.test(identifier.trim()) && !useOtp && (
                       <div className="pt-2">
                         <Button 
                           type="button" 
@@ -246,7 +263,7 @@ function LoginContent() {
                           disabled={isSmsSending}
                         >
                           {isSmsSending ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Phone className="mr-2 h-4 w-4" />}
-                          Get SMS Access Code
+                          Access via SMS Code
                         </Button>
                       </div>
                     )}
@@ -285,7 +302,7 @@ function LoginContent() {
                   <span className="w-full border-t border-primary/10" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white/80 px-4 text-primary/40 font-black tracking-widest">Quick Access</span>
+                  <span className="bg-white/80 px-4 text-primary/40 font-black tracking-widest">Quick Demo Access</span>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-3 w-full">

@@ -22,6 +22,7 @@ service cloud.firestore {
 
     match /caseRequirements/{docId} {
       allow read: if true;
+      allow write: if isAdmin();
     }
 
     match /users/{userId} {
@@ -37,10 +38,7 @@ service cloud.firestore {
     }
 
     match /appointments/{appointmentId} {
-      allow get: if true;
-      allow create: if true;
-      allow update: if true;
-      allow list: if true;
+      allow get, list, create, update: if true;
     }
 
     match /lawyerAvailability/{availId} {
@@ -50,15 +48,27 @@ service cloud.firestore {
 
     match /roleAdmin/{userId} {
       allow get: if isOwner(userId) || isAdmin();
-      allow write: if isAdmin();
+      // Allow bootstrap admin to create their own record
+      allow write: if isOwner(userId) && (request.auth.token.email == "admin@epao.com" || isAdmin());
     }
     
     match /roleLawyer/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if true;
+      // Allow authorized lawyers to create their own record
+      allow write: if isOwner(userId) && (request.auth.token.email.matches('.*@lawyers\\.com') || isAdmin());
+    }
+
+    match /lawyersEmail/{email} {
+      allow read: if true;
       allow write: if isAdmin();
     }
 
-    // Version: 2024-05-24T12:00:00Z - Comprehensive RBAC Deployment
+    match /roleAdmin/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Version: 2024-05-24T15:30:00Z - Bootstrap-Ready RBAC
   }
 }
