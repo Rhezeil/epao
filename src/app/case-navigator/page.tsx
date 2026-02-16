@@ -1,3 +1,4 @@
+
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -13,18 +14,17 @@ import {
   X, 
   CheckCircle2, 
   FileText, 
-  Info, 
+  Scale, 
   CalendarCheck, 
   Loader2, 
   ShieldCheck, 
-  Scale, 
-  AlertCircle,
   Briefcase,
   Layers,
   ClipboardList,
   User,
   Gavel,
-  AlertTriangle
+  AlertTriangle,
+  ArrowRight
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
@@ -36,10 +36,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 function CaseNavigatorContent() {
-  const { role } = useAuth();
+  const { role, user } = useAuth();
   const db = useFirestore();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedCase, setSelectedCase] = useState<string | null>(null);
@@ -93,6 +92,20 @@ function CaseNavigatorContent() {
     setSearchQuery("");
   };
 
+  const handleBookingRedirect = (caseName: string) => {
+    const category = selectedCategory || 'General';
+    const baseUrl = `/dashboard/client/book-appointment`;
+    const queryParams = `?caseType=${encodeURIComponent(caseName)}&category=${encodeURIComponent(category)}`;
+    
+    if (user) {
+      router.push(`${baseUrl}${queryParams}`);
+    } else {
+      // For guests, redirect to login then to the booking page
+      const returnUrl = encodeURIComponent(`${baseUrl}${queryParams}`);
+      router.push(`/login?redirect=${returnUrl}`);
+    }
+  };
+
   const getEffectiveData = () => {
     if (dynamicReqs) {
       return { 
@@ -138,7 +151,11 @@ function CaseNavigatorContent() {
               <div className="space-y-1">
                 <p className="text-[10px] font-bold text-primary/40 uppercase tracking-widest">Legal Matter</p>
                 <h2 className="text-xl font-black text-[#1A3B6B] leading-tight tracking-tight">{caseName}</h2>
-                {selectedCategory && <Badge className="mt-2 px-3 py-1 text-xs font-bold rounded-full bg-primary/10 text-primary border-none">{selectedCategory}</Badge>}
+                {selectedCategory && (
+                  <Badge className="mt-2 px-3 py-1 text-xs font-bold rounded-full bg-primary/10 text-primary border-none">
+                    {selectedCategory}
+                  </Badge>
+                )}
               </div>
 
               {guidance.description && (
@@ -163,12 +180,15 @@ function CaseNavigatorContent() {
 
               <div className="pt-4">
                 <Button 
-                  className="w-full h-12 bg-primary hover:bg-[#1A3B6B] text-white text-base font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all hover:scale-[1.02] active:scale-95"
-                  onClick={() => router.push(`/dashboard/client/book-appointment?caseType=${encodeURIComponent(caseName)}&category=${encodeURIComponent(selectedCategory || 'General')}`)}
+                  className="w-full h-14 bg-primary hover:bg-[#1A3B6B] text-white text-base font-bold rounded-2xl flex items-center justify-center gap-2 shadow-lg transition-all hover:scale-[1.02] active:scale-95"
+                  onClick={() => handleBookingRedirect(caseName)}
                 >
-                  <CalendarCheck className="h-5 w-5" />
+                  <CalendarCheck className="h-6 w-6" />
                   Book Consultation
                 </Button>
+                <p className="text-[10px] text-center text-muted-foreground mt-3 font-medium">
+                  {user ? "Click to schedule your slot now." : "You will be asked to sign in before confirming."}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -308,7 +328,7 @@ function CaseNavigatorContent() {
             <Compass className="h-12 w-12 text-primary" />
           </div>
           <h1 className="text-3xl md:text-4xl font-black font-headline text-primary tracking-tight leading-tight">
-            Case Navigator
+            Legal Navigator
           </h1>
           <p className="text-sm text-muted-foreground font-semibold leading-relaxed max-w-2xl mx-auto">
             Find required documents and process flows for legal matters in the Philippines.
@@ -351,8 +371,8 @@ function CaseNavigatorContent() {
                         <AlertTriangle className="h-12 w-12 text-amber-500" />
                       </div>
                       <div className="space-y-1">
-                        <h3 className="text-xl font-bold text-amber-900">No results found</h3>
-                        <p className="text-sm text-amber-800/60 font-medium">No case type found for "{searchQuery}".</p>
+                        <h3 className="text-xl font-bold text-amber-900">No case type found</h3>
+                        <p className="text-sm text-amber-800/60 font-medium">No results found for "{searchQuery}".</p>
                       </div>
                       <Button variant="outline" onClick={() => setSearchQuery("")} className="rounded-xl font-bold">Clear Search</Button>
                     </div>
@@ -380,7 +400,7 @@ function CaseNavigatorContent() {
                           {category === 'Criminal' && <Scale className="h-8 w-8" />}
                           {category === 'Civil' && <FileText className="h-8 w-8" />}
                           {category === 'Labor' && <Briefcase className="h-8 w-8" />}
-                          {category === 'Administrative' && <Info className="h-8 w-8" />}
+                          {category === 'Administrative' && <FileText className="h-8 w-8" />}
                           {category === 'Quasi-Judicial' && <Gavel className="h-8 w-8" />}
                         </div>
                         <span className="text-center text-sm leading-tight tracking-tight">{category}</span>
@@ -393,7 +413,7 @@ function CaseNavigatorContent() {
                        <div className="space-y-8">
                          <div className="text-center space-y-1">
                            <h3 className="text-xl font-black text-amber-900 flex items-center justify-center gap-3">
-                             <AlertCircle className="h-6 w-6" /> Important PAO Reminders
+                             <Scale className="h-6 w-6" /> Important PAO Reminders
                            </h3>
                            <p className="text-amber-800/60 font-bold uppercase tracking-widest text-[10px]">Standard Operating Guidelines</p>
                          </div>
@@ -418,30 +438,9 @@ function CaseNavigatorContent() {
   );
 }
 
-// Minimal ArrowRight for the search result list
-function ArrowRight(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M5 12h14" />
-      <path d="m12 5 7 7-7 7" />
-    </svg>
-  );
-}
-
 export default function CaseNavigatorPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div>Loading Navigator...</div>}>
       <CaseNavigatorContent />
     </Suspense>
   );
