@@ -5,12 +5,10 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { useAuth } from "@/components/auth-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { format } from "date-fns";
-import { Calendar as CalendarIcon, Info, CheckCircle2, Loader2, CheckCircle } from "lucide-react";
+import { Info, CheckCircle2, Loader2, CheckCircle, Calendar as CalendarIcon } from "lucide-react";
 import { useState, Suspense } from "react";
 import { cn } from "@/lib/utils";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -26,7 +24,7 @@ function BookAppointmentContent() {
   const caseTypeParam = searchParams.get("caseType") || "General Consultation";
   const categoryParam = searchParams.get("category") || "General";
 
-  const [date, setDate] = useState<Date>();
+  const [date, setDate] = useState<string>("");
   const [purpose, setPurpose] = useState("consultation");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookedRef, setBookedRef] = useState<string | null>(null);
@@ -34,7 +32,7 @@ function BookAppointmentContent() {
   const handleBooking = async () => {
     if (!date || !user || !db) return;
 
-    setIsSubmitting(true);
+    setIsLoading(true);
     const refCode = `PAO-${Math.floor(100000 + Math.random() * 900000)}`;
     const appointmentId = crypto.randomUUID();
     const apptRef = doc(db, "appointments", appointmentId);
@@ -46,7 +44,7 @@ function BookAppointmentContent() {
       caseCategory: categoryParam,
       caseType: caseTypeParam,
       purpose: purpose,
-      date: date.toISOString(),
+      date: new Date(date).toISOString(),
       status: "pending",
       createdAt: new Date().toISOString()
     };
@@ -58,6 +56,8 @@ function BookAppointmentContent() {
       setIsSubmitting(false);
     }, 800);
   };
+
+  const setIsLoading = (val: boolean) => setIsSubmitting(val);
 
   if (bookedRef) {
     return (
@@ -78,14 +78,17 @@ function BookAppointmentContent() {
               <p className="text-4xl font-black text-primary tracking-tighter">{bookedRef}</p>
               <p className="text-[10px] text-muted-foreground">Please save this code to manage your appointment later.</p>
             </div>
-            <Button className="w-full" onClick={() => router.push("/case-navigator?mode=manage")}>
-              Go to Appointment Manager
+            <Button className="w-full" onClick={() => router.push("/case-navigator")}>
+              Return to Navigator
             </Button>
           </Card>
         </div>
       </DashboardLayout>
     );
   }
+
+  // Get today's date in YYYY-MM-DD format for the 'min' attribute
+  const today = new Date().toISOString().split('T')[0];
 
   return (
     <DashboardLayout role={role}>
@@ -95,16 +98,16 @@ function BookAppointmentContent() {
           <p className="text-sm text-muted-foreground">
             You are booking a new client consultation for: <span className="font-bold text-primary">{caseTypeParam}</span>.
           </p>
-          <p className="text-sm text-muted-foreground">Please select a date, and time slot below.</p>
+          <p className="text-sm text-muted-foreground">Please select your preferred date and details below.</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <Card className="border-none shadow-sm bg-[#EBF2FA]">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-bold text-primary">Appointment Scheduler</CardTitle>
+                <CardTitle className="text-lg font-bold text-primary">Appointment Details</CardTitle>
                 <p className="text-xs text-muted-foreground">
-                  This system is for first-time users.
+                  Select the purpose and date for your visit to the district office.
                 </p>
               </CardHeader>
               <CardContent className="space-y-6 pt-4">
@@ -125,37 +128,25 @@ function BookAppointmentContent() {
 
                 <div className="space-y-2">
                   <Label className="text-xs font-bold text-primary uppercase">Select a Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal bg-white border-primary/20 h-11 px-3",
-                          !date && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
-                        {date ? format(date, "PPP") : <span>Pick a date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={date}
-                        onSelect={setDate}
-                        initialFocus
-                        disabled={(date) => date < new Date() || date.getDay() === 0 || date.getDay() === 6}
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <div className="relative">
+                    <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary pointer-events-none" />
+                    <Input 
+                      type="date"
+                      min={today}
+                      className="w-full bg-white border-primary/20 h-11 pl-10 pr-3 focus-visible:ring-primary/20"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                    />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">Please note: Office hours are Monday to Friday, 8:00 AM - 5:00 PM.</p>
                 </div>
 
                 <Button 
-                  className="w-full h-12 bg-primary hover:bg-[#1A3B6B] text-white font-bold"
+                  className="w-full h-12 bg-primary hover:bg-[#1A3B6B] text-white font-bold transition-all shadow-md active:scale-95"
                   disabled={!date || isSubmitting}
                   onClick={handleBooking}
                 >
-                  {isSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : "Confirm & Get Reference Code"}
+                  {isSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : "Confirm Appointment"}
                 </Button>
               </CardContent>
             </Card>
@@ -165,20 +156,20 @@ function BookAppointmentContent() {
             <Card className="border-none shadow-sm bg-[#EBF2FA]">
               <CardHeader className="pb-2 flex-row items-start gap-2 space-y-0">
                 <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <CardTitle className="text-lg font-bold text-primary">How to Get PAO Services</CardTitle>
+                <CardTitle className="text-lg font-bold text-primary">PAO Guidelines</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-4">
                   <div className="space-y-1">
-                    <h4 className="text-sm font-bold text-primary">1. Check Eligibility</h4>
+                    <h4 className="text-sm font-bold text-primary">1. Eligibility Check</h4>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      You must be an indigent person. PAO assesses your financial situation.
+                      Services are reserved for indigent citizens. A merit and indigency test will be conducted.
                     </p>
                   </div>
                   <div className="space-y-1">
-                    <h4 className="text-sm font-bold text-primary">2. Gather Documents</h4>
+                    <h4 className="text-sm font-bold text-primary">2. Required Documents</h4>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      Bring government ID, proof of income, and case-related documents.
+                      Bring a valid government ID and a Certificate of Indigency from your Barangay.
                     </p>
                   </div>
                 </div>
@@ -186,8 +177,8 @@ function BookAppointmentContent() {
                   <div className="bg-white/60 p-3 rounded-lg flex gap-3 border border-primary/5">
                     <CheckCircle2 className="h-5 w-5 text-secondary shrink-0" />
                     <div className="space-y-0.5">
-                      <p className="text-xs font-bold text-primary">Indigency</p>
-                      <p className="text-[10px] text-muted-foreground">Proof is crucial for full representation.</p>
+                      <p className="text-xs font-bold text-primary">Free Service</p>
+                      <p className="text-[10px] text-muted-foreground">All PAO legal services are provided free of charge.</p>
                     </div>
                   </div>
                 </div>
@@ -202,7 +193,7 @@ function BookAppointmentContent() {
 
 export default function BookAppointmentPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div>Loading Scheduler...</div>}>
       <BookAppointmentContent />
     </Suspense>
   );
