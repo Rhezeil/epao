@@ -4,8 +4,6 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- Helper Functions ---
-
     function isSignedIn() {
       return request.auth != null;
     }
@@ -18,30 +16,36 @@ service cloud.firestore {
       return isSignedIn() && exists(/databases/$(database)/documents/roleAdmin/$(request.auth.uid));
     }
 
-    // --- Rules ---
+    function isLawyer() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roleLawyer/$(request.auth.uid));
+    }
 
-    // Publicly accessible navigator data (No login required)
     match /caseRequirements/{docId} {
       allow read: if true;
     }
 
     match /users/{userId} {
-      allow get: if isOwner(userId) || isAdmin();
+      allow get: if isOwner(userId) || isAdmin() || isLawyer();
       allow list: if isAdmin();
-      allow create, update: if isOwner(userId);
+      allow create, update: if isOwner(userId) || isAdmin();
     }
 
     match /cases/{caseId} {
       allow get: if isAdmin() || (isSignedIn() && resource.data.clientId == request.auth.uid) || (isSignedIn() && resource.data.lawyerId == request.auth.uid);
-      allow list: if isAdmin() || isSignedIn(); // Restricted by query filters in app
-      allow create, update: if isAdmin();
+      allow list: if isAdmin() || isLawyer() || isSignedIn();
+      allow create, update, delete: if isAdmin();
     }
 
     match /appointments/{appointmentId} {
-      allow get: if true; // Public for reference code lookup
-      allow create: if true; // Guests can book
-      allow update: if true; // Guests can cancel/reschedule via reference code check in logic
-      allow list: if true; // Required for availability check in Guest Portal
+      allow get: if true;
+      allow create: if true;
+      allow update: if true;
+      allow list: if true;
+    }
+
+    match /lawyerAvailability/{availId} {
+      allow read: if true;
+      allow write: if isLawyer() || isAdmin();
     }
 
     match /roleAdmin/{userId} {
@@ -51,10 +55,10 @@ service cloud.firestore {
     
     match /roleLawyer/{userId} {
       allow get: if isOwner(userId) || isAdmin();
-      allow list: if isAdmin() || isSignedIn();
+      allow list: if true;
       allow write: if isAdmin();
     }
 
-    // Last updated: 2024-05-20T10:00:00Z - Triggering rules deployment for Case Navigator access
+    // Version: 2024-05-24T12:00:00Z - Comprehensive RBAC Deployment
   }
 }

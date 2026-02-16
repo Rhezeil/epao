@@ -48,6 +48,17 @@
         "lawyerId": { "type": "string" }
       },
       "required": ["referenceCode", "caseType", "date", "status"]
+    },
+    "LawyerAvailability": {
+      "title": "LawyerAvailability",
+      "description": "Blocked time slots for lawyers.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "lawyerId": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "reason": { "type": "string" }
+      }
     }
   },
   "auth": {
@@ -65,6 +76,10 @@
     "/appointments/{appointmentId}": {
       "schema": "Appointment",
       "description": "Consultation and follow-up bookings."
+    },
+    "/lawyerAvailability/{availId}": {
+      "schema": "LawyerAvailability",
+      "description": "Practitioner blocked dates."
     }
   }
 }

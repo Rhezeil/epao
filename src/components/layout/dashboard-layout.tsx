@@ -27,9 +27,11 @@ import {
   User,
   Settings,
   LogIn,
-  UserPlus,
   Database,
-  Search
+  Search,
+  ShieldCheck,
+  TrendingUp,
+  Clock
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
@@ -49,39 +51,38 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   const logo = PlaceHolderImages.find(img => img.id === 'pao-logo');
 
   const getMenuItems = () => {
-    // Guest Portal Items
     if (!user) {
       return [
         { icon: Compass, label: "Legal Navigator", path: "/case-navigator" },
         { icon: Calendar, label: "Book Consultation", path: "/book-appointment" },
         { icon: Search, label: "Manage Booking", path: "/manage-appointment" },
+        { icon: TrendingUp, label: "About LexConnect", path: "/about" },
       ];
     }
 
-    // Registered Client Items
     if (role === "client") {
       return [
-        { icon: LayoutDashboard, label: "My Dashboard", path: "/dashboard/client" },
-        { icon: FileText, label: "Case Details", path: "/dashboard/client/cases" },
-        { icon: CalendarCheck, label: "Appointments", path: "/dashboard/client/appointments" },
+        { icon: LayoutDashboard, label: "Client Dashboard", path: "/dashboard/client" },
         { icon: Compass, label: "Legal Navigator", path: "/case-navigator" },
+        { icon: CalendarCheck, label: "Book Follow-up", path: "/dashboard/client/book-appointment" },
       ];
     }
 
     if (role === "admin") {
       return [
-        { icon: LayoutDashboard, label: "Admin Home", path: "/dashboard/admin" },
-        { icon: Users, label: "Users Management", path: "/dashboard/admin/users" },
-        { icon: Briefcase, label: "Lawyer List", path: "/dashboard/admin/lawyers" },
-        { icon: Database, label: "Case Requirements", path: "/dashboard/admin/case-requirements" },
+        { icon: LayoutDashboard, label: "Admin Console", path: "/dashboard/admin" },
+        { icon: ShieldCheck, label: "Triage & Cases", path: "/dashboard/admin/triage" },
+        { icon: Users, label: "Users Registry", path: "/dashboard/admin/users" },
+        { icon: Briefcase, label: "Practitioners", path: "/dashboard/admin/lawyers" },
+        { icon: Database, label: "Legal Standards", path: "/dashboard/admin/case-requirements" },
       ];
     }
 
     if (role === "lawyer") {
       return [
         { icon: LayoutDashboard, label: "Lawyer Home", path: "/dashboard/lawyer" },
-        { icon: Users, label: "My Clients", path: "/dashboard/lawyer/clients" },
-        { icon: FileText, label: "Active Cases", path: "/dashboard/lawyer/cases" },
+        { icon: Clock, label: "Clinical Schedule", path: "/dashboard/lawyer" },
+        { icon: FileText, label: "My Active Cases", path: "/dashboard/lawyer/cases" },
       ];
     }
 
@@ -103,15 +104,15 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
                 <Image 
                   src={logo.imageUrl} 
                   alt={logo.description} 
-                  width={140} 
-                  height={140} 
+                  width={120} 
+                  height={120} 
                   className="rounded-full object-contain shadow-lg border-2 border-white/50"
                   data-ai-hint={logo.imageHint}
                 />
               </div>
             )}
             <div className="px-3 py-1 bg-primary/10 rounded-full border border-primary/20">
-              <span className="text-[10px] uppercase tracking-widest font-bold text-primary">
+              <span className="text-[10px] uppercase tracking-widest font-black text-primary">
                 {role || 'Guest'} Portal
               </span>
             </div>
@@ -125,17 +126,17 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
                     onClick={() => router.push(item.path)}
                     isActive={pathname === item.path}
                     className={cn(
-                      "flex items-center gap-3 px-4 py-6 rounded-lg transition-all duration-200 group",
+                      "flex items-center gap-3 px-4 py-6 rounded-2xl transition-all duration-300",
                       pathname === item.path 
-                        ? "bg-primary text-primary-foreground shadow-md" 
-                        : "text-primary hover:bg-primary/5 hover:translate-x-1"
+                        ? "bg-primary text-white shadow-xl scale-[1.02]" 
+                        : "text-primary hover:bg-primary/5"
                     )}
                   >
                     <item.icon className={cn(
-                      "h-5 w-5 transition-transform group-hover:scale-110",
-                      pathname === item.path ? "text-primary-foreground" : "text-primary"
+                      "h-5 w-5",
+                      pathname === item.path ? "text-white" : "text-primary"
                     )} />
-                    <span className="font-semibold text-sm">{item.label}</span>
+                    <span className="font-bold text-sm">{item.label}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -145,16 +146,16 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
           <SidebarFooter className="p-6 border-t border-primary/10 mt-auto">
             <div className="space-y-4">
               {user && (
-                <div className="px-4 py-3 bg-white/40 rounded-lg border border-primary/5">
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <div className="px-4 py-3 bg-white/40 rounded-2xl border border-primary/5 shadow-sm">
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    <div className="h-8 w-8 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
                       <User className="h-4 w-4 text-primary" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-primary truncate">
-                        {user?.email}
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-black text-primary truncate leading-none">
+                        {user?.email?.split('@')[0]}
                       </p>
-                      <p className="text-[10px] text-muted-foreground capitalize">{role}</p>
+                      <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold mt-1">{role}</p>
                     </div>
                   </div>
                 </div>
@@ -163,43 +164,32 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
               <SidebarMenu>
                 {user && (
                   <SidebarMenuItem>
-                    <SidebarMenuButton 
-                      onClick={() => router.push('/profile')}
-                      className="w-full justify-start text-primary hover:bg-primary/5 py-4"
-                    >
+                    <SidebarMenuButton onClick={() => router.push('/profile')} className="w-full text-primary hover:bg-primary/5 rounded-xl">
                       <Settings className="h-4 w-4 mr-2" />
-                      <span className="text-xs font-medium">Settings</span>
+                      <span className="text-xs font-bold">Profile Settings</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 )}
-                {user ? (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton 
-                      onClick={signOut} 
-                      className="w-full justify-start text-destructive hover:bg-destructive/10 hover:text-destructive py-4"
-                    >
+                <SidebarMenuItem>
+                  {user ? (
+                    <SidebarMenuButton onClick={signOut} className="w-full text-red-600 hover:bg-red-50 rounded-xl">
                       <LogOut className="h-4 w-4 mr-2" />
-                      <span className="text-xs font-bold">Logout</span>
+                      <span className="text-xs font-black uppercase">Logout</span>
                     </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ) : (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton 
-                      onClick={() => router.push('/login')} 
-                      className="w-full justify-start text-primary hover:bg-primary/5 py-4"
-                    >
+                  ) : (
+                    <SidebarMenuButton onClick={() => router.push('/login')} className="w-full text-primary hover:bg-primary/5 rounded-xl border-2 border-primary/20 bg-primary/5">
                       <LogIn className="h-4 w-4 mr-2" />
-                      <span className="text-xs font-bold">Client Login</span>
+                      <span className="text-xs font-black uppercase tracking-widest">Sign In</span>
                     </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )}
+                  )}
+                </SidebarMenuItem>
               </SidebarMenu>
             </div>
           </SidebarFooter>
         </Sidebar>
 
         <SidebarInset className="bg-transparent flex-1">
-          <header className="sticky top-0 z-30 flex h-16 items-center border-b bg-white/20 backdrop-blur-lg px-6">
+          <header className="sticky top-0 z-30 flex h-16 items-center border-b bg-white/40 backdrop-blur-lg px-6">
             <SidebarTrigger className="text-primary hover:bg-primary/5" />
           </header>
           <main className="flex-1 overflow-auto p-6 md:p-10">
