@@ -23,14 +23,15 @@ import {
   Layers,
   ClipboardList,
   User,
-  Gavel
+  Gavel,
+  AlertTriangle
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
 import { cn } from "@/lib/utils";
 import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
-import { caseCategories, categoryDefaults, caseSpecificData, pAONotes, standardPaoDocs, universalPaoFlow } from "@/app/lib/case-data";
+import { caseCategories, categoryDefaults, caseSpecificData, pAONotes, standardPaoDocs, universalPaoFlow, allCaseNames } from "@/app/lib/case-data";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -42,6 +43,27 @@ function CaseNavigatorContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedCase, setSelectedCase] = useState<string | null>(null);
+  const [filteredResults, setFilteredResults] = useState<string[]>([]);
+
+  // Real-time search logic
+  useEffect(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) {
+      setFilteredResults([]);
+      return;
+    }
+
+    let results: string[] = [];
+    if (q.length === 1) {
+      // Single letter matching: starting with that letter
+      results = allCaseNames.filter(c => c.toLowerCase().startsWith(q));
+    } else {
+      // Partial matching / keyword matching
+      results = allCaseNames.filter(c => c.toLowerCase().includes(q));
+    }
+    
+    setFilteredResults(results);
+  }, [searchQuery]);
 
   const reqDocRef = useMemoFirebase(() => {
     if (!db || !selectedCase) return null;
@@ -56,22 +78,18 @@ function CaseNavigatorContent() {
   const handleCategoryClick = (category: string) => {
     setSelectedCategory(category === selectedCategory ? null : category);
     setSelectedCase(null);
+    setSearchQuery("");
   };
 
   const handleCaseClick = (caseItem: string, category?: string) => {
     setSelectedCase(caseItem);
-    setSearchQuery(caseItem);
+    setSearchQuery("");
     if (category) setSelectedCategory(category);
-  };
-
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
-      setSelectedCase(searchQuery);
-    }
   };
 
   const handleClear = () => {
     setSelectedCase(null);
+    setSelectedCategory(null);
     setSearchQuery("");
   };
 
@@ -99,7 +117,7 @@ function CaseNavigatorContent() {
       <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
         <div className="flex justify-between items-center">
           <Button variant="ghost" size="sm" onClick={() => setSelectedCase(null)} className="text-primary gap-2 font-bold">
-            <ArrowLeft className="h-4 w-4" /> Back to Categories
+            <ArrowLeft className="h-4 w-4" /> Back to Search
           </Button>
           <Button variant="ghost" size="sm" onClick={handleClear} className="flex items-center gap-2 text-muted-foreground font-medium">
             <X className="h-4 w-4" /> Clear
@@ -256,7 +274,7 @@ function CaseNavigatorContent() {
         <h2 className="text-2xl font-black text-primary font-headline tracking-tight">{title}</h2>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {subCategories.map((cat, idx) => (
+        {subCategories.map((cat: any, idx: number) => (
           <div key={idx} className="bg-white/80 backdrop-blur-md rounded-[2rem] border border-primary/10 shadow-lg overflow-hidden flex flex-col transition-all hover:shadow-xl">
             <div className="bg-primary/5 p-4 border-b border-primary/10">
               <h3 className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">{cat.title}</h3>
@@ -301,22 +319,46 @@ function CaseNavigatorContent() {
           <div className="flex-1 flex items-center px-4">
             <Search className="h-6 w-6 text-primary/30 mr-3" />
             <Input 
-              placeholder='Search a legal matter (e.g., "Murder", "Annulment")...' 
+              placeholder='Search a legal matter (e.g., "Murder", "Assault")...' 
               className="h-12 border-none shadow-none focus-visible:ring-0 text-base font-bold placeholder:font-medium placeholder:text-muted-foreground/40"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             />
           </div>
-          <Button size="lg" onClick={handleSearch} className="bg-primary hover:bg-[#1A3B6B] text-white h-12 px-8 text-base font-bold rounded-xl flex items-center gap-2 shadow-lg transition-all hover:scale-[1.02] active:scale-95">
-            Search
-          </Button>
         </div>
 
         <div className="min-h-[500px]">
           {selectedCase ? renderCaseDetails(selectedCase) : (
             <div className="space-y-12">
-              {selectedCategory ? (
+              {searchQuery.trim().length > 0 ? (
+                <div className="space-y-6 max-w-4xl mx-auto animate-in fade-in duration-500">
+                  {filteredResults.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {filteredResults.map((result) => (
+                        <button
+                          key={result}
+                          onClick={() => handleCaseClick(result)}
+                          className="text-left bg-white/80 p-4 rounded-2xl border border-primary/10 hover:border-primary/40 hover:bg-primary/5 transition-all flex items-center justify-between group"
+                        >
+                          <span className="font-bold text-[#1A3B6B]">{result}</span>
+                          <ArrowRight className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-all" />
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+                      <div className="p-6 bg-amber-50 rounded-full">
+                        <AlertTriangle className="h-12 w-12 text-amber-500" />
+                      </div>
+                      <div className="space-y-1">
+                        <h3 className="text-xl font-bold text-amber-900">No results found</h3>
+                        <p className="text-sm text-amber-800/60 font-medium">No case type found for "{searchQuery}".</p>
+                      </div>
+                      <Button variant="outline" onClick={() => setSearchQuery("")} className="rounded-xl font-bold">Clear Search</Button>
+                    </div>
+                  )}
+                </div>
+              ) : selectedCategory ? (
                 renderCategoryListView(selectedCategory, (caseCategories as any)[selectedCategory])
               ) : (
                 <div className="space-y-10 max-w-5xl mx-auto animate-in fade-in duration-700">
@@ -373,6 +415,27 @@ function CaseNavigatorContent() {
         </div>
       </div>
     </DashboardLayout>
+  );
+}
+
+// Minimal ArrowRight for the search result list
+function ArrowRight(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M5 12h14" />
+      <path d="m12 5 7 7-7 7" />
+    </svg>
   );
 }
 
