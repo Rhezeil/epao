@@ -1,11 +1,10 @@
-
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, onSnapshot } from "firebase/firestore";
 import { useAuth as useFirebaseAuth, useFirestore } from "@/firebase";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 export type UserRole = "admin" | "lawyer" | "client" | null;
 
@@ -33,6 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const db = useFirestore();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     let unsubUser: () => void = () => {};
@@ -98,17 +98,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [auth, db]);
 
-  // Redirect Logic
+  // Redirect Logic with Path Preservation
   useEffect(() => {
-    const publicPaths = ["/login", "/register", "/", "/case-navigator"];
+    const publicPaths = ["/login", "/register", "/", "/case-navigator", "/about"];
+    
     if (!loading) {
       if (!user && !publicPaths.includes(pathname)) {
-        router.push("/login");
+        // Construct full current path with search params for redirect
+        const currentParams = searchParams.toString();
+        const fullPath = currentParams ? `${pathname}?${currentParams}` : pathname;
+        const encodedRedirect = encodeURIComponent(fullPath);
+        router.push(`/login?redirect=${encodedRedirect}`);
       } else if (user && role && (pathname === "/login" || pathname === "/register")) {
-        router.push(`/dashboard/${role}`);
+        // After login, if there is a redirect param, the LoginPage handles it. 
+        // This is a safety check to ensure users don't hang on auth pages.
+        const redirectParam = searchParams.get('redirect');
+        if (!redirectParam) {
+          router.push(`/dashboard/${role}`);
+        }
       }
     }
-  }, [user, role, loading, pathname, router]);
+  }, [user, role, loading, pathname, router, searchParams]);
 
   const signOut = async () => {
     await auth.signOut();

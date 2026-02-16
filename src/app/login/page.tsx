@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
@@ -11,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ShieldCheck, Briefcase, Phone, Mail, Lock } from "lucide-react";
+import { Loader2, ShieldCheck, Briefcase, Phone, Mail, Lock, ArrowRight } from "lucide-react";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { sendOtpSms } from "@/ai/flows/sms-service";
@@ -36,7 +35,6 @@ function LoginContent() {
   const db = useFirestore();
 
   const logo = PlaceHolderImages.find(img => img.id === 'pao-logo');
-
   const redirectPath = searchParams.get('redirect');
 
   useEffect(() => {
@@ -49,10 +47,6 @@ function LoginContent() {
     setIsLoading(true);
     try {
       const normalizedEmail = (user.email || "").toLowerCase().trim();
-      if (!normalizedEmail) {
-        throw new Error("User email is required for role verification.");
-      }
-
       const isBootstrapAdmin = normalizedEmail === "admin@epao.com";
 
       // 1. Check Admin Status
@@ -76,8 +70,6 @@ function LoginContent() {
       // 2. Check Existing Lawyer Record
       const lawyerDocRef = doc(db, "roleLawyer", user.uid);
       const lawyerDoc = await getDoc(lawyerDocRef);
-
-      // 3. Check Whitelist or Domain if no record exists
       const lawyerAuthDoc = await getDoc(doc(db, "lawyersEmail", normalizedEmail));
       const isAuthorizedLawyer = lawyerDoc.exists() || lawyerAuthDoc.exists() || normalizedEmail.endsWith("@lawyers.com");
 
@@ -94,7 +86,7 @@ function LoginContent() {
         return;
       }
 
-      // 4. Default to Client Status
+      // 3. Default to Client Status
       const clientDocRef = doc(db, "users", user.uid);
       const clientDoc = await getDoc(clientDocRef);
       
@@ -109,7 +101,12 @@ function LoginContent() {
         }, { merge: true });
       }
 
-      router.push(redirectPath || `/dashboard/client`);
+      // FINAL REDIRECT: Prioritize the 'redirect' query parameter
+      if (redirectPath) {
+        router.push(decodeURIComponent(redirectPath));
+      } else {
+        router.push(`/dashboard/client`);
+      }
     } catch (error: any) {
       toast({ variant: "destructive", title: "Sync Error", description: error.message || "Failed to synchronize your role records." });
     } finally {
@@ -178,12 +175,12 @@ function LoginContent() {
 
   return (
     <DashboardLayout role={null}>
-      <div className="flex items-center justify-center py-12">
+      <div className="flex items-center justify-center py-8">
         <div className="w-full max-w-lg">
-          <Card className="shadow-2xl border-primary/10 bg-white/80 backdrop-blur-md overflow-hidden">
+          <Card className="shadow-2xl border-primary/10 bg-white/80 backdrop-blur-md overflow-hidden rounded-[2.5rem]">
             <CardHeader className="flex flex-col items-center space-y-4 pb-2">
               {logo && (
-                <div className="p-3 bg-white rounded-full shadow-sm border border-border/50">
+                <div className="p-3 bg-white rounded-full shadow-lg border border-border/50">
                   <Image 
                     src={logo.imageUrl} 
                     alt={logo.description} 
@@ -194,14 +191,20 @@ function LoginContent() {
                   />
                 </div>
               )}
-              <CardTitle className="text-2xl text-center font-headline text-primary">Sign In</CardTitle>
+              <CardTitle className="text-3xl text-center font-black text-primary tracking-tight">Portal Access</CardTitle>
+              {redirectPath && (
+                <div className="bg-primary/5 px-4 py-2 rounded-xl border border-primary/10 flex items-center gap-2">
+                  <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                  <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Login required to proceed</p>
+                </div>
+              )}
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form onSubmit={handleLogin} className="space-y-6">
                 {step === 1 ? (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="identifier">Email or Mobile Number</Label>
+                      <Label htmlFor="identifier" className="text-xs font-black uppercase text-primary/60 ml-1">Email or Mobile Number</Label>
                       <div className="relative">
                         <Input 
                           id="identifier" 
@@ -209,6 +212,7 @@ function LoginContent() {
                           value={identifier} 
                           onChange={(e) => setIdentifier(e.target.value)} 
                           required 
+                          className="h-12 rounded-2xl border-primary/20 bg-white/50 focus-visible:ring-primary/20"
                           placeholder="09123456789 or name@example.com" 
                         />
                       </div>
@@ -216,13 +220,20 @@ function LoginContent() {
 
                     {!useOtp ? (
                       <div className="space-y-2">
-                        <Label htmlFor="password">Password</Label>
-                        <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                        <Label htmlFor="password" title="Password" className="text-xs font-black uppercase text-primary/60 ml-1">Secure Password</Label>
+                        <Input 
+                          id="password" 
+                          type="password" 
+                          value={password} 
+                          onChange={(e) => setPassword(e.target.value)} 
+                          required 
+                          className="h-12 rounded-2xl border-primary/20 bg-white/50 focus-visible:ring-primary/20"
+                        />
                       </div>
                     ) : null}
 
-                    <Button type="submit" className="w-full bg-primary" disabled={isLoading || useOtp}>
-                      {isLoading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : "Login"}
+                    <Button type="submit" className="w-full h-14 bg-primary text-white font-black text-lg rounded-2xl shadow-xl transition-all hover:scale-[1.02] active:scale-95" disabled={isLoading || useOtp}>
+                      {isLoading ? <Loader2 className="animate-spin mr-2 h-6 w-6" /> : "Sign In"}
                     </Button>
 
                     {/^\d{10,11}$/.test(identifier.trim()) && (
@@ -230,61 +241,67 @@ function LoginContent() {
                         <Button 
                           type="button" 
                           variant="outline" 
-                          className="w-full border-secondary text-secondary hover:bg-secondary/5"
+                          className="w-full h-12 border-2 border-secondary/30 text-secondary font-black rounded-2xl hover:bg-secondary/5"
                           onClick={() => { setUseOtp(true); handleSendOtp(); }}
                           disabled={isSmsSending}
                         >
                           {isSmsSending ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Phone className="mr-2 h-4 w-4" />}
-                          Login with SMS Verification
+                          Get SMS Access Code
                         </Button>
                       </div>
                     )}
                   </>
                 ) : (
                   <div className="space-y-4 animate-in fade-in zoom-in-95">
-                    <div className="text-center space-y-2">
-                      <p className="text-sm font-medium">Verify your number</p>
-                      <p className="text-xs text-muted-foreground">{identifier}</p>
+                    <div className="text-center space-y-2 bg-primary/5 p-4 rounded-2xl">
+                      <p className="text-xs font-black text-primary uppercase tracking-widest">Verify identity for</p>
+                      <p className="text-sm font-bold text-primary">{identifier}</p>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="otp">6-Digit Code</Label>
+                      <Label htmlFor="otp" className="text-xs font-black uppercase text-primary/60 ml-1">6-Digit Access Code</Label>
                       <Input 
                         id="otp" 
                         value={otpValue} 
                         onChange={(e) => setOtpValue(e.target.value)} 
                         maxLength={6}
-                        className="text-center text-xl font-bold tracking-widest"
+                        className="h-16 text-center text-3xl font-black tracking-[0.5em] rounded-2xl border-secondary/30 text-secondary bg-white/50"
                         required 
+                        autoFocus
                       />
                     </div>
-                    <Button type="submit" className="w-full bg-secondary text-white" disabled={isLoading}>
-                      {isLoading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : "Verify & Sign In"}
+                    <Button type="submit" className="w-full h-14 bg-secondary text-white font-black text-lg rounded-2xl shadow-xl" disabled={isLoading}>
+                      {isLoading ? <Loader2 className="animate-spin mr-2 h-6 w-6" /> : "Verify & Sign In"}
                     </Button>
-                    <Button variant="ghost" type="button" className="w-full text-xs" onClick={() => { setStep(1); setUseOtp(false); }}>
+                    <Button variant="ghost" type="button" className="w-full text-xs font-bold text-muted-foreground hover:text-primary" onClick={() => { setStep(1); setUseOtp(false); }}>
                       Back to password login
                     </Button>
                   </div>
                 )}
               </form>
             </CardContent>
-            <CardFooter className="flex flex-col space-y-4">
+            <CardFooter className="flex flex-col space-y-6 pb-8">
               <div className="relative w-full">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
+                  <span className="w-full border-t border-primary/10" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white/80 px-2 text-muted-foreground font-bold">Quick Access</span>
+                  <span className="bg-white/80 px-4 text-primary/40 font-black tracking-widest">Quick Access</span>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-2 w-full">
-                <Button variant="outline" size="sm" onClick={() => handleQuickAccess('admin')} className="text-xs">
+              <div className="grid grid-cols-3 gap-3 w-full">
+                <Button variant="outline" size="sm" onClick={() => handleQuickAccess('admin')} className="text-[10px] font-black h-12 rounded-xl border-primary/5 hover:bg-primary/5 transition-all">
                   <ShieldCheck className="mr-1 h-3 w-3" /> Admin
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => handleQuickAccess('lawyer')} className="text-xs">
+                <Button variant="outline" size="sm" onClick={() => handleQuickAccess('lawyer')} className="text-[10px] font-black h-12 rounded-xl border-primary/5 hover:bg-primary/5 transition-all">
                   <Briefcase className="mr-1 h-3 w-3" /> Lawyer
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => handleQuickAccess('client')} className="text-xs">
+                <Button variant="outline" size="sm" onClick={() => handleQuickAccess('client')} className="text-[10px] font-black h-12 rounded-xl border-primary/5 hover:bg-primary/5 transition-all">
                   <Phone className="mr-1 h-3 w-3" /> Client
+                </Button>
+              </div>
+              <div className="text-center">
+                <Button variant="link" onClick={() => router.push('/register')} className="text-xs font-bold text-primary flex items-center gap-1 mx-auto">
+                  New citizen user? Create an account <ArrowRight className="h-3 w-3" />
                 </Button>
               </div>
             </CardFooter>
@@ -297,7 +314,7 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading Portal...</div>}>
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading Auth Portal...</div>}>
       <LoginContent />
     </Suspense>
   );
