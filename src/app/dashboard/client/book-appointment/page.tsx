@@ -117,7 +117,7 @@ function BookAppointmentContent() {
                     <SelectContent>
                       <SelectItem value="consultation">Consultation</SelectItem>
                       <SelectItem value="notarization">Notarization</SelectItem>
-                      <SelectItem value="document-review">Document Review</SelectItem>
+                      <SelectItem value="document-preparation">Document Preparation</SelectItem>
                       <SelectItem value="legal-advice">Legal Advice</SelectItem>
                     </SelectContent>
                   </Select>
