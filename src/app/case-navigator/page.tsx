@@ -26,7 +26,7 @@ import {
   AlertTriangle,
   ArrowRight
 } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
 import { cn } from "@/lib/utils";
 import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
@@ -440,7 +440,7 @@ function CaseNavigatorContent() {
 
 export default function CaseNavigatorPage() {
   return (
-    <Suspense fallback={<div>Loading Navigator...</div>}>
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading Navigator...</div>}>
       <CaseNavigatorContent />
     </Suspense>
   );

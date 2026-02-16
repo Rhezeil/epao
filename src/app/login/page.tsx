@@ -1,23 +1,23 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { useAuth, useFirestore, setDocumentNonBlocking } from "@/firebase";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ShieldCheck, Briefcase, Phone, Mail, ArrowRight, Lock } from "lucide-react";
+import { Loader2, ShieldCheck, Briefcase, Phone, Mail, Lock } from "lucide-react";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { sendOtpSms } from "@/ai/flows/sms-service";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 
-export default function LoginPage() {
+function LoginContent() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -30,11 +30,14 @@ export default function LoginPage() {
   const [isSmsSending, setIsLoadingSms] = useState(false);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const auth = useAuth();
   const db = useFirestore();
 
   const logo = PlaceHolderImages.find(img => img.id === 'pao-logo');
+
+  const redirectPath = searchParams.get('redirect');
 
   useEffect(() => {
     if (auth.currentUser && !isLoading) {
@@ -66,7 +69,7 @@ export default function LoginPage() {
             createdAt: new Date().toISOString()
           }, { merge: true });
         }
-        router.push(`/dashboard/admin`);
+        router.push(redirectPath || `/dashboard/admin`);
         return;
       }
 
@@ -79,7 +82,6 @@ export default function LoginPage() {
       const isAuthorizedLawyer = lawyerDoc.exists() || lawyerAuthDoc.exists() || normalizedEmail.endsWith("@lawyers.com");
 
       if (isAuthorizedLawyer) {
-        // Always ensure the lawyer record exists and contains the email field for indexing/sorting
         setDocumentNonBlocking(lawyerDocRef, {
           id: user.uid,
           email: normalizedEmail,
@@ -88,19 +90,7 @@ export default function LoginPage() {
           lastLoginAt: new Date().toISOString()
         }, { merge: true });
 
-        // Initialize profile stub if it doesn't exist
-        const profileDocRef = doc(db, "users", user.uid, "profile", "profile");
-        const profileDoc = await getDoc(profileDocRef);
-        if (!profileDoc.exists()) {
-          setDocumentNonBlocking(profileDocRef, {
-            id: "profile",
-            firstName: "Practitioner",
-            lastName: "",
-            createdAt: new Date().toISOString()
-          }, { merge: true });
-        }
-        
-        router.push(`/dashboard/lawyer`);
+        router.push(redirectPath || `/dashboard/lawyer`);
         return;
       }
 
@@ -117,17 +107,9 @@ export default function LoginPage() {
           profileId: "profile",
           createdAt: new Date().toISOString()
         }, { merge: true });
-
-        const profileDocRef = doc(db, "users", user.uid, "profile", "profile");
-        setDocumentNonBlocking(profileDocRef, {
-          id: "profile",
-          firstName: "Client",
-          lastName: "",
-          createdAt: new Date().toISOString()
-        }, { merge: true });
       }
 
-      router.push(`/dashboard/client`);
+      router.push(redirectPath || `/dashboard/client`);
     } catch (error: any) {
       toast({ variant: "destructive", title: "Sync Error", description: error.message || "Failed to synchronize your role records." });
     } finally {
@@ -310,5 +292,13 @@ export default function LoginPage() {
         </div>
       </div>
     </DashboardLayout>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading Portal...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }
