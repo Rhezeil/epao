@@ -115,9 +115,9 @@ function BookAppointmentContent() {
     return (
       <DashboardLayout role={role}>
         <div className="max-w-xl mx-auto py-12">
-          <Card className="border-none shadow-xl bg-white text-center p-8 space-y-6 rounded-[2.5rem]">
+          <Card className="border-none shadow-2xl bg-white text-center p-8 space-y-6 rounded-[2.5rem]">
             <div className="flex justify-center">
-              <div className="p-4 bg-blue-500 text-white rounded-full animate-bounce">
+              <div className="p-4 bg-blue-600 text-white rounded-full animate-bounce shadow-xl">
                 <CheckCircle className="h-12 w-12" />
               </div>
             </div>
@@ -125,11 +125,11 @@ function BookAppointmentContent() {
               <h2 className="text-2xl font-black text-primary">Booking Confirmed!</h2>
               <p className="text-muted-foreground font-medium">Your follow-up visit has been successfully scheduled.</p>
             </div>
-            <div className="bg-[#E3F2FD] p-6 rounded-3xl space-y-2 border-2 border-dashed border-blue-500">
+            <div className="bg-blue-50 p-6 rounded-3xl space-y-2 border-2 border-dashed border-blue-400">
               <p className="text-[10px] font-black text-blue-700 uppercase tracking-widest">Reference Code</p>
               <p className="text-4xl font-black text-blue-900 tracking-tighter">{bookedRef}</p>
             </div>
-            <Button className="w-full h-12 rounded-2xl font-bold bg-blue-600 hover:bg-blue-700 text-white" onClick={() => router.push("/dashboard/client")}>
+            <Button className="w-full h-12 rounded-2xl font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-lg" onClick={() => router.push("/dashboard/client")}>
               Return to Dashboard
             </Button>
           </Card>
@@ -161,6 +161,7 @@ function BookAppointmentContent() {
                           mode="single"
                           selected={selectedDate}
                           onSelect={(date) => {
+                            if (date && (isWeekend(date) || isBefore(date, startOfToday()))) return;
                             setSelectedDate(date);
                             setSelectedTime("");
                           }}
@@ -196,6 +197,7 @@ function BookAppointmentContent() {
                         <div className="flex gap-2 text-[8px] font-bold uppercase">
                           <span className="flex items-center gap-1 text-green-600"><div className="w-2 h-2 bg-green-500 rounded-full" /> Open</span>
                           <span className="flex items-center gap-1 text-red-600"><div className="w-2 h-2 bg-red-500 rounded-full" /> Full</span>
+                          <span className="flex items-center gap-1 text-yellow-600"><div className="w-2 h-2 bg-yellow-400 rounded-full" /> Selected</span>
                         </div>
                       </div>
                       
@@ -212,10 +214,12 @@ function BookAppointmentContent() {
                               disabled={slot.isBooked || slot.isPast}
                               variant={selectedTime === slot.time ? "default" : "outline"}
                               className={cn(
-                                "h-12 rounded-xl font-bold transition-all",
-                                selectedTime === slot.time ? "bg-yellow-400 text-black hover:bg-yellow-500 scale-105" : 
-                                slot.isBooked ? "bg-red-50 text-red-400 border-red-100 cursor-not-allowed" : 
-                                "bg-green-50 text-green-700 border-green-100 hover:bg-green-100"
+                                "h-12 rounded-xl font-bold transition-all border-2",
+                                selectedTime === slot.time 
+                                  ? "bg-yellow-400 text-black border-yellow-500 scale-105 shadow-md" 
+                                  : slot.isBooked || slot.isPast
+                                  ? "bg-red-500 text-white border-red-600 opacity-80 cursor-not-allowed" 
+                                  : "bg-green-500 text-white border-green-600 hover:bg-green-600 shadow-sm"
                               )}
                               onClick={() => setSelectedTime(slot.time)}
                             >
@@ -223,7 +227,7 @@ function BookAppointmentContent() {
                             </Button>
                           ))}
                           {timeSlots.every(s => s.isBooked || s.isPast) && (
-                            <div className="col-span-2 text-center py-12 text-red-500 bg-red-50 rounded-2xl border border-red-100">
+                            <div className="col-span-2 text-center py-12 text-red-600 bg-red-50 rounded-2xl border border-red-200">
                               <AlertCircle className="h-8 w-8 mx-auto mb-2" />
                               <p className="font-bold">No available schedules.</p>
                             </div>

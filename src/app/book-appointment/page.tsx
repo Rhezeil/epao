@@ -117,7 +117,7 @@ function BookAppointmentContent() {
         <div className="max-w-xl mx-auto py-12">
           <Card className="border-none shadow-2xl bg-white text-center p-8 space-y-6 rounded-[3rem]">
             <div className="flex justify-center">
-              <div className="p-4 bg-blue-500 text-white rounded-full animate-pulse">
+              <div className="p-4 bg-blue-600 text-white rounded-full animate-pulse shadow-xl">
                 <CheckCircle className="h-12 w-12" />
               </div>
             </div>
@@ -125,11 +125,11 @@ function BookAppointmentContent() {
               <h2 className="text-3xl font-black text-primary">Booking Confirmed!</h2>
               <p className="text-muted-foreground font-medium">Your reference code is generated below.</p>
             </div>
-            <div className="bg-[#E3F2FD] p-8 rounded-[2rem] space-y-2 border-2 border-dashed border-blue-500">
+            <div className="bg-blue-50 p-8 rounded-[2rem] space-y-2 border-2 border-dashed border-blue-400">
               <p className="text-[10px] font-black text-blue-700 uppercase tracking-[0.2em]">Appointment Reference</p>
               <p className="text-5xl font-black text-blue-900 tracking-tighter">{refCode}</p>
             </div>
-            <Button className="w-full h-14 rounded-2xl font-bold text-lg bg-blue-600 hover:bg-blue-700" onClick={() => router.push("/case-navigator")}>
+            <Button className="w-full h-14 rounded-2xl font-bold text-lg bg-blue-600 hover:bg-blue-700 text-white shadow-lg" onClick={() => router.push("/case-navigator")}>
               Return to Navigator
             </Button>
           </Card>
@@ -160,6 +160,7 @@ function BookAppointmentContent() {
                         mode="single"
                         selected={selectedDate}
                         onSelect={(date) => {
+                          if (date && (isWeekend(date) || isBefore(date, startOfToday()))) return;
                           setSelectedDate(date);
                           setSelectedTime("");
                         }}
@@ -195,6 +196,7 @@ function BookAppointmentContent() {
                       <div className="flex gap-2 text-[8px] font-bold uppercase">
                         <span className="flex items-center gap-1"><div className="w-2 h-2 bg-green-500 rounded-full" /> Available</span>
                         <span className="flex items-center gap-1"><div className="w-2 h-2 bg-red-500 rounded-full" /> Booked</span>
+                        <span className="flex items-center gap-1"><div className="w-2 h-2 bg-yellow-400 rounded-full" /> Selected</span>
                       </div>
                     </div>
                     
@@ -211,10 +213,12 @@ function BookAppointmentContent() {
                             disabled={slot.isBooked || slot.isPast}
                             variant={selectedTime === slot.time ? "default" : "outline"}
                             className={cn(
-                              "h-12 rounded-xl font-bold transition-all",
-                              selectedTime === slot.time ? "bg-yellow-400 text-black hover:bg-yellow-500 scale-105" : 
-                              slot.isBooked ? "bg-red-50 text-red-400 border-red-100 cursor-not-allowed" : 
-                              "bg-green-50 text-green-700 border-green-100 hover:bg-green-100"
+                              "h-12 rounded-xl font-bold transition-all border-2",
+                              selectedTime === slot.time 
+                                ? "bg-yellow-400 text-black border-yellow-500 scale-105 shadow-md" 
+                                : slot.isBooked || slot.isPast
+                                ? "bg-red-500 text-white border-red-600 opacity-80 cursor-not-allowed" 
+                                : "bg-green-500 text-white border-green-600 hover:bg-green-600 shadow-sm"
                             )}
                             onClick={() => setSelectedTime(slot.time)}
                           >
@@ -222,7 +226,7 @@ function BookAppointmentContent() {
                           </Button>
                         ))}
                         {timeSlots.every(s => s.isBooked || s.isPast) && (
-                          <div className="col-span-2 text-center py-12 text-red-500 bg-red-50 rounded-2xl border border-red-100">
+                          <div className="col-span-2 text-center py-12 text-red-600 bg-red-50 rounded-2xl border border-red-200">
                             <AlertCircle className="h-8 w-8 mx-auto mb-2" />
                             <p className="font-bold">No available schedules for this date.</p>
                           </div>
@@ -234,7 +238,7 @@ function BookAppointmentContent() {
                   <Button 
                     disabled={!selectedDate || !selectedTime} 
                     onClick={() => setStep(2)} 
-                    className="w-full h-16 rounded-2xl text-lg font-black bg-primary hover:bg-[#1A3B6B] shadow-lg"
+                    className="w-full h-16 rounded-2xl text-lg font-black bg-primary hover:bg-[#1A3B6B] shadow-lg text-white"
                   >
                     Continue <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
@@ -249,7 +253,7 @@ function BookAppointmentContent() {
                       <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-40" />
                       <Input 
                         placeholder="Juan Dela Cruz"
-                        className="h-14 pl-12 rounded-2xl border-primary/20 bg-white"
+                        className="h-14 pl-12 rounded-2xl border-primary/20 bg-white font-bold"
                         value={guestInfo.name}
                         onChange={(e) => setGuestInfo({...guestInfo, name: e.target.value})}
                       />
@@ -259,7 +263,7 @@ function BookAppointmentContent() {
                     <Label className="text-xs font-black text-primary/60 uppercase tracking-widest ml-1">Active Mobile Number</Label>
                     <Input 
                       placeholder="09123456789"
-                      className="h-14 rounded-2xl border-primary/20 bg-white"
+                      className="h-14 rounded-2xl border-primary/20 bg-white font-bold"
                       value={guestInfo.mobile}
                       onChange={(e) => setGuestInfo({...guestInfo, mobile: e.target.value})}
                     />
@@ -274,7 +278,7 @@ function BookAppointmentContent() {
                   </div>
                   <div className="flex justify-between items-center text-sm font-bold text-[#1A3B6B]">
                     <span>Time Slot:</span>
-                    <span>{selectedTime}</span>
+                    <span className="px-3 py-1 bg-yellow-400 rounded-lg">{selectedTime}</span>
                   </div>
                   <div className="flex justify-between items-center text-sm font-bold text-[#1A3B6B]">
                     <span>Service:</span>
@@ -283,9 +287,9 @@ function BookAppointmentContent() {
                 </div>
 
                 <div className="flex gap-3">
-                  <Button variant="outline" className="h-14 rounded-2xl px-8 font-bold" onClick={() => setStep(1)}>Modify</Button>
+                  <Button variant="outline" className="h-14 rounded-2xl px-8 font-bold border-2" onClick={() => setStep(1)}>Modify</Button>
                   <Button 
-                    className="flex-1 h-14 rounded-2xl text-lg font-black bg-primary shadow-xl"
+                    className="flex-1 h-14 rounded-2xl text-lg font-black bg-primary text-white shadow-xl"
                     disabled={!guestInfo.name || !guestInfo.mobile || isSubmitting}
                     onClick={handleBooking}
                   >
