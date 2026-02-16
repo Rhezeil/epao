@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,11 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar as CalendarIcon, Clock, CheckCircle, ArrowRight, Loader2, ShieldCheck, User } from "lucide-react";
-import { useFirestore, setDocumentNonBlocking } from "@/firebase";
-import { doc } from "firebase/firestore";
-import { format } from "date-fns";
+import { Calendar as CalendarIcon, Clock, CheckCircle, ArrowRight, Loader2, User } from "lucide-react";
+import { useFirestore, setDocumentNonBlocking, useCollection, useMemoFirebase } from "@/firebase";
+import { doc, collection, query, where } from "firebase/firestore";
+import { format, addDays, isWeekend, startOfToday, setHours, setMinutes, isBefore } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
 
 function BookAppointmentContent() {
   const router = useRouter();
@@ -22,12 +23,14 @@ function BookAppointmentContent() {
   
   const caseTypeParam = searchParams.get("caseType") || "Initial Consultation";
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [date, setDate] = useState("");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedTime, setSelectedTime] = useState<string>("");
   const [purpose, setPurpose] = useState("consultation");
   const [guestInfo, setGuestInfo] = useState({ name: "", mobile: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [refCode, setRefCode] = useState<string | null>(null);
 
+  // Purpose to Service mapping
   const getServiceLabel = (p: string) => {
     switch (p) {
       case 'consultation': return 'Case Consultation';
@@ -38,8 +41,46 @@ function BookAppointmentContent() {
     }
   };
 
+  // Fetch existing appointments for the selected date to prevent double booking
+  const dateStr = selectedDate ? format(selectedDate, "yyyy-MM-dd") : null;
+  const existingApptsQuery = useMemoFirebase(() => {
+    if (!db || !dateStr) return null;
+    return query(collection(db, "appointments"), where("dateString", "==", dateStr));
+  }, [db, dateStr]);
+
+  const { data: existingAppts } = useCollection(existingApptsQuery);
+
+  // Generate 30-minute slots
+  const timeSlots = useMemo(() => {
+    const slots = [];
+    const startHour = 8;
+    const endHour = 17;
+    const now = new Date();
+
+    for (let h = startHour; h < endHour; h++) {
+      for (let m = 0; m < 60; m += 30) {
+        // Exclude Lunch Break: 12:00 PM - 1:00 PM
+        if (h === 12) continue;
+
+        const timeString = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+        const slotDate = selectedDate ? setMinutes(setHours(new Date(selectedDate), h), m) : null;
+        
+        // Prevent past times if today
+        if (slotDate && isBefore(slotDate, now)) continue;
+
+        // Check if already booked
+        const isBooked = existingAppts?.some(a => a.time === timeString && a.status !== 'cancelled');
+        
+        if (!isBooked) {
+          slots.push(timeString);
+        }
+      }
+    }
+    return slots;
+  }, [selectedDate, existingAppts]);
+
   const handleBooking = async () => {
-    if (!db || !date || !guestInfo.name || !guestInfo.mobile) return;
+    if (!db || !selectedDate || !selectedTime || !guestInfo.name || !guestInfo.mobile) return;
     setIsSubmitting(true);
 
     const code = `PAO-${Math.floor(100000 + Math.random() * 900000)}`;
@@ -54,7 +95,9 @@ function BookAppointmentContent() {
       guestMobile: guestInfo.mobile,
       purpose: purpose,
       serviceType: getServiceLabel(purpose),
-      date: new Date(date).toISOString(),
+      date: selectedDate.toISOString(),
+      dateString: format(selectedDate, "yyyy-MM-dd"),
+      time: selectedTime,
       status: "pending",
       type: "initial",
       createdAt: new Date().toISOString()
@@ -100,11 +143,9 @@ function BookAppointmentContent() {
     );
   }
 
-  const today = new Date().toISOString().split('T')[0];
-
   return (
     <DashboardLayout role={null}>
-      <div className="max-w-4xl mx-auto space-y-8 py-4">
+      <div className="max-w-6xl mx-auto space-y-8 py-4">
         <div className="text-center space-y-2">
           <div className="inline-flex p-3 bg-primary/10 rounded-2xl text-primary mb-2">
             <CalendarIcon className="h-6 w-6" />
@@ -125,25 +166,28 @@ function BookAppointmentContent() {
         </div>
 
         <Card className="border-none shadow-2xl bg-white/80 backdrop-blur-md rounded-[3rem] overflow-hidden">
-          <CardContent className="p-10 space-y-8">
+          <CardContent className="p-10">
             {step === 1 ? (
-              <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
-                <div className="grid md:grid-cols-2 gap-8">
+              <div className="grid lg:grid-cols-2 gap-12 animate-in fade-in slide-in-from-right-4">
+                <div className="space-y-6">
                   <div className="space-y-4">
-                    <Label className="text-xs font-black text-primary/60 uppercase tracking-widest ml-1">Select Available Date</Label>
-                    <div className="relative">
-                      <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-40 pointer-events-none" />
-                      <Input 
-                        type="date"
-                        min={today}
-                        className="h-16 pl-12 rounded-2xl border-primary/20 bg-white text-lg font-bold"
-                        value={date}
-                        onChange={(e) => setDate(e.target.value)}
+                    <Label className="text-xs font-black text-primary/60 uppercase tracking-widest ml-1">1. Select Weekday</Label>
+                    <div className="p-4 bg-white rounded-3xl border border-primary/10 shadow-inner flex justify-center">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={(date) => {
+                          setSelectedDate(date);
+                          setSelectedTime("");
+                        }}
+                        disabled={(date) => date < startOfToday() || isWeekend(date)}
+                        className="rounded-md"
                       />
                     </div>
                   </div>
+                  
                   <div className="space-y-4">
-                    <Label className="text-xs font-black text-primary/60 uppercase tracking-widest ml-1">Purpose of Visit</Label>
+                    <Label className="text-xs font-black text-primary/60 uppercase tracking-widest ml-1">2. Purpose of Visit</Label>
                     <Select value={purpose} onValueChange={setPurpose}>
                       <SelectTrigger className="h-16 rounded-2xl border-primary/20 bg-white font-bold">
                         <SelectValue placeholder="Select purpose" />
@@ -157,22 +201,55 @@ function BookAppointmentContent() {
                     </Select>
                   </div>
                 </div>
-                
-                <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-center gap-3">
-                  <Clock className="h-5 w-5 text-amber-500" />
-                  <p className="text-xs text-amber-900 font-bold">Note: PAO offices are closed on weekends and public holidays.</p>
-                </div>
 
-                <Button 
-                  disabled={!date} 
-                  onClick={() => setStep(2)} 
-                  className="w-full h-16 rounded-2xl text-lg font-black bg-primary hover:bg-[#1A3B6B] shadow-lg"
-                >
-                  Continue to Contact Info <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    <Label className="text-xs font-black text-primary/60 uppercase tracking-widest ml-1">3. Select Available Time</Label>
+                    {!selectedDate ? (
+                      <div className="h-[300px] flex flex-col items-center justify-center text-muted-foreground bg-primary/5 rounded-3xl border border-dashed">
+                        <Clock className="h-10 w-10 mb-2 opacity-20" />
+                        <p className="text-sm font-bold">Select a date first</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-2 max-h-[400px] overflow-y-auto p-2">
+                        {timeSlots.map(slot => (
+                          <Button
+                            key={slot}
+                            variant={selectedTime === slot ? "default" : "outline"}
+                            className={cn(
+                              "h-12 rounded-xl font-bold",
+                              selectedTime === slot ? "bg-primary text-white" : "hover:border-primary/40"
+                            )}
+                            onClick={() => setSelectedTime(slot)}
+                          >
+                            {slot}
+                          </Button>
+                        ))}
+                        {timeSlots.length === 0 && (
+                          <div className="col-span-3 text-center py-12 text-muted-foreground italic">
+                            No available slots for this date.
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-center gap-3">
+                    <Clock className="h-5 w-5 text-amber-500" />
+                    <p className="text-[10px] text-amber-900 font-bold uppercase tracking-tight">8:00 AM - 5:00 PM | Mon-Fri only</p>
+                  </div>
+
+                  <Button 
+                    disabled={!selectedDate || !selectedTime} 
+                    onClick={() => setStep(2)} 
+                    className="w-full h-16 rounded-2xl text-lg font-black bg-primary hover:bg-[#1A3B6B] shadow-lg"
+                  >
+                    Continue to Contact Info <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </div>
               </div>
             ) : (
-              <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
+              <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in slide-in-from-right-4">
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="text-xs font-black text-primary/60 uppercase tracking-widest ml-1">Full Name</Label>
@@ -204,7 +281,11 @@ function BookAppointmentContent() {
                   <h4 className="text-xs font-black text-primary/60 uppercase tracking-widest">Verify Your Schedule</h4>
                   <div className="flex justify-between items-center text-sm font-bold text-[#1A3B6B]">
                     <span>Visit Date:</span>
-                    <span>{format(new Date(date), "PPP")}</span>
+                    <span>{selectedDate ? format(selectedDate, "PPP") : ""}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm font-bold text-[#1A3B6B]">
+                    <span>Visit Time:</span>
+                    <span>{selectedTime}</span>
                   </div>
                   <div className="flex justify-between items-center text-sm font-bold text-[#1A3B6B]">
                     <span>Service:</span>
