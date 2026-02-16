@@ -12,14 +12,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar as CalendarIcon, Clock, CheckCircle, ArrowRight, Loader2, User } from "lucide-react";
 import { useFirestore, setDocumentNonBlocking, useCollection, useMemoFirebase } from "@/firebase";
 import { doc, collection, query, where } from "firebase/firestore";
-import { format, addDays, isWeekend, startOfToday, setHours, setMinutes, isBefore } from "date-fns";
+import { format, isWeekend, startOfToday, setHours, setMinutes, isBefore, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Calendar } from "@/components/ui/calendar";
+import { useToast } from "@/hooks/use-toast";
 
 function BookAppointmentContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const db = useFirestore();
+  const { toast } = useToast();
   
   const caseTypeParam = searchParams.get("caseType") || "Initial Consultation";
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -30,7 +31,6 @@ function BookAppointmentContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [refCode, setRefCode] = useState<string | null>(null);
 
-  // Purpose to Service mapping
   const getServiceLabel = (p: string) => {
     switch (p) {
       case 'consultation': return 'Case Consultation';
@@ -41,7 +41,6 @@ function BookAppointmentContent() {
     }
   };
 
-  // Fetch existing appointments for the selected date to prevent double booking
   const dateStr = selectedDate ? format(selectedDate, "yyyy-MM-dd") : null;
   const existingApptsQuery = useMemoFirebase(() => {
     if (!db || !dateStr) return null;
@@ -50,7 +49,6 @@ function BookAppointmentContent() {
 
   const { data: existingAppts } = useCollection(existingApptsQuery);
 
-  // Generate 30-minute slots
   const timeSlots = useMemo(() => {
     const slots = [];
     const startHour = 8;
@@ -59,16 +57,13 @@ function BookAppointmentContent() {
 
     for (let h = startHour; h < endHour; h++) {
       for (let m = 0; m < 60; m += 30) {
-        // Exclude Lunch Break: 12:00 PM - 1:00 PM
         if (h === 12) continue;
 
         const timeString = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
         const slotDate = selectedDate ? setMinutes(setHours(new Date(selectedDate), h), m) : null;
         
-        // Prevent past times if today
         if (slotDate && isBefore(slotDate, now)) continue;
 
-        // Check if already booked
         const isBooked = existingAppts?.some(a => a.time === timeString && a.status !== 'cancelled');
         
         if (!isBooked) {
@@ -171,17 +166,27 @@ function BookAppointmentContent() {
               <div className="grid lg:grid-cols-2 gap-12 animate-in fade-in slide-in-from-right-4">
                 <div className="space-y-6">
                   <div className="space-y-4">
-                    <Label className="text-xs font-black text-primary/60 uppercase tracking-widest ml-1">1. Select Weekday</Label>
-                    <div className="p-4 bg-white rounded-3xl border border-primary/10 shadow-inner flex justify-center">
-                      <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={(date) => {
+                    <Label className="text-xs font-black text-primary/60 uppercase tracking-widest ml-1">1. Select Date (Mon-Fri)</Label>
+                    <div className="p-4 bg-white rounded-3xl border border-primary/10 shadow-inner">
+                      <Input
+                        type="date"
+                        min={format(new Date(), "yyyy-MM-dd")}
+                        className="h-14 rounded-2xl border-primary/20 bg-white font-bold"
+                        onChange={(e) => {
+                          const date = e.target.value ? parseISO(e.target.value) : undefined;
+                          if (date && isWeekend(date)) {
+                            toast({
+                              variant: "destructive",
+                              title: "Closed on Weekends",
+                              description: "PAO only accepts appointments from Monday to Friday."
+                            });
+                            e.target.value = "";
+                            setSelectedDate(undefined);
+                            return;
+                          }
                           setSelectedDate(date);
                           setSelectedTime("");
                         }}
-                        disabled={(date) => date < startOfToday() || isWeekend(date)}
-                        className="rounded-md"
                       />
                     </div>
                   </div>
