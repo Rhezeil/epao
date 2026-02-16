@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar as CalendarIcon, Clock, CheckCircle, ArrowRight, Loader2, ShieldCheck, User } from "lucide-react";
 import { useFirestore, setDocumentNonBlocking } from "@/firebase";
 import { doc } from "firebase/firestore";
@@ -22,9 +23,20 @@ function BookAppointmentContent() {
   const caseTypeParam = searchParams.get("caseType") || "Initial Consultation";
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [date, setDate] = useState("");
+  const [purpose, setPurpose] = useState("consultation");
   const [guestInfo, setGuestInfo] = useState({ name: "", mobile: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [refCode, setRefCode] = useState<string | null>(null);
+
+  const getServiceLabel = (p: string) => {
+    switch (p) {
+      case 'consultation': return 'Case Consultation';
+      case 'notarization': return 'Document Notarization';
+      case 'document-preparation': return 'Document Preparation';
+      case 'legal-advice': return 'Legal Advice';
+      default: return 'General Service';
+    }
+  };
 
   const handleBooking = async () => {
     if (!db || !date || !guestInfo.name || !guestInfo.mobile) return;
@@ -40,6 +52,8 @@ function BookAppointmentContent() {
       caseType: caseTypeParam,
       guestName: guestInfo.name,
       guestMobile: guestInfo.mobile,
+      purpose: purpose,
+      serviceType: getServiceLabel(purpose),
       date: new Date(date).toISOString(),
       status: "pending",
       type: "initial",
@@ -114,23 +128,41 @@ function BookAppointmentContent() {
           <CardContent className="p-10 space-y-8">
             {step === 1 ? (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
-                <div className="space-y-4">
-                  <Label className="text-xs font-black text-primary/60 uppercase tracking-widest ml-1">Select Available Date</Label>
-                  <div className="relative">
-                    <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-40 pointer-events-none" />
-                    <Input 
-                      type="date"
-                      min={today}
-                      className="h-16 pl-12 rounded-2xl border-primary/20 bg-white text-lg font-bold"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                    />
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <Label className="text-xs font-black text-primary/60 uppercase tracking-widest ml-1">Select Available Date</Label>
+                    <div className="relative">
+                      <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-40 pointer-events-none" />
+                      <Input 
+                        type="date"
+                        min={today}
+                        className="h-16 pl-12 rounded-2xl border-primary/20 bg-white text-lg font-bold"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                      />
+                    </div>
                   </div>
-                  <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-center gap-3">
-                    <Clock className="h-5 w-5 text-amber-500" />
-                    <p className="text-xs text-amber-900 font-bold">Note: PAO offices are closed on weekends and public holidays.</p>
+                  <div className="space-y-4">
+                    <Label className="text-xs font-black text-primary/60 uppercase tracking-widest ml-1">Purpose of Visit</Label>
+                    <Select value={purpose} onValueChange={setPurpose}>
+                      <SelectTrigger className="h-16 rounded-2xl border-primary/20 bg-white font-bold">
+                        <SelectValue placeholder="Select purpose" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="consultation" className="font-medium">Case Consultation</SelectItem>
+                        <SelectItem value="notarization" className="font-medium">Document Notarization</SelectItem>
+                        <SelectItem value="document-preparation" className="font-medium">Document Preparation</SelectItem>
+                        <SelectItem value="legal-advice" className="font-medium">Legal Advice</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
+                
+                <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-center gap-3">
+                  <Clock className="h-5 w-5 text-amber-500" />
+                  <p className="text-xs text-amber-900 font-bold">Note: PAO offices are closed on weekends and public holidays.</p>
+                </div>
+
                 <Button 
                   disabled={!date} 
                   onClick={() => setStep(2)} 
@@ -157,7 +189,7 @@ function BookAppointmentContent() {
                   <div className="space-y-2">
                     <Label className="text-xs font-black text-primary/60 uppercase tracking-widest ml-1">Mobile Number</Label>
                     <div className="relative">
-                      <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-40" />
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-40" />
                       <Input 
                         placeholder="09123456789"
                         className="h-14 pl-12 rounded-2xl border-primary/20 bg-white"
@@ -173,6 +205,10 @@ function BookAppointmentContent() {
                   <div className="flex justify-between items-center text-sm font-bold text-[#1A3B6B]">
                     <span>Visit Date:</span>
                     <span>{format(new Date(date), "PPP")}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm font-bold text-[#1A3B6B]">
+                    <span>Service:</span>
+                    <span>{getServiceLabel(purpose)}</span>
                   </div>
                   <div className="flex justify-between items-center text-sm font-bold text-[#1A3B6B]">
                     <span>Matter:</span>

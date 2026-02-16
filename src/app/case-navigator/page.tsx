@@ -94,15 +94,14 @@ function CaseNavigatorContent() {
 
   const handleBookingRedirect = (caseName: string) => {
     const category = selectedCategory || 'General';
-    const baseUrl = `/dashboard/client/book-appointment`;
     const queryParams = `?caseType=${encodeURIComponent(caseName)}&category=${encodeURIComponent(category)}`;
     
-    if (user) {
-      router.push(`${baseUrl}${queryParams}`);
+    if (user && role === 'client') {
+      // If logged in as client, go to internal booking
+      router.push(`/dashboard/client/book-appointment${queryParams}`);
     } else {
-      // For guests, redirect to login then to the booking page
-      const returnUrl = encodeURIComponent(`${baseUrl}${queryParams}`);
-      router.push(`/login?redirect=${returnUrl}`);
+      // For guests or non-clients, go directly to public booking (no redirect to login)
+      router.push(`/book-appointment${queryParams}`);
     }
   };
 
@@ -186,8 +185,8 @@ function CaseNavigatorContent() {
                   <CalendarCheck className="h-6 w-6" />
                   Book Consultation
                 </Button>
-                <p className="text-[10px] text-center text-muted-foreground mt-3 font-medium">
-                  {user ? "Click to schedule your slot now." : "You will be asked to sign in before confirming."}
+                <p className="text-[10px] text-center text-muted-foreground mt-3 font-medium uppercase tracking-widest">
+                  No login required for first-time visits
                 </p>
               </div>
             </CardContent>

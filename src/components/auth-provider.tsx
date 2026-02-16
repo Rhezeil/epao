@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
@@ -100,7 +101,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Redirect Logic with Path Preservation
   useEffect(() => {
-    const publicPaths = ["/login", "/register", "/", "/case-navigator", "/about"];
+    // Added /book-appointment and /manage-appointment to public paths
+    const publicPaths = ["/login", "/register", "/", "/case-navigator", "/about", "/book-appointment", "/manage-appointment"];
     
     if (!loading) {
       if (!user && !publicPaths.includes(pathname)) {
@@ -111,7 +113,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         router.push(`/login?redirect=${encodedRedirect}`);
       } else if (user && role && (pathname === "/login" || pathname === "/register")) {
         // After login, if there is a redirect param, the LoginPage handles it. 
-        // This is a safety check to ensure users don't hang on auth pages.
         const redirectParam = searchParams.get('redirect');
         if (!redirectParam) {
           router.push(`/dashboard/${role}`);
