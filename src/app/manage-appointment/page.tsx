@@ -98,7 +98,7 @@ export default function ManageAppointmentPage() {
                     <Calendar className="h-3 w-3" /> Date & Time
                   </div>
                   <p className="text-lg font-bold text-[#1A3B6B]">
-                    {format(new Date(appointment.date), "PPP")}
+                    {format(new Date(appointment.date), "PPP")} at {appointment.time}
                   </p>
                 </div>
                 <div className="space-y-2">

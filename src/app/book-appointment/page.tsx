@@ -13,9 +13,28 @@ import { Calendar } from "@/components/ui/calendar";
 import { Calendar as CalendarIcon, Clock, CheckCircle, ArrowRight, Loader2, User, AlertCircle } from "lucide-react";
 import { useFirestore, setDocumentNonBlocking, useCollection, useMemoFirebase } from "@/firebase";
 import { doc, collection, query, where } from "firebase/firestore";
-import { format, isWeekend, startOfToday, setHours, setMinutes, isBefore, parseISO } from "date-fns";
+import { format, isWeekend, startOfToday, setHours, setMinutes, isBefore, parseISO, isSameDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+
+// Statutory Holidays Logic
+const HOLIDAYS = [
+  "2024-01-01", // New Year's Day
+  "2024-04-09", // Araw ng Kagitingan
+  "2024-05-01", // Labor Day
+  "2024-06-12", // Independence Day
+  "2024-08-26", // National Heroes Day
+  "2024-11-01", // All Saints' Day
+  "2024-11-30", // Bonifacio Day
+  "2024-12-25", // Christmas Day
+  "2024-12-30", // Rizal Day
+  "2025-01-01",
+];
+
+const isHoliday = (date: Date) => {
+  const ds = format(date, "yyyy-MM-dd");
+  return HOLIDAYS.includes(ds);
+};
 
 function BookAppointmentContent() {
   const router = useRouter();
@@ -61,7 +80,10 @@ function BookAppointmentContent() {
         // Exclude 12:00 PM - 1:00 PM Break
         if (h === 12) continue;
 
-        const timeString = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const displayHour = h % 12 || 12;
+        const timeString = `${displayHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
+        
         const slotDate = selectedDate ? setMinutes(setHours(new Date(selectedDate), h), m) : null;
         
         // Disable past times for today
@@ -160,13 +182,14 @@ function BookAppointmentContent() {
                         mode="single"
                         selected={selectedDate}
                         onSelect={(date) => {
-                          if (date && (isWeekend(date) || isBefore(date, startOfToday()))) return;
+                          if (date && (isWeekend(date) || isHoliday(date) || isBefore(date, startOfToday()))) return;
                           setSelectedDate(date);
                           setSelectedTime("");
                         }}
                         disabled={[
                           { before: startOfToday() },
-                          { dayOfWeek: [0, 6] }
+                          { dayOfWeek: [0, 6] },
+                          (date) => isHoliday(date)
                         ]}
                         className="rounded-md border-none"
                       />

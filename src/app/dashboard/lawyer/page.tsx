@@ -119,8 +119,8 @@ export default function LawyerDashboard() {
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="text-right hidden sm:block">
-                          <p className="text-sm font-black text-primary">09:00 AM</p>
-                          <p className="text-[10px] text-muted-foreground font-bold uppercase">Standard Slot</p>
+                          <p className="text-sm font-black text-primary">{appt.time}</p>
+                          <p className="text-[10px] text-muted-foreground font-bold uppercase">Scheduled Slot</p>
                         </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>

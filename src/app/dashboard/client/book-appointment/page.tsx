@@ -18,6 +18,16 @@ import { format, isWeekend, startOfToday, setHours, setMinutes, isBefore, parseI
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
+const HOLIDAYS = [
+  "2024-01-01", "2024-04-09", "2024-05-01", "2024-06-12", "2024-08-26",
+  "2024-11-01", "2024-11-30", "2024-12-25", "2024-12-30", "2025-01-01"
+];
+
+const isHoliday = (date: Date) => {
+  const ds = format(date, "yyyy-MM-dd");
+  return HOLIDAYS.includes(ds);
+};
+
 function BookAppointmentContent() {
   const { role, user } = useAuth();
   const router = useRouter();
@@ -63,7 +73,10 @@ function BookAppointmentContent() {
         // Exclude 12:00 PM - 1:00 PM Break
         if (h === 12) continue;
 
-        const timeString = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const displayHour = h % 12 || 12;
+        const timeString = `${displayHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
+        
         const slotDate = selectedDate ? setMinutes(setHours(new Date(selectedDate), h), m) : null;
         
         // Disable past times for today
@@ -161,13 +174,14 @@ function BookAppointmentContent() {
                           mode="single"
                           selected={selectedDate}
                           onSelect={(date) => {
-                            if (date && (isWeekend(date) || isBefore(date, startOfToday()))) return;
+                            if (date && (isWeekend(date) || isHoliday(date) || isBefore(date, startOfToday()))) return;
                             setSelectedDate(date);
                             setSelectedTime("");
                           }}
                           disabled={[
                             { before: startOfToday() },
-                            { dayOfWeek: [0, 6] }
+                            { dayOfWeek: [0, 6] },
+                            (date) => isHoliday(date)
                           ]}
                           className="rounded-md border-none"
                         />
