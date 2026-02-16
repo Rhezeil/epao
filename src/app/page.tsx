@@ -1,33 +1,30 @@
 
 "use client";
 
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { useAuth } from "@/components/auth-provider";
 
-export default function HomePage() {
+export default function LandingPage() {
   const router = useRouter();
   const { user, role, loading } = useAuth();
 
   useEffect(() => {
     if (!loading) {
-      if (!user) {
-        router.push("/login");
-      } else if (role) {
+      if (user && role) {
         router.push(`/dashboard/${role}`);
-      } else if (user && !role) {
-        // Logged in but no role assigned/found yet. 
-        // Redirect to login to allow the auto-repair/initialization logic to run
-        router.push("/login");
+      } else {
+        // Guests start at the Case Navigator
+        router.push("/case-navigator");
       }
     }
   }, [user, role, loading, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="flex flex-col items-center">
-        <div className="h-12 w-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-muted-foreground font-medium animate-pulse">Initializing LexConnect...</p>
+      <div className="flex flex-col items-center gap-4">
+        <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <p className="text-muted-foreground font-medium animate-pulse">Welcome to LexConnect...</p>
       </div>
     </div>
   );

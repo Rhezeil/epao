@@ -29,7 +29,7 @@ import {
   LogIn,
   UserPlus,
   Database,
-  Info
+  Search
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
@@ -49,14 +49,23 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   const logo = PlaceHolderImages.find(img => img.id === 'pao-logo');
 
   const getMenuItems = () => {
-    const commonItems = [
-      { icon: Compass, label: "Case Requirements Navigator", path: "/case-navigator" },
-      { icon: Calendar, label: "Book Appointment", path: "/dashboard/client/book-appointment" },
-      { icon: CalendarCheck, label: "Manage Appointment", path: "/case-navigator?mode=manage" },
-    ];
-
+    // Guest Portal Items
     if (!user) {
-      return commonItems;
+      return [
+        { icon: Compass, label: "Legal Navigator", path: "/case-navigator" },
+        { icon: Calendar, label: "Book Consultation", path: "/book-appointment" },
+        { icon: Search, label: "Manage Booking", path: "/manage-appointment" },
+      ];
+    }
+
+    // Registered Client Items
+    if (role === "client") {
+      return [
+        { icon: LayoutDashboard, label: "My Dashboard", path: "/dashboard/client" },
+        { icon: FileText, label: "Case Details", path: "/dashboard/client/cases" },
+        { icon: CalendarCheck, label: "Appointments", path: "/dashboard/client/appointments" },
+        { icon: Compass, label: "Legal Navigator", path: "/case-navigator" },
+      ];
     }
 
     if (role === "admin") {
@@ -65,7 +74,6 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
         { icon: Users, label: "Users Management", path: "/dashboard/admin/users" },
         { icon: Briefcase, label: "Lawyer List", path: "/dashboard/admin/lawyers" },
         { icon: Database, label: "Case Requirements", path: "/dashboard/admin/case-requirements" },
-        { icon: UserPlus, label: "Register Practitioner", path: "/register" },
       ];
     }
 
@@ -77,14 +85,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
       ];
     }
 
-    if (role === "client") {
-      return [
-        ...commonItems,
-        { icon: FileText, label: "Case Updates", path: "/dashboard/client/cases" },
-      ];
-    }
-
-    return commonItems;
+    return [];
   };
 
   const menuItems = getMenuItems();
@@ -151,7 +152,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-bold text-primary truncate">
-                        {user?.email?.includes('@epao.mobile') ? user.email.split('@')[0] : user?.email}
+                        {user?.email}
                       </p>
                       <p className="text-[10px] text-muted-foreground capitalize">{role}</p>
                     </div>
@@ -188,7 +189,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
                       className="w-full justify-start text-primary hover:bg-primary/5 py-4"
                     >
                       <LogIn className="h-4 w-4 mr-2" />
-                      <span className="text-xs font-bold">Sign In</span>
+                      <span className="text-xs font-bold">Client Login</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 )}

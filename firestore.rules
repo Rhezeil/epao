@@ -1,3 +1,4 @@
+
 rules_version = '2';
 
 service cloud.firestore {
@@ -14,10 +15,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() && (
-        exists(/databases/$(database)/documents/roleAdmin/$(request.auth.uid)) ||
-        (request.auth.token.email != null && request.auth.token.email.lower() == "admin@epao.com")
-      );
+      return isSignedIn() && exists(/databases/$(database)/documents/roleAdmin/$(request.auth.uid));
     }
 
     // --- Rules ---
@@ -26,37 +24,30 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create, update: if isOwner(userId);
-      allow delete: if isAdmin();
     }
 
-    match /users/{userId}/profile/{profileId} {
-      allow get, list: if isOwner(userId) || isAdmin();
-      allow create, update: if isOwner(userId);
-      allow delete: if isAdmin();
+    match /cases/{caseId} {
+      allow get: if isAdmin() || (isSignedIn() && resource.data.clientId == request.auth.uid) || (isSignedIn() && resource.data.lawyerId == request.auth.uid);
+      allow list: if isAdmin() || isSignedIn(); // Restricted by query filters in app
+      allow create, update: if isAdmin();
+    }
+
+    match /appointments/{appointmentId} {
+      allow get: if true; // Public for reference code lookup
+      allow create: if true; // Guests can book
+      allow update: if true; // Guests can cancel/reschedule via reference code check in logic
+      allow list: if isAdmin() || isSignedIn();
     }
 
     match /roleAdmin/{userId} {
       allow get: if isOwner(userId) || isAdmin();
-      allow list: if isAdmin();
       allow write: if isAdmin();
     }
-
+    
     match /roleLawyer/{userId} {
       allow get: if isOwner(userId) || isAdmin();
-      allow list: if isAdmin();
+      allow list: if isAdmin() || isSignedIn();
       allow write: if isAdmin();
-      allow update: if isOwner(userId);
-    }
-
-    match /caseRequirements/{caseName} {
-      allow get: if true;
-      allow list, write: if isAdmin();
-    }
-
-    match /appointments/{appointmentId} {
-      allow get: if true;
-      allow create: if isSignedIn();
-      allow update, delete, list: if isAdmin() || (isSignedIn() && resource.data.clientId == request.auth.uid);
     }
   }
 }

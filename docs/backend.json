@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -8,88 +9,45 @@
         "id": { "type": "string" },
         "mobileNumber": { "type": "string" },
         "email": { "type": "string", "format": "email" },
-        "role": { "type": "string", "enum": ["client"] },
+        "role": { "type": "string", "enum": ["client", "admin", "lawyer"] },
         "profileId": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "mobileNumber", "role"]
+      "required": ["id", "role"]
     },
-    "AccessControlRule": {
-      "title": "AccessControlRule",
-      "description": "Represents an administrator's record.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "email": { "type": "string", "format": "email" },
-        "role": { "type": "string", "enum": ["admin"] },
-        "permission": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "role", "email"]
-    },
-    "LawyerRecord": {
-      "title": "LawyerRecord",
-      "description": "Represents a Lawyer's record.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "email": { "type": "string", "format": "email" },
-        "role": { "type": "string", "enum": ["lawyer"] },
-        "profileId": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "role", "email"]
-    },
-    "Profile": {
-      "title": "Profile",
-      "description": "Personal details for any user type.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "firstName": { "type": "string" },
-        "lastName": { "type": "string" },
-        "phoneNumber": { "type": "string" },
-        "address": { "type": "string" }
-      },
-      "required": ["id", "firstName", "lastName"]
-    },
-    "CaseRequirement": {
-      "title": "CaseRequirement",
-      "description": "Dynamic requirements and process roadmap for specific cases.",
-      "type": "object",
-      "properties": {
-        "caseName": { "type": "string" },
-        "description": { "type": "string" },
-        "requirements": { "type": "array", "items": { "type": "string" } },
-        "steps": { 
-          "type": "array", 
-          "items": { 
-            "type": "object", 
-            "properties": {
-              "step": { "type": "number" },
-              "title": { "type": "string" },
-              "content": { "type": "string" }
-            }
-          } 
-        }
-      }
-    },
-    "Appointment": {
-      "title": "Appointment",
-      "description": "Client consultation booking record.",
+    "Case": {
+      "title": "Case",
+      "description": "Represents an official legal case record.",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
         "clientId": { "type": "string" },
+        "lawyerId": { "type": "string" },
+        "caseType": { "type": "string" },
+        "status": { "type": "string", "enum": ["Active", "Pending", "Closed", "For Compliance"] },
+        "description": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "clientId", "lawyerId", "status"]
+    },
+    "Appointment": {
+      "title": "Appointment",
+      "description": "Consultation booking record.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "clientId": { "type": "string" },
+        "guestName": { "type": "string" },
+        "guestMobile": { "type": "string" },
         "referenceCode": { "type": "string" },
-        "caseCategory": { "type": "string" },
         "caseType": { "type": "string" },
         "purpose": { "type": "string" },
         "date": { "type": "string", "format": "date-time" },
         "status": { "type": "string", "enum": ["pending", "scheduled", "completed", "cancelled"] },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "type": { "type": "string", "enum": ["initial", "follow-up"] },
+        "lawyerId": { "type": "string" }
       },
-      "required": ["clientId", "referenceCode", "caseType", "date", "status"]
+      "required": ["referenceCode", "caseType", "date", "status"]
     }
   },
   "auth": {
@@ -98,27 +56,15 @@
   "firestore": {
     "/users/{userId}": {
       "schema": "User",
-      "description": "Client account records."
+      "description": "Account records."
     },
-    "/users/{userId}/profile/profile": {
-      "schema": "Profile",
-      "description": "User profile data."
-    },
-    "/roleAdmin/{userId}": {
-      "schema": "AccessControlRule",
-      "description": "Admin-only account records."
-    },
-    "/roleLawyer/{userId}": {
-      "schema": "LawyerRecord",
-      "description": "Lawyer-only account records."
-    },
-    "/caseRequirements/{caseName}": {
-      "schema": "CaseRequirement",
-      "description": "Specific case documentation and process requirements."
+    "/cases/{caseId}": {
+      "schema": "Case",
+      "description": "Official case records."
     },
     "/appointments/{appointmentId}": {
       "schema": "Appointment",
-      "description": "Consultation and legal service bookings."
+      "description": "Consultation and follow-up bookings."
     }
   }
 }
