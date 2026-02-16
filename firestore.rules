@@ -20,6 +20,11 @@ service cloud.firestore {
 
     // --- Rules ---
 
+    // Publicly accessible navigator data (No login required)
+    match /caseRequirements/{docId} {
+      allow read: if true;
+    }
+
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
@@ -36,7 +41,7 @@ service cloud.firestore {
       allow get: if true; // Public for reference code lookup
       allow create: if true; // Guests can book
       allow update: if true; // Guests can cancel/reschedule via reference code check in logic
-      allow list: if isAdmin() || isSignedIn();
+      allow list: if true; // Required for availability check in Guest Portal
     }
 
     match /roleAdmin/{userId} {
@@ -49,5 +54,7 @@ service cloud.firestore {
       allow list: if isAdmin() || isSignedIn();
       allow write: if isAdmin();
     }
+
+    // Last updated: 2024-05-20T10:00:00Z - Triggering rules deployment for Case Navigator access
   }
 }
