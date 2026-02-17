@@ -18,12 +18,9 @@ import {
   UserCheck, 
   Search, 
   ArrowUpDown, 
-  ArrowRightLeft,
   Settings2,
   Edit3,
-  ShieldAlert,
   Camera,
-  User,
   Scale,
   ChevronRight
 } from "lucide-react";
@@ -58,10 +55,6 @@ export default function AdminLawyersPage() {
   
   // Reassignment State
   const [selectedLawyer, setSelectedLawyer] = useState<any>(null);
-  const [isReassignOpen, setIsReassignOpen] = useState(false);
-  const [targetLawyerId, setTargetLawyerId] = useState("");
-
-  // Edit Profile State
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editLawyerData, setEditLawyerData] = useState({ 
     firstName: "", 
@@ -273,7 +266,9 @@ export default function AdminLawyersPage() {
                           <TableCell className="text-center">
                             <Badge variant="outline" className={cn(
                               "font-black text-[9px] uppercase",
-                              lawyer.status === 'Available' ? 'border-green-200 text-green-700 bg-green-50' : 'border-amber-200 text-amber-700 bg-amber-50'
+                              lawyer.status === 'Available' ? 'border-green-200 text-green-700 bg-green-50' : 
+                              lawyer.status === 'Onsite' ? 'border-blue-200 text-blue-700 bg-blue-50' :
+                              'border-amber-200 text-amber-700 bg-amber-50'
                             )}>
                               {lawyer.status}
                             </Badge>
@@ -308,6 +303,9 @@ export default function AdminLawyersPage() {
                                   <DropdownMenuLabel className="text-[10px] font-black uppercase text-primary/40 px-2 pb-2">Quick Status</DropdownMenuLabel>
                                   <DropdownMenuItem onClick={() => updateDocumentNonBlocking(doc(db, "roleLawyer", lawyer.id), { status: "Available" })} className="rounded-xl font-bold">
                                     Mark as Available
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => updateDocumentNonBlocking(doc(db, "roleLawyer", lawyer.id), { status: "Onsite" })} className="rounded-xl font-bold">
+                                    Mark as Onsite
                                   </DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => updateDocumentNonBlocking(doc(db, "roleLawyer", lawyer.id), { status: "On Leave" })} className="rounded-xl font-bold">
                                     Mark as On Leave
@@ -417,8 +415,8 @@ export default function AdminLawyersPage() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Available">Available</SelectItem>
+                          <SelectItem value="Onsite">Onsite</SelectItem>
                           <SelectItem value="On Leave">On Leave</SelectItem>
-                          <SelectItem value="Fully Booked">Fully Booked</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
