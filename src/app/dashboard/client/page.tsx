@@ -10,10 +10,13 @@ import { Briefcase, Calendar, FileText, User, ChevronRight, Gavel, Clock } from 
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
 export default function ClientDashboard() {
   const { user, role } = useAuth();
   const db = useFirestore();
+  const router = useRouter();
   const [assignedLawyer, setAssignedLawyer] = useState<any>(null);
 
   // Fetch Client's official case
@@ -50,8 +53,8 @@ export default function ClientDashboard() {
       <div className="space-y-8">
         <div className="flex justify-between items-end">
           <div className="space-y-1">
-            <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Client Dashboard</h1>
-            <p className="text-muted-foreground font-medium">Welcome back. Track your case and manage follow-ups.</p>
+            <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Citizen Portal</h1>
+            <p className="text-muted-foreground font-medium">Welcome back. Track your legal case and manage your appointments.</p>
           </div>
           <Badge className="bg-primary/10 text-primary border-none px-4 py-2 rounded-full font-bold">
             Registered Client
@@ -68,7 +71,7 @@ export default function ClientDashboard() {
                     <div className="p-2 bg-primary text-white rounded-xl">
                       <Gavel className="h-5 w-5" />
                     </div>
-                    <CardTitle className="text-xl font-bold text-primary">Active Case Details</CardTitle>
+                    <CardTitle className="text-xl font-bold text-primary">My Active Legal Matter</CardTitle>
                   </div>
                   {activeCase && (
                     <Badge className="bg-green-100 text-green-800 border-none font-bold px-3">
@@ -84,23 +87,23 @@ export default function ClientDashboard() {
                   <div className="grid md:grid-cols-2 gap-8">
                     <div className="space-y-4">
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest">Case ID</p>
+                        <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest">Official Case ID</p>
                         <p className="text-lg font-black text-[#1A3B6B]">{activeCase.id}</p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest">Matter Type</p>
+                        <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest">Legal Classification</p>
                         <p className="text-lg font-black text-[#1A3B6B]">{activeCase.caseType}</p>
                       </div>
                     </div>
                     <div className="space-y-4">
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest">Created Date</p>
+                        <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest">Filing Date</p>
                         <p className="text-lg font-black text-[#1A3B6B]">
                           {activeCase.createdAt ? format(new Date(activeCase.createdAt), "PPP") : '---'}
                         </p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest">Description</p>
+                        <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest">Case Description</p>
                         <p className="text-sm text-muted-foreground font-medium leading-relaxed">{activeCase.description}</p>
                       </div>
                     </div>
@@ -119,7 +122,7 @@ export default function ClientDashboard() {
               <CardHeader className="pb-4">
                 <CardTitle className="text-lg font-bold text-primary flex items-center gap-2">
                   <Calendar className="h-5 w-5" />
-                  Upcoming Visits
+                  My Scheduled Visits
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -132,7 +135,7 @@ export default function ClientDashboard() {
                       </div>
                       <div>
                         <p className="text-sm font-bold text-[#1A3B6B]">{appt.caseType}</p>
-                        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">Ref: {appt.referenceCode}</p>
+                        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">Reference: {appt.referenceCode} • {appt.time}</p>
                       </div>
                     </div>
                     <ChevronRight className="h-5 w-5 text-primary/30" />
@@ -149,7 +152,7 @@ export default function ClientDashboard() {
             {/* Assigned Lawyer Card */}
             <Card className="border-none shadow-xl bg-[#F0F4F8] rounded-[2.5rem] overflow-hidden">
               <CardHeader className="bg-primary p-6 text-white">
-                <CardTitle className="text-sm font-black uppercase tracking-widest">Assigned Practitioner</CardTitle>
+                <CardTitle className="text-sm font-black uppercase tracking-widest">Assigned Public Attorney</CardTitle>
               </CardHeader>
               <CardContent className="p-8 space-y-6">
                 {assignedLawyer ? (
@@ -168,13 +171,13 @@ export default function ClientDashboard() {
                         <Briefcase className="h-4 w-4" /> District Office North
                       </div>
                       <div className="flex items-center gap-3 text-xs font-bold text-[#2E5A99]">
-                        <FileText className="h-4 w-4" /> Active on {cases?.length || 0} Matters
+                        <FileText className="h-4 w-4" /> Managing your {activeCase?.caseType || "Legal Matter"}
                       </div>
                     </div>
                   </>
                 ) : (
                   <div className="text-center py-6">
-                    <p className="text-xs text-muted-foreground font-medium italic">Lawyer will be assigned after initial consultation.</p>
+                    <p className="text-xs text-muted-foreground font-medium italic leading-relaxed">Your assigned attorney will appear here once your case is triaged.</p>
                   </div>
                 )}
               </CardContent>
@@ -185,9 +188,12 @@ export default function ClientDashboard() {
                 <Clock className="h-4 w-4" /> Booking Follow-ups
               </h4>
               <p className="text-xs text-amber-800/70 font-medium leading-relaxed">
-                Registered clients can only book follow-up consultations with their assigned lawyer to ensure case continuity.
+                Registered clients can book follow-up consultations with their assigned lawyer to ensure continuous legal support.
               </p>
-              <Button className="w-full bg-amber-500 hover:bg-amber-600 rounded-xl font-bold" onClick={() => {}}>
+              <Button 
+                className="w-full bg-amber-500 hover:bg-amber-600 rounded-xl font-bold shadow-md" 
+                onClick={() => router.push('/dashboard/client/book-appointment')}
+              >
                 Schedule Follow-up
               </Button>
             </Card>

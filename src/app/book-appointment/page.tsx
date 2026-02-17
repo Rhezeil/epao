@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, Suspense, useMemo } from "react";
@@ -33,7 +34,6 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { sendOtpSms } from "@/ai/flows/sms-service";
 
-// Statutory Holidays Logic
 const HOLIDAYS = [
   "2024-01-01", "2024-04-09", "2024-05-01", "2024-06-12", "2024-08-26",
   "2024-11-01", "2024-11-30", "2024-12-25", "2024-12-30", 
@@ -67,7 +67,6 @@ function BookAppointmentContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [refCode, setRefCode] = useState<string | null>(null);
 
-  // OTP States
   const [otpValue, setOtpValue] = useState("");
   const [generatedOtp, setGeneratedOtp] = useState("");
   const [isSmsSending, setIsSmsSending] = useState(false);
@@ -240,7 +239,7 @@ function BookAppointmentContent() {
                 <div className="space-y-6">
                   <div className="space-y-4">
                     <Label className="text-xs font-black text-primary/60 uppercase tracking-widest">1. Select Visit Date</Label>
-                    <div className="p-4 bg-white rounded-3xl border border-primary/10 shadow-sm">
+                    <div className="p-4 bg-white rounded-3xl border border-primary/10 shadow-sm flex justify-center">
                       <Calendar
                         mode="single"
                         selected={selectedDate}

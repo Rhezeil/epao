@@ -53,8 +53,8 @@ export default function LawyerDashboard() {
       <div className="space-y-8">
         <div className="flex justify-between items-end">
           <div>
-            <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Practitioner Dashboard</h1>
-            <p className="text-muted-foreground font-medium">Manage your clinical load and legal schedule.</p>
+            <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Practitioner Portal</h1>
+            <p className="text-muted-foreground font-medium">Manage your clinical load and legal schedule for today.</p>
           </div>
           <Badge className="bg-primary/10 text-primary border-none px-4 py-2 rounded-full font-bold">
             Public Attorney II
@@ -66,7 +66,7 @@ export default function LawyerDashboard() {
             <CardContent className="p-6 flex items-center gap-4">
               <div className="p-3 bg-white/20 rounded-2xl"><Briefcase className="h-6 w-6" /></div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Active Cases</p>
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-60">My Caseload</p>
                 <p className="text-2xl font-black">{cases?.length || 0}</p>
               </div>
             </CardContent>
@@ -86,7 +86,7 @@ export default function LawyerDashboard() {
             <CardContent className="p-6 flex items-center gap-4 text-primary">
               <div className="p-3 bg-primary/5 rounded-2xl"><TrendingUp className="h-6 w-6" /></div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Completion Rate</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Monthly Efficiency</p>
                 <p className="text-2xl font-black">94%</p>
               </div>
             </CardContent>
@@ -98,7 +98,7 @@ export default function LawyerDashboard() {
             <CardHeader className="bg-primary/5 pb-4 border-b border-primary/10">
               <CardTitle className="text-lg font-bold text-primary flex items-center gap-2">
                 <Clock className="h-5 w-5" />
-                Upcoming Schedule
+                Daily Clinical Schedule
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
@@ -112,7 +112,7 @@ export default function LawyerDashboard() {
                           <span className="text-xl font-black text-primary leading-none mt-1">{format(new Date(appt.date), "dd")}</span>
                         </div>
                         <div>
-                          <h4 className="font-bold text-primary">{appt.guestName || "Registered Client"}</h4>
+                          <h4 className="font-bold text-primary">{appt.guestName || appt.clientName || "Client"}</h4>
                           <p className="text-xs text-muted-foreground font-medium">{appt.caseType}</p>
                           <Badge variant="outline" className="mt-1 text-[9px] font-black uppercase py-0">{appt.status}</Badge>
                         </div>
@@ -120,7 +120,7 @@ export default function LawyerDashboard() {
                       <div className="flex items-center gap-3">
                         <div className="text-right hidden sm:block">
                           <p className="text-sm font-black text-primary">{appt.time}</p>
-                          <p className="text-[10px] text-muted-foreground font-bold uppercase">Scheduled Slot</p>
+                          <p className="text-[10px] text-muted-foreground font-bold uppercase">Time Slot</p>
                         </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -143,7 +143,7 @@ export default function LawyerDashboard() {
                   {(!appointments || appointments.length === 0) && (
                     <div className="p-12 text-center space-y-2">
                       <Calendar className="h-12 w-12 text-primary/10 mx-auto" />
-                      <p className="text-muted-foreground font-medium">Your schedule is currently clear.</p>
+                      <p className="text-muted-foreground font-medium">No appointments scheduled for this period.</p>
                     </div>
                   )}
                 </div>
@@ -154,30 +154,30 @@ export default function LawyerDashboard() {
           <div className="space-y-8">
             <Card className="border-none shadow-xl rounded-[2.5rem] bg-amber-50/50 p-6 space-y-4 border border-amber-100">
               <h3 className="font-bold text-amber-900 flex items-center gap-2">
-                <AlertCircle className="h-5 w-5" /> Quick Notifications
+                <AlertCircle className="h-5 w-5" /> Operational Alerts
               </h3>
               <div className="space-y-3">
                 <div className="p-3 bg-white rounded-xl shadow-sm border border-amber-200">
-                  <p className="text-[10px] font-black text-amber-900/40 uppercase tracking-widest">System Alert</p>
-                  <p className="text-xs text-amber-900 font-bold leading-tight">3 new cases assigned for triage today.</p>
+                  <p className="text-[10px] font-black text-amber-900/40 uppercase tracking-widest">New Assignment</p>
+                  <p className="text-xs text-amber-900 font-bold leading-tight">A new case has been assigned to your caseload today.</p>
                 </div>
                 <div className="p-3 bg-white rounded-xl shadow-sm border border-amber-200">
-                  <p className="text-[10px] font-black text-amber-900/40 uppercase tracking-widest">Client Update</p>
-                  <p className="text-xs text-amber-900 font-bold leading-tight">Client (Ref: PAO-8827) uploaded new evidence.</p>
+                  <p className="text-[10px] font-black text-amber-900/40 uppercase tracking-widest">Client Filing</p>
+                  <p className="text-xs text-amber-900 font-bold leading-tight">New evidence uploaded for Case ID: {cases?.[0]?.id || "---"}.</p>
                 </div>
               </div>
             </Card>
 
             <Card className="border-none shadow-xl rounded-[2.5rem] bg-[#1A237E] p-8 text-white space-y-6">
               <div className="space-y-1">
-                <h3 className="text-lg font-black tracking-tight">Availability Manager</h3>
-                <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest">Control Your Public Calendar</p>
+                <h3 className="text-lg font-black tracking-tight">Practitioner Schedule</h3>
+                <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest">Public Calendar Controls</p>
               </div>
               <p className="text-xs text-white/80 leading-relaxed font-medium">
-                Block specific time slots or mark entire days as unavailable to prevent public and client bookings.
+                Manage your availability by blocking specific slots to ensure balanced daily clinical load.
               </p>
-              <Button className="w-full bg-white text-primary hover:bg-white/90 font-black rounded-xl">
-                Block Time Slots
+              <Button className="w-full bg-white text-primary hover:bg-white/90 font-black rounded-xl shadow-lg">
+                Manage Availability
               </Button>
             </Card>
           </div>
