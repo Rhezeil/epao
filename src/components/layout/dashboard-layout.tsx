@@ -72,7 +72,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
       return [
         { icon: LayoutDashboard, label: "Analytics Overview", path: "/dashboard/admin" },
         { icon: ShieldCheck, label: "Client Triage", path: "/dashboard/admin/triage" },
-        { icon: Users, label: "Users Registry", path: "/dashboard/admin/users" },
+        { icon: Users, label: "Client Directory", path: "/dashboard/admin/users" },
         { icon: Briefcase, label: "Lawyers", path: "/dashboard/admin/lawyers" },
         { icon: Database, label: "Legal Standards", path: "/dashboard/admin/case-requirements" },
       ];
