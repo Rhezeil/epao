@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
@@ -135,7 +134,7 @@ function LoginContent() {
       if (result.success) {
         setGeneratedOtp(result.code);
         setStep(2);
-        toast({ title: "Verification Code Sent", description: `Check your SMS for the code. (Debug: ${result.code})` });
+        toast({ title: "Mock SMS Received", description: result.message });
       }
     } catch (error) {
       toast({ variant: "destructive", title: "SMS Error", description: "Could not send verification code." });

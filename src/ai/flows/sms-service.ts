@@ -3,7 +3,6 @@
  * @fileOverview SMS Service for handling OTP generation and formatting.
  * 
  * - sendOtpSms - Generates and "sends" a verification code to a mobile number.
- * - verifyOtp - (Simulated) validation of the OTP.
  */
 
 import { ai } from '@/ai/genkit';
@@ -39,7 +38,7 @@ App: {{appName}}`,
 
 /**
  * Server action to "send" an SMS OTP.
- * In this prototype, it returns the code and logs the formatted message.
+ * In this prototype, it returns the code and message for UI simulation.
  */
 export async function sendOtpSms(mobileNumber: string) {
   const code = Math.floor(100000 + Math.random() * 900000).toString();
@@ -50,17 +49,17 @@ export async function sendOtpSms(mobileNumber: string) {
     appName: 'ePAO',
   });
 
-  const message = output?.formattedMessage || `${code} is your verification code for ePAO.`;
+  const formattedMessage = output?.formattedMessage || `${code} is your verification code for ePAO.`;
   
   // LOGGING: This is where you'd call an actual SMS API (e.g., Twilio)
   console.log('--- SMS GATEWAY SIMULATION ---');
   console.log(`TO: ${mobileNumber}`);
-  console.log(`MESSAGE: ${message}`);
+  console.log(`MESSAGE: ${formattedMessage}`);
   console.log('------------------------------');
 
   return { 
     success: true, 
-    code, // Returning the code for prototype testing convenience
-    message: "A verification code has been sent to your mobile number."
+    code, 
+    message: formattedMessage 
   };
 }

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, Suspense, useMemo } from "react";
@@ -142,7 +141,7 @@ function BookAppointmentContent() {
       if (result.success) {
         setGeneratedOtp(result.code);
         setStep(4);
-        toast({ title: "Verification Sent", description: `A 6-digit code has been sent to ${guestInfo.mobile}.` });
+        toast({ title: "Mock SMS Received", description: result.message });
       }
     } catch (error) {
       toast({ variant: "destructive", title: "SMS Service Error", description: "Could not send verification code. Please try again." });

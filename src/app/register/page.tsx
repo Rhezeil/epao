@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from "react";
@@ -52,7 +51,7 @@ export default function RegisterPage() {
       if (result.success) {
         setGeneratedOtp(result.code);
         setStep(2);
-        toast({ title: "Code Sent", description: `Verification code sent to ${mobileNumber}. (Debug: ${result.code})` });
+        toast({ title: "Mock SMS Received", description: result.message });
       }
     } catch (error) {
       toast({ variant: "destructive", title: "SMS Failed", description: "Could not send verification code." });

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -123,11 +122,16 @@ export default function ManageAppointmentPage() {
     }
     setIsSmsSending(true);
     try {
-      const result = await sendOtpSms(appointment.guestMobile || appointment.clientMobile);
+      const mobileToUse = appointment.guestMobile || appointment.clientMobile;
+      if (!mobileToUse) {
+        toast({ variant: "destructive", title: "Missing Mobile", description: "No mobile number found for verification." });
+        return;
+      }
+      const result = await sendOtpSms(mobileToUse);
       if (result.success) {
         setGeneratedOtp(result.code);
         setIsOtpOpen(true);
-        toast({ title: "Verification Sent", description: `A cancellation code has been sent to your mobile.` });
+        toast({ title: "Mock SMS Received", description: result.message });
       }
     } catch (e) {
       toast({ variant: "destructive", title: "SMS Service Unavailable", description: "Please try again later." });
@@ -292,7 +296,7 @@ export default function ManageAppointmentPage() {
             <div className="space-y-6">
               <Card className="border-none shadow-xl bg-primary text-white rounded-[3rem] overflow-hidden">
                 <CardHeader className="p-8 bg-white/10 border-b border-white/5">
-                  <CardTitle className="text-sm font-black uppercase tracking-widest">Practitioner Registry</CardTitle>
+                  <CardTitle className="text-sm font-black uppercase tracking-widest">Lawyer Registry</CardTitle>
                 </CardHeader>
                 <CardContent className="p-10 space-y-6">
                   {assignedLawyer ? (
@@ -358,7 +362,7 @@ export default function ManageAppointmentPage() {
               </div>
               <DialogTitle className="text-3xl font-black text-center text-primary">Authorize Action</DialogTitle>
               <DialogDescription className="text-center font-bold text-muted-foreground leading-relaxed">
-                Enter the 6-digit verification code sent to <span className="text-primary">****{appointment?.guestMobile?.slice(-4) || appointment?.clientMobile?.slice(-4)}</span> to finalize your cancellation.
+                Enter the 6-digit verification code sent to your mobile to finalize your cancellation.
               </DialogDescription>
             </DialogHeader>
             <div className="py-8 space-y-6">
@@ -435,7 +439,7 @@ export default function ManageAppointmentPage() {
                               ? "bg-yellow-400 text-black border-yellow-500 shadow-md scale-105" 
                               : slot.isBooked || slot.isPast
                               ? "bg-red-500 text-white border-red-600 opacity-80 cursor-not-allowed" 
-                              : "bg-green-500 text-white border-green-600 hover:bg-green-600 shadow-sm"
+                              : "bg-green-500 text-white border-green-600 shadow-sm"
                           )}
                           onClick={() => setRescheduleTime(slot.time)}
                         >
@@ -463,4 +467,3 @@ export default function ManageAppointmentPage() {
     </DashboardLayout>
   );
 }
-
