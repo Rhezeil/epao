@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -9,7 +10,6 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      // Updated to match the requested 'admins' collection path
       return exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
@@ -24,25 +24,19 @@ service cloud.firestore {
     // ===== APPOINTMENTS =====
 
     match /appointments/{apptId} {
-      // Admin: Full oversight
-      allow read, write, delete: if isAdmin();
-
-      // Role-Based List/Get (Strictly matching query filters)
-      allow read: if (isSignedIn() &&
+      allow read: if isAdmin()
+        || (isSignedIn() &&
            (resource.data.lawyerId == request.auth.uid
             || resource.data.clientId == request.auth.uid));
 
-      // Public: Allowed to lookup by code (Supported by code logic)
-      allow list: if resource.data.referenceCode != null;
-      allow get: if resource.data.referenceCode != null;
-
-      // CREATE appointment (booking allowed)
       allow create: if true;
 
-      // UPDATE (lawyer or client)
-      allow update: if (isSignedIn() &&
+      allow update: if isAdmin()
+        || (isSignedIn() &&
            (resource.data.lawyerId == request.auth.uid
             || resource.data.clientId == request.auth.uid));
+
+      allow delete: if isAdmin();
     }
 
     // ===== CASES =====

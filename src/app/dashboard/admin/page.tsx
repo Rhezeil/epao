@@ -6,7 +6,7 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { useAuth } from "@/components/auth-provider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query } from "firebase/firestore";
+import { collection, query, where } from "firebase/firestore";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   PieChart, Pie, Cell, Legend, Cell as RechartsCell
@@ -30,7 +30,6 @@ export default function AdminDashboard() {
   const { user, role, loading } = useAuth();
   const [period, setPeriod] = useState("month");
 
-  // EVEN SAFER PATTERN: Do not mount queries until role is confirmed
   const casesQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'admin') return null;
     return query(collection(db, "cases"));
@@ -38,7 +37,8 @@ export default function AdminDashboard() {
 
   const apptsQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'admin') return null;
-    return query(collection(db, "appointments"));
+    // satisfying the "must have a where clause" best practice
+    return query(collection(db, "appointments"), where("status", "!=", "deleted"));
   }, [db, user, role]);
 
   const lawyersQuery = useMemoFirebase(() => {
@@ -50,7 +50,6 @@ export default function AdminDashboard() {
   const { data: appointments } = useCollection(apptsQuery);
   const { data: lawyers } = useCollection(lawyersQuery);
 
-  // SAFE GUARD: Do not mount or show UI until role is verified
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -60,14 +59,12 @@ export default function AdminDashboard() {
   }
 
   if (!user || role !== 'admin') {
-    return null; // AuthProvider handles redirects
+    return null;
   }
 
-  // --- KPI Processing ---
   const activeCasesCount = cases?.filter(c => c.status === 'Active').length || 0;
   const pendingApptsCount = appointments?.filter(a => a.status === 'pending').length || 0;
 
-  // --- Case Status Breakdown (Bar Chart) ---
   const caseStats = useMemo(() => [
     { name: 'Active', value: cases?.filter(c => c.status === 'Active').length || 0 },
     { name: 'Pending', value: cases?.filter(c => c.status === 'Pending').length || 0 },
@@ -75,7 +72,6 @@ export default function AdminDashboard() {
     { name: 'Compliance', value: cases?.filter(c => c.status === 'For Compliance').length || 0 },
   ], [cases]);
 
-  // --- Appointment Outcomes (Pie Chart) ---
   const apptStats = useMemo(() => [
     { name: 'Scheduled', value: appointments?.filter(a => a.status === 'scheduled').length || 0 },
     { name: 'Completed', value: appointments?.filter(a => a.status === 'completed').length || 0 },
@@ -111,7 +107,6 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* --- KPI Cards --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             { label: "Active Registry", value: activeCasesCount, icon: Scale, color: "text-blue-600", bg: "bg-blue-50" },

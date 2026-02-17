@@ -1,3 +1,4 @@
+
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -28,8 +29,6 @@ export default function LawyerDashboard() {
   const { toast } = useToast();
   const router = useRouter();
 
-  // EVEN SAFER PATTERN: Define queries with strict role checks
-  // This ensures the query isn't even initialized until we are sure of the role
   const lawyerRef = useMemoFirebase(() => {
     if (!db || !user || role !== 'lawyer') return null;
     return doc(db, "roleLawyer", user.uid);
@@ -38,13 +37,11 @@ export default function LawyerDashboard() {
   const { data: lawyerData } = useDoc(lawyerRef);
 
   const apptsQuery = useMemoFirebase(() => {
-    // CRITICAL: Prevent raw collection listing by returning null if role is not confirmed
-    // This matches the "Clean Working Rules" pattern
     if (!db || !user || role !== 'lawyer') return null;
+    // Updated query pattern: Removing orderBy to match simplified security rule requirements
     return query(
       collection(db, "appointments"), 
-      where("lawyerId", "==", user.uid),
-      orderBy("date", "asc")
+      where("lawyerId", "==", user.uid)
     );
   }, [db, user, role]);
 
@@ -57,12 +54,9 @@ export default function LawyerDashboard() {
     );
   }, [db, user, role]);
 
-  // Hook calls remain at top level, handled by null queries above
   const { data: appointments, isLoading: isApptsLoading } = useCollection(apptsQuery);
   const { data: activeCases } = useCollection(casesQuery);
 
-  // SAFE GUARD: Do not show UI or mount heavy Logic until role is verified
-  // This is the "Even Safer Version" to prevent unauthorized "list" attempts
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -72,7 +66,7 @@ export default function LawyerDashboard() {
   }
 
   if (!user || role !== 'lawyer') {
-    return null; // AuthProvider handles redirects to /login
+    return null;
   }
 
   const updateStatus = (apptId: string, status: string) => {
@@ -162,7 +156,9 @@ export default function LawyerDashboard() {
                 <div className="p-20 flex justify-center"><Loader2 className="animate-spin h-10 w-10 text-secondary/20" /></div>
               ) : (
                 <div className="divide-y divide-secondary/5">
-                  {appointments?.slice(0, 10).map((appt) => (
+                  {[...(appointments || [])]
+                    .sort((a, b) => a.date.localeCompare(b.date))
+                    .slice(0, 10).map((appt) => (
                     <div key={appt.id} className="p-6 flex items-center justify-between hover:bg-secondary/5 transition-colors">
                       <div className="flex items-center gap-4">
                         <div className="h-14 w-14 rounded-2xl bg-secondary/5 flex flex-col items-center justify-center border border-secondary/10">
