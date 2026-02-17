@@ -59,7 +59,7 @@ export default function AdminDashboard() {
           {[
             { label: "Active Cases", value: cases?.length || 0, icon: FileText, color: "text-blue-600", bg: "bg-blue-50" },
             { label: "Total Appts", value: appointments?.length || 0, icon: Calendar, color: "text-teal-600", bg: "bg-teal-50" },
-            { label: "Practitioners", value: lawyers?.length || 0, icon: Briefcase, color: "text-amber-600", bg: "bg-amber-50" },
+            { label: "Lawyers", value: lawyers?.length || 0, icon: Briefcase, color: "text-amber-600", bg: "bg-amber-50" },
             { label: "Pending Triage", value: appointments?.filter(a => a.status === 'pending').length || 0, icon: AlertCircle, color: "text-red-600", bg: "bg-red-50" }
           ].map((stat, i) => (
             <Card key={i} className="border-none shadow-sm rounded-3xl overflow-hidden">
