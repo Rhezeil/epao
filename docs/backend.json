@@ -3,14 +3,19 @@
   "entities": {
     "User": {
       "title": "User",
-      "description": "Represents a Client record.",
+      "description": "Represents a Client or Staff record.",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
         "mobileNumber": { "type": "string" },
         "email": { "type": "string", "format": "email" },
         "role": { "type": "string", "enum": ["client", "admin", "lawyer"] },
+        "status": { "type": "string", "enum": ["Active", "Inactive", "On Leave", "New Intake", "Under Screening", "Not Qualified"] },
         "profileId": { "type": "string" },
+        "incomeClassification": { "type": "string" },
+        "specialization": { "type": "string" },
+        "accountLocked": { "type": "boolean" },
+        "forcePasswordReset": { "type": "boolean" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "role"]
@@ -26,6 +31,7 @@
         "caseType": { "type": "string" },
         "status": { "type": "string", "enum": ["Active", "Pending", "Closed", "For Compliance"] },
         "description": { "type": "string" },
+        "initialAppointmentId": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "clientId", "lawyerId", "status"]

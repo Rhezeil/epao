@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
 import { useAuth } from "@/components/auth-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -23,7 +23,12 @@ import {
   ArrowUpDown, 
   Briefcase, 
   CheckCircle2, 
-  Filter
+  Filter,
+  ShieldAlert,
+  ArrowRightLeft,
+  Settings2,
+  Calendar,
+  Eye
 } from "lucide-react";
 import { initializeApp, deleteApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
@@ -31,25 +36,31 @@ import { firebaseConfig } from "@/firebase/config";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 export default function AdminLawyersPage() {
   const db = useFirestore();
   const { toast } = useToast();
   const { user, role } = useAuth();
-  const [newLawyerEmail, setNewLawyerEmail] = useState("");
-  const [newLawyerPassword, setNewLawyerPassword] = useState("");
+  
+  // Controls
+  const [newLawyer, setNewLawyer] = useState({ email: "", password: "", specialization: "General" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "activeCases" | "appointments">("name");
+  
+  // Reassignment State
+  const [selectedLawyer, setSelectedLawyer] = useState<any>(null);
+  const [isReassignOpen, setIsReassignOpen] = useState(false);
+  const [targetLawyerId, setTargetLawyerId] = useState("");
 
-  // Fetch registered lawyers
+  // Queries
   const registeredLawyersQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'admin') return null;
     return query(collection(db, "roleLawyer"), orderBy("email", "asc"));
   }, [db, user, role]);
 
-  // Fetch all cases and appointments for metrics
   const casesQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'admin') return null;
     return query(collection(db, "cases"));
@@ -70,16 +81,17 @@ export default function AdminLawyersPage() {
     return registeredLawyers.map(lawyer => {
       const lawyerCases = allCases?.filter(c => c.lawyerId === lawyer.id) || [];
       const lawyerAppts = allAppts?.filter(a => a.lawyerId === lawyer.id) || [];
-      
-      const services = new Set(lawyerAppts.filter(a => a.status === 'completed').map(a => a.serviceType || a.purpose));
+      const activeCount = lawyerCases.filter(c => c.status === 'Active').length;
 
       return {
         ...lawyer,
         appointmentsHandled: lawyerAppts.filter(a => a.status === 'completed').length,
         casesOpened: lawyerCases.length,
         casesClosed: lawyerCases.filter(c => c.status === 'Closed').length,
-        activeCases: lawyerCases.filter(c => c.status === 'Active').length,
-        servicesRendered: services.size
+        activeCases: activeCount,
+        specialization: lawyer.specialization || "General Litigation",
+        status: lawyer.status || "Available",
+        isOverloaded: activeCount >= 5
       };
     });
   }, [registeredLawyers, allCases, allAppts]);
@@ -100,19 +112,18 @@ export default function AdminLawyersPage() {
 
   const handleAuthorizeLawyer = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!db || !newLawyerEmail || !newLawyerPassword) return;
+    if (!db || !newLawyer.email || !newLawyer.password) return;
 
     setIsSubmitting(true);
-    const email = newLawyerEmail.toLowerCase().trim();
-    const password = newLawyerPassword;
+    const email = newLawyer.email.toLowerCase().trim();
 
     try {
-      const secondaryApp = initializeApp(firebaseConfig, "secondary-registration-" + Date.now());
+      const secondaryApp = initializeApp(firebaseConfig, "lawyer-auth-" + Date.now());
       const secondaryAuth = getAuth(secondaryApp);
       
       let newUserId: string | null = null;
       try {
-        const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+        const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, newLawyer.password);
         newUserId = userCredential.user.uid;
       } catch (authError: any) {
         if (authError.code !== 'auth/email-already-in-use') throw authError;
@@ -120,27 +131,20 @@ export default function AdminLawyersPage() {
         await deleteApp(secondaryApp);
       }
 
-      const authRef = doc(db, "lawyersEmail", email);
-      setDocumentNonBlocking(authRef, {
-        email,
-        password,
-        authorizedAt: new Date().toISOString()
-      }, { merge: true });
-
       if (newUserId) {
         const lawyerRef = doc(db, "roleLawyer", newUserId);
         setDocumentNonBlocking(lawyerRef, {
           id: newUserId,
           email,
           role: "lawyer",
-          profileId: "profile",
+          specialization: newLawyer.specialization,
+          status: "Available",
           createdAt: new Date().toISOString()
         }, { merge: true });
       }
 
-      toast({ title: "Lawyer Authorized", description: `Lawyer ${email} authorized.` });
-      setNewLawyerEmail("");
-      setNewLawyerPassword("");
+      toast({ title: "Lawyer Provisioned", description: `${email} is now an authorized public attorney.` });
+      setNewLawyer({ email: "", password: "", specialization: "General" });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Failed", description: error.message });
     } finally {
@@ -148,11 +152,26 @@ export default function AdminLawyersPage() {
     }
   };
 
-  const handleDeleteLawyer = (lawyerId: string, email: string) => {
+  const handleReassignCases = () => {
+    if (!db || !selectedLawyer || !targetLawyerId) return;
+    setIsSubmitting(true);
+
+    const casesToMove = allCases?.filter(c => c.lawyerId === selectedLawyer.id) || [];
+    casesToMove.forEach(c => {
+      updateDocumentNonBlocking(doc(db, "cases", c.id), { lawyerId: targetLawyerId });
+    });
+
+    toast({ title: "Cases Reassigned", description: `Successfully migrated ${casesToMove.length} matters.` });
+    setIsReassignOpen(false);
+    setSelectedLawyer(null);
+    setTargetLawyerId("");
+    setIsSubmitting(false);
+  };
+
+  const updateLawyerStatus = (id: string, status: string) => {
     if (!db) return;
-    deleteDocumentNonBlocking(doc(db, "roleLawyer", lawyerId));
-    deleteDocumentNonBlocking(doc(db, "lawyersEmail", email.toLowerCase()));
-    toast({ variant: "destructive", title: "Lawyer Removed", description: `${email} removed.` });
+    updateDocumentNonBlocking(doc(db, "roleLawyer", id), { status });
+    toast({ title: "Status Updated", description: `Lawyer is now marked as ${status}.` });
   };
 
   return (
@@ -160,53 +179,45 @@ export default function AdminLawyersPage() {
       <div className="space-y-8 pb-12">
         <div className="flex justify-between items-end">
           <div className="space-y-1">
-            <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Lawyer Management</h1>
-            <p className="text-muted-foreground font-medium">Authorize lawyers and monitor operational workload.</p>
+            <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Lawyer Directory</h1>
+            <p className="text-muted-foreground font-medium">Manage legal staff, monitor workloads, and reassign cases.</p>
           </div>
         </div>
 
-        <Tabs defaultValue="workload" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 max-w-2xl bg-white/50 p-1 rounded-2xl border-2 border-primary/5 h-14">
-            <TabsTrigger value="workload" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
-              <TrendingUp className="h-4 w-4 mr-2" /> Workload &amp; Analytics
+        <Tabs defaultValue="directory" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 max-w-xl bg-white/50 p-1 rounded-2xl border-2 border-primary/5 h-14">
+            <TabsTrigger value="directory" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
+              <UserCheck className="h-4 w-4 mr-2" /> Staff Registry
             </TabsTrigger>
-            <TabsTrigger value="management" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
-              <Plus className="h-4 w-4 mr-2" /> Lawyer Authorization
+            <TabsTrigger value="provision" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
+              <Plus className="h-4 w-4 mr-2" /> Add Attorney
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="workload" className="mt-8 space-y-6">
+          <TabsContent value="directory" className="mt-8 space-y-6">
             <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
               <CardHeader className="bg-primary/5 pb-6">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                  <div>
-                    <CardTitle className="text-xl font-bold text-primary flex items-center gap-2">
-                      <Briefcase className="h-6 w-6" /> Lawyer Activity Table
-                    </CardTitle>
-                    <CardDescription>Performance metrics across all active legal staff.</CardDescription>
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                  <div className="relative w-full md:w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/30" />
+                    <Input 
+                      placeholder="Search attorneys..." 
+                      className="pl-9 h-11 rounded-xl border-primary/10 bg-white"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
                   </div>
-                  <div className="flex items-center gap-3 w-full md:w-auto">
-                    <div className="relative flex-1 md:w-64">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/30" />
-                      <Input 
-                        placeholder="Search lawyers..." 
-                        className="pl-9 h-11 rounded-xl border-primary/10 bg-white"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                      />
-                    </div>
-                    <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
-                      <SelectTrigger className="h-11 w-[180px] rounded-xl border-primary/10 bg-white font-bold text-primary">
-                        <ArrowUpDown className="h-4 w-4 mr-2" />
-                        <SelectValue placeholder="Sort By" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="name">Sort by Name</SelectItem>
-                        <SelectItem value="activeCases">Highest Workload</SelectItem>
-                        <SelectItem value="appointments">Most Visits Handled</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
+                    <SelectTrigger className="h-11 w-[180px] rounded-xl border-primary/10 font-bold text-primary">
+                      <ArrowUpDown className="h-4 w-4 mr-2" />
+                      <SelectValue placeholder="Sort By" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="name">Sort by Name</SelectItem>
+                      <SelectItem value="activeCases">Workload Weight</SelectItem>
+                      <SelectItem value="appointments">Consultation Count</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </CardHeader>
               <CardContent className="p-0">
@@ -214,12 +225,11 @@ export default function AdminLawyersPage() {
                   <Table>
                     <TableHeader className="bg-muted/30">
                       <TableRow>
-                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40 px-8">Lawyer Profile</TableHead>
-                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40 text-center">Appointments Handled</TableHead>
-                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40 text-center">Cases Opened</TableHead>
-                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40 text-center">Cases Closed</TableHead>
-                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40 text-center">Active Cases</TableHead>
-                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40 text-right px-8">Services</TableHead>
+                        <TableHead className="px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Attorney</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Workload</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Efficiency</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Status</TableHead>
+                        <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -232,43 +242,73 @@ export default function AdminLawyersPage() {
                               </div>
                               <div>
                                 <p className="font-black text-primary leading-none mb-1">{lawyer.email.split('@')[0]}</p>
-                                <p className="text-[10px] text-muted-foreground font-medium">{lawyer.email}</p>
+                                <p className="text-[9px] text-muted-foreground font-black uppercase tracking-tighter">{lawyer.specialization}</p>
                               </div>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-center font-bold text-primary">
-                            <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-100 font-black">{lawyer.appointmentsHandled}</Badge>
-                          </TableCell>
-                          <TableCell className="text-center font-bold text-primary">{lawyer.casesOpened}</TableCell>
-                          <TableCell className="text-center font-bold text-green-600">
-                            <div className="flex items-center justify-center gap-1">
-                              <CheckCircle2 className="h-3 w-3" />
-                              {lawyer.casesClosed}
                             </div>
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge className={cn(
-                              "font-black px-3",
-                              lawyer.activeCases > 5 ? "bg-red-500" : "bg-primary"
+                              "font-black px-3 py-1",
+                              lawyer.isOverloaded ? "bg-red-500" : "bg-primary"
                             )}>
-                              {lawyer.activeCases}
+                              {lawyer.activeCases} / 5
+                            </Badge>
+                            {lawyer.isOverloaded && <p className="text-[8px] font-black text-red-600 mt-1 uppercase">Overloaded</p>}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex flex-col items-center">
+                              <span className="text-xs font-black text-primary">{lawyer.casesClosed}</span>
+                              <span className="text-[8px] font-bold text-muted-foreground uppercase">Closed Cases</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Badge variant="outline" className={cn(
+                              "font-black text-[9px] uppercase",
+                              lawyer.status === 'Available' ? 'border-green-200 text-green-700 bg-green-50' : 'border-amber-200 text-amber-700 bg-amber-50'
+                            )}>
+                              {lawyer.status}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right px-8">
-                            <div className="flex items-center justify-end gap-2">
-                              <span className="text-xs font-bold text-muted-foreground">Unique Types:</span>
-                              <Badge variant="outline" className="font-black border-primary/20 text-primary">{lawyer.servicesRendered}</Badge>
+                            <div className="flex justify-end gap-2">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-9 w-9 rounded-xl text-primary hover:bg-primary/5"
+                                onClick={() => { setSelectedLawyer(lawyer); setIsReassignOpen(true); }}
+                              >
+                                <ArrowRightLeft className="h-4 w-4" />
+                              </Button>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-primary/5">
+                                    <Settings2 className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="rounded-2xl p-2 w-56">
+                                  <DropdownMenuLabel className="text-[10px] font-black uppercase text-primary/40 px-2 pb-2">Staff Controls</DropdownMenuLabel>
+                                  <DropdownMenuItem onClick={() => updateLawyerStatus(lawyer.id, "Available")} className="rounded-xl font-bold">
+                                    Mark as Available
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => updateLawyerStatus(lawyer.id, "On Leave")} className="rounded-xl font-bold">
+                                    Mark as On Leave
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => updateLawyerStatus(lawyer.id, "Fully Booked")} className="rounded-xl font-bold">
+                                    Mark as Fully Booked
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem 
+                                    onClick={() => deleteDocumentNonBlocking(doc(db, "roleLawyer", lawyer.id))}
+                                    className="text-destructive font-bold rounded-xl"
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" /> Deactivate
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           </TableCell>
                         </TableRow>
                       ))}
-                      {filteredAndSortedLawyers.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center py-20 text-muted-foreground italic font-medium">
-                            No lawyers matching your search criteria.
-                          </TableCell>
-                        </TableRow>
-                      )}
                     </TableBody>
                   </Table>
                 )}
@@ -276,97 +316,109 @@ export default function AdminLawyersPage() {
             </Card>
           </TabsContent>
           
-          <TabsContent value="management" className="mt-8 space-y-6">
-            <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
+          <TabsContent value="provision" className="mt-8">
+            <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden max-w-2xl">
               <CardHeader className="bg-primary p-8 text-white">
                 <CardTitle className="text-xl font-black flex items-center gap-2">
-                  <Plus className="h-6 w-6" /> Authorize New Lawyer
+                  <Plus className="h-6 w-6" /> Authorize New Staff
                 </CardTitle>
-                <CardDescription className="text-white/60 font-medium">
-                  Manually provision credentials for legal professionals.
-                </CardDescription>
+                <CardDescription className="text-white/60 font-medium">Create credentials for public attorneys.</CardDescription>
               </CardHeader>
               <CardContent className="p-10">
-                <form onSubmit={handleAuthorizeLawyer} className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-black uppercase tracking-widest text-primary/40 ml-1">Work Email</Label>
-                    <Input 
-                      type="email" 
-                      value={newLawyerEmail} 
-                      onChange={(e) => setNewLawyerEmail(e.target.value)} 
-                      required 
-                      placeholder="name@lawyers.com" 
-                      className="h-12 rounded-xl border-primary/20 bg-white"
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-black uppercase tracking-widest text-primary/40 ml-1">Initial Password</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/30" />
+                <form onSubmit={handleAuthorizeLawyer} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Work Email</Label>
                       <Input 
-                        type="password" 
-                        value={newLawyerPassword} 
-                        onChange={(e) => setNewLawyerPassword(e.target.value)} 
+                        type="email" 
+                        value={newLawyer.email} 
+                        onChange={(e) => setNewLawyer({...newLawyer, email: e.target.value})} 
                         required 
-                        placeholder="Min 6 characters" 
-                        className="h-12 pl-10 rounded-xl border-primary/20 bg-white"
-                        disabled={isSubmitting}
+                        placeholder="name@lawyers.com" 
+                        className="h-12 rounded-xl border-primary/20"
                       />
                     </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Temporary Password</Label>
+                      <Input 
+                        type="password" 
+                        value={newLawyer.password} 
+                        onChange={(e) => setNewLawyer({...newLawyer, password: e.target.value})} 
+                        required 
+                        placeholder="Min 6 characters" 
+                        className="h-12 rounded-xl border-primary/20"
+                      />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Specialization Focus</Label>
+                      <Select value={newLawyer.specialization} onValueChange={v => setNewLawyer({...newLawyer, specialization: v})}>
+                        <SelectTrigger className="h-12 rounded-xl border-primary/10">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Criminal Defense">Criminal Defense</SelectItem>
+                          <SelectItem value="Civil & Property">Civil & Property</SelectItem>
+                          <SelectItem value="Labor & Employment">Labor & Employment</SelectItem>
+                          <SelectItem value="Administrative & Ethics">Administrative</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                  <Button type="submit" disabled={isSubmitting} className="h-12 rounded-xl bg-primary text-white font-black shadow-lg">
-                    {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />} 
-                    Authorize Lawyer
+                  <Button type="submit" disabled={isSubmitting} className="w-full h-14 rounded-2xl bg-primary text-white font-black text-lg shadow-xl">
+                    {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Authorize Attorney Access"}
                   </Button>
                 </form>
               </CardContent>
             </Card>
-
-            <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
-              <CardHeader className="bg-muted/30 pb-6">
-                <CardTitle className="text-lg font-bold text-primary">Authorized Lawyers List</CardTitle>
-                <CardDescription>Legal professionals with active accounts in the registry.</CardDescription>
-              </CardHeader>
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="px-8">Lawyer Email</TableHead>
-                      <TableHead>Registration Date</TableHead>
-                      <TableHead className="text-right px-8">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {registeredLawyers?.map((lawyer) => (
-                      <TableRow key={lawyer.id}>
-                        <TableCell className="px-8 font-bold text-primary">{lawyer.email}</TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
-                          {lawyer.createdAt ? new Date(lawyer.createdAt).toLocaleDateString() : 'N/A'}
-                        </TableCell>
-                        <TableCell className="text-right px-8">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="text-destructive hover:bg-destructive/10 rounded-lg"
-                            onClick={() => handleDeleteLawyer(lawyer.id, lawyer.email)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {(!registeredLawyers || registeredLawyers.length === 0) && (
-                      <TableRow>
-                        <TableCell colSpan={3} className="text-center text-muted-foreground py-12 font-medium">No registered lawyers yet.</TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
           </TabsContent>
         </Tabs>
+
+        {/* --- REASSIGNMENT DIALOG --- */}
+        <Dialog open={isReassignOpen} onOpenChange={setIsReassignOpen}>
+          <DialogContent className="rounded-[3rem] max-w-md p-0 overflow-hidden border-none shadow-2xl">
+            <DialogHeader className="p-8 bg-secondary text-white">
+              <div className="space-y-1">
+                <DialogTitle className="text-2xl font-black">Reassign Caseload</DialogTitle>
+                <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">
+                  Balancing Active Matters for {selectedLawyer?.email?.split('@')[0]}
+                </DialogDescription>
+              </div>
+            </DialogHeader>
+            <div className="p-10 space-y-6">
+              <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100 flex gap-3">
+                <ShieldAlert className="h-5 w-5 text-amber-600 shrink-0" />
+                <p className="text-xs text-amber-900 font-bold leading-relaxed">
+                  You are about to migrate all {selectedLawyer?.activeCases} active cases to a new attorney. This action cannot be undone.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Target Attorney</Label>
+                <Select value={targetLawyerId} onValueChange={setTargetLawyerId}>
+                  <SelectTrigger className="h-14 rounded-2xl border-primary/10">
+                    <SelectValue placeholder="Select receiving attorney" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {lawyerMetrics.filter(l => l.id !== selectedLawyer?.id).map(l => (
+                      <SelectItem key={l.id} value={l.id} className="font-bold">
+                        {l.email.split('@')[0]} ({l.activeCases}/5 cases)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter className="p-8 bg-muted/30 gap-3">
+              <Button variant="outline" onClick={() => setIsReassignOpen(false)} className="flex-1 h-14 rounded-2xl font-bold">Cancel</Button>
+              <Button 
+                onClick={handleReassignCases} 
+                disabled={!targetLawyerId || isSubmitting} 
+                className="flex-1 h-14 rounded-2xl font-black bg-secondary text-white shadow-xl"
+              >
+                {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : "Confirm Migration"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

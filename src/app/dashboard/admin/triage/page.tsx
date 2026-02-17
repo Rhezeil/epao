@@ -1,3 +1,4 @@
+
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -43,7 +44,7 @@ export default function AdminTriagePage() {
   const [selectedAppt, setSelectedAppt] = useState<any>(null);
   const [reviewMode, setReviewMode] = useState<"assign" | "intake">("assign");
   const [assignedLawyer, setAssignedLawyer] = useState("");
-  const [caseStatus, setCaseStatus] = useState("Active");
+  const [caseStatus, setCaseStatus] = useState("Active Case");
   const [rejectionReason, setRejectionReason] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -110,12 +111,10 @@ export default function AdminTriagePage() {
       const year = new Date().getFullYear();
       const caseId = `CASE-${year}-${Math.floor(1000 + Math.random() * 9000)}`;
       
-      // Determine existing or new UID
       let clientId = selectedAppt.clientId;
       const email = selectedAppt.guestEmail || selectedAppt.clientEmail || `${selectedAppt.guestMobile || selectedAppt.clientMobile}@epao.mobile`;
 
       if (!clientId) {
-        // Guest conversion: Create Auth Account
         try {
           const secondaryApp = initializeApp(firebaseConfig, "client-reg-" + Date.now());
           const secondaryAuth = getAuth(secondaryApp);
@@ -124,7 +123,6 @@ export default function AdminTriagePage() {
           await deleteApp(secondaryApp);
         } catch (authError: any) {
           if (authError.code !== 'auth/email-already-in-use') throw authError;
-          // If exists, we'd normally need a way to link it
         }
       }
 
@@ -135,7 +133,7 @@ export default function AdminTriagePage() {
         clientId: clientId || crypto.randomUUID(),
         lawyerId: assignedLawyer,
         caseType: selectedAppt.caseType,
-        status: caseStatus,
+        status: "Active",
         initialAppointmentId: selectedAppt.id,
         description: `Official case initialized from intake review. Source: ${selectedAppt.referenceCode}`,
         createdAt: new Date().toISOString()
@@ -148,6 +146,7 @@ export default function AdminTriagePage() {
         mobileNumber: selectedAppt.guestMobile || selectedAppt.clientMobile || "",
         email: email,
         role: "client",
+        status: caseStatus,
         profileId: "profile",
         createdAt: new Date().toISOString()
       }, { merge: true });
@@ -405,15 +404,15 @@ export default function AdminTriagePage() {
 
                 {reviewMode === 'intake' && (
                   <div className="space-y-2">
-                    <Label className="text-xs font-black uppercase tracking-widest text-primary/40 ml-1">Case Status</Label>
+                    <Label className="text-xs font-black uppercase tracking-widest text-primary/40 ml-1">Initial Matter Status</Label>
                     <Select value={caseStatus} onValueChange={setCaseStatus}>
                       <SelectTrigger className="h-14 rounded-2xl border-primary/20 bg-white font-bold shadow-sm">
-                        <SelectValue placeholder="Initial Status" />
+                        <SelectValue placeholder="Select status" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Active">Active Case</SelectItem>
-                        <SelectItem value="Pending Documents">Pending Documents</SelectItem>
-                        <SelectItem value="Under Evaluation">Under Evaluation</SelectItem>
+                        <SelectItem value="Active Case">Active Case</SelectItem>
+                        <SelectItem value="Under Screening">Under Screening</SelectItem>
+                        <SelectItem value="New Intake">New Intake</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
