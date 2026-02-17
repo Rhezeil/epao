@@ -47,34 +47,40 @@ service cloud.firestore {
     }
 
     match /appointments/{apptId} {
-      // Split LIST permissions into dedicated paths to satisfy Firestore's query guarantee requirement
+      // SPLIT LIST RULES: Crucial for Firestore Query Guarantee
+      
+      // 1. Admins: Strategic oversight
       allow list: if isAdmin();
+      
+      // 2. Clients: Personal schedule lookup. Query MUST use where("clientId", "==", auth.uid)
       allow list: if isSignedIn() && resource.data.clientId == request.auth.uid;
+      
+      // 3. Lawyers: Professional schedule lookup. Query MUST use where("lawyerId", "==", auth.uid)
       allow list: if isSignedIn() && resource.data.lawyerId == request.auth.uid;
-      // Allow public listing IF the query is specifically looking for a valid reference code
+      
+      // 4. Public/Guest: Lookup by reference code. Query MUST use where("referenceCode", "==", code)
       allow list: if resource.data.referenceCode != null;
       
-      // Individual document access (GET is simpler as it evaluates a single existing resource)
+      // Individual document access (GET)
       allow get: if isAdmin() || 
                     (isSignedIn() && (resource.data.clientId == request.auth.uid || resource.data.lawyerId == request.auth.uid)) ||
                     (resource.data.referenceCode != null);
       
       allow create: if true; // Public booking
-      allow update: if isAdmin() || isLawyer() || (isSignedIn() && (resource.data.clientId == request.auth.uid || resource.data.lawyerId == request.auth.uid));
+      allow update: if isAdmin() || (isSignedIn() && (resource.data.clientId == request.auth.uid || resource.data.lawyerId == request.auth.uid));
       allow delete: if isAdmin();
     }
 
     match /cases/{caseId} {
-      // Admins can see all cases
+      // SPLIT LIST RULES
       allow list: if isAdmin();
-      // Clients and Lawyers can list their own cases via dedicated filtered queries
       allow list: if isSignedIn() && resource.data.clientId == request.auth.uid;
       allow list: if isSignedIn() && resource.data.lawyerId == request.auth.uid;
       
       allow get: if isAdmin() || (isSignedIn() && (resource.data.clientId == request.auth.uid || resource.data.lawyerId == request.auth.uid));
       
       allow create: if isAdmin();
-      allow update: if isAdmin() || (isLawyer() && resource.data.lawyerId == request.auth.uid);
+      allow update: if isAdmin() || (isSignedIn() && resource.data.lawyerId == request.auth.uid);
       allow delete: if isAdmin();
     }
 
