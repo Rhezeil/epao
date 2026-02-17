@@ -59,6 +59,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { initializeApp, deleteApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { firebaseConfig } from "@/firebase/config";
+import { cn } from "@/lib/utils";
 
 export default function AdminUsersPage() {
   const db = useFirestore();
@@ -104,7 +105,6 @@ export default function AdminUsersPage() {
     setIsSubmitting(true);
 
     try {
-      const tempId = crypto.randomUUID();
       const email = newClient.email || `${newClient.mobile}@epao.mobile`;
       
       // 1. Create Auth Account Simulation/Action
@@ -121,7 +121,7 @@ export default function AdminUsersPage() {
           mobileNumber: newClient.mobile,
           email: email,
           role: "client",
-          status: "Active",
+          status: "New Intake",
           incomeClassification: newClient.income,
           createdAt: new Date().toISOString()
         }, { merge: true });
@@ -185,7 +185,6 @@ export default function AdminUsersPage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Client Directory</h1>
-            <p className="text-muted-foreground font-medium">Manage citizen records, case status, and portal access.</p>
           </div>
           <Button onClick={() => setIsAddDialogOpen(true)} className="rounded-2xl h-12 bg-primary font-black shadow-lg">
             <UserPlus className="mr-2 h-5 w-5" /> Add New Client
@@ -245,10 +244,11 @@ export default function AdminUsersPage() {
                       <TableCell>
                         <Badge className={cn(
                           "font-black text-[9px] uppercase px-3",
-                          client.status === 'Active' ? 'bg-green-500' : 
-                          client.status === 'Inactive' ? 'bg-red-500' : 'bg-primary'
+                          client.status === 'Active Case' ? 'bg-green-500' : 
+                          client.status === 'Inactive' ? 'bg-red-500' : 
+                          client.status === 'Closed Case' ? 'bg-gray-500' : 'bg-primary'
                         )}>
-                          {client.status || "Registered"}
+                          {client.status || "New Intake"}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-[10px] font-bold text-muted-foreground">
@@ -272,11 +272,14 @@ export default function AdminUsersPage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="rounded-2xl w-56 p-2">
                               <DropdownMenuLabel className="text-[10px] font-black uppercase text-primary/40 tracking-widest px-2 pb-2">Record Actions</DropdownMenuLabel>
-                              <DropdownMenuItem onClick={() => handleUpdateStatus(client.id, "Active")} className="rounded-xl font-bold">
+                              <DropdownMenuItem onClick={() => handleUpdateStatus(client.id, "Active Case")} className="rounded-xl font-bold">
                                 <ShieldAlert className="mr-2 h-4 w-4 text-green-600" /> Mark as Active Case
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleUpdateStatus(client.id, "Closed Case")} className="rounded-xl font-bold">
                                 <Gavel className="mr-2 h-4 w-4 text-primary" /> Mark as Closed
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleUpdateStatus(client.id, "Under Screening")} className="rounded-xl font-bold">
+                                <Search className="mr-2 h-4 w-4 text-amber-600" /> Mark as Under Screening
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem onClick={() => handleLockAccount(client.id, !client.accountLocked)} className="rounded-xl font-bold">
