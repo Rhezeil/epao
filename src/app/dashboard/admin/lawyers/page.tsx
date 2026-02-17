@@ -132,7 +132,7 @@ export default function AdminLawyersPage() {
         }, { merge: true });
       }
 
-      toast({ title: "Lawyer Authorized", description: `Practitioner ${email} authorized.` });
+      toast({ title: "Lawyer Authorized", description: `Lawyer ${email} authorized.` });
       setNewLawyerEmail("");
       setNewLawyerPassword("");
     } catch (error: any) {
@@ -155,7 +155,7 @@ export default function AdminLawyersPage() {
         <div className="flex justify-between items-end">
           <div className="space-y-1">
             <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Lawyer Management</h1>
-            <p className="text-muted-foreground font-medium">Authorize practitioners and monitor operational workload.</p>
+            <p className="text-muted-foreground font-medium">Authorize lawyers and monitor operational workload.</p>
           </div>
         </div>
 
@@ -165,7 +165,7 @@ export default function AdminLawyersPage() {
               <TrendingUp className="h-4 w-4 mr-2" /> Workload &amp; Analytics
             </TabsTrigger>
             <TabsTrigger value="management" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
-              <Plus className="h-4 w-4 mr-2" /> Practitioner Auth
+              <Plus className="h-4 w-4 mr-2" /> Lawyer Authorization
             </TabsTrigger>
           </TabsList>
           
@@ -259,7 +259,7 @@ export default function AdminLawyersPage() {
                       {filteredAndSortedLawyers.length === 0 && (
                         <TableRow>
                           <TableCell colSpan={6} className="text-center py-20 text-muted-foreground italic font-medium">
-                            No practitioners matching your search criteria.
+                            No lawyers matching your search criteria.
                           </TableCell>
                         </TableRow>
                       )}
@@ -277,7 +277,7 @@ export default function AdminLawyersPage() {
                   <div className="space-y-1">
                     <h4 className="font-black text-amber-900 text-sm">High Caseload Warning</h4>
                     <p className="text-xs text-amber-800/70 font-medium leading-relaxed">
-                      Practitioners with more than 5 active cases are highlighted in red. Consider triaging new matters to lawyers with lower active caseloads.
+                      Lawyers with more than 5 active cases are highlighted in red. Consider triaging new matters to lawyers with lower active caseloads.
                     </p>
                   </div>
                </Card>
@@ -336,7 +336,7 @@ export default function AdminLawyersPage() {
                   </div>
                   <Button type="submit" disabled={isSubmitting} className="h-12 rounded-xl bg-primary text-white font-black shadow-lg">
                     {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />} 
-                    Authorize Practitioner
+                    Authorize Lawyer
                   </Button>
                 </form>
               </CardContent>
@@ -344,14 +344,14 @@ export default function AdminLawyersPage() {
 
             <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
               <CardHeader className="bg-muted/30 pb-6">
-                <CardTitle className="text-lg font-bold text-primary">Authorized Practitioners List</CardTitle>
+                <CardTitle className="text-lg font-bold text-primary">Authorized Lawyers List</CardTitle>
                 <CardDescription>Legal professionals with active accounts in the registry.</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="px-8">Practitioner Email</TableHead>
+                      <TableHead className="px-8">Lawyer Email</TableHead>
                       <TableHead>Registration Date</TableHead>
                       <TableHead className="text-right px-8">Actions</TableHead>
                     </TableRow>
@@ -377,7 +377,7 @@ export default function AdminLawyersPage() {
                     ))}
                     {(!registeredLawyers || registeredLawyers.length === 0) && (
                       <TableRow>
-                        <TableCell colSpan={3} className="text-center text-muted-foreground py-12 font-medium">No registered practitioners yet.</TableCell>
+                        <TableCell colSpan={3} className="text-center text-muted-foreground py-12 font-medium">No registered lawyers yet.</TableCell>
                       </TableRow>
                     )}
                   </TableBody>

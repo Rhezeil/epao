@@ -136,7 +136,7 @@ export default function RegisterPage() {
   return (
     <DashboardLayout role={null}>
       <div className="flex items-center justify-center py-12">
-        <div className="w-full max-w-md space-y-6">
+        <div className="w-full max-md space-y-6">
           <Card className="w-full shadow-2xl border-primary/10 bg-white/80 backdrop-blur-md">
             <CardHeader className="flex flex-col items-center space-y-4">
               {logo && (
@@ -163,7 +163,7 @@ export default function RegisterPage() {
                     <Phone className="h-4 w-4" /> Client
                   </TabsTrigger>
                   <TabsTrigger value="lawyer" className="flex items-center gap-2">
-                    <Mail className="h-4 w-4" /> Practitioner
+                    <Mail className="h-4 w-4" /> Lawyer
                   </TabsTrigger>
                 </TabsList>
               </Tabs>

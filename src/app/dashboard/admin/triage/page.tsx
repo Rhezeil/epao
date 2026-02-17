@@ -146,7 +146,7 @@ export default function AdminTriagePage() {
               </div>
 
               <div className="space-y-3">
-                <Label className="text-xs font-black uppercase tracking-widest ml-1">Assign Practitioner</Label>
+                <Label className="text-xs font-black uppercase tracking-widest ml-1">Assign Lawyer</Label>
                 <Select value={assignedLawyer} onValueChange={setAssignedLawyer}>
                   <SelectTrigger className="h-12 rounded-xl border-primary/20">
                     <SelectValue placeholder="Select a Public Attorney" />

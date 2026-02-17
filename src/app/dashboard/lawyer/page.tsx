@@ -53,8 +53,8 @@ export default function LawyerDashboard() {
       <div className="space-y-8">
         <div className="flex justify-between items-end">
           <div>
-            <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Practitioner Portal</h1>
-            <p className="text-muted-foreground font-medium">Manage your clinical load and legal schedule for today.</p>
+            <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Lawyer Portal</h1>
+            <p className="text-muted-foreground font-medium">Manage your caseload and legal schedule for today.</p>
           </div>
           <Badge className="bg-primary/10 text-primary border-none px-4 py-2 rounded-full font-bold">
             Public Attorney II
@@ -98,7 +98,7 @@ export default function LawyerDashboard() {
             <CardHeader className="bg-primary/5 pb-4 border-b border-primary/10">
               <CardTitle className="text-lg font-bold text-primary flex items-center gap-2">
                 <Clock className="h-5 w-5" />
-                Daily Clinical Schedule
+                Daily Schedule
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
@@ -170,7 +170,7 @@ export default function LawyerDashboard() {
 
             <Card className="border-none shadow-xl rounded-[2.5rem] bg-[#1A237E] p-8 text-white space-y-6">
               <div className="space-y-1">
-                <h3 className="text-lg font-black tracking-tight">Practitioner Schedule</h3>
+                <h3 className="text-lg font-black tracking-tight">Lawyer Schedule</h3>
                 <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest">Public Calendar Controls</p>
               </div>
               <p className="text-xs text-white/80 leading-relaxed font-medium">
