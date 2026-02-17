@@ -1,4 +1,3 @@
-
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -33,6 +32,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 export default function AdminTriagePage() {
   const db = useFirestore();
@@ -63,7 +63,7 @@ export default function AdminTriagePage() {
     return query(collection(db, "roleLawyer"));
   }, [db, user, role]);
 
-  const { data: pendingAppts, isLoading: isPendingLoading } = useCollection(pendingQuery);
+  const { data: pendingAppointments, isLoading: isPendingLoading } = useCollection(pendingQuery);
   const { data: completedIntakes, isLoading: isIntakeLoading } = useCollection(completedIntakeQuery);
   const { data: lawyers } = useCollection(lawyersQuery);
 
@@ -196,7 +196,7 @@ export default function AdminTriagePage() {
                       <TableRow>
                         <TableHead className="px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Reference</TableHead>
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Citizen Name</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Matter Category</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Service</TableHead>
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Visit Date</TableHead>
                         <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Action</TableHead>
                       </TableRow>
@@ -248,13 +248,13 @@ export default function AdminTriagePage() {
                       <TableRow>
                         <TableHead className="px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Reference</TableHead>
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Citizen Name</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Service Type</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Service</TableHead>
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Submission</TableHead>
                         <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Action</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {pendingAppts?.map((appt) => (
+                      {pendingAppointments?.map((appt) => (
                         <TableRow key={appt.id} className="hover:bg-primary/5 transition-colors group">
                           <TableCell className="px-8 font-black text-primary">{appt.referenceCode}</TableCell>
                           <TableCell className="font-bold">{appt.guestName || "Registered Citizen"}</TableCell>
@@ -269,7 +269,7 @@ export default function AdminTriagePage() {
                           </TableCell>
                         </TableRow>
                       ))}
-                      {(!pendingAppts || pendingAppts.length === 0) && (
+                      {(!pendingAppointments || pendingAppointments.length === 0) && (
                         <TableRow>
                           <TableCell colSpan={5} className="text-center py-20 text-muted-foreground italic font-medium">
                             No pending visits requiring assignment.
