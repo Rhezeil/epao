@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAuth, useFirestore, useUser, useDoc, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
@@ -9,23 +10,23 @@ import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
 import { doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { User, Shield, Lock, Phone, Mail } from "lucide-react";
+import { User, Shield, Lock, Phone, Mail, Camera } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function ProfilePage() {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
-  
-  // Use user's role from AuthContext
   const { role } = useAuth();
 
-  // Memoize the document reference for the profile
+  // Memoize the document reference for the profile based on role
   const profileDocRef = useMemoFirebase(() => {
-    if (!db || !user) return null;
+    if (!db || !user || !role) return null;
+    if (role === 'lawyer') return doc(db, "roleLawyer", user.uid);
+    if (role === 'admin') return doc(db, "roleAdmin", user.uid);
     return doc(db, "users", user.uid, "profile", "profile");
-  }, [db, user]);
+  }, [db, user, role]);
 
-  // Subscribe to real-time updates for the profile
   const { data: profileData, isLoading: isProfileLoading } = useDoc(profileDocRef);
 
   const [formState, setFormState] = useState({
@@ -33,149 +34,167 @@ export default function ProfilePage() {
     lastName: "",
     phoneNumber: "",
     address: "",
+    photoUrl: ""
   });
 
-  // Sync form state when data is loaded from Firestore
   useEffect(() => {
     if (profileData) {
       setFormState({
         firstName: profileData.firstName || "",
         lastName: profileData.lastName || "",
-        phoneNumber: profileData.phoneNumber || "",
+        phoneNumber: profileData.phoneNumber || profileData.contactNumber || "",
         address: profileData.address || "",
+        photoUrl: profileData.photoUrl || ""
       });
     }
   }, [profileData]);
 
   const handleUpdate = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!profileDocRef || !user || !db) return;
+    if (!profileDocRef || !user || !db || !role) return;
 
-    // Use non-blocking write pattern for sub-profile
-    setDocumentNonBlocking(profileDocRef, {
-      ...formState,
-      updatedAt: new Date().toISOString(),
-    }, { merge: true });
+    if (role === 'client') {
+      // Sync client sub-profile and top-level doc
+      setDocumentNonBlocking(profileDocRef, {
+        ...formState,
+        updatedAt: new Date().toISOString(),
+      }, { merge: true });
 
-    // Sync with top-level user document for directory visibility
-    const userRef = doc(db, "users", user.uid);
-    updateDocumentNonBlocking(userRef, {
-      fullName: `${formState.firstName} ${formState.lastName}`.trim(),
-      mobileNumber: formState.phoneNumber
-    });
+      updateDocumentNonBlocking(doc(db, "users", user.uid), {
+        fullName: `${formState.firstName} ${formState.lastName}`.trim(),
+        mobileNumber: formState.phoneNumber
+      });
+    } else {
+      // Direct role doc update for lawyers/admins
+      updateDocumentNonBlocking(profileDocRef, {
+        ...formState,
+        updatedAt: new Date().toISOString(),
+      });
+    }
 
     toast({ 
-      title: "Update initiated", 
-      description: "Your information is being saved." 
+      title: "Settings Updated", 
+      description: "Your profile information has been saved successfully." 
     });
   };
 
   if (!role) return null;
 
-  const isClient = role === 'client';
-
   return (
     <DashboardLayout role={role}>
-      <div className="max-w-2xl mx-auto space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold font-headline">Account Settings</h1>
-          <p className="text-muted-foreground">Manage your personal information and preferences.</p>
+      <div className="max-w-3xl mx-auto space-y-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Professional Profile</h1>
+            <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest mt-1">Manage your identity within LexConnect</p>
+          </div>
+          <Avatar className="h-20 w-20 border-4 border-white shadow-xl">
+            <AvatarImage src={formState.photoUrl} className="object-cover" />
+            <AvatarFallback className="bg-primary/10 text-2xl font-black text-primary">
+              {formState.firstName?.[0] || user?.email?.[0]?.toUpperCase() || "?"}
+            </AvatarFallback>
+          </Avatar>
         </div>
 
-        <Card className="bg-white/50 backdrop-blur-sm border-primary/10 shadow-lg">
-          <CardHeader>
+        <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
+          <CardHeader className="bg-primary/5 p-8">
             <div className="flex items-center space-x-4">
-              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <User className="h-8 w-8 text-primary" />
+              <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                <User className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <CardTitle>Personal Information</CardTitle>
-                <CardDescription>Update your profile details and contact information.</CardDescription>
+                <CardTitle className="text-xl font-bold text-primary">Personal Details</CardTitle>
+                <CardDescription className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Update your contact and identification data</CardDescription>
               </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleUpdate} className="grid gap-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="firstName">First Name</Label>
+          <CardContent className="p-10">
+            <form onSubmit={handleUpdate} className="grid gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">First Name</Label>
                   <Input 
-                    id="firstName" 
-                    className="bg-white/60"
+                    className="h-12 rounded-xl border-primary/10 bg-primary/5 focus-visible:ring-primary/20 font-bold"
                     value={formState.firstName} 
                     onChange={(e) => setFormState({...formState, firstName: e.target.value})} 
                   />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="lastName">Last Name</Label>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Last Name</Label>
                   <Input 
-                    id="lastName" 
-                    className="bg-white/60"
+                    className="h-12 rounded-xl border-primary/10 bg-primary/5 focus-visible:ring-primary/20 font-bold"
                     value={formState.lastName} 
                     onChange={(e) => setFormState({...formState, lastName: e.target.value})} 
                   />
                 </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label className="flex items-center gap-1">
-                    {isClient ? <Phone className="h-3 w-3" /> : <Mail className="h-3 w-3" />}
-                    {isClient ? "Mobile Identifier" : "Email Address"}
-                  </Label>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Work Email</Label>
                   <Input 
-                    className="bg-muted/50"
-                    value={isClient ? (formState.phoneNumber || user?.email?.split('@')[0]) : (user?.email || "")} 
+                    className="h-12 rounded-xl bg-muted/50 border-none font-bold text-muted-foreground"
+                    value={user?.email || ""} 
                     disabled 
                   />
-                  <p className="text-[10px] text-muted-foreground">Identity identifier cannot be changed.</p>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="phone">Contact Number</Label>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Contact Number</Label>
                   <Input 
-                    id="phone" 
-                    className="bg-white/60"
+                    className="h-12 rounded-xl border-primary/10 bg-primary/5 focus-visible:ring-primary/20 font-bold"
                     value={formState.phoneNumber} 
                     onChange={(e) => setFormState({...formState, phoneNumber: e.target.value})} 
                   />
                 </div>
+                <div className="col-span-1 md:col-span-2 space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Home/Office Address</Label>
+                  <Input 
+                    className="h-12 rounded-xl border-primary/10 bg-primary/5 focus-visible:ring-primary/20 font-bold"
+                    value={formState.address} 
+                    onChange={(e) => setFormState({...formState, address: e.target.value})} 
+                  />
+                </div>
+                {(role === 'lawyer' || role === 'admin') && (
+                  <div className="col-span-1 md:col-span-2 space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-primary/40 ml-1 flex items-center gap-2">
+                      <Camera className="h-3 w-3" /> Professional Photo URL
+                    </Label>
+                    <Input 
+                      className="h-12 rounded-xl border-primary/10 bg-primary/5 focus-visible:ring-primary/20 font-bold"
+                      placeholder="https://images.unsplash.com/photo-..."
+                      value={formState.photoUrl} 
+                      onChange={(e) => setFormState({...formState, photoUrl: e.target.value})} 
+                    />
+                    <p className="text-[9px] text-muted-foreground italic ml-1">Provide a public URL for your professional portrait to be displayed to clients.</p>
+                  </div>
+                )}
               </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="address">Address</Label>
-                <Input 
-                  id="address" 
-                  className="bg-white/60"
-                  value={formState.address} 
-                  onChange={(e) => setFormState({...formState, address: e.target.value})} 
-                />
+              <div className="pt-4 border-t border-primary/5">
+                <Button type="submit" className="h-12 px-10 rounded-2xl bg-primary text-white font-black shadow-lg hover:scale-105 transition-all">
+                  Commit Profile Updates
+                </Button>
               </div>
-
-              <Button type="submit" className="w-fit bg-secondary hover:bg-secondary/90 shadow-md">
-                Save Profile Changes
-              </Button>
             </form>
           </CardContent>
         </Card>
 
-        <Card className="border-destructive/20 bg-white/50 backdrop-blur-sm shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center text-destructive">
+        <Card className="border-none shadow-lg rounded-[2.5rem] bg-white overflow-hidden">
+          <CardHeader className="bg-destructive/5 p-8">
+            <CardTitle className="flex items-center text-destructive text-lg font-bold">
               <Shield className="h-5 w-5 mr-2" />
-              Security
+              Access Security
             </CardTitle>
-            <CardDescription>Manage your password and authentication methods.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-muted/20 rounded-lg border">
-              <div className="flex items-center space-x-3">
-                <Lock className="h-5 w-5 text-muted-foreground" />
+          <CardContent className="p-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 bg-muted/20 rounded-2xl border-2 border-dashed border-muted-foreground/10 gap-4">
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-white rounded-xl shadow-sm">
+                  <Lock className="h-5 w-5 text-muted-foreground" />
+                </div>
                 <div>
-                  <p className="text-sm font-bold">Password</p>
-                  <p className="text-xs text-muted-foreground">Update your account password</p>
+                  <p className="text-sm font-black text-primary">Login Password</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Last changed 3 months ago</p>
                 </div>
               </div>
-              <Button variant="outline" size="sm" className="border-primary/20 hover:bg-primary/5">Update Password</Button>
+              <Button variant="outline" className="rounded-xl font-black text-[10px] uppercase tracking-widest border-2">Change Password</Button>
             </div>
           </CardContent>
         </Card>

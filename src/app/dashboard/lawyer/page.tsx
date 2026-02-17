@@ -9,7 +9,8 @@ import { collection, query, where, orderBy, doc } from "firebase/firestore";
 import { format } from "date-fns";
 import { 
   Calendar, Clock, CheckCircle2, XCircle, MoreVertical, 
-  FileText, Users, Briefcase, TrendingUp, AlertCircle 
+  FileText, Users, Briefcase, TrendingUp, AlertCircle,
+  Scale, User, Phone, ChevronRight
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,11 +20,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useRouter } from "next/navigation";
 
 export default function LawyerDashboard() {
   const { user, role } = useAuth();
   const db = useFirestore();
   const { toast } = useToast();
+  const router = useRouter();
 
   const lawyerRef = useMemoFirebase(() => {
     if (!db || !user || role !== 'lawyer') return null;
@@ -43,11 +46,11 @@ export default function LawyerDashboard() {
 
   const casesQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'lawyer') return null;
-    return query(collection(db, "cases"), where("lawyerId", "==", user.uid));
+    return query(collection(db, "cases"), where("lawyerId", "==", user.uid), where("status", "==", "Active"));
   }, [db, user, role]);
 
   const { data: appointments, isLoading: isApptsLoading } = useCollection(apptsQuery);
-  const { data: cases } = useCollection(casesQuery);
+  const { data: activeCases } = useCollection(casesQuery);
 
   const updateStatus = (apptId: string, status: string) => {
     if (!db) return;
@@ -58,110 +61,135 @@ export default function LawyerDashboard() {
 
   return (
     <DashboardLayout role="lawyer">
-      <div className="space-y-8">
-        <div className="flex justify-between items-center">
+      <div className="space-y-8 pb-12">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="flex items-center gap-6">
             <Avatar className="h-20 w-20 border-4 border-white shadow-xl">
               <AvatarImage src={lawyerData?.photoUrl} className="object-cover" />
-              <AvatarFallback className="bg-primary/10 text-2xl font-black text-primary">
+              <AvatarFallback className="bg-secondary/10 text-2xl font-black text-secondary">
                 {lawyerData?.firstName?.[0] || user?.email?.[0]?.toUpperCase() || "?"}
               </AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-3xl font-black text-primary font-headline tracking-tight">
-                Welcome, Atty. {lawyerData?.lastName || user?.email?.split('@')[0]}
+              <h1 className="text-3xl font-black text-secondary font-headline tracking-tight">
+                Atty. {lawyerData?.firstName} {lawyerData?.lastName}
               </h1>
-              <p className="text-muted-foreground font-medium">Managing your professional caseload and daily clinical schedule.</p>
+              <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-[0.2em]">Public Attorney Workstation</p>
             </div>
           </div>
-          <Badge className="bg-primary/10 text-primary border-none px-4 py-2 rounded-full font-bold">
-            Public Attorney II
-          </Badge>
+          <div className="flex gap-3">
+            <Badge className="bg-secondary text-white border-none px-4 py-2 rounded-full font-black text-[10px] uppercase tracking-widest shadow-md">
+              Office Active
+            </Badge>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="border-none shadow-sm rounded-3xl bg-primary text-white">
-            <CardContent className="p-6 flex items-center gap-4">
-              <div className="p-3 bg-white/20 rounded-2xl"><Briefcase className="h-6 w-6" /></div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest opacity-60">My Caseload</p>
-                <p className="text-2xl font-black">{cases?.length || 0}</p>
-              </div>
+          <Card className="border-none shadow-xl rounded-[2rem] bg-secondary text-white overflow-hidden relative group">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+              <Briefcase className="h-24 w-24" />
+            </div>
+            <CardContent className="p-8 space-y-1 relative z-10">
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Active Caseload</p>
+              <p className="text-5xl font-black">{activeCases?.length || 0}</p>
+              <p className="text-xs font-bold opacity-80 pt-2 flex items-center gap-1 cursor-pointer" onClick={() => router.push('/dashboard/lawyer/cases')}>
+                Manage Registry <ChevronRight className="h-3 w-3" />
+              </p>
             </CardContent>
           </Card>
-          <Card className="border-none shadow-sm rounded-3xl bg-secondary text-white">
-            <CardContent className="p-6 flex items-center gap-4">
-              <div className="p-3 bg-white/20 rounded-2xl"><Calendar className="h-6 w-6" /></div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Today's Visits</p>
-                <p className="text-2xl font-black">
-                  {appointments?.filter(a => format(new Date(a.date), "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd")).length || 0}
-                </p>
+          
+          <Card className="border-none shadow-xl rounded-[2rem] bg-white text-secondary overflow-hidden border-2 border-secondary/5">
+            <CardContent className="p-8 space-y-1">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Today's Clinic</p>
+                  <p className="text-5xl font-black">
+                    {appointments?.filter(a => a.dateString === format(new Date(), "yyyy-MM-dd")).length || 0}
+                  </p>
+                </div>
+                <div className="p-3 bg-secondary/5 rounded-2xl">
+                  <Calendar className="h-6 w-6 text-secondary" />
+                </div>
               </div>
+              <p className="text-xs font-bold text-muted-foreground pt-2">Scheduled Consultations</p>
             </CardContent>
           </Card>
-          <Card className="border-none shadow-sm rounded-3xl bg-white">
-            <CardContent className="p-6 flex items-center gap-4 text-primary">
-              <div className="p-3 bg-primary/5 rounded-2xl"><TrendingUp className="h-6 w-6" /></div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Monthly Efficiency</p>
-                <p className="text-2xl font-black">94%</p>
-              </div>
+
+          <Card className="border-none shadow-xl rounded-[2rem] bg-amber-400 text-amber-950 overflow-hidden">
+            <CardContent className="p-8 space-y-1">
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Success Rate</p>
+              <p className="text-5xl font-black">92%</p>
+              <p className="text-xs font-bold opacity-80 pt-2">Monthly Resolution Metric</p>
             </CardContent>
           </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Daily Clinical Schedule */}
           <Card className="lg:col-span-2 border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
-            <CardHeader className="bg-primary/5 pb-4 border-b border-primary/10">
-              <CardTitle className="text-lg font-bold text-primary flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Daily Schedule
-              </CardTitle>
+            <CardHeader className="bg-secondary/5 pb-4 border-b border-secondary/10">
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-lg font-bold text-secondary flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  Clinical Schedule
+                </CardTitle>
+                <Badge variant="outline" className="border-secondary/20 text-secondary font-black text-[9px] uppercase">
+                  {format(new Date(), "EEEE, MMMM dd")}
+                </Badge>
+              </div>
             </CardHeader>
             <CardContent className="p-0">
-              {isApptsLoading ? <div className="p-12 text-center"><AlertCircle className="animate-spin h-8 w-8 mx-auto text-primary/20" /></div> : (
-                <div className="divide-y divide-primary/5">
-                  {appointments?.map((appt) => (
-                    <div key={appt.id} className="p-6 flex items-center justify-between hover:bg-primary/5 transition-colors">
+              {isApptsLoading ? (
+                <div className="p-20 flex justify-center"><AlertCircle className="animate-spin h-10 w-10 text-secondary/20" /></div>
+              ) : (
+                <div className="divide-y divide-secondary/5">
+                  {appointments?.slice(0, 5).map((appt) => (
+                    <div key={appt.id} className="p-6 flex items-center justify-between hover:bg-secondary/5 transition-colors">
                       <div className="flex items-center gap-4">
-                        <div className="h-14 w-14 rounded-2xl bg-primary/5 flex flex-col items-center justify-center border border-primary/10">
-                          <span className="text-[10px] font-black text-primary uppercase leading-none">{format(new Date(appt.date), "MMM")}</span>
-                          <span className="text-xl font-black text-primary leading-none mt-1">{format(new Date(appt.date), "dd")}</span>
+                        <div className="h-14 w-14 rounded-2xl bg-secondary/5 flex flex-col items-center justify-center border border-secondary/10">
+                          <span className="text-[10px] font-black text-secondary uppercase leading-none">{format(new Date(appt.date), "MMM")}</span>
+                          <span className="text-xl font-black text-secondary leading-none mt-1">{format(new Date(appt.date), "dd")}</span>
                         </div>
                         <div>
-                          <h4 className="font-bold text-primary">{appt.guestName || appt.clientName || "Client"}</h4>
-                          <p className="text-xs text-muted-foreground font-medium">{appt.caseType}</p>
-                          <Badge variant="outline" className="mt-1 text-[9px] font-black uppercase py-0">{appt.status}</Badge>
+                          <h4 className="font-bold text-secondary">{appt.guestName || appt.clientName || "Client"}</h4>
+                          <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                            <Badge variant="outline" className="text-[9px] font-black uppercase py-0 border-secondary/20 text-secondary">{appt.status}</Badge>
+                            <span>•</span>
+                            <span>{appt.caseType}</span>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-4">
                         <div className="text-right hidden sm:block">
-                          <p className="text-sm font-black text-primary">{appt.time}</p>
-                          <p className="text-[10px] text-muted-foreground font-bold uppercase">Time Slot</p>
+                          <p className="text-sm font-black text-secondary">{appt.time}</p>
+                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Appointment Slot</p>
                         </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="rounded-xl"><MoreVertical className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-secondary/5">
+                              <MoreVertical className="h-4 w-4 text-secondary" />
+                            </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="rounded-xl">
-                            <DropdownMenuItem onClick={() => updateStatus(appt.id, 'completed')} className="text-green-600 font-bold">
+                          <DropdownMenuContent align="end" className="rounded-2xl w-56 p-2">
+                            <DropdownMenuItem onClick={() => updateStatus(appt.id, 'completed')} className="text-green-600 font-bold rounded-xl">
                               <CheckCircle2 className="mr-2 h-4 w-4" /> Mark Completed
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => updateStatus(appt.id, 'cancelled')} className="text-red-600 font-bold">
+                            <DropdownMenuItem onClick={() => updateStatus(appt.id, 'cancelled')} className="text-red-600 font-bold rounded-xl">
                               <XCircle className="mr-2 h-4 w-4" /> Mark Cancelled
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="font-bold">View Case File</DropdownMenuItem>
+                            <DropdownMenuItem className="font-bold rounded-xl">
+                              <User className="mr-2 h-4 w-4" /> View Client Info
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
                     </div>
                   ))}
                   {(!appointments || appointments.length === 0) && (
-                    <div className="p-12 text-center space-y-2">
-                      <Calendar className="h-12 w-12 text-primary/10 mx-auto" />
-                      <p className="text-muted-foreground font-medium">No appointments scheduled for this period.</p>
+                    <div className="p-20 text-center space-y-4">
+                      <Calendar className="h-16 w-16 text-secondary/10 mx-auto" />
+                      <p className="text-muted-foreground font-medium">No professional visits scheduled today.</p>
                     </div>
                   )}
                 </div>
@@ -170,33 +198,57 @@ export default function LawyerDashboard() {
           </Card>
 
           <div className="space-y-8">
-            <Card className="border-none shadow-xl rounded-[2.5rem] bg-amber-50/50 p-6 space-y-4 border border-amber-100">
-              <h3 className="font-bold text-amber-900 flex items-center gap-2">
-                <AlertCircle className="h-5 w-5" /> Operational Alerts
-              </h3>
-              <div className="space-y-3">
-                <div className="p-3 bg-white rounded-xl shadow-sm border border-amber-200">
-                  <p className="text-[10px] font-black text-amber-900/40 uppercase tracking-widest">New Assignment</p>
-                  <p className="text-xs text-amber-900 font-bold leading-tight">A new case has been assigned to your caseload today.</p>
+            {/* Active Clients Quick Access */}
+            <Card className="border-none shadow-xl rounded-[2.5rem] bg-secondary text-white overflow-hidden">
+              <CardHeader className="bg-white/10 p-6 border-b border-white/5">
+                <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
+                  <Users className="h-4 w-4" /> My Active Clients
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  {activeCases?.slice(0, 3).map((c) => (
+                    <div key={c.id} className="p-4 bg-white/10 rounded-2xl border border-white/5 flex items-center justify-between hover:bg-white/20 transition-all cursor-pointer">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center font-black text-xs">
+                          {c.id.split('-').pop()}
+                        </div>
+                        <div>
+                          <p className="text-xs font-black leading-none mb-1">{c.caseType}</p>
+                          <p className="text-[9px] font-bold opacity-60 uppercase tracking-widest">Case Ref: {c.id}</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 opacity-40" />
+                    </div>
+                  ))}
+                  {(!activeCases || activeCases.length === 0) && (
+                    <p className="text-center py-6 text-xs font-bold opacity-40 italic">No active legal matters.</p>
+                  )}
+                  <Button variant="link" className="w-full text-white font-black text-[10px] uppercase tracking-[0.2em] mt-2" onClick={() => router.push('/dashboard/lawyer/cases')}>
+                    View Complete Caseload
+                  </Button>
                 </div>
-                <div className="p-3 bg-white rounded-xl shadow-sm border border-amber-200">
-                  <p className="text-[10px] font-black text-amber-900/40 uppercase tracking-widest">Client Filing</p>
-                  <p className="text-xs text-amber-900 font-bold leading-tight">New evidence uploaded for Case ID: {cases?.[0]?.id || "---"}.</p>
-                </div>
-              </div>
+              </CardContent>
             </Card>
 
-            <Card className="border-none shadow-xl rounded-[2.5rem] bg-[#1A237E] p-8 text-white space-y-6">
-              <div className="space-y-1">
-                <h3 className="text-lg font-black tracking-tight">Lawyer Schedule</h3>
-                <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest">Public Calendar Controls</p>
+            <Card className="border-none shadow-xl rounded-[2.5rem] bg-amber-50 p-8 space-y-6 border border-amber-100">
+              <div className="space-y-2">
+                <h3 className="font-black text-amber-900 flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5" /> Clinic Notice
+                </h3>
+                <p className="text-xs text-amber-800/70 font-medium leading-relaxed">
+                  Please ensure all completed appointments are marked in the system to maintain accurate efficiency metrics.
+                </p>
               </div>
-              <p className="text-xs text-white/80 leading-relaxed font-medium">
-                Manage your availability by blocking specific slots to ensure balanced daily clinical load.
-              </p>
-              <Button className="w-full bg-white text-primary hover:bg-white/90 font-black rounded-xl shadow-lg">
-                Manage Availability
-              </Button>
+              <div className="p-4 bg-white rounded-2xl border border-amber-200 shadow-sm flex items-center gap-3">
+                <div className="p-2 bg-amber-100 rounded-lg">
+                  <Scale className="h-4 w-4 text-amber-700" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-amber-900/40 uppercase">Merit Evaluation</p>
+                  <p className="text-[11px] font-bold text-amber-900">3 Cases require review</p>
+                </div>
+              </div>
             </Card>
           </div>
         </div>

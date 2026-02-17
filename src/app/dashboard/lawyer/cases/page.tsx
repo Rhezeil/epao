@@ -4,8 +4,8 @@
 import { useAuth } from "@/components/auth-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, where, orderBy } from "firebase/firestore";
+import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
+import { collection, query, where, orderBy, doc } from "firebase/firestore";
 import { format } from "date-fns";
 import { 
   FileText, 
@@ -17,17 +17,32 @@ import {
   Search,
   Filter,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  MoreVertical,
+  Settings2,
+  Trash2,
+  Edit3,
+  Loader2
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
 
 export default function LawyerCasesPage() {
   const { user, role } = useAuth();
   const db = useFirestore();
+  const { toast } = useToast();
   const [search, setSearch] = useState("");
 
   const casesQuery = useMemoFirebase(() => {
@@ -45,83 +60,112 @@ export default function LawyerCasesPage() {
     );
   }, [cases, search]);
 
+  const handleUpdateStatus = (caseId: string, status: string) => {
+    if (!db) return;
+    updateDocumentNonBlocking(doc(db, "cases", caseId), { 
+      status,
+      updatedAt: new Date().toISOString(),
+      ...(status === 'Closed' ? { closedAt: new Date().toISOString() } : { closedAt: null })
+    });
+    toast({ title: "Case Updated", description: `Case ${caseId} is now ${status}.` });
+  };
+
   return (
     <DashboardLayout role="lawyer">
       <div className="space-y-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Case Registry</h1>
-            <p className="text-muted-foreground font-medium">Comprehensive list of all legal matters assigned to your office.</p>
+            <h1 className="text-3xl font-black text-secondary font-headline tracking-tight">Case Registry</h1>
+            <p className="text-muted-foreground font-medium">Manage and progress legal matters assigned to your district office.</p>
           </div>
           <div className="relative w-full md:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/30" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary/30" />
             <Input 
               placeholder="Search Case ID or Type..." 
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-9 h-11 rounded-xl border-primary/10 bg-white"
+              className="pl-9 h-11 rounded-xl border-secondary/10 bg-white focus-visible:ring-secondary/20 font-bold"
             />
           </div>
         </div>
 
         <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
-          <CardHeader className="bg-primary/5 pb-6">
+          <CardHeader className="bg-secondary/5 pb-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary text-white rounded-xl">
+              <div className="p-2 bg-secondary text-white rounded-xl">
                 <Scale className="h-5 w-5" />
               </div>
-              <CardTitle className="text-xl font-bold text-primary">Assigned Caseload</CardTitle>
+              <CardTitle className="text-xl font-bold text-secondary">My Professional Caseload</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="p-0">
             {isLoading ? (
-              <div className="py-20 flex justify-center"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div>
+              <div className="py-20 flex justify-center"><Loader2 className="animate-spin h-10 w-10 text-secondary" /></div>
             ) : (
               <Table>
                 <TableHeader className="bg-muted/30">
                   <TableRow>
-                    <TableHead className="px-8 font-black text-[10px] uppercase tracking-widest text-primary/40">Case Profile</TableHead>
-                    <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40">Status</TableHead>
-                    <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40">Date Opened</TableHead>
-                    <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40">Date Closed</TableHead>
-                    <TableHead className="text-right px-8 font-black text-[10px] uppercase tracking-widest text-primary/40">Details</TableHead>
+                    <TableHead className="px-8 font-black text-[10px] uppercase tracking-widest text-secondary/40">Legal Matter</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase tracking-widest text-secondary/40">Status</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase tracking-widest text-secondary/40">Date Opened</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase tracking-widest text-secondary/40">Case ID</TableHead>
+                    <TableHead className="text-right px-8 font-black text-[10px] uppercase tracking-widest text-secondary/40">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredCases.map((c) => (
-                    <TableRow key={c.id} className="hover:bg-primary/5 transition-colors group">
+                    <TableRow key={c.id} className="hover:bg-secondary/5 transition-colors group">
                       <TableCell className="px-8 py-6">
-                        <div className="space-y-1">
-                          <p className="font-black text-primary leading-none">{c.caseType}</p>
-                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{c.id}</p>
-                        </div>
+                        <p className="font-black text-secondary leading-none">{c.caseType}</p>
                       </TableCell>
                       <TableCell>
                         <Badge className={cn(
                           "font-black text-[9px] uppercase px-3",
                           c.status === 'Active' ? 'bg-green-500' : 
-                          c.status === 'Closed' ? 'bg-gray-500' : 'bg-primary'
+                          c.status === 'Closed' ? 'bg-gray-500' : 
+                          c.status === 'For Compliance' ? 'bg-amber-500' : 'bg-secondary'
                         )}>
                           {c.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-xs font-bold text-primary">
+                      <TableCell className="text-xs font-bold text-secondary">
                         {c.createdAt ? format(new Date(c.createdAt), "MMM dd, yyyy") : '---'}
                       </TableCell>
-                      <TableCell className="text-xs font-bold text-muted-foreground">
-                        {c.closedAt ? format(new Date(c.closedAt), "MMM dd, yyyy") : '---'}
+                      <TableCell className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">
+                        {c.id}
                       </TableCell>
                       <TableCell className="text-right px-8">
-                        <Badge variant="outline" className="cursor-pointer hover:bg-primary/5">
-                          View File <ChevronRight className="h-3 w-3 ml-1" />
-                        </Badge>
+                        <div className="flex justify-end gap-2">
+                          <Button variant="ghost" size="sm" className="h-9 rounded-xl font-bold text-[10px] uppercase text-secondary hover:bg-secondary/10">
+                            View File
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-secondary/5">
+                                <Settings2 className="h-4 w-4 text-secondary" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="rounded-2xl w-56 p-2">
+                              <DropdownMenuLabel className="text-[10px] font-black uppercase text-secondary/40 tracking-widest px-2 pb-2">Status Actions</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => handleUpdateStatus(c.id, "Active")} className="rounded-xl font-bold">
+                                <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" /> Mark as Active
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleUpdateStatus(c.id, "For Compliance")} className="rounded-xl font-bold">
+                                <AlertCircle className="mr-2 h-4 w-4 text-amber-600" /> Mark For Compliance
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleUpdateStatus(c.id, "Closed")} className="rounded-xl font-bold">
+                                <FileText className="mr-2 h-4 w-4 text-muted-foreground" /> Close Legal Case
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
                   {filteredCases.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-20 text-muted-foreground italic">
-                        No Case records found in your directory.
+                      <TableCell colSpan={5} className="text-center py-20 text-muted-foreground italic font-medium">
+                        No Case records found in your workstation.
                       </TableCell>
                     </TableRow>
                   )}
