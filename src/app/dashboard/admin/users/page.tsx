@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking, setDocumentNonBlocking, updateDocumentNonBlocking, useDoc } from "@/firebase";
@@ -191,7 +192,7 @@ export default function AdminUsersPage() {
   const handleReassignLawyer = (caseId: string, newLawyerId: string) => {
     if (!db || !caseId) return;
     updateDocumentNonBlocking(doc(db, "cases", caseId), { lawyerId: newLawyerId });
-    toast({ title: "Attorney Reassigned", description: "The case has been updated with the new lawyer." });
+    toast({ title: "Attorney Reassigned", description: "The Case has been updated with the new lawyer." });
   };
 
   const handleLockAccount = (userId: string, locked: boolean) => {
@@ -460,7 +461,7 @@ export default function AdminUsersPage() {
               <Tabs defaultValue="profile" className="w-full">
                 <TabsList className="grid w-full grid-cols-3 bg-muted/50 p-1 rounded-2xl h-14">
                   <TabsTrigger value="profile" className="rounded-xl font-bold">Personal</TabsTrigger>
-                  <TabsTrigger value="matter" className="rounded-xl font-bold">Matter</TabsTrigger>
+                  <TabsTrigger value="case" className="rounded-xl font-bold">Case</TabsTrigger>
                   <TabsTrigger value="history" className="rounded-xl font-bold">History</TabsTrigger>
                 </TabsList>
                 
@@ -502,13 +503,13 @@ export default function AdminUsersPage() {
                   </div>
                 </TabsContent>
 
-                <TabsContent value="matter" className="space-y-8 pt-6 animate-in slide-in-from-right-4">
+                <TabsContent value="case" className="space-y-8 pt-6 animate-in slide-in-from-right-4">
                   {selectedCase ? (
                     <div className="space-y-6">
                       <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10">
                         <div className="flex items-center gap-3 mb-4">
                           <Scale className="h-6 w-6 text-primary" />
-                          <h4 className="font-black text-primary uppercase tracking-widest text-sm">Active Legal Matter</h4>
+                          <h4 className="font-black text-primary uppercase tracking-widest text-sm">Active Legal Case</h4>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-1">
@@ -552,7 +553,7 @@ export default function AdminUsersPage() {
                   ) : (
                     <div className="text-center py-12 bg-muted/20 rounded-3xl border-2 border-dashed border-primary/10">
                       <FileText className="h-12 w-12 mx-auto text-primary/10 mb-2" />
-                      <p className="text-sm font-bold text-muted-foreground">No active legal matters initialized.</p>
+                      <p className="text-sm font-bold text-muted-foreground">No active legal Cases initialized.</p>
                       <Button variant="link" className="mt-2 text-secondary font-black uppercase text-[10px] tracking-widest">Convert Intake to Case</Button>
                     </div>
                   )}

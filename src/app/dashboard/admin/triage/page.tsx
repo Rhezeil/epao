@@ -1,3 +1,4 @@
+
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -67,7 +68,7 @@ export default function AdminTriagePage() {
   const { data: completedIntakes, isLoading: isIntakeLoading } = useCollection(completedIntakeQuery);
   const { data: lawyers } = useCollection(lawyersQuery);
 
-  // Filter out completed intakes that already have cases
+  // Filter out completed intakes that already have Cases
   const casesQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'admin') return null;
     return query(collection(db, "cases"));
@@ -134,7 +135,7 @@ export default function AdminTriagePage() {
         caseType: selectedAppt.caseType,
         status: "Active",
         initialAppointmentId: selectedAppt.id,
-        description: `Official case initialized from intake review. Source: ${selectedAppt.referenceCode}`,
+        description: `Official Case initialized from intake review. Source: ${selectedAppt.referenceCode}`,
         createdAt: new Date().toISOString()
       }, { merge: true });
 
@@ -233,7 +234,7 @@ export default function AdminTriagePage() {
                 <CardTitle className="text-xl font-bold text-primary flex items-center gap-2">
                   <CheckCircle2 className="h-6 w-6" /> Completed Consultations
                 </CardTitle>
-                <CardDescription>Review visits and convert to official case files.</CardDescription>
+                <CardDescription>Review visits and convert to official Case files.</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 {isIntakeLoading ? <div className="flex justify-center py-20"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div> : (
@@ -403,7 +404,7 @@ export default function AdminTriagePage() {
 
                 {reviewMode === 'intake' && (
                   <div className="space-y-2">
-                    <Label className="text-xs font-black uppercase tracking-widest text-primary/40 ml-1">Initial Matter Status</Label>
+                    <Label className="text-xs font-black uppercase tracking-widest text-primary/40 ml-1">Initial Case Status</Label>
                     <Select value={caseStatus} onValueChange={setCaseStatus}>
                       <SelectTrigger className="h-14 rounded-2xl border-primary/20 bg-white font-bold shadow-sm">
                         <SelectValue placeholder="Select status" />
@@ -427,7 +428,7 @@ export default function AdminTriagePage() {
                   <div className="space-y-2">
                     <Label className="text-[10px] font-bold text-muted-foreground uppercase">Reason for Closing Intake</Label>
                     <Textarea 
-                      placeholder="e.g., Household income exceeds limit, matter not covered."
+                      placeholder="e.g., Household income exceeds limit, Case not covered."
                       className="rounded-2xl border-primary/10 bg-white text-sm font-medium min-h-[100px]"
                       value={rejectionReason}
                       onChange={(e) => setRejectionReason(e.target.value)}

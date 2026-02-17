@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, Suspense, useMemo } from "react";
@@ -448,7 +449,7 @@ function BookAppointmentContent() {
                         <p className="font-bold text-secondary">{selectedTime}</p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Matter Category</p>
+                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Case Category</p>
                         <p className="font-bold text-secondary">{caseTypeParam}</p>
                       </div>
                       <div className="space-y-1">

@@ -144,7 +144,7 @@ function CaseNavigatorContent() {
             </CardHeader>
             <CardContent className="space-y-4 pt-6 flex-1">
               <div className="space-y-1">
-                <p className="text-[10px] font-bold text-primary/40 uppercase tracking-widest">Legal Matter</p>
+                <p className="text-[10px] font-bold text-primary/40 uppercase tracking-widest">Legal Case</p>
                 <h2 className="text-xl font-black text-[#1A3B6B] leading-tight tracking-tight">{caseName}</h2>
                 {selectedCategory && (
                   <Badge className="mt-2 px-3 py-1 text-xs font-bold rounded-full bg-primary/10 text-primary border-none">
@@ -235,7 +235,7 @@ function CaseNavigatorContent() {
                         ))
                       )}
                       {(!guidance.requirements || guidance.requirements.length === 0) && !isReqLoading && (
-                        <p className="text-xs text-muted-foreground italic text-center py-8">Standard evidence requirements apply for this case.</p>
+                        <p className="text-xs text-muted-foreground italic text-center py-8">Standard evidence requirements apply for this Case.</p>
                       )}
                     </CardContent>
                   </Card>
@@ -326,7 +326,7 @@ function CaseNavigatorContent() {
             Case Requirement Navigator
           </h1>
           <p className="text-sm text-muted-foreground font-semibold leading-relaxed max-w-2xl mx-auto">
-            Find required documents and process flows for legal matters in the Philippines.
+            Find required documents and process flows for legal Cases in the Philippines.
           </p>
         </div>
 
@@ -334,7 +334,7 @@ function CaseNavigatorContent() {
           <div className="flex-1 flex items-center px-4">
             <Search className="h-6 w-6 text-primary/30 mr-3" />
             <Input 
-              placeholder='Search a legal matter (e.g., "Murder", "Assault")...' 
+              placeholder='Search a legal Case (e.g., "Murder", "Assault")...' 
               className="h-12 border-none shadow-none focus-visible:ring-0 text-base font-bold placeholder:font-medium placeholder:text-muted-foreground/40"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -366,7 +366,7 @@ function CaseNavigatorContent() {
                         <AlertTriangle className="h-12 w-12 text-amber-500" />
                       </div>
                       <div className="space-y-1">
-                        <h3 className="text-xl font-bold text-amber-900">No case type found</h3>
+                        <h3 className="text-xl font-bold text-amber-900">No Case type found</h3>
                         <p className="text-sm text-amber-800/60 font-medium">No results found for "{searchQuery}".</p>
                       </div>
                       <Button variant="outline" onClick={() => setSearchQuery("")} className="rounded-xl font-bold">Clear Search</Button>
@@ -440,4 +440,3 @@ export default function CaseNavigatorPage() {
     </Suspense>
   );
 }
-

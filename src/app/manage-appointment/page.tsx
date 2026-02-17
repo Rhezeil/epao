@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -246,7 +247,7 @@ export default function ManageAppointmentPage() {
                     </div>
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-primary font-black uppercase text-[10px] tracking-widest mb-1">
-                        <CheckCircle2 className="h-4 w-4" /> Legal Matter
+                        <CheckCircle2 className="h-4 w-4" /> Legal Case
                       </div>
                       <p className="text-xl font-black text-[#1A3B6B]">{appointment.caseType}</p>
                       <Badge variant="outline" className="border-primary/20 text-[10px] font-bold text-primary px-3">
@@ -319,7 +320,7 @@ export default function ManageAppointmentPage() {
                     <div className="text-center py-8 space-y-4">
                       <Loader2 className="h-12 w-12 text-white/20 mx-auto animate-spin" />
                       <p className="text-xs font-bold text-white/60 leading-relaxed italic">
-                        Your matter is currently in the Triage Queue. A lawyer will be assigned upon system approval.
+                        Your Case is currently in the Triage Queue. A lawyer will be assigned upon system approval.
                       </p>
                     </div>
                   )}

@@ -28,7 +28,13 @@ import {
   ArrowRightLeft,
   Settings2,
   Calendar,
-  Eye
+  Eye,
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator
 } from "lucide-react";
 import { initializeApp, deleteApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
@@ -126,7 +132,13 @@ export default function AdminLawyersPage() {
         const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, newLawyer.password);
         newUserId = userCredential.user.uid;
       } catch (authError: any) {
-        if (authError.code !== 'auth/email-already-in-use') throw authError;
+        if (authError.code === 'auth/email-already-in-use') {
+          // If already in Auth, we still need a UID to create the firestore record
+          // For prototype simplicity, we assume if it's already in auth it's the same user or we handle elsewhere
+          throw authError;
+        } else {
+          throw authError;
+        }
       } finally {
         await deleteApp(secondaryApp);
       }
@@ -161,7 +173,7 @@ export default function AdminLawyersPage() {
       updateDocumentNonBlocking(doc(db, "cases", c.id), { lawyerId: targetLawyerId });
     });
 
-    toast({ title: "Cases Reassigned", description: `Successfully migrated ${casesToMove.length} matters.` });
+    toast({ title: "Cases Reassigned", description: `Successfully migrated ${casesToMove.length} Cases.` });
     setIsReassignOpen(false);
     setSelectedLawyer(null);
     setTargetLawyerId("");
@@ -180,7 +192,7 @@ export default function AdminLawyersPage() {
         <div className="flex justify-between items-end">
           <div className="space-y-1">
             <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Lawyer Directory</h1>
-            <p className="text-muted-foreground font-medium">Manage legal staff, monitor workloads, and reassign cases.</p>
+            <p className="text-muted-foreground font-medium">Manage legal staff, monitor workloads, and reassign Cases.</p>
           </div>
         </div>
 
@@ -380,7 +392,7 @@ export default function AdminLawyersPage() {
               <div className="space-y-1">
                 <DialogTitle className="text-2xl font-black">Reassign Caseload</DialogTitle>
                 <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">
-                  Balancing Active Matters for {selectedLawyer?.email?.split('@')[0]}
+                  Balancing Active Cases for {selectedLawyer?.email?.split('@')[0]}
                 </DialogDescription>
               </div>
             </DialogHeader>
@@ -388,7 +400,7 @@ export default function AdminLawyersPage() {
               <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100 flex gap-3">
                 <ShieldAlert className="h-5 w-5 text-amber-600 shrink-0" />
                 <p className="text-xs text-amber-900 font-bold leading-relaxed">
-                  You are about to migrate all {selectedLawyer?.activeCases} active cases to a new attorney. This action cannot be undone.
+                  You are about to migrate all {selectedLawyer?.activeCases} active Cases to a new attorney. This action cannot be undone.
                 </p>
               </div>
               <div className="space-y-2">
@@ -400,7 +412,7 @@ export default function AdminLawyersPage() {
                   <SelectContent>
                     {lawyerMetrics.filter(l => l.id !== selectedLawyer?.id).map(l => (
                       <SelectItem key={l.id} value={l.id} className="font-bold">
-                        {l.email.split('@')[0]} ({l.activeCases}/5 cases)
+                        {l.email.split('@')[0]} ({l.activeCases}/5 Cases)
                       </SelectItem>
                     ))}
                   </SelectContent>

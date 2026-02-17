@@ -19,7 +19,7 @@ export default function ClientDashboard() {
   const router = useRouter();
   const [assignedLawyer, setAssignedLawyer] = useState<any>(null);
 
-  // Fetch Client's official case
+  // Fetch Client's official Case
   const casesQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'client') return null;
     return query(collection(db, "cases"), where("clientId", "==", user.uid));
@@ -54,7 +54,7 @@ export default function ClientDashboard() {
         <div className="flex justify-between items-end">
           <div className="space-y-1">
             <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Citizen Portal</h1>
-            <p className="text-muted-foreground font-medium">Welcome back. Track your legal case and manage your appointments.</p>
+            <p className="text-muted-foreground font-medium">Welcome back. Track your legal Case and manage your appointments.</p>
           </div>
           <Badge className="bg-primary/10 text-primary border-none px-4 py-2 rounded-full font-bold">
             Registered Client
@@ -71,7 +71,7 @@ export default function ClientDashboard() {
                     <div className="p-2 bg-primary text-white rounded-xl">
                       <Gavel className="h-5 w-5" />
                     </div>
-                    <CardTitle className="text-xl font-bold text-primary">My Active Legal Matter</CardTitle>
+                    <CardTitle className="text-xl font-bold text-primary">My Active Legal Case</CardTitle>
                   </div>
                   {activeCase && (
                     <Badge className="bg-green-100 text-green-800 border-none font-bold px-3">
@@ -111,7 +111,7 @@ export default function ClientDashboard() {
                 ) : (
                   <div className="text-center py-12 space-y-4">
                     <FileText className="h-12 w-12 text-primary/10 mx-auto" />
-                    <p className="text-muted-foreground font-medium">No official case records found yet.</p>
+                    <p className="text-muted-foreground font-medium">No official Case records found yet.</p>
                   </div>
                 )}
               </CardContent>
@@ -171,13 +171,13 @@ export default function ClientDashboard() {
                         <Briefcase className="h-4 w-4" /> District Office North
                       </div>
                       <div className="flex items-center gap-3 text-xs font-bold text-[#2E5A99]">
-                        <FileText className="h-4 w-4" /> Managing your {activeCase?.caseType || "Legal Matter"}
+                        <FileText className="h-4 w-4" /> Managing your {activeCase?.caseType || "Legal Case"}
                       </div>
                     </div>
                   </>
                 ) : (
                   <div className="text-center py-6">
-                    <p className="text-xs text-muted-foreground font-medium italic leading-relaxed">Your assigned lawyer will appear here once your case is triaged.</p>
+                    <p className="text-xs text-muted-foreground font-medium italic leading-relaxed">Your assigned lawyer will appear here once your Case is triaged.</p>
                   </div>
                 )}
               </CardContent>

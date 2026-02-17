@@ -118,7 +118,7 @@ export default function AdminDashboard() {
         {/* --- KPI Cards --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { label: "Active Matters", value: activeCasesCount, icon: Scale, color: "text-blue-600", bg: "bg-blue-50", trend: "+5.2%", isUp: true },
+            { label: "Active Cases", value: activeCasesCount, icon: Scale, color: "text-blue-600", bg: "bg-blue-50", trend: "+5.2%", isUp: true },
             { label: "Total Visits", value: appointments?.length || 0, icon: Calendar, color: "text-teal-600", bg: "bg-teal-50", trend: "+12.1%", isUp: true },
             { label: "Lawyers", value: lawyers?.length || 0, icon: Briefcase, color: "text-amber-600", bg: "bg-amber-50", trend: "Stable", isUp: null },
             { label: "Triage Queue", value: pendingApptsCount, icon: AlertCircle, color: "text-red-600", bg: "bg-red-50", trend: "-2.4%", isUp: false }
@@ -279,7 +279,7 @@ export default function AdminDashboard() {
               <CardTitle className="text-lg font-bold text-teal-900 flex items-center gap-2">
                 <Gavel className="h-5 w-5" /> Top Case Categories
               </CardTitle>
-              <CardDescription>Most frequently filed matters and booked consultations.</CardDescription>
+              <CardDescription>Most frequently filed Cases and booked consultations.</CardDescription>
             </CardHeader>
             <CardContent className="p-6">
               <div className="space-y-4">
@@ -298,7 +298,7 @@ export default function AdminDashboard() {
                   </div>
                 ))}
                 {topCases.length === 0 && (
-                  <div className="text-center py-12 text-muted-foreground italic">No case data available for ranking.</div>
+                  <div className="text-center py-12 text-muted-foreground italic">No Case data available for ranking.</div>
                 )}
               </div>
             </CardContent>

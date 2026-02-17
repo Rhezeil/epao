@@ -1,3 +1,4 @@
+
 /**
  * @fileOverview Refined legal database for LexConnect.
  * Standardized documentation and process flows based on official PAO, DOJ, and Supreme Court standards.
@@ -235,7 +236,7 @@ export const standardPaoDocs = [
   "Latest ITR, pay slip, or Certificate of No Income",
   "Valid Government-issued ID (SSS, PhilHealth, Voter's, etc.)",
   "Case-Related Documents (Complaints, summons, affidavits, or police reports)",
-  "Merit Test: The case must not be frivolous and must have legal basis."
+  "Merit Test: The Case must not be frivolous and must have legal basis."
 ];
 
 export const universalPaoFlow = [
@@ -247,24 +248,24 @@ export const universalPaoFlow = [
   { 
     step: 2, 
     title: "Submit Requirements", 
-    content: "Provide proof of indigency (e.g., Certificate of Indigency, ITR, or Pay Slip), Valid ID, and documents related to the case (e.g., complaint, subpoena)." 
+    content: "Provide proof of indigency (e.g., Certificate of Indigency, ITR, or Pay Slip), Valid ID, and documents related to the Case (e.g., complaint, subpoena)." 
   },
   { 
     step: 3, 
     title: "Client Interview & Evaluation", 
-    content: "A public attorney will interview you to determine if the case has merit (Merit Test) and if you qualify for assistance (Indigency Test)." 
+    content: "A public attorney will interview you to determine if the Case has merit (Merit Test) and if you qualify for assistance (Indigency Test)." 
   },
   { 
     step: 4, 
     title: "Acceptance & Case Assignment", 
-    content: "Upon approval, a lawyer is officially assigned to your case to provide counseling, mediation, or representation." 
+    content: "Upon approval, a lawyer is officially assigned to your Case to provide counseling, mediation, or representation." 
   }
 ];
 
 export const pAONotes = [
   "Indigency Test: Your net income must meet the agency's regional threshold.",
-  "Merit Test: The case must not be frivolous and must have legal basis.",
-  "Conflict of Interest: PAO cannot represent opposing parties in the same matter.",
+  "Merit Test: The Case must not be frivolous and must have legal basis.",
+  "Conflict of Interest: PAO cannot represent opposing parties in the same Case.",
   "Free Service: All legal services provided by PAO are free of charge.",
   "Eligibility: Must provide proof of indigency and valid government ID."
 ];
