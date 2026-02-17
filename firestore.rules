@@ -24,17 +24,13 @@ service cloud.firestore {
     }
 
     match /roleLawyer/{lawyerId} {
-      // Allow any signed-in user to fetch a specific lawyer (e.g., for appointment details)
       allow get: if isSignedIn();
-      // Only admins can list the entire lawyer directory
       allow list: if isAdmin();
-      // Admins and the lawyer themselves can update the profile
       allow write: if isAdmin() || (isSignedIn() && request.auth.uid == lawyerId);
     }
 
     match /users/{userId} {
       allow get: if isAdmin() || isLawyer() || (isSignedIn() && request.auth.uid == userId);
-      // Only admins can list the full client directory
       allow list: if isAdmin();
       
       allow create: if isSignedIn();
