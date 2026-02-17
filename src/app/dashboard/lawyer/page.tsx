@@ -5,13 +5,11 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAuth } from "@/components/auth-provider";
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc } from "@/firebase";
-import { collection, query, where, orderBy, doc } from "firebase/firestore";
+import { collection, query, where, doc } from "firebase/firestore";
 import { format } from "date-fns";
 import { 
   Calendar, Clock, CheckCircle2, XCircle, MoreVertical, 
-  FileText, Users, Briefcase, TrendingUp, AlertCircle,
-  Scale, User, Phone, ChevronRight, LayoutDashboard,
-  Loader2
+  Briefcase, Scale, User, ChevronRight, Loader2
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,7 +36,6 @@ export default function LawyerDashboard() {
 
   const apptsQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'lawyer') return null;
-    // Updated query pattern: Removing orderBy to match simplified security rule requirements
     return query(
       collection(db, "appointments"), 
       where("lawyerId", "==", user.uid)
@@ -54,8 +51,8 @@ export default function LawyerDashboard() {
     );
   }, [db, user, role]);
 
-  const { data: appointments, isLoading: isApptsLoading } = useCollection(apptsQuery);
-  const { data: activeCases } = useCollection(casesQuery);
+  const { data: appointments, isLoading: isApptsLoading } = useCollection(apptsQuery ? apptsQuery : null);
+  const { data: activeCases } = useCollection(casesQuery ? casesQuery : null);
 
   if (loading) {
     return (
@@ -216,7 +213,7 @@ export default function LawyerDashboard() {
             <Card className="border-none shadow-xl rounded-[2.5rem] bg-secondary text-white overflow-hidden">
               <CardHeader className="bg-white/10 p-6 border-b border-white/5">
                 <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
-                  <Users className="h-4 w-4" /> My Active Clients
+                  <User className="h-4 w-4" /> My Active Clients
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
@@ -248,7 +245,7 @@ export default function LawyerDashboard() {
             <Card className="border-none shadow-xl rounded-[2.5rem] bg-amber-50 p-8 space-y-6 border border-amber-100">
               <div className="space-y-2">
                 <h3 className="font-black text-amber-900 flex items-center gap-2">
-                  <AlertCircle className="h-5 w-5" /> Professional Duty
+                  <Clock className="h-5 w-5" /> Professional Duty
                 </h3>
                 <p className="text-xs text-amber-800/70 font-medium leading-relaxed">
                   Please update clinic results immediately after each session to maintain system-wide performance metrics.

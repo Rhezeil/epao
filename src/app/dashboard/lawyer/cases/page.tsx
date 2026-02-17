@@ -3,25 +3,17 @@
 
 import { useAuth } from "@/components/auth-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
-import { collection, query, where, orderBy, doc } from "firebase/firestore";
+import { collection, query, where, doc } from "firebase/firestore";
 import { format } from "date-fns";
 import { 
   FileText, 
   Scale, 
-  User, 
-  Calendar, 
-  Clock, 
-  ChevronRight, 
   Search,
-  Filter,
   CheckCircle2,
   AlertCircle,
-  MoreVertical,
   Settings2,
-  Trash2,
-  Edit3,
   Loader2
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +26,6 @@ import {
   DropdownMenuContent, 
   DropdownMenuItem, 
   DropdownMenuLabel, 
-  DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
@@ -47,12 +38,14 @@ export default function LawyerCasesPage() {
 
   const casesQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'lawyer') return null;
-    return query(collection(db, "cases"), where("lawyerId", "==", user.uid), orderBy("createdAt", "desc"));
+    return query(
+      collection(db, "cases"), 
+      where("lawyerId", "==", user.uid)
+    );
   }, [db, user, role]);
 
-  const { data: cases, isLoading } = useCollection(casesQuery);
+  const { data: cases, isLoading } = useCollection(casesQuery ? casesQuery : null);
 
-  // SAFE GUARD
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
