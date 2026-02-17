@@ -28,7 +28,8 @@ import {
   ArrowRightLeft,
   Settings2,
   Calendar,
-  Eye
+  Eye,
+  Edit3
 } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -62,6 +63,10 @@ export default function AdminLawyersPage() {
   const [selectedLawyer, setSelectedLawyer] = useState<any>(null);
   const [isReassignOpen, setIsReassignOpen] = useState(false);
   const [targetLawyerId, setTargetLawyerId] = useState("");
+
+  // Edit Profile State
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editLawyerData, setEditLawyerData] = useState({ specialization: "", status: "" });
 
   // Queries
   const registeredLawyersQuery = useMemoFirebase(() => {
@@ -135,7 +140,6 @@ export default function AdminLawyersPage() {
         newUserId = userCredential.user.uid;
       } catch (authError: any) {
         if (authError.code === 'auth/email-already-in-use') {
-          // If already in Auth, we still need a UID to create the firestore record
           throw authError;
         } else {
           throw authError;
@@ -181,10 +185,14 @@ export default function AdminLawyersPage() {
     setIsSubmitting(false);
   };
 
-  const updateLawyerStatus = (id: string, status: string) => {
-    if (!db) return;
-    updateDocumentNonBlocking(doc(db, "roleLawyer", id), { status });
-    toast({ title: "Status Updated", description: `Lawyer is now marked as ${status}.` });
+  const handleUpdateLawyerProfile = () => {
+    if (!db || !selectedLawyer) return;
+    setIsSubmitting(true);
+    const lawyerRef = doc(db, "roleLawyer", selectedLawyer.id);
+    updateDocumentNonBlocking(lawyerRef, editLawyerData);
+    toast({ title: "Profile Updated", description: "Lawyer details have been saved." });
+    setIsEditOpen(false);
+    setIsSubmitting(false);
   };
 
   return (
@@ -288,6 +296,14 @@ export default function AdminLawyersPage() {
                                 variant="ghost" 
                                 size="icon" 
                                 className="h-9 w-9 rounded-xl text-primary hover:bg-primary/5"
+                                onClick={() => { setSelectedLawyer(lawyer); setEditLawyerData({ specialization: lawyer.specialization, status: lawyer.status }); setIsEditOpen(true); }}
+                              >
+                                <Edit3 className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-9 w-9 rounded-xl text-primary hover:bg-primary/5"
                                 onClick={() => { setSelectedLawyer(lawyer); setIsReassignOpen(true); }}
                               >
                                 <ArrowRightLeft className="h-4 w-4" />
@@ -299,15 +315,12 @@ export default function AdminLawyersPage() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="rounded-2xl p-2 w-56">
-                                  <DropdownMenuLabel className="text-[10px] font-black uppercase text-primary/40 px-2 pb-2">Staff Controls</DropdownMenuLabel>
-                                  <DropdownMenuItem onClick={() => updateLawyerStatus(lawyer.id, "Available")} className="rounded-xl font-bold">
+                                  <DropdownMenuLabel className="text-[10px] font-black uppercase text-primary/40 px-2 pb-2">Quick Status</DropdownMenuLabel>
+                                  <DropdownMenuItem onClick={() => updateDocumentNonBlocking(doc(db, "roleLawyer", lawyer.id), { status: "Available" })} className="rounded-xl font-bold">
                                     Mark as Available
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => updateLawyerStatus(lawyer.id, "On Leave")} className="rounded-xl font-bold">
+                                  <DropdownMenuItem onClick={() => updateDocumentNonBlocking(doc(db, "roleLawyer", lawyer.id), { status: "On Leave" })} className="rounded-xl font-bold">
                                     Mark as On Leave
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => updateLawyerStatus(lawyer.id, "Fully Booked")} className="rounded-xl font-bold">
-                                    Mark as Fully Booked
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem 
@@ -385,6 +398,59 @@ export default function AdminLawyersPage() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* --- EDIT LAWYER DIALOG --- */}
+        <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+          <DialogContent className="rounded-[3rem] max-w-md p-0 overflow-hidden border-none shadow-2xl">
+            <DialogHeader className="p-8 bg-primary text-white">
+              <div className="space-y-1">
+                <DialogTitle className="text-2xl font-black">Edit Attorney Profile</DialogTitle>
+                <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">
+                  Staff Account: {selectedLawyer?.email}
+                </DialogDescription>
+              </div>
+            </DialogHeader>
+            <div className="p-10 space-y-6">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Specialization</Label>
+                <Select value={editLawyerData.specialization} onValueChange={v => setEditLawyerData({...editLawyerData, specialization: v})}>
+                  <SelectTrigger className="h-14 rounded-2xl border-primary/10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Criminal Defense">Criminal Defense</SelectItem>
+                    <SelectItem value="Civil & Property">Civil & Property</SelectItem>
+                    <SelectItem value="Labor & Employment">Labor & Employment</SelectItem>
+                    <SelectItem value="Administrative & Ethics">Administrative</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Availability Status</Label>
+                <Select value={editLawyerData.status} onValueChange={v => setEditLawyerData({...editLawyerData, status: v})}>
+                  <SelectTrigger className="h-14 rounded-2xl border-primary/10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Available">Available</SelectItem>
+                    <SelectItem value="On Leave">On Leave</SelectItem>
+                    <SelectItem value="Fully Booked">Fully Booked</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter className="p-8 bg-muted/30 gap-3">
+              <Button variant="outline" onClick={() => setIsEditOpen(false)} className="flex-1 h-14 rounded-2xl font-bold">Cancel</Button>
+              <Button 
+                onClick={handleUpdateLawyerProfile} 
+                disabled={isSubmitting} 
+                className="flex-1 h-14 rounded-2xl font-black bg-primary text-white shadow-xl"
+              >
+                {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : "Save Changes"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* --- REASSIGNMENT DIALOG --- */}
         <Dialog open={isReassignOpen} onOpenChange={setIsReassignOpen}>

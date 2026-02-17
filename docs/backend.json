@@ -32,7 +32,8 @@
         "status": { "type": "string", "enum": ["Active", "Pending", "Closed", "For Compliance"] },
         "description": { "type": "string" },
         "initialAppointmentId": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "createdAt": { "type": "string", "format": "date-time" },
+        "closedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "clientId", "lawyerId", "status"]
     },

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking, setDocumentNonBlocking, updateDocumentNonBlocking, useDoc } from "@/firebase";
@@ -31,7 +32,9 @@ import {
   MapPin,
   Phone,
   Mail,
-  Scale
+  Scale,
+  Save,
+  X
 } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -64,6 +67,7 @@ import { initializeApp, deleteApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { firebaseConfig } from "@/firebase/config";
 import { cn } from "@/lib/utils";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function AdminUsersPage() {
   const db = useFirestore();
@@ -76,6 +80,12 @@ export default function AdminUsersPage() {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Edit States
+  const [isEditingPersonal, setIsEditingPersonal] = useState(false);
+  const [isEditingCase, setIsEditingCase] = useState(false);
+  const [editProfile, setEditProfile] = useState<any>({});
+  const [editCase, setEditCase] = useState<any>({});
 
   // New Client State
   const [newClient, setNewClient] = useState({
@@ -119,10 +129,30 @@ export default function AdminUsersPage() {
     [users, selectedClientId]
   );
 
-  const selectedCase = useMemo(() => 
+  const activeCase = useMemo(() => 
     cases?.find(c => c.clientId === selectedClientId), 
     [cases, selectedClientId]
   );
+
+  useEffect(() => {
+    if (selectedProfile) {
+      setEditProfile({
+        firstName: selectedProfile.firstName || "",
+        lastName: selectedProfile.lastName || "",
+        phoneNumber: selectedProfile.phoneNumber || selectedUser?.mobileNumber || "",
+        address: selectedProfile.address || ""
+      });
+    }
+    if (activeCase) {
+      setEditCase({
+        caseType: activeCase.caseType || "",
+        description: activeCase.description || "",
+        createdAt: activeCase.createdAt || "",
+        closedAt: activeCase.closedAt || "",
+        lawyerId: activeCase.lawyerId || ""
+      });
+    }
+  }, [selectedProfile, selectedUser, activeCase]);
 
   const filteredUsers = useMemo(() => {
     if (!users) return [];
@@ -182,9 +212,40 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleSaveProfile = () => {
+    if (!db || !selectedClientId) return;
+    const ref = doc(db, "users", selectedClientId, "profile", "profile");
+    updateDocumentNonBlocking(ref, editProfile);
+    setIsEditingPersonal(false);
+    toast({ title: "Profile Saved", description: "Personal details updated successfully." });
+  };
+
+  const handleSaveCase = () => {
+    if (!db || !activeCase) return;
+    const ref = doc(db, "cases", activeCase.id);
+    updateDocumentNonBlocking(ref, editCase);
+    setIsEditingCase(false);
+    toast({ title: "Case Saved", description: "Legal Case record updated." });
+  };
+
   const handleUpdateStatus = (userId: string, newStatus: string) => {
     if (!db) return;
     updateDocumentNonBlocking(doc(db, "users", userId), { status: newStatus });
+    
+    // Also update case if it exists and we're closing it
+    const clientCase = cases?.find(c => c.clientId === userId);
+    if (clientCase && newStatus === 'Closed Case') {
+      updateDocumentNonBlocking(doc(db, "cases", clientCase.id), { 
+        status: "Closed",
+        closedAt: new Date().toISOString()
+      });
+    } else if (clientCase && newStatus === 'Active Case') {
+      updateDocumentNonBlocking(doc(db, "cases", clientCase.id), { 
+        status: "Active",
+        closedAt: null
+      });
+    }
+
     toast({ title: "Status Updated", description: `Client is now ${newStatus}.` });
   };
 
@@ -192,16 +253,6 @@ export default function AdminUsersPage() {
     if (!db || !caseId) return;
     updateDocumentNonBlocking(doc(db, "cases", caseId), { lawyerId: newLawyerId });
     toast({ title: "Attorney Reassigned", description: "The Case has been updated with the new lawyer." });
-  };
-
-  const handleLockAccount = (userId: string, locked: boolean) => {
-    if (!db) return;
-    updateDocumentNonBlocking(doc(db, "users", userId), { accountLocked: locked });
-    toast({ 
-      variant: locked ? "destructive" : "default",
-      title: locked ? "Account Locked" : "Account Unlocked", 
-      description: `Access permissions updated.` 
-    });
   };
 
   const handleDeleteUser = (userId: string) => {
@@ -329,10 +380,6 @@ export default function AdminUsersPage() {
                                   <Search className="mr-2 h-4 w-4 text-amber-600" /> Mark as Under Screening
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => handleLockAccount(client.id, !client.accountLocked)} className="rounded-xl font-bold">
-                                  <Lock className="mr-2 h-4 w-4" /> {client.accountLocked ? "Unlock Access" : "Restrict Access"}
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
                                 <DropdownMenuItem 
                                   onClick={() => handleDeleteUser(client.id)}
                                   className="text-destructive focus:text-destructive rounded-xl font-bold"
@@ -360,88 +407,8 @@ export default function AdminUsersPage() {
           </CardContent>
         </Card>
 
-        {/* --- ADD CLIENT DIALOG --- */}
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogContent className="rounded-[3rem] max-w-lg p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
-            <DialogHeader className="p-8 bg-primary text-white shrink-0">
-              <div className="flex justify-between items-center">
-                <div className="space-y-1">
-                  <DialogTitle className="text-3xl font-black tracking-tight">Register Citizen</DialogTitle>
-                  <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">Manual Intake Entry</DialogDescription>
-                </div>
-                <UserPlus className="h-10 w-10 text-white/20" />
-              </div>
-            </DialogHeader>
-            <form onSubmit={handleAddClient} className="flex-1 overflow-y-auto">
-              <div className="p-10 space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Full Legal Name</Label>
-                    <Input 
-                      placeholder="Juan Dela Cruz" 
-                      value={newClient.name} 
-                      onChange={e => setNewClient({...newClient, name: e.target.value})} 
-                      required 
-                      className="h-12 rounded-xl border-primary/10"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Mobile Number</Label>
-                    <Input 
-                      placeholder="09123456789" 
-                      value={newClient.mobile} 
-                      onChange={e => setNewClient({...newClient, mobile: e.target.value})} 
-                      required 
-                      className="h-12 rounded-xl border-primary/10"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Email (Optional)</Label>
-                    <Input 
-                      type="email" 
-                      placeholder="name@example.com" 
-                      value={newClient.email} 
-                      onChange={e => setNewClient({...newClient, email: e.target.value})} 
-                      className="h-12 rounded-xl border-primary/10"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Income Classification</Label>
-                    <Select value={newClient.income} onValueChange={v => setNewClient({...newClient, income: v})}>
-                      <SelectTrigger className="h-12 rounded-xl border-primary/10">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Indigent">Indigent (Qualified)</SelectItem>
-                        <SelectItem value="Lower Class">Lower Class</SelectItem>
-                        <SelectItem value="Middle Class">Middle Class (Evaluation Required)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Residential Address</Label>
-                  <Input 
-                    placeholder="Street, Barangay, City" 
-                    value={newClient.address} 
-                    onChange={e => setNewClient({...newClient, address: e.target.value})} 
-                    required 
-                    className="h-12 rounded-xl border-primary/10"
-                  />
-                </div>
-              </div>
-            </form>
-            <DialogFooter className="p-8 bg-muted/30 flex gap-4 shrink-0">
-              <Button variant="outline" type="button" onClick={() => setIsAddDialogOpen(false)} className="h-14 rounded-2xl font-bold flex-1">Cancel</Button>
-              <Button type="submit" disabled={isSubmitting} className="h-14 rounded-2xl font-black bg-primary text-white flex-1 shadow-xl" onClick={(e) => { e.preventDefault(); (e.currentTarget.closest('form') as any)?.requestSubmit(); }}>
-                {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : "Confirm Registration"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
         {/* --- DETAILS & PROFILE OVERLAY --- */}
-        <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+        <Dialog open={isDetailsOpen} onOpenChange={(open) => { setIsDetailsOpen(open); if(!open) { setIsEditingPersonal(false); setIsEditingCase(false); } }}>
           <DialogContent className="rounded-[3rem] max-w-2xl p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
             <DialogHeader className="p-6 md:p-8 bg-secondary text-white shrink-0">
               <div className="flex justify-between items-center">
@@ -465,64 +432,150 @@ export default function AdminUsersPage() {
                 </TabsList>
                 
                 <TabsContent value="profile" className="space-y-8 pt-6 animate-in fade-in duration-500">
+                  <div className="flex justify-between items-center">
+                    <h4 className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Contact Information</h4>
+                    {!isEditingPersonal ? (
+                      <Button variant="ghost" size="sm" onClick={() => setIsEditingPersonal(true)} className="h-8 rounded-lg text-primary">
+                        <Edit3 className="h-3 w-3 mr-1" /> Edit
+                      </Button>
+                    ) : (
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => setIsEditingPersonal(false)} className="h-8 rounded-lg text-muted-foreground">
+                          <X className="h-3 w-3 mr-1" /> Cancel
+                        </Button>
+                        <Button size="sm" onClick={handleSaveProfile} className="h-8 rounded-lg bg-primary text-white">
+                          <Save className="h-3 w-3 mr-1" /> Save
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="grid md:grid-cols-2 gap-8">
-                    <div className="space-y-4">
-                      <div className="space-y-1">
-                        <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Contact Information</Label>
-                        <p className="font-bold text-primary flex items-center gap-2">
-                          <Phone className="h-4 w-4 text-secondary" /> {selectedUser?.mobileNumber || selectedProfile?.phoneNumber || "N/A"}
-                        </p>
-                        <p className="font-bold text-primary flex items-center gap-2">
-                          <Mail className="h-4 w-4 text-secondary" /> {selectedUser?.email || "N/A"}
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Home Address</Label>
-                        <p className="text-sm font-bold text-primary flex items-start gap-2">
-                          <MapPin className="h-4 w-4 text-secondary shrink-0 mt-0.5" /> 
-                          {selectedProfile?.address || "Address not provided"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="space-y-1">
-                        <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Eligibility Status</Label>
-                        <p className="font-black text-secondary">{selectedUser?.incomeClassification || "Indigent"}</p>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">Verified Priority Rank</p>
-                      </div>
-                    </div>
+                    {isEditingPersonal ? (
+                      <>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase">First Name</Label>
+                          <Input value={editProfile.firstName} onChange={e => setEditProfile({...editProfile, firstName: e.target.value})} className="h-10 rounded-xl" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase">Last Name</Label>
+                          <Input value={editProfile.lastName} onChange={e => setEditProfile({...editProfile, lastName: e.target.value})} className="h-10 rounded-xl" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase">Mobile Number</Label>
+                          <Input value={editProfile.phoneNumber} onChange={e => setEditProfile({...editProfile, phoneNumber: e.target.value})} className="h-10 rounded-xl" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase">Home Address</Label>
+                          <Input value={editProfile.address} onChange={e => setEditProfile({...editProfile, address: e.target.value})} className="h-10 rounded-xl" />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="space-y-4">
+                          <div className="space-y-1">
+                            <p className="font-bold text-primary flex items-center gap-2">
+                              <Phone className="h-4 w-4 text-secondary" /> {selectedUser?.mobileNumber || selectedProfile?.phoneNumber || "N/A"}
+                            </p>
+                            <p className="font-bold text-primary flex items-center gap-2">
+                              <Mail className="h-4 w-4 text-secondary" /> {selectedUser?.email || "N/A"}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Home Address</Label>
+                            <p className="text-sm font-bold text-primary flex items-start gap-2">
+                              <MapPin className="h-4 w-4 text-secondary shrink-0 mt-0.5" /> 
+                              {selectedProfile?.address || "Address not provided"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="space-y-4">
+                          <div className="space-y-1">
+                            <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Eligibility Status</Label>
+                            <p className="font-black text-secondary">{selectedUser?.incomeClassification || "Indigent"}</p>
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">Verified Priority Rank</p>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </TabsContent>
 
                 <TabsContent value="case" className="space-y-8 pt-6 animate-in slide-in-from-right-4">
-                  {selectedCase ? (
+                  {activeCase ? (
                     <div className="space-y-6">
                       <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10">
-                        <div className="flex items-center gap-3 mb-4">
-                          <Scale className="h-6 w-6 text-primary" />
-                          <h4 className="font-black text-primary uppercase tracking-widest text-sm">Active Legal Case</h4>
+                        <div className="flex justify-between items-center mb-4">
+                          <div className="flex items-center gap-3">
+                            <Scale className="h-6 w-6 text-primary" />
+                            <h4 className="font-black text-primary uppercase tracking-widest text-sm">Active Legal Case</h4>
+                          </div>
+                          {!isEditingCase ? (
+                            <Button variant="ghost" size="sm" onClick={() => setIsEditingCase(true)} className="h-8 rounded-lg text-primary">
+                              <Edit3 className="h-3 w-3 mr-1" /> Edit Case
+                            </Button>
+                          ) : (
+                            <div className="flex gap-2">
+                              <Button variant="ghost" size="sm" onClick={() => setIsEditingCase(false)} className="h-8 rounded-lg text-muted-foreground">
+                                <X className="h-3 w-3 mr-1" /> Cancel
+                              </Button>
+                              <Button size="sm" onClick={handleSaveCase} className="h-8 rounded-lg bg-primary text-white">
+                                <Save className="h-3 w-3 mr-1" /> Save
+                              </Button>
+                            </div>
+                          )}
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1">
-                            <p className="text-[10px] font-black text-muted-foreground uppercase">Case ID</p>
-                            <p className="font-black text-primary tracking-tight">{selectedCase.id}</p>
+
+                        {isEditingCase ? (
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label className="text-[10px] font-black uppercase">Case Type</Label>
+                              <Input value={editCase.caseType} onChange={e => setEditCase({...editCase, caseType: e.target.value})} className="h-10 rounded-xl" />
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-[10px] font-black uppercase">Date Opened</Label>
+                              <Input type="date" value={editCase.createdAt?.split('T')[0]} onChange={e => setEditCase({...editCase, createdAt: new Date(e.target.value).toISOString()})} className="h-10 rounded-xl" />
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-[10px] font-black uppercase">Date Closed</Label>
+                              <Input type="date" value={editCase.closedAt?.split('T')[0]} onChange={e => setEditCase({...editCase, closedAt: e.target.value ? new Date(e.target.value).toISOString() : null})} className="h-10 rounded-xl" />
+                            </div>
+                            <div className="col-span-2 space-y-2">
+                              <Label className="text-[10px] font-black uppercase">Full Case Description</Label>
+                              <Textarea value={editCase.description} onChange={e => setEditCase({...editCase, description: e.target.value})} className="rounded-xl min-h-[100px]" />
+                            </div>
                           </div>
-                          <div className="space-y-1">
-                            <p className="text-[10px] font-black text-muted-foreground uppercase">Classification</p>
-                            <p className="font-black text-primary tracking-tight">{selectedCase.caseType}</p>
+                        ) : (
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                              <p className="text-[10px] font-black text-muted-foreground uppercase">Case ID</p>
+                              <p className="font-black text-primary tracking-tight">{activeCase.id}</p>
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-[10px] font-black text-muted-foreground uppercase">Classification</p>
+                              <p className="font-black text-primary tracking-tight">{activeCase.caseType}</p>
+                            </div>
+                            <div className="space-y-1 pt-2">
+                              <p className="text-[10px] font-black text-muted-foreground uppercase">Date Opened</p>
+                              <p className="text-xs font-bold text-primary">{format(new Date(activeCase.createdAt), "PPP")}</p>
+                            </div>
+                            <div className="space-y-1 pt-2">
+                              <p className="text-[10px] font-black text-muted-foreground uppercase">Date Closed</p>
+                              <p className="text-xs font-bold text-primary">{activeCase.closedAt ? format(new Date(activeCase.closedAt), "PPP") : "---"}</p>
+                            </div>
+                            <div className="col-span-2 space-y-1 pt-2">
+                              <p className="text-[10px] font-black text-muted-foreground uppercase">Description</p>
+                              <p className="text-xs font-medium text-primary/80 italic leading-relaxed">{activeCase.description}</p>
+                            </div>
                           </div>
-                          <div className="col-span-2 space-y-1 pt-2">
-                            <p className="text-[10px] font-black text-muted-foreground uppercase">Description</p>
-                            <p className="text-xs font-medium text-primary/80 italic leading-relaxed">{selectedCase.description}</p>
-                          </div>
-                        </div>
+                        )}
                       </div>
 
                       <div className="space-y-4">
                         <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Attorney Assignment</Label>
                         <Select 
-                          value={selectedCase.lawyerId} 
-                          onValueChange={(v) => handleReassignLawyer(selectedCase.id, v)}
+                          value={activeCase.lawyerId} 
+                          onValueChange={(v) => handleReassignLawyer(activeCase.id, v)}
                         >
                           <SelectTrigger className="h-14 rounded-2xl border-primary/20 bg-white font-bold shadow-sm">
                             <div className="flex items-center gap-2">

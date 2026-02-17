@@ -74,7 +74,10 @@ export default function ClientDashboard() {
                     <CardTitle className="text-xl font-bold text-primary">My Active Legal Case</CardTitle>
                   </div>
                   {activeCase && (
-                    <Badge className="bg-green-100 text-green-800 border-none font-bold px-3">
+                    <Badge className={cn(
+                      "border-none font-bold px-3",
+                      activeCase.status === 'Closed' ? 'bg-gray-100 text-gray-800' : 'bg-green-100 text-green-800'
+                    )}>
                       {activeCase.status}
                     </Badge>
                   )}
@@ -96,11 +99,19 @@ export default function ClientDashboard() {
                       </div>
                     </div>
                     <div className="space-y-4">
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest">Filing Date</p>
-                        <p className="text-lg font-black text-[#1A3B6B]">
-                          {activeCase.createdAt ? format(new Date(activeCase.createdAt), "PPP") : '---'}
-                        </p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest">Date Opened</p>
+                          <p className="text-sm font-black text-[#1A3B6B]">
+                            {activeCase.createdAt ? format(new Date(activeCase.createdAt), "PPP") : '---'}
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest">Date Closed</p>
+                          <p className="text-sm font-black text-[#1A3B6B]">
+                            {activeCase.closedAt ? format(new Date(activeCase.closedAt), "PPP") : '---'}
+                          </p>
+                        </div>
                       </div>
                       <div className="space-y-1">
                         <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest">Case Description</p>
