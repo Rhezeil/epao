@@ -266,20 +266,6 @@ export default function AdminLawyersPage() {
                 )}
               </CardContent>
             </Card>
-
-            <div className="grid md:grid-cols-2 gap-6">
-               <Card className="border-none shadow-xl rounded-3xl bg-primary text-white p-6 flex items-start gap-4">
-                  <div className="p-3 bg-white/20 rounded-2xl text-white">
-                    <Filter className="h-6 w-6" />
-                  </div>
-                  <div className="space-y-1">
-                    <h4 className="font-black text-sm">Performance Period</h4>
-                    <p className="text-xs text-white/70 font-medium leading-relaxed">
-                      Workload metrics are currently calculated based on lifetime system records. Interactive date range filters will be available in the next release.
-                    </p>
-                  </div>
-               </Card>
-            </div>
           </TabsContent>
           
           <TabsContent value="management" className="mt-8 space-y-6">
