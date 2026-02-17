@@ -2,7 +2,7 @@
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { useAuth } from "@/components/auth-provider";
-import { useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
 import { collection, query, where, doc, getDoc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -22,7 +22,8 @@ import {
   CheckCircle2,
   XCircle,
   Eye,
-  Info
+  Info,
+  Trash2
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -160,6 +161,16 @@ export default function AdminTriagePage() {
     }, 800);
   };
 
+  const handleDeleteRequest = (id: string, refCode: string) => {
+    if (!db) return;
+    deleteDocumentNonBlocking(doc(db, "appointments", id));
+    toast({
+      variant: "destructive",
+      title: "Request Deleted",
+      description: `Pending request ${refCode} has been permanently removed.`
+    });
+  };
+
   return (
     <DashboardLayout role="admin">
       <div className="space-y-8">
@@ -262,9 +273,18 @@ export default function AdminTriagePage() {
                             <Badge variant="outline" className="bg-primary/5 font-bold">{appt.caseType}</Badge>
                           </TableCell>
                           <TableCell className="text-xs font-medium text-muted-foreground">{format(new Date(appt.createdAt), "MMM dd, p")}</TableCell>
-                          <TableCell className="text-right px-8">
+                          <TableCell className="text-right px-8 flex justify-end gap-2">
                             <Button size="sm" onClick={() => { setSelectedAppt(appt); setReviewMode("assign"); }} className="rounded-xl font-black bg-primary hover:bg-primary/90 shadow-md">
                               <UserPlus className="mr-2 h-4 w-4" /> Assign Lawyer
+                            </Button>
+                            <Button 
+                              size="icon" 
+                              variant="ghost" 
+                              onClick={() => handleDeleteRequest(appt.id, appt.referenceCode)} 
+                              className="h-9 w-9 rounded-xl text-destructive hover:bg-destructive/10"
+                              title="Delete repeated booking"
+                            >
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </TableCell>
                         </TableRow>
