@@ -96,7 +96,7 @@ export default function AdminTriagePage() {
                   <TableRow>
                     <TableHead>Reference</TableHead>
                     <TableHead>Client Name</TableHead>
-                    <TableHead>Matter Type</TableHead>
+                    <TableHead>Service</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead className="text-right">Action</TableHead>
                   </TableRow>
