@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -83,13 +82,13 @@ export default function AdminLawyersPage() {
     return query(collection(db, "cases"));
   }, [db, user, role]);
 
+  const { data: registeredLawyers, isLoading: isLawyersLoading } = useCollection(registeredLawyersQuery);
+  const { data: allCases } = useCollection(casesQuery);
+
   const apptsQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'admin') return null;
     return query(collection(db, "appointments"));
   }, [db, user, role]);
-
-  const { data: registeredLawyers, isLoading: isLawyersLoading } = useCollection(registeredLawyersQuery);
-  const { data: allCases } = useCollection(casesQuery);
   const { data: allAppts } = useCollection(apptsQuery);
 
   const lawyerMetrics = useMemo(() => {
@@ -183,7 +182,7 @@ export default function AdminLawyersPage() {
   const handleSingleCaseReassign = (caseId: string, newLawyerId: string) => {
     if (!db || !caseId || !newLawyerId) return;
     updateDocumentNonBlocking(doc(db, "cases", caseId), { lawyerId: newLawyerId });
-    toast({ title: "Case Reassigned", description: "Legal matter successfully moved." });
+    toast({ title: "Case Reassigned", description: "Legal Case successfully moved." });
   };
 
   const currentLawyerCases = useMemo(() => {
@@ -255,7 +254,7 @@ export default function AdminLawyersPage() {
                           <TableCell className="px-8 py-6">
                             <div className="flex items-center gap-3">
                               <Avatar className="h-12 w-12 border-2 border-white shadow-sm">
-                                <AvatarImage src={lawyer.photoUrl} />
+                                <AvatarImage src={lawyer.photoUrl} className="object-cover" />
                                 <AvatarFallback className="bg-primary/10 text-primary font-black">
                                   {lawyer.firstName?.[0] || lawyer.email[0].toUpperCase()}
                                 </AvatarFallback>
@@ -387,8 +386,8 @@ export default function AdminLawyersPage() {
           <DialogContent className="rounded-[3rem] max-w-2xl p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
             <DialogHeader className="p-8 bg-primary text-white shrink-0">
               <div className="flex items-center gap-6">
-                <Avatar className="h-20 w-24 border-4 border-white/20 shadow-xl">
-                  <AvatarImage src={editLawyerData.photoUrl} />
+                <Avatar className="h-20 w-20 border-4 border-white/20 shadow-xl">
+                  <AvatarImage src={editLawyerData.photoUrl} className="object-cover" />
                   <AvatarFallback className="bg-white/10 text-2xl font-black text-white">
                     {editLawyerData.firstName?.[0] || "?"}
                   </AvatarFallback>
@@ -468,7 +467,7 @@ export default function AdminLawyersPage() {
                             <TableCell className="text-right px-8">
                               <Select onValueChange={(newLawyerId) => handleSingleCaseReassign(c.id, newLawyerId)}>
                                 <SelectTrigger className="h-9 w-40 rounded-lg text-[10px] font-bold">
-                                  <SelectValue placeholder="Select target" />
+                                  <SelectValue placeholder="Select Lawyer" />
                                 </SelectTrigger>
                                 <SelectContent>
                                   {lawyerMetrics.filter(l => l.id !== selectedLawyer?.id).map(l => (
