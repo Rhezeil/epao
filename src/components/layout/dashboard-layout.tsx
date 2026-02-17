@@ -54,7 +54,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     if (!user) {
       return [
         { icon: Compass, label: "Case Requirement Navigator", path: "/case-navigator" },
-        { icon: Calendar, label: "Book Consultation", path: "/book-appointment" },
+        { icon: Calendar, label: "Book an appointment", path: "/book-appointment" },
         { icon: Search, label: "Manage Booking", path: "/manage-appointment" },
         { icon: TrendingUp, label: "About LexConnect", path: "/about" },
       ];
@@ -64,7 +64,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
       return [
         { icon: LayoutDashboard, label: "Client Dashboard", path: "/dashboard/client" },
         { icon: Compass, label: "Case Requirement Navigator", path: "/case-navigator" },
-        { icon: CalendarCheck, label: "Book Follow-up", path: "/dashboard/client/book-appointment" },
+        { icon: CalendarCheck, label: "Book an appointment", path: "/dashboard/client/book-appointment" },
       ];
     }
 
@@ -200,4 +200,3 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     </SidebarProvider>
   );
 }
-
