@@ -16,20 +16,13 @@ import {
   Loader2, 
   Plus, 
   Trash2, 
-  Lock, 
   UserCheck, 
-  TrendingUp, 
   Search, 
   ArrowUpDown, 
-  Briefcase, 
-  CheckCircle2, 
-  Filter,
-  ShieldAlert,
   ArrowRightLeft,
   Settings2,
-  Calendar,
-  Eye,
-  Edit3
+  Edit3,
+  ShieldAlert
 } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -54,7 +47,7 @@ export default function AdminLawyersPage() {
   const { user, role } = useAuth();
   
   // Controls
-  const [newLawyer, setNewLawyer] = useState({ email: "", password: "", specialization: "General" });
+  const [newLawyer, setNewLawyer] = useState({ email: "", password: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "activeCases" | "appointments">("name");
@@ -66,7 +59,7 @@ export default function AdminLawyersPage() {
 
   // Edit Profile State
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [editLawyerData, setEditLawyerData] = useState({ specialization: "", status: "" });
+  const [editLawyerData, setEditLawyerData] = useState({ status: "" });
 
   // Queries
   const registeredLawyersQuery = useMemoFirebase(() => {
@@ -102,7 +95,6 @@ export default function AdminLawyersPage() {
         casesOpened: lawyerCases.length,
         casesClosed: lawyerCases.filter(c => c.status === 'Closed').length,
         activeCases: activeCount,
-        specialization: lawyer.specialization || "General Litigation",
         status: lawyer.status || "Available",
         isOverloaded: activeCount >= 5
       };
@@ -139,11 +131,7 @@ export default function AdminLawyersPage() {
         const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, newLawyer.password);
         newUserId = userCredential.user.uid;
       } catch (authError: any) {
-        if (authError.code === 'auth/email-already-in-use') {
-          throw authError;
-        } else {
-          throw authError;
-        }
+        throw authError;
       } finally {
         await deleteApp(secondaryApp);
       }
@@ -154,14 +142,13 @@ export default function AdminLawyersPage() {
           id: newUserId,
           email,
           role: "lawyer",
-          specialization: newLawyer.specialization,
           status: "Available",
           createdAt: new Date().toISOString()
         }, { merge: true });
       }
 
       toast({ title: "Lawyer Provisioned", description: `${email} is now an authorized public attorney.` });
-      setNewLawyer({ email: "", password: "", specialization: "General" });
+      setNewLawyer({ email: "", password: "" });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Failed", description: error.message });
     } finally {
@@ -263,7 +250,7 @@ export default function AdminLawyersPage() {
                               </div>
                               <div>
                                 <p className="font-black text-primary leading-none mb-1">{lawyer.email.split('@')[0]}</p>
-                                <p className="text-[9px] text-muted-foreground font-black uppercase tracking-tighter">{lawyer.specialization}</p>
+                                <p className="text-[9px] text-muted-foreground font-black uppercase tracking-tighter">Public Attorney</p>
                               </div>
                             </div>
                           </TableCell>
@@ -296,7 +283,7 @@ export default function AdminLawyersPage() {
                                 variant="ghost" 
                                 size="icon" 
                                 className="h-9 w-9 rounded-xl text-primary hover:bg-primary/5"
-                                onClick={() => { setSelectedLawyer(lawyer); setEditLawyerData({ specialization: lawyer.specialization, status: lawyer.status }); setIsEditOpen(true); }}
+                                onClick={() => { setSelectedLawyer(lawyer); setEditLawyerData({ status: lawyer.status }); setIsEditOpen(true); }}
                               >
                                 <Edit3 className="h-4 w-4" />
                               </Button>
@@ -375,20 +362,6 @@ export default function AdminLawyersPage() {
                         className="h-12 rounded-xl border-primary/20"
                       />
                     </div>
-                    <div className="space-y-2 md:col-span-2">
-                      <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Specialization Focus</Label>
-                      <Select value={newLawyer.specialization} onValueChange={v => setNewLawyer({...newLawyer, specialization: v})}>
-                        <SelectTrigger className="h-12 rounded-xl border-primary/10">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Criminal Defense">Criminal Defense</SelectItem>
-                          <SelectItem value="Civil & Property">Civil & Property</SelectItem>
-                          <SelectItem value="Labor & Employment">Labor & Employment</SelectItem>
-                          <SelectItem value="Administrative & Ethics">Administrative</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
                   </div>
                   <Button type="submit" disabled={isSubmitting} className="w-full h-14 rounded-2xl bg-primary text-white font-black text-lg shadow-xl">
                     {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Authorize Attorney Access"}
@@ -411,20 +384,6 @@ export default function AdminLawyersPage() {
               </div>
             </DialogHeader>
             <div className="p-10 space-y-6">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Specialization</Label>
-                <Select value={editLawyerData.specialization} onValueChange={v => setEditLawyerData({...editLawyerData, specialization: v})}>
-                  <SelectTrigger className="h-14 rounded-2xl border-primary/10">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Criminal Defense">Criminal Defense</SelectItem>
-                    <SelectItem value="Civil & Property">Civil & Property</SelectItem>
-                    <SelectItem value="Labor & Employment">Labor & Employment</SelectItem>
-                    <SelectItem value="Administrative & Ethics">Administrative</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Availability Status</Label>
                 <Select value={editLawyerData.status} onValueChange={v => setEditLawyerData({...editLawyerData, status: v})}>

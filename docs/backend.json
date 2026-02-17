@@ -13,7 +13,6 @@
         "status": { "type": "string", "enum": ["Active", "Inactive", "On Leave", "New Intake", "Under Screening", "Not Qualified"] },
         "profileId": { "type": "string" },
         "incomeClassification": { "type": "string" },
-        "specialization": { "type": "string" },
         "accountLocked": { "type": "boolean" },
         "forcePasswordReset": { "type": "boolean" },
         "createdAt": { "type": "string", "format": "date-time" }
