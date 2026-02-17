@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking } from "@/firebase";
@@ -42,7 +41,6 @@ export default function AdminUsersPage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold font-headline">Client Registry</h1>
-          <p className="text-muted-foreground">Manage standard client accounts in the system registry.</p>
         </div>
 
         <Card>
