@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking } from "@/firebase";
 import { useAuth } from "@/components/auth-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { collection, query, orderBy, doc } from "firebase/firestore";
-import { Shield, Briefcase, UserCircle, Loader2, MoreVertical, ShieldAlert, Trash2, UserCheck } from "lucide-react";
+import { UserCircle, Loader2, MoreVertical, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 
@@ -25,54 +25,6 @@ export default function AdminUsersPage() {
   }, [db, currentUser, currentRole]);
 
   const { data: users, isLoading } = useCollection(usersQuery);
-
-  const handlePromoteToAdmin = (userId: string, currentEmail: string) => {
-    if (!db) return;
-    
-    const userRef = doc(db, "users", userId);
-    const adminRef = doc(db, "roleAdmin", userId);
-
-    // 1. Create Admin record
-    setDocumentNonBlocking(adminRef, {
-      id: userId,
-      role: "admin",
-      email: currentEmail,
-      permission: "read/write",
-      createdAt: new Date().toISOString(),
-    }, { merge: true });
-
-    // 2. Remove from Client registry
-    deleteDocumentNonBlocking(userRef);
-
-    toast({
-      title: "User Promoted to Admin",
-      description: `${currentEmail} moved to Admin registry.`
-    });
-  };
-
-  const handlePromoteToLawyer = (userId: string, currentEmail: string) => {
-    if (!db) return;
-    
-    const userRef = doc(db, "users", userId);
-    const lawyerRef = doc(db, "roleLawyer", userId);
-
-    // 1. Create Lawyer record
-    setDocumentNonBlocking(lawyerRef, {
-      id: userId,
-      role: "lawyer",
-      email: currentEmail,
-      profileId: "profile",
-      createdAt: new Date().toISOString(),
-    }, { merge: true });
-
-    // 2. Remove from Client registry
-    deleteDocumentNonBlocking(userRef);
-
-    toast({
-      title: "User Promoted to Lawyer",
-      description: `${currentEmail} moved to Lawyer registry.`
-    });
-  };
 
   const handleDeleteUser = (userId: string) => {
     if (!db) return;
@@ -90,7 +42,7 @@ export default function AdminUsersPage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold font-headline">Client Registry</h1>
-          <p className="text-muted-foreground">Manage standard client accounts. Promoting a user moves them to specialized registries.</p>
+          <p className="text-muted-foreground">Manage standard client accounts in the system registry.</p>
         </div>
 
         <Card>
@@ -135,14 +87,6 @@ export default function AdminUsersPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handlePromoteToAdmin(user.id, user.email)}>
-                                <ShieldAlert className="mr-2 h-4 w-4" />
-                                Promote to Admin
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handlePromoteToLawyer(user.id, user.email)}>
-                                <Briefcase className="mr-2 h-4 w-4" />
-                                Promote to Lawyer
-                              </DropdownMenuItem>
                               <DropdownMenuItem 
                                 onClick={() => handleDeleteUser(user.id)}
                                 className="text-destructive focus:text-destructive"
