@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking, setDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
@@ -217,7 +216,7 @@ export default function AdminUsersPage() {
                   <TableRow>
                     <TableHead className="px-8 font-black text-[10px] uppercase tracking-widest text-primary/40">Citizen Profile</TableHead>
                     <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40">Income Rank</TableHead>
-                    <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40">Matter Status</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40">Case Status</TableHead>
                     <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40">Registration</TableHead>
                     <TableHead className="text-right px-8 font-black text-[10px] uppercase tracking-widest text-primary/40">Actions</TableHead>
                   </TableRow>
