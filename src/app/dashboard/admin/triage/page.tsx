@@ -1,3 +1,4 @@
+
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -9,21 +10,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
-  UserCheck, 
   ShieldCheck, 
-  Briefcase, 
-  Plus, 
   Loader2, 
   UserPlus, 
-  Search, 
-  FileText, 
   ClipboardCheck, 
   AlertCircle,
   CheckCircle2,
   XCircle,
   Eye,
   Info,
-  Trash2
+  Trash2,
+  Scale
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -34,6 +31,9 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { initializeApp, deleteApp } from "firebase/app";
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { firebaseConfig } from "@/firebase/config";
 
 export default function AdminTriagePage() {
   const db = useFirestore();
@@ -80,6 +80,29 @@ export default function AdminTriagePage() {
     return completedIntakes.filter(intake => !allCases.some(c => c.initialAppointmentId === intake.id));
   }, [completedIntakes, allCases]);
 
+  const handleAssignLawyer = async () => {
+    if (!db || !selectedAppt || !assignedLawyer) return;
+    setIsProcessing(true);
+
+    try {
+      const apptRef = doc(db, "appointments", selectedAppt.id);
+      updateDocumentNonBlocking(apptRef, {
+        lawyerId: assignedLawyer,
+        status: "scheduled"
+      });
+
+      toast({ 
+        title: "Lawyer Assigned", 
+        description: `Reference ${selectedAppt.referenceCode} has been scheduled.` 
+      });
+      setSelectedAppt(null);
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Error", description: e.message });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleCreateCase = async () => {
     if (!db || !selectedAppt || !assignedLawyer) return;
     setIsProcessing(true);
@@ -87,52 +110,67 @@ export default function AdminTriagePage() {
     try {
       const year = new Date().getFullYear();
       const caseId = `CASE-${year}-${Math.floor(1000 + Math.random() * 9000)}`;
-      const clientId = selectedAppt.clientId || crypto.randomUUID();
+      
+      // Determine existing or new UID
+      let clientId = selectedAppt.clientId;
+      const email = selectedAppt.guestEmail || selectedAppt.clientEmail || `${selectedAppt.guestMobile || selectedAppt.clientMobile}@epao.mobile`;
+
+      if (!clientId) {
+        // Guest conversion: Create Auth Account
+        try {
+          const secondaryApp = initializeApp(firebaseConfig, "client-reg-" + Date.now());
+          const secondaryAuth = getAuth(secondaryApp);
+          const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, "password123");
+          clientId = userCredential.user.uid;
+          await deleteApp(secondaryApp);
+        } catch (authError: any) {
+          if (authError.code !== 'auth/email-already-in-use') throw authError;
+          // If exists, we'd normally need a way to link it, but for prototype we'll proceed if we can
+        }
+      }
 
       // 1. Create Official Case Record
       const caseRef = doc(db, "cases", caseId);
       setDocumentNonBlocking(caseRef, {
         id: caseId,
-        clientId,
+        clientId: clientId || crypto.randomUUID(),
         lawyerId: assignedLawyer,
         caseType: selectedAppt.caseType,
         status: caseStatus,
         initialAppointmentId: selectedAppt.id,
-        description: `Official case initialized from triage review. Source: ${selectedAppt.referenceCode}`,
+        description: `Official case initialized from intake review. Source: ${selectedAppt.referenceCode}`,
         createdAt: new Date().toISOString()
       }, { merge: true });
 
-      // 2. Convert Guest to Registered Client if needed
-      const userRef = doc(db, "users", clientId);
-      const userSnap = await getDoc(userRef);
-      if (!userSnap.exists()) {
-        setDocumentNonBlocking(userRef, {
-          id: clientId,
-          mobileNumber: selectedAppt.guestMobile || "",
-          email: selectedAppt.guestEmail || `${selectedAppt.guestMobile}@epao.mobile`,
-          role: "client",
-          profileId: "profile",
-          createdAt: new Date().toISOString()
-        }, { merge: true });
+      // 2. Ensure User Record exists
+      const userRef = doc(db, "users", clientId || "");
+      setDocumentNonBlocking(userRef, {
+        id: clientId,
+        mobileNumber: selectedAppt.guestMobile || selectedAppt.clientMobile || "",
+        email: email,
+        role: "client",
+        profileId: "profile",
+        createdAt: new Date().toISOString()
+      }, { merge: true });
 
-        // Initialize empty profile
-        const profileRef = doc(db, "users", clientId, "profile", "profile");
-        setDocumentNonBlocking(profileRef, {
-          id: "profile",
-          firstName: selectedAppt.guestName?.split(' ')[0] || "",
-          lastName: selectedAppt.guestName?.split(' ').slice(1).join(' ') || "",
-          phoneNumber: selectedAppt.guestMobile || "",
-          createdAt: new Date().toISOString()
-        }, { merge: true });
-      }
+      // 3. Initialize/Update profile
+      const profileRef = doc(db, "users", clientId || "", "profile", "profile");
+      setDocumentNonBlocking(profileRef, {
+        id: "profile",
+        firstName: selectedAppt.guestName?.split(' ')[0] || selectedAppt.clientName?.split(' ')[0] || "",
+        lastName: selectedAppt.guestName?.split(' ').slice(1).join(' ') || selectedAppt.clientName?.split(' ').slice(1).join(' ') || "",
+        phoneNumber: selectedAppt.guestMobile || selectedAppt.clientMobile || "",
+        address: selectedAppt.guestAddress || selectedAppt.clientAddress || "",
+        createdAt: new Date().toISOString()
+      }, { merge: true });
 
       toast({ 
-        title: "Case Formally Initialized", 
-        description: `Case ${caseId} has been created and assigned to lawyer.` 
+        title: "Case Created", 
+        description: `Official record ${caseId} initialized and citizen account activated.` 
       });
       setSelectedAppt(null);
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Operation Failed", description: e.message });
+      toast({ variant: "destructive", title: "Conversion Failed", description: e.message });
     } finally {
       setIsProcessing(false);
     }
@@ -151,8 +189,8 @@ export default function AdminTriagePage() {
 
     toast({ 
       variant: "destructive",
-      title: "Intake Rejected", 
-      description: "The client has been marked as Not Eligible." 
+      title: "Intake Closed", 
+      description: "Marked as Not Eligible." 
     });
     
     setTimeout(() => {
@@ -167,7 +205,7 @@ export default function AdminTriagePage() {
     toast({
       variant: "destructive",
       title: "Request Deleted",
-      description: `Pending request ${refCode} has been permanently removed.`
+      description: `Pending appointment ${refCode} removed.`
     });
   };
 
@@ -177,7 +215,7 @@ export default function AdminTriagePage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Triage Command Center</h1>
-            <p className="text-muted-foreground font-medium">Evaluate intakes and initialize official legal records.</p>
+            <p className="text-muted-foreground font-medium">Initialize official legal records and manage lawyer assignments.</p>
           </div>
         </div>
 
@@ -187,7 +225,7 @@ export default function AdminTriagePage() {
               <ClipboardCheck className="h-4 w-4 mr-2" /> Intake Review Queue
             </TabsTrigger>
             <TabsTrigger value="pending" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
-              <Search className="h-4 w-4 mr-2" /> Assignment Queue
+              <UserPlus className="h-4 w-4 mr-2" /> Assignment Queue
             </TabsTrigger>
           </TabsList>
 
@@ -198,7 +236,7 @@ export default function AdminTriagePage() {
                 <CardTitle className="text-xl font-bold text-primary flex items-center gap-2">
                   <CheckCircle2 className="h-6 w-6" /> Completed Consultations
                 </CardTitle>
-                <CardDescription>First-time clients awaiting official case conversion.</CardDescription>
+                <CardDescription>Review visits and convert to official case files.</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 {isIntakeLoading ? <div className="flex justify-center py-20"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div> : (
@@ -207,7 +245,7 @@ export default function AdminTriagePage() {
                       <TableRow>
                         <TableHead className="px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Reference</TableHead>
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Citizen Name</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Service</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Service Category</TableHead>
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Visit Date</TableHead>
                         <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Action</TableHead>
                       </TableRow>
@@ -216,7 +254,7 @@ export default function AdminTriagePage() {
                       {triagableIntakes.map((intake) => (
                         <TableRow key={intake.id} className="hover:bg-primary/5 transition-colors group">
                           <TableCell className="px-8 font-black text-primary">{intake.referenceCode}</TableCell>
-                          <TableCell className="font-bold">{intake.guestName || "Registered Citizen"}</TableCell>
+                          <TableCell className="font-bold">{intake.guestName || intake.clientName || "Registered Citizen"}</TableCell>
                           <TableCell>
                             <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-100 font-bold">{intake.caseType}</Badge>
                           </TableCell>
@@ -248,9 +286,9 @@ export default function AdminTriagePage() {
             <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden">
               <CardHeader className="bg-amber-50/50 pb-6">
                 <CardTitle className="text-xl font-bold text-amber-900 flex items-center gap-2">
-                  <AlertCircle className="h-6 w-6" /> Pending First Visits
+                  <AlertCircle className="h-6 w-6" /> Pending Appointments
                 </CardTitle>
-                <CardDescription>New requests needing lawyer assignment for initial evaluation.</CardDescription>
+                <CardDescription>Assign lawyers to new visitor requests.</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 {isPendingLoading ? <div className="flex justify-center py-20"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div> : (
@@ -259,7 +297,7 @@ export default function AdminTriagePage() {
                       <TableRow>
                         <TableHead className="px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Reference</TableHead>
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Citizen Name</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Service</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Service Category</TableHead>
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Submission</TableHead>
                         <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Action</TableHead>
                       </TableRow>
@@ -268,7 +306,7 @@ export default function AdminTriagePage() {
                       {pendingAppointments?.map((appt) => (
                         <TableRow key={appt.id} className="hover:bg-primary/5 transition-colors group">
                           <TableCell className="px-8 font-black text-primary">{appt.referenceCode}</TableCell>
-                          <TableCell className="font-bold">{appt.guestName || "Registered Citizen"}</TableCell>
+                          <TableCell className="font-bold">{appt.guestName || appt.clientName || "Registered Citizen"}</TableCell>
                           <TableCell>
                             <Badge variant="outline" className="bg-primary/5 font-bold">{appt.caseType}</Badge>
                           </TableCell>
@@ -282,7 +320,6 @@ export default function AdminTriagePage() {
                               variant="ghost" 
                               onClick={() => handleDeleteRequest(appt.id, appt.referenceCode)} 
                               className="h-9 w-9 rounded-xl text-destructive hover:bg-destructive/10"
-                              title="Delete repeated booking"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -292,7 +329,7 @@ export default function AdminTriagePage() {
                       {(!pendingAppointments || pendingAppointments.length === 0) && (
                         <TableRow>
                           <TableCell colSpan={5} className="text-center py-20 text-muted-foreground italic font-medium">
-                            No pending visits requiring assignment.
+                            No pending appointments requiring assignment.
                           </TableCell>
                         </TableRow>
                       )}
@@ -314,10 +351,10 @@ export default function AdminTriagePage() {
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
                   <DialogTitle className="text-3xl font-black tracking-tight">
-                    {reviewMode === 'intake' ? "Intake Evaluation" : "Lawyer Assignment"}
+                    {reviewMode === 'intake' ? "Intake Review" : "Lawyer Assignment"}
                   </DialogTitle>
                   <DialogDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest">
-                    Citizen Reference: {selectedAppt?.referenceCode}
+                    Reference: {selectedAppt?.referenceCode}
                   </DialogDescription>
                 </div>
                 <div className="p-3 bg-white/20 rounded-2xl">
@@ -331,7 +368,7 @@ export default function AdminTriagePage() {
                 <div className="space-y-4">
                   <div className="space-y-1">
                     <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Citizen Profile</Label>
-                    <p className="font-black text-xl text-primary leading-none">{selectedAppt?.guestName || "Registered Account"}</p>
+                    <p className="font-black text-xl text-primary leading-none">{selectedAppt?.guestName || selectedAppt?.clientName || "Registered Account"}</p>
                     <p className="text-sm font-bold text-muted-foreground">{selectedAppt?.guestMobile || selectedAppt?.clientMobile}</p>
                   </div>
                   <div className="space-y-1">
@@ -341,7 +378,7 @@ export default function AdminTriagePage() {
                 </div>
                 <div className="space-y-4">
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Initial Visit Conducted</Label>
+                    <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Visit Logged</Label>
                     <p className="text-base font-bold text-primary">{selectedAppt?.date ? format(new Date(selectedAppt.date), "PPP") : "---"}</p>
                     <p className="text-xs font-medium text-muted-foreground">{selectedAppt?.time}</p>
                   </div>
@@ -350,10 +387,12 @@ export default function AdminTriagePage() {
 
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <Label className="text-xs font-black uppercase tracking-widest text-primary/40 ml-1">Assign Permanent Lawyer</Label>
+                  <Label className="text-xs font-black uppercase tracking-widest text-primary/40 ml-1">
+                    {reviewMode === 'intake' ? "Assign Permanent Lawyer" : "Assign Lawyer for Visit"}
+                  </Label>
                   <Select value={assignedLawyer} onValueChange={setAssignedLawyer}>
                     <SelectTrigger className="h-14 rounded-2xl border-primary/20 bg-white font-bold shadow-sm">
-                      <SelectValue placeholder="Select an authorized public attorney" />
+                      <SelectValue placeholder="Select a lawyer" />
                     </SelectTrigger>
                     <SelectContent>
                       {lawyers?.map((lawyer) => (
@@ -367,10 +406,10 @@ export default function AdminTriagePage() {
 
                 {reviewMode === 'intake' && (
                   <div className="space-y-2">
-                    <Label className="text-xs font-black uppercase tracking-widest text-primary/40 ml-1">Set Case Status</Label>
+                    <Label className="text-xs font-black uppercase tracking-widest text-primary/40 ml-1">Case Status</Label>
                     <Select value={caseStatus} onValueChange={setCaseStatus}>
                       <SelectTrigger className="h-14 rounded-2xl border-primary/20 bg-white font-bold shadow-sm">
-                        <SelectValue placeholder="Status" />
+                        <SelectValue placeholder="Initial Status" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Active">Active Case</SelectItem>
@@ -386,12 +425,12 @@ export default function AdminTriagePage() {
                 <div className="pt-6 border-t border-primary/5 space-y-4">
                   <div className="flex items-center gap-2">
                     <XCircle className="h-4 w-4 text-red-500" />
-                    <span className="text-xs font-black uppercase tracking-widest text-red-500">Not Eligible for PAO Services?</span>
+                    <span className="text-xs font-black uppercase tracking-widest text-red-500">Close without Case Creation?</span>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-bold text-muted-foreground uppercase">Reason for Rejection (Required for closing intake)</Label>
+                    <Label className="text-[10px] font-bold text-muted-foreground uppercase">Reason for Closing Intake</Label>
                     <Textarea 
-                      placeholder="e.g., Household income exceeds PAO threshold, matter not covered by PAO mandate."
+                      placeholder="e.g., Household income exceeds limit, matter not covered."
                       className="rounded-2xl border-primary/10 bg-white text-sm font-medium min-h-[100px]"
                       value={rejectionReason}
                       onChange={(e) => setRejectionReason(e.target.value)}
@@ -402,28 +441,30 @@ export default function AdminTriagePage() {
             </div>
 
             <DialogFooter className="p-8 bg-muted/30 flex gap-4">
-              <Button variant="outline" onClick={() => setSelectedAppt(null)} className="flex-1 h-14 rounded-2xl font-bold">Cancel Review</Button>
-              {reviewMode === 'intake' && (
+              <Button variant="outline" onClick={() => setSelectedAppt(null)} className="flex-1 h-14 rounded-2xl font-bold">Cancel</Button>
+              {reviewMode === 'intake' && rejectionReason && (
                 <Button 
                   variant="outline" 
-                  disabled={!rejectionReason || isProcessing}
+                  disabled={isProcessing}
                   onClick={handleRejectIntake}
                   className="flex-1 h-14 rounded-2xl font-black border-red-200 text-red-600 hover:bg-red-50"
                 >
-                  Reject intake
+                  Close Intake
                 </Button>
               )}
-              <Button 
-                onClick={handleCreateCase} 
-                disabled={!assignedLawyer || isProcessing} 
-                className={cn(
-                  "flex-1 h-14 rounded-2xl font-black text-lg shadow-xl",
-                  reviewMode === 'intake' ? "bg-secondary" : "bg-primary"
-                )}
-              >
-                {isProcessing ? <Loader2 className="animate-spin h-6 w-6" /> : <ShieldCheck className="mr-2 h-6 w-6" />}
-                {reviewMode === 'intake' ? "Create Official Case" : "Confirm Assignment"}
-              </Button>
+              {(!rejectionReason || reviewMode === 'assign') && (
+                <Button 
+                  onClick={reviewMode === 'intake' ? handleCreateCase : handleAssignLawyer} 
+                  disabled={!assignedLawyer || isProcessing} 
+                  className={cn(
+                    "flex-1 h-14 rounded-2xl font-black text-lg shadow-xl",
+                    reviewMode === 'intake' ? "bg-secondary" : "bg-primary"
+                  )}
+                >
+                  {isProcessing ? <Loader2 className="animate-spin h-6 w-6" /> : <ShieldCheck className="mr-2 h-6 w-6" />}
+                  {reviewMode === 'intake' ? "Create Case Record" : "Confirm Assignment"}
+                </Button>
+              )}
             </DialogFooter>
           </DialogContent>
         </Dialog>
