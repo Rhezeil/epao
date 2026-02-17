@@ -105,8 +105,7 @@ export default function AdminLawyersPage() {
         casesOpened: lawyerCases.length,
         casesClosed: lawyerCases.filter(c => c.status === 'Closed').length,
         activeCases: activeCount,
-        status: lawyer.status || "Available",
-        isOverloaded: activeCount >= 5
+        status: lawyer.status || "Available"
       };
     });
   }, [registeredLawyers, allCases, allAppts]);
@@ -268,13 +267,9 @@ export default function AdminLawyersPage() {
                             </div>
                           </TableCell>
                           <TableCell className="text-center">
-                            <Badge className={cn(
-                              "font-black px-3 py-1",
-                              lawyer.activeCases >= 5 ? "bg-red-500" : "bg-primary"
-                            )}>
-                              {lawyer.activeCases} / 5
+                            <Badge className="font-black px-3 py-1 bg-primary">
+                              {lawyer.activeCases} Active
                             </Badge>
-                            {lawyer.activeCases >= 5 && <p className="text-[8px] font-black text-red-600 mt-1 uppercase">Overloaded</p>}
                           </TableCell>
                           <TableCell className="text-center">
                             <div className="flex flex-col items-center">
