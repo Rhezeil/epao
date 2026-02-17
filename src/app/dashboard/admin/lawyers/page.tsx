@@ -207,7 +207,7 @@ export default function AdminLawyersPage() {
                     <TableHeader className="bg-muted/30">
                       <TableRow>
                         <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40 px-8">Lawyer Profile</TableHead>
-                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40 text-center">Appts Handled</TableHead>
+                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40 text-center">Appointments Handled</TableHead>
                         <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40 text-center">Cases Opened</TableHead>
                         <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40 text-center">Cases Closed</TableHead>
                         <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40 text-center">Active Cases</TableHead>
