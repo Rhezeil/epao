@@ -30,7 +30,6 @@ import {
   Database,
   Search,
   ShieldCheck,
-  TrendingUp,
   Clock,
   Heart,
   Gavel

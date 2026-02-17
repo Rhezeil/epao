@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -17,7 +18,7 @@
         },
         "role": {
           "type": "string",
-          "description": "The assigned role of the user (Admin, Client, or Lawyer). (Relationship: UserProfile 1:1 AdminProfile/ClientProfile/LawyerProfile)"
+          "description": "The assigned role of the user (Admin, Client, or Lawyer)."
         },
         "createdAt": {
           "type": "string",
@@ -42,348 +43,152 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "AdminProfile",
       "type": "object",
-      "description": "Stores specific profile details for users designated with the 'Admin' role in LexConnect.",
+      "description": "Stores specific profile details for administrators.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the AdminProfile entity."
+          "description": "Unique identifier (UID)."
         },
-        "userId": {
+        "email": {
+          "type": "string"
+        },
+        "role": {
           "type": "string",
-          "description": "Reference to the associated UserProfile. (Relationship: UserProfile 1:1 AdminProfile)"
+          "default": "admin"
         },
         "firstName": {
-          "type": "string",
-          "description": "The administrator's first name."
+          "type": "string"
         },
         "lastName": {
-          "type": "string",
-          "description": "The administrator's last name."
-        },
-        "contactNumber": {
-          "type": "string",
-          "description": "The administrator's contact phone number."
-        },
-        "lastLogin": {
-          "type": "string",
-          "description": "Timestamp of the administrator's last successful login.",
-          "format": "date-time"
+          "type": "string"
         }
       },
       "required": [
         "id",
-        "userId",
-        "firstName",
-        "lastName"
+        "email",
+        "role"
       ]
     },
     "ClientProfile": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "ClientProfile",
       "type": "object",
-      "description": "Stores detailed personal and case-related information for users designated with the 'Client' role. This entity includes 'Citizen Full Name' and 'contact number' as requested by the user.",
+      "description": "Stores detailed personal and case-related information for registered citizens.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the ClientProfile entity."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to the associated UserProfile. (Relationship: UserProfile 1:1 ClientProfile)"
+          "description": "Unique identifier (UID)."
         },
         "fullName": {
           "type": "string",
-          "description": "The client's full name, as requested by the user for display."
+          "description": "The citizen's full legal name."
         },
-        "contactNumber": {
+        "mobileNumber": {
           "type": "string",
-          "description": "The client's primary contact phone number, as requested by the user for display."
+          "description": "Primary contact number."
+        },
+        "email": {
+          "type": "string"
         },
         "address": {
-          "type": "string",
-          "description": "The client's physical address."
+          "type": "string"
         },
-        "dateOfBirth": {
+        "status": {
           "type": "string",
-          "description": "The client's date of birth.",
-          "format": "date"
+          "description": "Current system status (e.g., 'Active Case', 'New Intake', 'Closed Case')."
         },
-        "lastLogin": {
+        "incomeClassification": {
           "type": "string",
-          "description": "Timestamp of the client's last successful login.",
-          "format": "date-time"
-        },
-        "caseIds": {
-          "type": "array",
-          "description": "References to the legal cases associated with this client. (Relationship: ClientProfile 1:N Case)",
-          "items": {
-            "type": "string"
-          }
+          "enum": ["Indigent", "Low Income", "Not Qualified"]
         }
       },
       "required": [
         "id",
-        "userId",
         "fullName",
-        "contactNumber"
+        "mobileNumber"
       ]
     },
     "LawyerProfile": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "LawyerProfile",
       "type": "object",
-      "description": "Stores professional and contact information for users designated with the 'Lawyer' role in LexConnect.",
+      "description": "Stores professional information for PAO attorneys.",
       "properties": {
         "id": {
-          "type": "string",
-          "description": "Unique identifier for the LawyerProfile entity."
+          "type": "string"
         },
-        "userId": {
-          "type": "string",
-          "description": "Reference to the associated UserProfile. (Relationship: UserProfile 1:1 LawyerProfile)"
+        "email": {
+          "type": "string"
         },
         "firstName": {
-          "type": "string",
-          "description": "The lawyer's first name."
+          "type": "string"
         },
         "lastName": {
-          "type": "string",
-          "description": "The lawyer's last name."
+          "type": "string"
         },
-        "specialization": {
-          "type": "string",
-          "description": "The lawyer's primary area of legal specialization."
-        },
-        "barLicenseNumber": {
-          "type": "string",
-          "description": "The lawyer's unique bar association license number."
-        },
-        "contactNumber": {
-          "type": "string",
-          "description": "The lawyer's primary contact phone number."
-        },
-        "lastLogin": {
-          "type": "string",
-          "description": "Timestamp of the lawyer's last successful login.",
-          "format": "date-time"
-        },
-        "caseIds": {
-          "type": "array",
-          "description": "References to the legal cases currently handled by this lawyer. (Relationship: LawyerProfile 1:N Case)",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "required": [
-        "id",
-        "userId",
-        "firstName",
-        "lastName",
-        "specialization",
-        "barLicenseNumber"
-      ]
-    },
-    "Case": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Case",
-      "type": "object",
-      "description": "Represents a legal case within the LexConnect system, detailing its status, involved parties, and key dates.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Case entity."
-        },
-        "clientId": {
-          "type": "string",
-          "description": "Reference to the client associated with this case. (Relationship: ClientProfile 1:N Case)"
-        },
-        "assignedLawyerId": {
-          "type": "string",
-          "description": "Reference to the lawyer assigned to this case. Can be null if unassigned. (Relationship: LawyerProfile 1:N Case)"
-        },
-        "caseName": {
-          "type": "string",
-          "description": "A brief name or title for the legal case."
-        },
-        "description": {
-          "type": "string",
-          "description": "A detailed description or summary of the legal case."
+        "photoUrl": {
+          "type": "string"
         },
         "status": {
           "type": "string",
-          "description": "The current status of the case (e.g., 'New Intake', 'Active', 'Pending', 'Closed')."
-        },
-        "startDate": {
-          "type": "string",
-          "description": "The date the case was initiated or opened.",
-          "format": "date"
-        },
-        "dueDate": {
-          "type": "string",
-          "description": "An optional due date for a significant milestone or projected case closure.",
-          "format": "date"
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp when the case record was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp when the case record was last updated.",
-          "format": "date-time"
+          "enum": ["Available", "Onsite", "On Leave"]
         }
       },
       "required": [
         "id",
-        "clientId",
-        "caseName",
-        "status",
-        "startDate",
-        "createdAt",
-        "updatedAt"
+        "email"
       ]
     },
-    "AccessRule": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "AccessRule",
+    "Appointment": {
+      "title": "Appointment",
       "type": "object",
-      "description": "Defines specific access permissions for different user roles on various resources and actions within the LexConnect application.",
+      "description": "Represents a scheduled visit or intake request.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the AccessRule entity."
-        },
-        "role": {
-          "type": "string",
-          "description": "The user role to which this access rule applies (Admin, Client, Lawyer)."
-        },
-        "resource": {
-          "type": "string",
-          "description": "The name of the data entity or resource this rule governs (e.g., 'UserProfile', 'ClientProfile', 'Case')."
-        },
-        "action": {
-          "type": "string",
-          "description": "The specific action this rule permits or denies (e.g., 'read', 'write', 'create', 'delete', 'list')."
-        },
-        "permissionGranted": {
-          "type": "boolean",
-          "description": "A boolean indicating whether the specified action on the resource is permitted for the given role."
-        },
-        "description": {
-          "type": "string",
-          "description": "A natural language description of what this access rule permits."
-        }
-      },
-      "required": [
-        "id",
-        "role",
-        "resource",
-        "action",
-        "permissionGranted"
-      ]
+        "id": { "type": "string" },
+        "referenceCode": { "type": "string" },
+        "clientId": { "type": "string" },
+        "lawyerId": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "scheduled", "completed", "cancelled", "rescheduled"] },
+        "dateString": { "type": "string" },
+        "time": { "type": "string" }
+      }
     }
   },
   "auth": {
     "providers": [
-      "password",
-      "anonymous"
+      "password"
     ]
   },
   "firestore": {
     "structure": [
       {
-        "path": "/user_profiles/{userId}",
-        "definition": {
-          "entityName": "UserProfile",
-          "schema": {
-            "$ref": "#/backend/entities/UserProfile"
-          },
-          "description": "Stores core user authentication data and primary role. Secured such that only the authenticated user can access their own profile. `userId` corresponds to `request.auth.uid`."
-        }
-      },
-      {
-        "path": "/admin_profiles/{adminId}",
+        "path": "/roleAdmin/{adminId}",
         "definition": {
           "entityName": "AdminProfile",
-          "schema": {
-            "$ref": "#/backend/entities/AdminProfile"
-          },
-          "description": "Dedicated collection for admin-specific profile details. Its existence for a `userId` (`adminId`) signifies the 'Admin' role. Secured for access by the owning admin and potentially other admins for directory purposes.",
-          "params": [
-            {
-              "name": "adminId",
-              "description": "The unique ID of the administrator, corresponding to the UserProfile ID and `request.auth.uid`."
-            }
-          ]
+          "description": "Administrators with system-wide oversight."
         }
       },
       {
-        "path": "/client_profiles/{clientId}",
-        "definition": {
-          "entityName": "ClientProfile",
-          "schema": {
-            "$ref": "#/backend/entities/ClientProfile"
-          },
-          "description": "Dedicated collection for client-specific profile details, including `fullName` and `contactNumber` as requested. Its existence for a `userId` (`clientId`) signifies the 'Client' role. Secured for access by the owning client and administrators.",
-          "params": [
-            {
-              "name": "clientId",
-              "description": "The unique ID of the client, corresponding to the UserProfile ID and `request.auth.uid`."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/lawyer_profiles/{lawyerId}",
+        "path": "/roleLawyer/{lawyerId}",
         "definition": {
           "entityName": "LawyerProfile",
-          "schema": {
-            "$ref": "#/backend/entities/LawyerProfile"
-          },
-          "description": "Dedicated collection for lawyer-specific professional details. Its existence for a `userId` (`lawyerId`) signifies the 'Lawyer' role. Secured for access by the owning lawyer and administrators. Clients might have restricted read access to specific fields (e.g., name, specialization).",
-          "params": [
-            {
-              "name": "lawyerId",
-              "description": "The unique ID of the lawyer, corresponding to the UserProfile ID and `request.auth.uid`."
-            }
-          ]
+          "description": "Authorized public attorneys."
         }
       },
       {
-        "path": "/cases/{caseId}",
+        "path": "/users/{clientId}",
         "definition": {
-          "entityName": "Case",
-          "schema": {
-            "$ref": "#/backend/entities/Case"
-          },
-          "description": "Stores details for each legal case. Includes denormalized `clientId` and `assignedLawyerId` for authorization independence, allowing direct rule checks without `get()`. This enables QAPs for clients (their cases) and lawyers (their assigned cases).",
-          "params": [
-            {
-              "name": "caseId",
-              "description": "The unique ID of the legal case."
-            }
-          ]
+          "entityName": "ClientProfile",
+          "description": "Registered citizens and their case history."
         }
       },
       {
-        "path": "/access_rules/{ruleId}",
+        "path": "/appointments/{apptId}",
         "definition": {
-          "entityName": "AccessRule",
-          "schema": {
-            "$ref": "#/backend/entities/AccessRule"
-          },
-          "description": "Stores application-level access control rules. This collection is intended for administrators to manage and for the application to interpret for UI/backend logic, not for direct enforcement by Firestore security rules. Access is restricted to administrators only.",
-          "params": [
-            {
-              "name": "ruleId",
-              "description": "The unique ID for an access rule."
-            }
-          ]
+          "entityName": "Appointment",
+          "description": "Client visit logs and requests."
         }
       }
-    ],
-    "reasoning": "The Firestore structure is designed following the core principles of Authorization Independence, Structural Segregation, and DBAC (Database-Backed Access Control) to ensure secure, scalable, and debuggable rules. \n\n**Authorization Independence via Denormalization:**\n\n1.  **UserProfile, AdminProfile, ClientProfile, LawyerProfile:** Each user-specific profile (`/user_profiles/{userId}`, `/admin_profiles/{adminId}`, `/client_profiles/{clientId}`, `/lawyer_profiles/{lawyerId}`) explicitly contains its associated `userId`. This `userId` will directly correspond to `request.auth.uid`. This design eliminates the need for `get()` calls in security rules to determine the owner of a profile, as the ownership is inherent in the document path and the `userId` field itself. For instance, a rule for `client_profiles` can directly check `request.auth.uid == clientId`, ensuring atomic operations and simplifying rule logic.\n\n2.  **Case:** The `Case` entity (`/cases/{caseId}`) denormalizes its primary authorization context by including `clientId` and `assignedLawyerId` directly within each case document. This allows security rules to evaluate access based on `request.auth.uid == resource.data.clientId` or `request.auth.uid == resource.data.assignedLawyerId` without needing to perform cross-collection `get()` operations on client or lawyer profiles. This is crucial for maintaining atomic transactions and simplifying rule debugging.\n\n**Support for QAPs (Queryable Access Patterns):**\n\n1.  **User-Owned Profiles:** For `/user_profiles/{userId}`, `/admin_profiles/{adminId}`, `/client_profiles/{clientId}`, and `/lawyer_profiles/{lawyerId}`, QAPs are straightforward. A user can fetch their own profile using their UID as the document ID, e.g., `db.collection('client_profiles').doc(currentUser.uid).get()`. Administrators, based on their explicit role, can list all profiles of a certain type (e.g., all client profiles) without additional filters by checking their admin status.\n\n2.  **Cases:** The denormalization of `clientId` and `assignedLawyerId` directly supports efficient and secure `list` queries:\n    *   **Clients:** Can query `db.collection('cases').where('clientId', '==', request.auth.uid)` to retrieve all cases they are associated with. The security rules can validate this filter directly.\n    *   **Lawyers:** Can query `db.collection('cases').where('assignedLawyerId', '==', request.auth.uid)` to retrieve all cases assigned to them. Rules will similarly enforce this filter.\n    *   **Admins:** Are granted broader `list` access to the `/cases` collection without requiring specific filters, based on their authenticated role (e.g., `exists(/databases/$(database)/documents/admin_profiles/$(request.auth.uid))`).\n\n**Structural Segregation and DBAC:**\n\n*   Separate top-level collections like `/admin_profiles`, `/client_profiles`, `/lawyer_profiles` ensure homogeneous security postures. The mere existence of a document for `request.auth.uid` in these collections acts as the role definition (DBAC - Existence over Content), enabling simple role checks in rules.\n*   The `/access_rules` collection is segregated to store application-level access configurations, meant for interpretation by the application logic, not direct enforcement by Firestore security rules. This clarifies intent and prevents misuse or complexity in Firestore rules themselves.\n\nThis design prioritizes direct checks within the document data or path over expensive and non-atomic cross-document lookups, resulting in a more robust, performant, and easily auditable security model."
+    ]
   }
 }
