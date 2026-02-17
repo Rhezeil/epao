@@ -13,7 +13,10 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() && exists(/databases/$(database)/documents/roleAdmin/$(request.auth.uid));
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/roleAdmin/$(request.auth.uid)) || 
+        request.auth.token.email == "admin@epao.com"
+      );
     }
 
     function isLawyer() {
@@ -52,15 +55,14 @@ service cloud.firestore {
     // Role-based Access Control Registry
     match /roleAdmin/{userId} {
       allow get: if isOwner(userId) || isAdmin();
-      // Allow bootstrap admin (admin@epao.com) to create their own record, or existing admins to manage others
-      allow write: if isAdmin() || (isOwner(userId) && request.auth.token.email == "admin@epao.com");
+      allow write: if isAdmin();
     }
     
     match /roleLawyer/{userId} {
-      allow get: if isOwner(userId) || isAdmin();
+      // Allow everyone to see lawyer profiles (names and photos)
+      allow get: if isSignedIn();
       allow list: if true;
-      // Allow authorized lawyers (@lawyers.com) to create their own record, or admins to manage all
-      allow write: if isAdmin() || (isOwner(userId) && request.auth.token.email.matches('.*@lawyers\\.com'));
+      allow write: if isAdmin();
     }
 
     match /lawyersEmail/{email} {
@@ -72,7 +74,5 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isLawyer() || isAdmin();
     }
-
-    // Version: 2024-05-24T17:15:00Z - Fixed role management permissions for administrators
   }
 }

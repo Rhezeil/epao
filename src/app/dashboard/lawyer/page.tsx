@@ -4,7 +4,7 @@
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAuth } from "@/components/auth-provider";
-import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc } from "@/firebase";
 import { collection, query, where, orderBy, doc } from "firebase/firestore";
 import { format } from "date-fns";
 import { 
@@ -18,11 +18,19 @@ import {
   DropdownMenuTrigger, DropdownMenuSeparator 
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function LawyerDashboard() {
   const { user, role } = useAuth();
   const db = useFirestore();
   const { toast } = useToast();
+
+  const lawyerRef = useMemoFirebase(() => {
+    if (!db || !user || role !== 'lawyer') return null;
+    return doc(db, "roleLawyer", user.uid);
+  }, [db, user, role]);
+
+  const { data: lawyerData } = useDoc(lawyerRef);
 
   const apptsQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'lawyer') return null;
@@ -51,10 +59,20 @@ export default function LawyerDashboard() {
   return (
     <DashboardLayout role="lawyer">
       <div className="space-y-8">
-        <div className="flex justify-between items-end">
-          <div>
-            <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Lawyer Portal</h1>
-            <p className="text-muted-foreground font-medium">Manage your caseload and legal schedule for today.</p>
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-6">
+            <Avatar className="h-20 w-20 border-4 border-white shadow-xl">
+              <AvatarImage src={lawyerData?.photoUrl} className="object-cover" />
+              <AvatarFallback className="bg-primary/10 text-2xl font-black text-primary">
+                {lawyerData?.firstName?.[0] || user?.email?.[0]?.toUpperCase() || "?"}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h1 className="text-3xl font-black text-primary font-headline tracking-tight">
+                Welcome, Atty. {lawyerData?.lastName || user?.email?.split('@')[0]}
+              </h1>
+              <p className="text-muted-foreground font-medium">Managing your professional caseload and daily clinical schedule.</p>
+            </div>
           </div>
           <Badge className="bg-primary/10 text-primary border-none px-4 py-2 rounded-full font-bold">
             Public Attorney II

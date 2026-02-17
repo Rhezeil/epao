@@ -22,7 +22,11 @@ import {
   ArrowRightLeft,
   Settings2,
   Edit3,
-  ShieldAlert
+  ShieldAlert,
+  Camera,
+  User,
+  Scale,
+  ChevronRight
 } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -40,6 +44,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function AdminLawyersPage() {
   const db = useFirestore();
@@ -47,7 +52,7 @@ export default function AdminLawyersPage() {
   const { user, role } = useAuth();
   
   // Controls
-  const [newLawyer, setNewLawyer] = useState({ email: "", password: "" });
+  const [newLawyer, setNewLawyer] = useState({ email: "", password: "", firstName: "", lastName: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "activeCases" | "appointments">("name");
@@ -59,7 +64,13 @@ export default function AdminLawyersPage() {
 
   // Edit Profile State
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [editLawyerData, setEditLawyerData] = useState({ status: "" });
+  const [editLawyerData, setEditLawyerData] = useState({ 
+    firstName: "", 
+    lastName: "", 
+    phoneNumber: "", 
+    photoUrl: "", 
+    status: "" 
+  });
 
   // Queries
   const registeredLawyersQuery = useMemoFirebase(() => {
@@ -103,7 +114,8 @@ export default function AdminLawyersPage() {
 
   const filteredAndSortedLawyers = useMemo(() => {
     let result = lawyerMetrics.filter(l => 
-      l.email.toLowerCase().includes(searchQuery.toLowerCase())
+      l.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      `${l.firstName} ${l.lastName}`.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     if (sortBy === "activeCases") {
@@ -141,6 +153,8 @@ export default function AdminLawyersPage() {
         setDocumentNonBlocking(lawyerRef, {
           id: newUserId,
           email,
+          firstName: newLawyer.firstName,
+          lastName: newLawyer.lastName,
           role: "lawyer",
           status: "Available",
           createdAt: new Date().toISOString()
@@ -148,28 +162,12 @@ export default function AdminLawyersPage() {
       }
 
       toast({ title: "Lawyer Provisioned", description: `${email} is now an authorized public attorney.` });
-      setNewLawyer({ email: "", password: "" });
+      setNewLawyer({ email: "", password: "", firstName: "", lastName: "" });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Failed", description: error.message });
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleReassignCases = () => {
-    if (!db || !selectedLawyer || !targetLawyerId) return;
-    setIsSubmitting(true);
-
-    const casesToMove = allCases?.filter(c => c.lawyerId === selectedLawyer.id) || [];
-    casesToMove.forEach(c => {
-      updateDocumentNonBlocking(doc(db, "cases", c.id), { lawyerId: targetLawyerId });
-    });
-
-    toast({ title: "Cases Reassigned", description: `Successfully migrated ${casesToMove.length} Cases.` });
-    setIsReassignOpen(false);
-    setSelectedLawyer(null);
-    setTargetLawyerId("");
-    setIsSubmitting(false);
   };
 
   const handleUpdateLawyerProfile = () => {
@@ -182,13 +180,24 @@ export default function AdminLawyersPage() {
     setIsSubmitting(false);
   };
 
+  const handleSingleCaseReassign = (caseId: string, newLawyerId: string) => {
+    if (!db || !caseId || !newLawyerId) return;
+    updateDocumentNonBlocking(doc(db, "cases", caseId), { lawyerId: newLawyerId });
+    toast({ title: "Case Reassigned", description: "Legal matter successfully moved." });
+  };
+
+  const currentLawyerCases = useMemo(() => {
+    if (!selectedLawyer || !allCases) return [];
+    return allCases.filter(c => c.lawyerId === selectedLawyer.id && c.status === 'Active');
+  }, [selectedLawyer, allCases]);
+
   return (
     <DashboardLayout role="admin">
       <div className="space-y-8 pb-12">
         <div className="flex justify-between items-end">
           <div className="space-y-1">
             <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Lawyer Directory</h1>
-            <p className="text-muted-foreground font-medium">Manage legal staff, monitor workloads, and reassign Cases.</p>
+            <p className="text-muted-foreground font-medium">Manage staff profiles, monitor workloads, and assign photos.</p>
           </div>
         </div>
 
@@ -245,23 +254,28 @@ export default function AdminLawyersPage() {
                         <TableRow key={lawyer.id} className="hover:bg-primary/5 transition-colors group">
                           <TableCell className="px-8 py-6">
                             <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center border-2 border-white shadow-sm">
-                                <UserCheck className="h-5 w-5 text-primary" />
-                              </div>
+                              <Avatar className="h-12 w-12 border-2 border-white shadow-sm">
+                                <AvatarImage src={lawyer.photoUrl} />
+                                <AvatarFallback className="bg-primary/10 text-primary font-black">
+                                  {lawyer.firstName?.[0] || lawyer.email[0].toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
                               <div>
-                                <p className="font-black text-primary leading-none mb-1">{lawyer.email.split('@')[0]}</p>
-                                <p className="text-[9px] text-muted-foreground font-black uppercase tracking-tighter">Public Attorney</p>
+                                <p className="font-black text-primary leading-none mb-1">
+                                  {lawyer.firstName ? `${lawyer.firstName} ${lawyer.lastName}` : lawyer.email.split('@')[0]}
+                                </p>
+                                <p className="text-[9px] text-muted-foreground font-black uppercase tracking-tighter">{lawyer.email}</p>
                               </div>
                             </div>
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge className={cn(
                               "font-black px-3 py-1",
-                              lawyer.isOverloaded ? "bg-red-500" : "bg-primary"
+                              lawyer.activeCases >= 5 ? "bg-red-500" : "bg-primary"
                             )}>
                               {lawyer.activeCases} / 5
                             </Badge>
-                            {lawyer.isOverloaded && <p className="text-[8px] font-black text-red-600 mt-1 uppercase">Overloaded</p>}
+                            {lawyer.activeCases >= 5 && <p className="text-[8px] font-black text-red-600 mt-1 uppercase">Overloaded</p>}
                           </TableCell>
                           <TableCell className="text-center">
                             <div className="flex flex-col items-center">
@@ -283,17 +297,19 @@ export default function AdminLawyersPage() {
                                 variant="ghost" 
                                 size="icon" 
                                 className="h-9 w-9 rounded-xl text-primary hover:bg-primary/5"
-                                onClick={() => { setSelectedLawyer(lawyer); setEditLawyerData({ status: lawyer.status }); setIsEditOpen(true); }}
+                                onClick={() => { 
+                                  setSelectedLawyer(lawyer); 
+                                  setEditLawyerData({ 
+                                    firstName: lawyer.firstName || "",
+                                    lastName: lawyer.lastName || "",
+                                    phoneNumber: lawyer.phoneNumber || "",
+                                    photoUrl: lawyer.photoUrl || "",
+                                    status: lawyer.status 
+                                  }); 
+                                  setIsEditOpen(true); 
+                                }}
                               >
                                 <Edit3 className="h-4 w-4" />
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-9 w-9 rounded-xl text-primary hover:bg-primary/5"
-                                onClick={() => { setSelectedLawyer(lawyer); setIsReassignOpen(true); }}
-                              >
-                                <ArrowRightLeft className="h-4 w-4" />
                               </Button>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -339,28 +355,22 @@ export default function AdminLawyersPage() {
               </CardHeader>
               <CardContent className="p-10">
                 <form onSubmit={handleAuthorizeLawyer} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Work Email</Label>
-                      <Input 
-                        type="email" 
-                        value={newLawyer.email} 
-                        onChange={(e) => setNewLawyer({...newLawyer, email: e.target.value})} 
-                        required 
-                        placeholder="name@lawyers.com" 
-                        className="h-12 rounded-xl border-primary/20"
-                      />
+                      <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">First Name</Label>
+                      <Input value={newLawyer.firstName} onChange={e => setNewLawyer({...newLawyer, firstName: e.target.value})} placeholder="Juan" className="h-12 rounded-xl" />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Temporary Password</Label>
-                      <Input 
-                        type="password" 
-                        value={newLawyer.password} 
-                        onChange={(e) => setNewLawyer({...newLawyer, password: e.target.value})} 
-                        required 
-                        placeholder="Min 6 characters" 
-                        className="h-12 rounded-xl border-primary/20"
-                      />
+                      <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Last Name</Label>
+                      <Input value={newLawyer.lastName} onChange={e => setNewLawyer({...newLawyer, lastName: e.target.value})} placeholder="Dela Cruz" className="h-12 rounded-xl" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Work Email</Label>
+                      <Input type="email" value={newLawyer.email} onChange={(e) => setNewLawyer({...newLawyer, email: e.target.value})} required placeholder="name@lawyers.com" className="h-12 rounded-xl" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Temp Password</Label>
+                      <Input type="password" value={newLawyer.password} onChange={(e) => setNewLawyer({...newLawyer, password: e.target.value})} required placeholder="Min 6 chars" className="h-12 rounded-xl" />
                     </div>
                   </div>
                   <Button type="submit" disabled={isSubmitting} className="w-full h-14 rounded-2xl bg-primary text-white font-black text-lg shadow-xl">
@@ -374,85 +384,122 @@ export default function AdminLawyersPage() {
 
         {/* --- EDIT LAWYER DIALOG --- */}
         <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-          <DialogContent className="rounded-[3rem] max-w-md p-0 overflow-hidden border-none shadow-2xl">
-            <DialogHeader className="p-8 bg-primary text-white">
-              <div className="space-y-1">
-                <DialogTitle className="text-2xl font-black">Edit Attorney Profile</DialogTitle>
-                <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">
-                  Staff Account: {selectedLawyer?.email}
-                </DialogDescription>
+          <DialogContent className="rounded-[3rem] max-w-2xl p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
+            <DialogHeader className="p-8 bg-primary text-white shrink-0">
+              <div className="flex items-center gap-6">
+                <Avatar className="h-20 w-24 border-4 border-white/20 shadow-xl">
+                  <AvatarImage src={editLawyerData.photoUrl} />
+                  <AvatarFallback className="bg-white/10 text-2xl font-black text-white">
+                    {editLawyerData.firstName?.[0] || "?"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="space-y-1">
+                  <DialogTitle className="text-3xl font-black">Edit Attorney Profile</DialogTitle>
+                  <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">
+                    Staff Account: {selectedLawyer?.email}
+                  </DialogDescription>
+                </div>
               </div>
             </DialogHeader>
-            <div className="p-10 space-y-6">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Availability Status</Label>
-                <Select value={editLawyerData.status} onValueChange={v => setEditLawyerData({...editLawyerData, status: v})}>
-                  <SelectTrigger className="h-14 rounded-2xl border-primary/10">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Available">Available</SelectItem>
-                    <SelectItem value="On Leave">On Leave</SelectItem>
-                    <SelectItem value="Fully Booked">Fully Booked</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="flex-1 overflow-y-auto">
+              <Tabs defaultValue="profile" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1 rounded-none h-14">
+                  <TabsTrigger value="profile" className="rounded-none font-bold">Personal Details</TabsTrigger>
+                  <TabsTrigger value="cases" className="rounded-none font-bold">Assigned Cases ({currentLawyerCases.length})</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="profile" className="p-10 space-y-6">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">First Name</Label>
+                      <Input value={editLawyerData.firstName} onChange={e => setEditLawyerData({...editLawyerData, firstName: e.target.value})} className="h-12 rounded-xl" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Last Name</Label>
+                      <Input value={editLawyerData.lastName} onChange={e => setEditLawyerData({...editLawyerData, lastName: e.target.value})} className="h-12 rounded-xl" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Contact Number</Label>
+                      <Input value={editLawyerData.phoneNumber} onChange={e => setEditLawyerData({...editLawyerData, phoneNumber: e.target.value})} className="h-12 rounded-xl" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Availability Status</Label>
+                      <Select value={editLawyerData.status} onValueChange={v => setEditLawyerData({...editLawyerData, status: v})}>
+                        <SelectTrigger className="h-12 rounded-xl">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Available">Available</SelectItem>
+                          <SelectItem value="On Leave">On Leave</SelectItem>
+                          <SelectItem value="Fully Booked">Fully Booked</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="col-span-2 space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-primary/40 ml-1 flex items-center gap-2">
+                        <Camera className="h-3 w-3" /> Profile Photo URL
+                      </Label>
+                      <Input 
+                        placeholder="https://images.unsplash.com/photo-..." 
+                        value={editLawyerData.photoUrl} 
+                        onChange={e => setEditLawyerData({...editLawyerData, photoUrl: e.target.value})} 
+                        className="h-12 rounded-xl"
+                      />
+                      <p className="text-[9px] text-muted-foreground italic ml-1">Paste a public image URL to update the lawyer's professional portrait.</p>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="cases" className="p-0">
+                  {currentLawyerCases.length > 0 ? (
+                    <Table>
+                      <TableHeader className="bg-muted/30">
+                        <TableRow>
+                          <TableHead className="px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Case ID</TableHead>
+                          <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Type</TableHead>
+                          <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Reassign To</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {currentLawyerCases.map(c => (
+                          <TableRow key={c.id}>
+                            <TableCell className="px-8 font-black text-primary">{c.id}</TableCell>
+                            <TableCell className="text-xs font-bold">{c.caseType}</TableCell>
+                            <TableCell className="text-right px-8">
+                              <Select onValueChange={(newLawyerId) => handleSingleCaseReassign(c.id, newLawyerId)}>
+                                <SelectTrigger className="h-9 w-40 rounded-lg text-[10px] font-bold">
+                                  <SelectValue placeholder="Select target" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {lawyerMetrics.filter(l => l.id !== selectedLawyer?.id).map(l => (
+                                    <SelectItem key={l.id} value={l.id} className="text-xs font-bold">
+                                      {l.firstName || l.email.split('@')[0]}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <div className="p-20 text-center space-y-4">
+                      <Scale className="h-12 w-12 text-primary/10 mx-auto" />
+                      <p className="text-sm font-bold text-muted-foreground">This lawyer has no active legal Cases assigned.</p>
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
             </div>
-            <DialogFooter className="p-8 bg-muted/30 gap-3">
+            <DialogFooter className="p-8 bg-muted/30 gap-3 shrink-0">
               <Button variant="outline" onClick={() => setIsEditOpen(false)} className="flex-1 h-14 rounded-2xl font-bold">Cancel</Button>
               <Button 
                 onClick={handleUpdateLawyerProfile} 
                 disabled={isSubmitting} 
                 className="flex-1 h-14 rounded-2xl font-black bg-primary text-white shadow-xl"
               >
-                {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : "Save Changes"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* --- REASSIGNMENT DIALOG --- */}
-        <Dialog open={isReassignOpen} onOpenChange={setIsReassignOpen}>
-          <DialogContent className="rounded-[3rem] max-w-md p-0 overflow-hidden border-none shadow-2xl">
-            <DialogHeader className="p-8 bg-secondary text-white">
-              <div className="space-y-1">
-                <DialogTitle className="text-2xl font-black">Reassign Caseload</DialogTitle>
-                <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">
-                  Balancing Active Cases for {selectedLawyer?.email?.split('@')[0]}
-                </DialogDescription>
-              </div>
-            </DialogHeader>
-            <div className="p-10 space-y-6">
-              <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100 flex gap-3">
-                <ShieldAlert className="h-5 w-5 text-amber-600 shrink-0" />
-                <p className="text-xs text-amber-900 font-bold leading-relaxed">
-                  You are about to migrate all {selectedLawyer?.activeCases} active Cases to a new attorney. This action cannot be undone.
-                </p>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Target Attorney</Label>
-                <Select value={targetLawyerId} onValueChange={setTargetLawyerId}>
-                  <SelectTrigger className="h-14 rounded-2xl border-primary/10">
-                    <SelectValue placeholder="Select receiving attorney" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {lawyerMetrics.filter(l => l.id !== selectedLawyer?.id).map(l => (
-                      <SelectItem key={l.id} value={l.id} className="font-bold">
-                        {l.email.split('@')[0]} ({l.activeCases}/5 Cases)
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter className="p-8 bg-muted/30 gap-3">
-              <Button variant="outline" onClick={() => setIsReassignOpen(false)} className="flex-1 h-14 rounded-2xl font-bold">Cancel</Button>
-              <Button 
-                onClick={handleReassignCases} 
-                disabled={!targetLawyerId || isSubmitting} 
-                className="flex-1 h-14 rounded-2xl font-black bg-secondary text-white shadow-xl"
-              >
-                {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : "Confirm Migration"}
+                {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : "Save Profile Changes"}
               </Button>
             </DialogFooter>
           </DialogContent>

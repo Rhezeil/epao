@@ -5,13 +5,15 @@ import { useAuth } from "@/components/auth-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, where, doc, getDoc } from "firebase/firestore";
+import { collection, query, where, doc, onSnapshot } from "firebase/firestore";
 import { Briefcase, Calendar, FileText, User, ChevronRight, Gavel, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function ClientDashboard() {
   const { user, role } = useAuth();
@@ -38,14 +40,14 @@ export default function ClientDashboard() {
   const activeCase = cases?.[0];
 
   useEffect(() => {
-    async function fetchLawyer() {
-      if (activeCase?.lawyerId && db && role === 'client') {
-        const lawyerRef = doc(db, "roleLawyer", activeCase.lawyerId);
-        const snap = await getDoc(lawyerRef);
+    let unsub = () => {};
+    if (activeCase?.lawyerId && db && role === 'client') {
+      const lawyerRef = doc(db, "roleLawyer", activeCase.lawyerId);
+      unsub = onSnapshot(lawyerRef, (snap) => {
         if (snap.exists()) setAssignedLawyer(snap.data());
-      }
+      });
     }
-    fetchLawyer();
+    return () => unsub();
   }, [activeCase, db, role]);
 
   return (
@@ -162,19 +164,24 @@ export default function ClientDashboard() {
           <div className="space-y-8">
             {/* Assigned Lawyer Card */}
             <Card className="border-none shadow-xl bg-[#F0F4F8] rounded-[2.5rem] overflow-hidden">
-              <CardHeader className="bg-primary p-6 text-white">
+              <CardHeader className="bg-primary p-6 text-white text-center">
                 <CardTitle className="text-sm font-black uppercase tracking-widest">Assigned Public Attorney</CardTitle>
               </CardHeader>
               <CardContent className="p-8 space-y-6">
                 {assignedLawyer ? (
                   <>
-                    <div className="flex items-center gap-4">
-                      <div className="h-16 w-16 rounded-full bg-white border-4 border-white shadow-lg flex items-center justify-center overflow-hidden">
-                        <User className="h-10 w-10 text-primary/20" />
-                      </div>
-                      <div>
-                        <p className="text-lg font-black text-[#1A3B6B]">{assignedLawyer.email.split('@')[0]}</p>
-                        <Badge className="bg-primary/10 text-primary border-none font-bold uppercase text-[9px]">Public Attorney II</Badge>
+                    <div className="flex flex-col items-center gap-4">
+                      <Avatar className="h-32 w-32 border-4 border-white shadow-xl">
+                        <AvatarImage src={assignedLawyer.photoUrl} className="object-cover" />
+                        <AvatarFallback className="bg-primary/10 text-4xl font-black text-primary">
+                          {assignedLawyer.firstName?.[0] || "?"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="text-center">
+                        <p className="text-xl font-black text-[#1A3B6B]">
+                          {assignedLawyer.firstName ? `${assignedLawyer.firstName} ${assignedLawyer.lastName}` : assignedLawyer.email.split('@')[0]}
+                        </p>
+                        <Badge className="bg-primary/10 text-primary border-none font-bold uppercase text-[9px] mt-1">Public Attorney II</Badge>
                       </div>
                     </div>
                     <div className="space-y-3 pt-4 border-t border-primary/10">
