@@ -286,7 +286,7 @@ export default function AdminTriagePage() {
 
         {/* --- DYNAMIC TRIAGE DIALOG --- */}
         <Dialog open={!!selectedAppt} onOpenChange={() => { setSelectedAppt(null); setRejectionReason(""); }}>
-          <DialogContent className="rounded-[3rem] max-w-2xl p-0 overflow-hidden border-none shadow-2xl">
+          <DialogContent className="rounded-[3rem] max-w-lg p-0 overflow-hidden border-none shadow-2xl">
             <DialogHeader className={cn(
               "p-8 text-white",
               reviewMode === 'intake' ? "bg-secondary" : "bg-primary"
