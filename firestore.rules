@@ -47,22 +47,22 @@ service cloud.firestore {
     }
 
     match /appointments/{apptId} {
-      // SPLIT LIST RULES: Crucial for Firestore Query Guarantee
+      // SPLIT LIST RULES: Optimized for Firestore Query Guarantee
       
       // 1. Admins: Strategic oversight
       allow list: if isAdmin();
       
-      // 2. Clients: Personal schedule lookup. Query MUST use where("clientId", "==", auth.uid)
+      // 2. Clients: Personal schedule lookup. Query: where("clientId", "==", auth.uid)
       allow list: if isSignedIn() && resource.data.clientId == request.auth.uid;
       
-      // 3. Lawyers: Professional schedule lookup. Query MUST use where("lawyerId", "==", auth.uid)
+      // 3. Lawyers: Professional schedule lookup. Query: where("lawyerId", "==", auth.uid)
       allow list: if isSignedIn() && resource.data.lawyerId == request.auth.uid;
       
-      // 4. Public/Guest: Lookup by reference code. Query MUST use where("referenceCode", "==", code)
+      // 4. Public/Guest: Lookup by reference code. Query: where("referenceCode", "==", code)
       allow list: if resource.data.referenceCode != null;
       
       // Individual document access (GET)
-      allow get: if isAdmin() || 
+      allow get: if isAdmin() || isLawyer() ||
                     (isSignedIn() && (resource.data.clientId == request.auth.uid || resource.data.lawyerId == request.auth.uid)) ||
                     (resource.data.referenceCode != null);
       
