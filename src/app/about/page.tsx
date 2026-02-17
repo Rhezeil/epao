@@ -89,7 +89,7 @@ export default function AboutPage() {
             <h3 className="text-xl font-bold">Need Legal Assistance?</h3>
             <p className="text-sm text-primary-foreground/80 max-w-lg mx-auto">
               If you are an indigent citizen in need of legal representation or advice, 
-              please use our Navigator to check your requirements and book a consultation today.
+              please use our Case Requirement Navigator to check your requirements and book a consultation today.
             </p>
           </CardContent>
         </Card>
@@ -97,3 +97,4 @@ export default function AboutPage() {
     </DashboardLayout>
   );
 }
+

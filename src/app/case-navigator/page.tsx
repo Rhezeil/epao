@@ -323,7 +323,7 @@ function CaseNavigatorContent() {
             <Compass className="h-12 w-12 text-primary" />
           </div>
           <h1 className="text-3xl md:text-4xl font-black font-headline text-primary tracking-tight leading-tight">
-            Legal Navigator
+            Case Requirement Navigator
           </h1>
           <p className="text-sm text-muted-foreground font-semibold leading-relaxed max-w-2xl mx-auto">
             Find required documents and process flows for legal matters in the Philippines.
@@ -440,3 +440,4 @@ export default function CaseNavigatorPage() {
     </Suspense>
   );
 }
+

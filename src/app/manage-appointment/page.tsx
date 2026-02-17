@@ -112,7 +112,7 @@ export default function ManageAppointmentPage() {
               <div className="p-6 bg-[#F0F4F8] rounded-3xl space-y-3">
                 <h4 className="text-xs font-black text-primary/60 uppercase tracking-widest">Important Reminder</h4>
                 <p className="text-sm text-[#1A3B6B] font-medium leading-relaxed">
-                  Please arrive 15 minutes before your scheduled time. Bring all required documents found in the Legal Navigator.
+                  Please arrive 15 minutes before your scheduled time. Bring all required documents found in the Case Requirement Navigator.
                 </p>
               </div>
 
@@ -132,3 +132,4 @@ export default function ManageAppointmentPage() {
     </DashboardLayout>
   );
 }
+
