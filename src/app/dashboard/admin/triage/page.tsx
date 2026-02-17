@@ -177,7 +177,7 @@ export default function AdminTriagePage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Triage Command Center</h1>
-            <p className="text-muted-foreground font-medium">Evaluate intakes, verify eligibility, and initialize official legal records.</p>
+            <p className="text-muted-foreground font-medium">Evaluate intakes and initialize official legal records.</p>
           </div>
         </div>
 
