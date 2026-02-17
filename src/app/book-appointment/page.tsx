@@ -20,7 +20,8 @@ import { useToast } from "@/hooks/use-toast";
 // Statutory Holidays Logic
 const HOLIDAYS = [
   "2024-01-01", "2024-04-09", "2024-05-01", "2024-06-12", "2024-08-26",
-  "2024-11-01", "2024-11-30", "2024-12-25", "2024-12-30", "2025-01-01",
+  "2024-11-01", "2024-11-30", "2024-12-25", "2024-12-30", 
+  "2025-01-01", "2025-02-25", "2025-04-17", "2025-04-18", "2025-05-01"
 ];
 
 const isHoliday = (date: Date) => {
@@ -40,7 +41,7 @@ function BookAppointmentContent() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string>("");
-  const [purpose, setPurpose] = useState("consultation");
+  const [purpose, setPurpose] = useState(fromNavigator ? "consultation" : "consultation");
   const [guestInfo, setGuestInfo] = useState({ name: "", mobile: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [refCode, setRefCode] = useState<string | null>(null);
@@ -65,13 +66,16 @@ function BookAppointmentContent() {
 
   const timeSlots = useMemo(() => {
     const slots = [];
-    const startHour = 8;
-    const endHour = 17;
     const now = new Date();
 
-    for (let h = startHour; h < endHour; h++) {
+    // Generate 8 AM to 5 PM
+    for (let h = 8; h <= 16; h++) {
       for (let m = 0; m < 60; m += 30) {
+        // Skip lunch break: 12:00 PM - 1:00 PM
         if (h === 12) continue;
+        
+        // Stop at 4:30 PM (last slot is 4:30 - 5:00)
+        if (h === 16 && m > 30) continue;
 
         const ampm = h >= 12 ? 'PM' : 'AM';
         const displayHour = h % 12 || 12;
@@ -293,7 +297,7 @@ function BookAppointmentContent() {
                   </div>
                   <div className="flex justify-between items-center text-sm font-bold text-[#1A3B6B]">
                     <span>Time Slot:</span>
-                    <span className="px-3 py-1 bg-yellow-400 rounded-lg">{selectedTime}</span>
+                    <span className="px-3 py-1 bg-yellow-400 rounded-lg font-bold">{selectedTime}</span>
                   </div>
                   <div className="flex justify-between items-center text-sm font-bold text-[#1A3B6B]">
                     <span>Service:</span>

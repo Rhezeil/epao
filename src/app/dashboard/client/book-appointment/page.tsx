@@ -20,7 +20,8 @@ import { useToast } from "@/hooks/use-toast";
 
 const HOLIDAYS = [
   "2024-01-01", "2024-04-09", "2024-05-01", "2024-06-12", "2024-08-26",
-  "2024-11-01", "2024-11-30", "2024-12-25", "2024-12-30", "2025-01-01"
+  "2024-11-01", "2024-11-30", "2024-12-25", "2024-12-30", 
+  "2025-01-01", "2025-02-25", "2025-04-17", "2025-04-18", "2025-05-01"
 ];
 
 const isHoliday = (date: Date) => {
@@ -65,13 +66,12 @@ function BookAppointmentContent() {
 
   const timeSlots = useMemo(() => {
     const slots = [];
-    const startHour = 8;
-    const endHour = 17;
     const now = new Date();
 
-    for (let h = startHour; h < endHour; h++) {
+    for (let h = 8; h <= 16; h++) {
       for (let m = 0; m < 60; m += 30) {
         if (h === 12) continue;
+        if (h === 16 && m > 30) continue;
 
         const ampm = h >= 12 ? 'PM' : 'AM';
         const displayHour = h % 12 || 12;
