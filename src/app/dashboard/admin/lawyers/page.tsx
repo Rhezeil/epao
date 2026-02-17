@@ -365,19 +365,6 @@ export default function AdminLawyersPage() {
                       <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Contact Number</Label>
                       <Input value={editLawyerData.phoneNumber} onChange={e => setEditLawyerData({...editLawyerData, phoneNumber: e.target.value})} className="h-12 rounded-xl" />
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Availability Status</Label>
-                      <Select value={editLawyerData.status} onValueChange={v => setEditLawyerData({...editLawyerData, status: v})}>
-                        <SelectTrigger className="h-12 rounded-xl">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Available">Available</SelectItem>
-                          <SelectItem value="Onsite">Onsite</SelectItem>
-                          <SelectItem value="On Leave">On Leave</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
                     <div className="col-span-2 space-y-2">
                       <Label className="text-[10px] font-black uppercase text-primary/40 ml-1 flex items-center gap-2">
                         <Camera className="h-3 w-3" /> Profile Photo URL
