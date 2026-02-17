@@ -242,7 +242,6 @@ export default function AdminLawyersPage() {
                       <TableRow>
                         <TableHead className="px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Attorney</TableHead>
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Workload</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Efficiency</TableHead>
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Status</TableHead>
                         <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Actions</TableHead>
                       </TableRow>
@@ -270,12 +269,6 @@ export default function AdminLawyersPage() {
                             <Badge className="font-black px-3 py-1 bg-primary">
                               {lawyer.activeCases} Active
                             </Badge>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <div className="flex flex-col items-center">
-                              <span className="text-xs font-black text-primary">{lawyer.casesClosed}</span>
-                              <span className="text-[8px] font-bold text-muted-foreground uppercase">Closed Cases</span>
-                            </div>
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge variant="outline" className={cn(
