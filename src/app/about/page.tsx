@@ -14,7 +14,7 @@ export default function AboutPage() {
       <div className="max-w-4xl mx-auto space-y-12 py-8">
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-black text-primary font-headline tracking-tight">
-            About LexConnect
+            About Us
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Empowering every Filipino with accessible, transparent, and efficient legal support services.
@@ -97,4 +97,3 @@ export default function AboutPage() {
     </DashboardLayout>
   );
 }
-
