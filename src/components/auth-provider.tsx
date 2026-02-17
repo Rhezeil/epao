@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
@@ -51,8 +50,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (firebaseUser) {
         setLoading(true);
         
-        // Listen to Admin Role
-        unsubAdmin = onSnapshot(doc(db, "roleAdmin", firebaseUser.uid), (docSnap) => {
+        // Listen to Admin Role (pointing to 'admins' collection)
+        unsubAdmin = onSnapshot(doc(db, "admins", firebaseUser.uid), (docSnap) => {
           if (docSnap.exists()) {
             setRole("admin");
             setLoading(false);
@@ -72,17 +71,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   }
                   setLoading(false);
                 }, (err) => {
-                   console.error("User listener error", err);
                    setLoading(false);
                 });
               }
             }, (err) => {
-               console.error("Lawyer listener error", err);
                setLoading(false);
             });
           }
         }, (err) => {
-           console.error("Admin listener error", err);
            setLoading(false);
         });
       } else {
@@ -101,18 +97,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Redirect Logic with Path Preservation
   useEffect(() => {
-    // Added /book-appointment and /manage-appointment to public paths
     const publicPaths = ["/login", "/register", "/", "/case-navigator", "/about", "/book-appointment", "/manage-appointment"];
     
     if (!loading) {
       if (!user && !publicPaths.includes(pathname)) {
-        // Construct full current path with search params for redirect
         const currentParams = searchParams.toString();
         const fullPath = currentParams ? `${pathname}?${currentParams}` : pathname;
         const encodedRedirect = encodeURIComponent(fullPath);
         router.push(`/login?redirect=${encodedRedirect}`);
       } else if (user && role && (pathname === "/login" || pathname === "/register")) {
-        // After login, if there is a redirect param, the LoginPage handles it. 
         const redirectParam = searchParams.get('redirect');
         if (!redirectParam) {
           router.push(`/dashboard/${role}`);

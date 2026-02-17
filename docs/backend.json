@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "UserProfile": {
@@ -162,7 +161,7 @@
   "firestore": {
     "structure": [
       {
-        "path": "/roleAdmin/{adminId}",
+        "path": "/admins/{adminId}",
         "definition": {
           "entityName": "AdminProfile",
           "description": "Administrators with system-wide oversight."

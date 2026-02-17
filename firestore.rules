@@ -1,4 +1,3 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -10,21 +9,66 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      // Points to roleAdmin per the established project structure and login logic
-      return isSignedIn() && exists(/databases/$(database)/documents/roleAdmin/$(request.auth.uid));
+      // Updated to match the requested 'admins' collection path
+      return exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
     function isLawyer() {
-      return isSignedIn() && exists(/databases/$(database)/documents/roleLawyer/$(request.auth.uid));
+      return exists(/databases/$(database)/documents/roleLawyer/$(request.auth.uid));
     }
 
     function isClient() {
-      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
     }
 
-    // ===== ROLE & USER COLLECTIONS =====
+    // ===== APPOINTMENTS =====
 
-    match /roleAdmin/{adminId} {
+    match /appointments/{apptId} {
+      // Admin: Full oversight
+      allow read, write, delete: if isAdmin();
+
+      // Role-Based List/Get (Strictly matching query filters)
+      allow read: if (isSignedIn() &&
+           (resource.data.lawyerId == request.auth.uid
+            || resource.data.clientId == request.auth.uid));
+
+      // Public: Allowed to lookup by code (Supported by code logic)
+      allow list: if resource.data.referenceCode != null;
+      allow get: if resource.data.referenceCode != null;
+
+      // CREATE appointment (booking allowed)
+      allow create: if true;
+
+      // UPDATE (lawyer or client)
+      allow update: if (isSignedIn() &&
+           (resource.data.lawyerId == request.auth.uid
+            || resource.data.clientId == request.auth.uid));
+    }
+
+    // ===== CASES =====
+
+    match /cases/{caseId} {
+      allow list: if isAdmin() || (isSignedIn() && (resource.data.lawyerId == request.auth.uid || resource.data.clientId == request.auth.uid));
+      allow get: if isAdmin() || (isSignedIn() && (resource.data.lawyerId == request.auth.uid || resource.data.clientId == request.auth.uid));
+      allow create: if isAdmin();
+      allow update: if isAdmin() || (isSignedIn() && resource.data.lawyerId == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    // ===== USER REGISTRY =====
+
+    match /users/{userId} {
+      allow get: if isAdmin() || isLawyer() || (isSignedIn() && request.auth.uid == userId);
+      allow list: if isAdmin();
+      allow create: if isSignedIn();
+      allow update: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+      
+      match /profile/{profileId} {
+        allow read, write: if isAdmin() || isLawyer() || (isSignedIn() && request.auth.uid == userId);
+      }
+    }
+
+    match /admins/{adminId} {
       allow read, write: if isSignedIn() && (request.auth.uid == adminId || isAdmin());
     }
 
@@ -32,74 +76,6 @@ service cloud.firestore {
       allow get: if isSignedIn();
       allow list: if isAdmin();
       allow write: if isAdmin() || (isSignedIn() && request.auth.uid == lawyerId);
-    }
-
-    match /users/{userId} {
-      allow get: if isAdmin() || isLawyer() || (isSignedIn() && request.auth.uid == userId);
-      allow list: if isAdmin();
-      
-      allow create: if isSignedIn();
-      allow update: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
-      allow delete: if isAdmin();
-
-      match /profile/{profileId} {
-        allow read, write: if isAdmin() || isLawyer() || (isSignedIn() && request.auth.uid == userId);
-      }
-    }
-
-    // ===== APPOINTMENTS =====
-
-    match /appointments/{apptId} {
-      // ADMIN: Full oversight
-      allow list: if isAdmin();
-
-      // LAWYER: Allowed to list their assigned consultations
-      allow list: if isSignedIn() && resource.data.lawyerId == request.auth.uid;
-
-      // CLIENT: Allowed to list their own bookings
-      allow list: if isSignedIn() && resource.data.clientId == request.auth.uid;
-
-      // PUBLIC LOOKUP: Allows the Manage Booking page to query by reference code
-      allow list: if resource.data.referenceCode != null;
-
-      // AVAILABILITY CHECK: Allows guest booking calendar to check dates
-      allow list: if resource.data.dateString != null;
-
-      // GET single document
-      allow get: if isAdmin() || isLawyer() ||
-        (isSignedIn() && (resource.data.lawyerId == request.auth.uid || resource.data.clientId == request.auth.uid)) ||
-        (resource.data.referenceCode != null);
-
-      // CREATE appointment (Public and registered booking allowed)
-      allow create: if true;
-
-      // UPDATE (Staff or Citizen)
-      allow update: if isAdmin() || (isSignedIn() &&
-        (
-          resource.data.lawyerId == request.auth.uid ||
-          resource.data.clientId == request.auth.uid
-        ));
-      
-      allow delete: if isAdmin();
-    }
-
-    // ===== CASES =====
-
-    match /cases/{caseId} {
-      // ADMIN: Full access
-      allow list: if isAdmin();
-
-      // LAWYER: Filtered clinical view
-      allow list: if isSignedIn() && resource.data.lawyerId == request.auth.uid;
-
-      // CLIENT: Personal case tracking
-      allow list: if isSignedIn() && resource.data.clientId == request.auth.uid;
-      
-      allow get: if isAdmin() || (isSignedIn() && (resource.data.clientId == request.auth.uid || resource.data.lawyerId == request.auth.uid));
-      
-      allow create: if isAdmin();
-      allow update: if isAdmin() || (isSignedIn() && resource.data.lawyerId == request.auth.uid);
-      allow delete: if isAdmin();
     }
 
     // ===== REFERENCE DATA =====

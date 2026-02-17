@@ -21,7 +21,6 @@ function LoginContent() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   
-  // OTP States for Client Login
   const [useOtp, setUseOtp] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
   const [otpValue, setOtpValue] = useState("");
@@ -38,7 +37,6 @@ function LoginContent() {
   const redirectPath = searchParams.get('redirect');
 
   useEffect(() => {
-    // If user is already signed in via auth persistence, initialize them
     if (auth.currentUser && !isLoading) {
       checkAndInitializeUser(auth.currentUser);
     }
@@ -50,8 +48,8 @@ function LoginContent() {
       const normalizedEmail = (user.email || "").toLowerCase().trim();
       const isBootstrapAdmin = normalizedEmail === "admin@epao.com";
 
-      // 1. Check Admin Status
-      const adminDocRef = doc(db, "roleAdmin", user.uid);
+      // 1. Check Admin Status (using 'admins' collection)
+      const adminDocRef = doc(db, "admins", user.uid);
       const adminDoc = await getDoc(adminDocRef);
       
       if (isBootstrapAdmin || adminDoc.exists()) {
@@ -71,7 +69,6 @@ function LoginContent() {
       // 2. Check Existing Lawyer Record
       const lawyerDocRef = doc(db, "roleLawyer", user.uid);
       const lawyerDoc = await getDoc(lawyerDocRef);
-      // Also check the authorized email whitelist
       const lawyerAuthDoc = await getDoc(doc(db, "lawyersEmail", normalizedEmail));
       const isAuthorizedLawyer = lawyerDoc.exists() || lawyerAuthDoc.exists() || normalizedEmail.endsWith("@lawyers.com");
 
@@ -110,7 +107,6 @@ function LoginContent() {
         router.push(`/dashboard/client`);
       }
     } catch (error: any) {
-      console.error("Initialization error:", error);
       toast({ 
         variant: "destructive", 
         title: "Access Error", 
@@ -150,7 +146,6 @@ function LoginContent() {
       let finalIdentifier = identifier.trim();
       let finalPassword = password;
 
-      // Handle mobile-based accounts
       if (/^\d{10,11}$/.test(finalIdentifier)) {
         finalIdentifier = `${finalIdentifier}@epao.mobile`;
         if (useOtp) {
