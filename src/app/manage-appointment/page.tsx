@@ -140,7 +140,7 @@ export default function ManageAppointmentPage() {
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-primary font-black uppercase text-[10px] tracking-widest">
-                    <CheckCircle2 className="h-3 w-3" /> Legal Matter
+                    <CheckCircle2 className="h-3 w-3" /> Service
                   </div>
                   <p className="text-lg font-bold text-[#1A3B6B]">{appointment.caseType}</p>
                 </div>
