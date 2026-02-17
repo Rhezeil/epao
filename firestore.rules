@@ -10,7 +10,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      // Points to roleAdmin per the established project structure
+      // Points to roleAdmin per the established project structure and login logic
       return isSignedIn() && exists(/databases/$(database)/documents/roleAdmin/$(request.auth.uid));
     }
 
@@ -50,23 +50,20 @@ service cloud.firestore {
     // ===== APPOINTMENTS =====
 
     match /appointments/{apptId} {
+      // ADMIN: Full oversight
+      allow list: if isAdmin();
 
-      // ADMIN: Full access
-      allow read, write, delete: if isAdmin();
+      // LAWYER: Allowed to list their assigned consultations
+      allow list: if isSignedIn() && resource.data.lawyerId == request.auth.uid;
 
-      // LAWYER: Can read only their assigned appointments (Matches clinical schedule query)
-      allow list: if isSignedIn()
-                  && request.query.where('lawyerId', '==', request.auth.uid);
-
-      // CLIENT: Can read only their own bookings
-      allow list: if isSignedIn()
-                  && request.query.where('clientId', '==', request.auth.uid);
+      // CLIENT: Allowed to list their own bookings
+      allow list: if isSignedIn() && resource.data.clientId == request.auth.uid;
 
       // PUBLIC LOOKUP: Allows the Manage Booking page to query by reference code
-      allow list: if request.query.limit <= 10 && (request.query.where('referenceCode', '!=', null) || request.query.where('referenceCode', '==', request.query.limit));
+      allow list: if resource.data.referenceCode != null;
 
       // AVAILABILITY CHECK: Allows guest booking calendar to check dates
-      allow list: if request.query.where('dateString', '!=', null);
+      allow list: if resource.data.dateString != null;
 
       // GET single document
       allow get: if isAdmin() || isLawyer() ||
@@ -82,15 +79,21 @@ service cloud.firestore {
           resource.data.lawyerId == request.auth.uid ||
           resource.data.clientId == request.auth.uid
         ));
+      
+      allow delete: if isAdmin();
     }
 
     // ===== CASES =====
 
     match /cases/{caseId} {
-      // Split list logic for cases to match dashboard queries
+      // ADMIN: Full access
       allow list: if isAdmin();
-      allow list: if isSignedIn() && request.query.where('clientId', '==', request.auth.uid);
-      allow list: if isSignedIn() && request.query.where('lawyerId', '==', request.auth.uid);
+
+      // LAWYER: Filtered clinical view
+      allow list: if isSignedIn() && resource.data.lawyerId == request.auth.uid;
+
+      // CLIENT: Personal case tracking
+      allow list: if isSignedIn() && resource.data.clientId == request.auth.uid;
       
       allow get: if isAdmin() || (isSignedIn() && (resource.data.clientId == request.auth.uid || resource.data.lawyerId == request.auth.uid));
       

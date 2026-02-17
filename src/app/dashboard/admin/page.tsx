@@ -30,6 +30,7 @@ export default function AdminDashboard() {
   const { user, role, loading } = useAuth();
   const [period, setPeriod] = useState("month");
 
+  // EVEN SAFER PATTERN: Do not mount queries until role is confirmed
   const casesQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'admin') return null;
     return query(collection(db, "cases"));

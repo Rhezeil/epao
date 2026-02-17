@@ -21,20 +21,18 @@ export default function ClientDashboard() {
   const router = useRouter();
   const [assignedLawyer, setAssignedLawyer] = useState<any>(null);
 
-  // Fetch Client's official Case
+  // EVEN SAFER PATTERN: Do not mount queries until role is confirmed
   const casesQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'client') return null;
     return query(collection(db, "cases"), where("clientId", "==", user.uid));
   }, [db, user, role]);
 
-  const { data: cases, isLoading: isCasesLoading } = useCollection(casesQuery);
-
-  // Fetch upcoming appointments
   const apptsQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'client') return null;
     return query(collection(db, "appointments"), where("clientId", "==", user.uid));
   }, [db, user, role]);
 
+  const { data: cases, isLoading: isCasesLoading } = useCollection(casesQuery);
   const { data: appts, isLoading: isApptsLoading } = useCollection(apptsQuery);
 
   const activeCase = cases?.[0];
@@ -50,7 +48,7 @@ export default function ClientDashboard() {
     return () => unsub();
   }, [activeCase, db, role]);
 
-  // SAFE GUARD
+  // SAFE GUARD: Do not show UI until role is verified
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -59,7 +57,9 @@ export default function ClientDashboard() {
     );
   }
 
-  if (!user || role !== 'client') return null;
+  if (!user || role !== 'client') {
+    return null;
+  }
 
   return (
     <DashboardLayout role="client">

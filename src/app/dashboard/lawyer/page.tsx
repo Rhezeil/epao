@@ -29,6 +29,7 @@ export default function LawyerDashboard() {
   const { toast } = useToast();
   const router = useRouter();
 
+  // EVEN SAFER PATTERN: Define queries with strict role checks
   const lawyerRef = useMemoFirebase(() => {
     if (!db || !user || role !== 'lawyer') return null;
     return doc(db, "roleLawyer", user.uid);
@@ -47,13 +48,18 @@ export default function LawyerDashboard() {
 
   const casesQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'lawyer') return null;
-    return query(collection(db, "cases"), where("lawyerId", "==", user.uid), where("status", "==", "Active"));
+    return query(
+      collection(db, "cases"), 
+      where("lawyerId", "==", user.uid), 
+      where("status", "==", "Active")
+    );
   }, [db, user, role]);
 
+  // Hook calls must remain at top level, handled by null queries above
   const { data: appointments, isLoading: isApptsLoading } = useCollection(apptsQuery);
   const { data: activeCases } = useCollection(casesQuery);
 
-  // SAFE GUARD: Do not mount or show UI until role is verified
+  // SAFE GUARD: Do not show UI or mount heavy Logic until role is verified
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
