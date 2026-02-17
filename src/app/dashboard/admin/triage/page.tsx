@@ -4,7 +4,7 @@
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { useAuth } from "@/components/auth-provider";
 import { useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
-import { collection, query, where, doc, getDoc } from "firebase/firestore";
+import { collection, query, where, doc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -125,7 +125,7 @@ export default function AdminTriagePage() {
           await deleteApp(secondaryApp);
         } catch (authError: any) {
           if (authError.code !== 'auth/email-already-in-use') throw authError;
-          // If exists, we'd normally need a way to link it, but for prototype we'll proceed if we can
+          // If exists, we'd normally need a way to link it
         }
       }
 
@@ -214,7 +214,7 @@ export default function AdminTriagePage() {
       <div className="space-y-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Triage Command Center</h1>
+            <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Client Triage</h1>
             <p className="text-muted-foreground font-medium">Initialize official legal records and manage lawyer assignments.</p>
           </div>
         </div>
@@ -229,7 +229,7 @@ export default function AdminTriagePage() {
             </TabsTrigger>
           </TabsList>
 
-          {/* --- INTAKE REVIEW QUEUE (Completed Initial Visits) --- */}
+          {/* --- INTAKE REVIEW QUEUE --- */}
           <TabsContent value="intake" className="mt-8">
             <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden">
               <CardHeader className="bg-primary/5 pb-6">
@@ -281,13 +281,13 @@ export default function AdminTriagePage() {
             </Card>
           </TabsContent>
 
-          {/* --- ASSIGNMENT QUEUE (Pending Initial Visits) --- */}
+          {/* --- ASSIGNMENT QUEUE --- */}
           <TabsContent value="pending" className="mt-8">
             <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden">
               <CardHeader className="bg-amber-50/50 pb-6">
                 <CardTitle className="text-xl font-bold text-amber-900 flex items-center gap-2">
                   <AlertCircle className="h-6 w-6" /> Pending Appointments
-                </CardTitle>
+                </AlertCircle>
                 <CardDescription>Assign lawyers to new visitor requests.</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
