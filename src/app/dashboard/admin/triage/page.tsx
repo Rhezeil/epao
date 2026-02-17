@@ -315,7 +315,7 @@ export default function AdminTriagePage() {
                     <p className="text-sm font-bold text-muted-foreground">{selectedAppt?.guestMobile || selectedAppt?.clientMobile}</p>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Matter Category</Label>
+                    <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Service or Case Category</Label>
                     <p className="text-base font-bold text-primary">{selectedAppt?.caseType}</p>
                   </div>
                 </div>
