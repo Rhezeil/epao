@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, Suspense, useMemo, useEffect } from "react";
@@ -213,9 +212,6 @@ function BookAppointmentContent() {
       <div className="max-w-6xl mx-auto space-y-8 px-4">
         <div className="space-y-2">
           <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Schedule Follow-up</h1>
-          <p className="text-muted-foreground font-medium">
-            Active Matter: <span className="font-bold text-primary">{caseTypeParam}</span>
-          </p>
         </div>
 
         <Card className="border-none shadow-xl bg-white/80 backdrop-blur-md rounded-[2.5rem] overflow-hidden">
