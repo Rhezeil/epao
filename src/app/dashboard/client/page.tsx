@@ -6,7 +6,7 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, where, doc, onSnapshot } from "firebase/firestore";
-import { Briefcase, Calendar, FileText, User, ChevronRight, Gavel, Clock } from "lucide-react";
+import { Briefcase, Calendar, FileText, User, ChevronRight, Gavel, Clock, Heart, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
@@ -53,19 +53,23 @@ export default function ClientDashboard() {
   return (
     <DashboardLayout role="client">
       <div className="space-y-8">
-        <div className="flex justify-between items-end">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Citizen Portal</h1>
-            <p className="text-muted-foreground font-medium">Welcome back. Track your legal Case and manage your appointments.</p>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-amber-500 text-white rounded-2xl shadow-lg">
+              <Heart className="h-8 w-8" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Citizen Portal</h1>
+              <p className="text-muted-foreground font-medium">Welcome back. Track your legal journey and upcoming visits.</p>
+            </div>
           </div>
           <Badge className="bg-primary/10 text-primary border-none px-4 py-2 rounded-full font-bold">
-            Registered Client
+            Registered Resident
           </Badge>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
-            {/* Official Case Card */}
             <Card className="border-none shadow-xl bg-white rounded-[2.5rem] overflow-hidden">
               <CardHeader className="bg-primary/5 pb-6 border-b border-primary/10">
                 <div className="flex justify-between items-center">
@@ -73,11 +77,11 @@ export default function ClientDashboard() {
                     <div className="p-2 bg-primary text-white rounded-xl">
                       <Gavel className="h-5 w-5" />
                     </div>
-                    <CardTitle className="text-xl font-bold text-primary">My Active Legal Case</CardTitle>
+                    <CardTitle className="text-xl font-bold text-primary">My Official Case Record</CardTitle>
                   </div>
                   {activeCase && (
                     <Badge className={cn(
-                      "border-none font-bold px-3",
+                      "border-none font-black px-4 py-1.5 rounded-full uppercase text-[9px] tracking-widest",
                       activeCase.status === 'Closed' ? 'bg-gray-100 text-gray-800' : 'bg-green-100 text-green-800'
                     )}>
                       {activeCase.status}
@@ -85,87 +89,84 @@ export default function ClientDashboard() {
                   )}
                 </div>
               </CardHeader>
-              <CardContent className="pt-8 space-y-6">
+              <CardContent className="pt-8 space-y-6 px-10">
                 {isCasesLoading ? (
                   <div className="py-12 flex justify-center"><Clock className="animate-spin h-8 w-8 text-primary/20" /></div>
                 ) : activeCase ? (
                   <div className="grid md:grid-cols-2 gap-8">
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest">Official Case ID</p>
-                        <p className="text-lg font-black text-[#1A3B6B]">{activeCase.id}</p>
+                        <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest">Case Reference ID</p>
+                        <p className="text-xl font-black text-[#1A3B6B]">{activeCase.id}</p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest">Legal Classification</p>
-                        <p className="text-lg font-black text-[#1A3B6B]">{activeCase.caseType}</p>
+                        <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest">Legal Matter Type</p>
+                        <p className="text-xl font-black text-[#1A3B6B]">{activeCase.caseType}</p>
                       </div>
                     </div>
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
                           <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest">Date Opened</p>
-                          <p className="text-sm font-black text-[#1A3B6B]">
-                            {activeCase.createdAt ? format(new Date(activeCase.createdAt), "PPP") : '---'}
+                          <p className="text-sm font-bold text-[#1A3B6B]">
+                            {activeCase.createdAt ? format(new Date(activeCase.createdAt), "MMM dd, yyyy") : '---'}
                           </p>
                         </div>
                         <div className="space-y-1">
-                          <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest">Date Closed</p>
-                          <p className="text-sm font-black text-[#1A3B6B]">
-                            {activeCase.closedAt ? format(new Date(activeCase.closedAt), "PPP") : '---'}
+                          <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest">Status Update</p>
+                          <p className="text-sm font-bold text-[#1A3B6B]">
+                            {activeCase.status}
                           </p>
                         </div>
                       </div>
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest">Case Description</p>
-                        <p className="text-sm text-muted-foreground font-medium leading-relaxed">{activeCase.description}</p>
+                      <div className="space-y-1 bg-muted/20 p-4 rounded-2xl border-2 border-dashed">
+                        <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest mb-1">Case Summary</p>
+                        <p className="text-xs text-muted-foreground font-medium leading-relaxed italic">{activeCase.description}</p>
                       </div>
                     </div>
                   </div>
                 ) : (
                   <div className="text-center py-12 space-y-4">
                     <FileText className="h-12 w-12 text-primary/10 mx-auto" />
-                    <p className="text-muted-foreground font-medium">No official Case records found yet.</p>
+                    <p className="text-muted-foreground font-medium">No official Case file has been initialized yet.</p>
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* Upcoming Appointments */}
-            <Card className="border-none shadow-xl bg-white rounded-[2.5rem]">
-              <CardHeader className="pb-4">
+            <Card className="border-none shadow-xl bg-white rounded-[2.5rem] overflow-hidden">
+              <CardHeader className="pb-4 pt-8 px-10">
                 <CardTitle className="text-lg font-bold text-primary flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
-                  My Scheduled Visits
+                  <Calendar className="h-5 w-5" /> My Scheduled Appointments
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 px-10 pb-10">
                 {appts?.filter(a => a.status !== 'cancelled').map((appt) => (
-                  <div key={appt.id} className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10 hover:bg-primary/10 transition-colors">
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-xl bg-white flex flex-col items-center justify-center shadow-sm border">
+                  <div key={appt.id} className="flex items-center justify-between p-5 bg-primary/5 rounded-3xl border border-primary/10 hover:bg-primary/10 transition-colors">
+                    <div className="flex items-center gap-5">
+                      <div className="h-14 w-14 rounded-2xl bg-white flex flex-col items-center justify-center shadow-sm border border-primary/5">
                         <span className="text-[10px] font-black text-primary leading-none uppercase">{format(new Date(appt.date), "MMM")}</span>
-                        <span className="text-lg font-black text-[#1A3B6B] leading-none">{format(new Date(appt.date), "dd")}</span>
+                        <span className="text-xl font-black text-[#1A3B6B] leading-none mt-1">{format(new Date(appt.date), "dd")}</span>
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-[#1A3B6B]">{appt.caseType}</p>
-                        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">Reference: {appt.referenceCode} • {appt.time}</p>
+                        <p className="text-base font-black text-[#1A3B6B]">{appt.caseType}</p>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.1em]">Ref: {appt.referenceCode} • {appt.time}</p>
                       </div>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-primary/30" />
+                    <Badge className="bg-primary/10 text-primary border-none text-[9px] font-black uppercase">{appt.status}</Badge>
                   </div>
                 ))}
                 {(!appts || appts.length === 0) && (
-                  <p className="text-center py-8 text-sm text-muted-foreground font-medium italic">No upcoming follow-ups scheduled.</p>
+                  <p className="text-center py-12 text-sm text-muted-foreground font-medium italic">You have no upcoming follow-ups scheduled.</p>
                 )}
               </CardContent>
             </Card>
           </div>
 
           <div className="space-y-8">
-            {/* Assigned Lawyer Card */}
             <Card className="border-none shadow-xl bg-[#F0F4F8] rounded-[2.5rem] overflow-hidden">
               <CardHeader className="bg-primary p-6 text-white text-center">
-                <CardTitle className="text-sm font-black uppercase tracking-widest">Assigned Public Attorney</CardTitle>
+                <CardTitle className="text-xs font-black uppercase tracking-widest">Assigned Legal Counsel</CardTitle>
               </CardHeader>
               <CardContent className="p-8 space-y-6">
                 {assignedLawyer ? (
@@ -179,40 +180,45 @@ export default function ClientDashboard() {
                       </Avatar>
                       <div className="text-center">
                         <p className="text-xl font-black text-[#1A3B6B]">
-                          {assignedLawyer.firstName ? `${assignedLawyer.firstName} ${assignedLawyer.lastName}` : assignedLawyer.email.split('@')[0]}
+                          Atty. {assignedLawyer.firstName} {assignedLawyer.lastName}
                         </p>
-                        <Badge className="bg-primary/10 text-primary border-none font-bold uppercase text-[9px] mt-1">Public Attorney II</Badge>
+                        <Badge className="bg-primary/10 text-primary border-none font-bold uppercase text-[9px] mt-1 px-3">Public Attorney II</Badge>
                       </div>
                     </div>
-                    <div className="space-y-3 pt-4 border-t border-primary/10">
+                    <div className="space-y-3 pt-6 border-t border-primary/10">
                       <div className="flex items-center gap-3 text-xs font-bold text-[#2E5A99]">
-                        <Briefcase className="h-4 w-4" /> District Office North
+                        <ShieldCheck className="h-4 w-4 text-primary" /> District Office North
                       </div>
                       <div className="flex items-center gap-3 text-xs font-bold text-[#2E5A99]">
-                        <FileText className="h-4 w-4" /> Managing your {activeCase?.caseType || "Legal Case"}
+                        <Briefcase className="h-4 w-4 text-primary" /> Specialist in {activeCase?.caseType || "Legal Matters"}
                       </div>
                     </div>
                   </>
                 ) : (
-                  <div className="text-center py-6">
-                    <p className="text-xs text-muted-foreground font-medium italic leading-relaxed">Your assigned lawyer will appear here once your Case is triaged.</p>
+                  <div className="text-center py-10 space-y-4">
+                    <div className="h-16 w-16 bg-white rounded-full flex items-center justify-center mx-auto shadow-inner">
+                      <User className="h-8 w-8 text-primary/20" />
+                    </div>
+                    <p className="text-xs text-muted-foreground font-medium italic leading-relaxed px-4">
+                      An official lawyer will be assigned once your Case record is fully processed by the office.
+                    </p>
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-xl bg-amber-50 rounded-[2.5rem] p-8 space-y-4">
+            <Card className="border-none shadow-xl bg-amber-50 rounded-[2.5rem] p-8 space-y-4 border border-amber-100">
               <h4 className="text-sm font-black text-amber-900 flex items-center gap-2">
-                <Clock className="h-4 w-4" /> Booking Follow-ups
+                <Clock className="h-4 w-4" /> Next Steps
               </h4>
               <p className="text-xs text-amber-800/70 font-medium leading-relaxed">
-                Registered clients can book follow-up consultations with their assigned lawyer to ensure continuous legal support.
+                As a registered client, you can skip initial triage and book follow-up consultations directly with our staff.
               </p>
               <Button 
-                className="w-full bg-amber-500 hover:bg-amber-600 rounded-xl font-bold shadow-md" 
+                className="w-full h-12 bg-amber-500 hover:bg-amber-600 rounded-2xl font-black shadow-lg text-white" 
                 onClick={() => router.push('/dashboard/client/book-appointment')}
               >
-                Schedule Follow-up
+                Schedule Visit
               </Button>
             </Card>
           </div>

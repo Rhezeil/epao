@@ -31,7 +31,9 @@ import {
   Search,
   ShieldCheck,
   TrendingUp,
-  Clock
+  Clock,
+  Heart,
+  Gavel
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
@@ -50,27 +52,35 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   
   const logo = PlaceHolderImages.find(img => img.id === 'pao-logo');
 
+  const getPortalInfo = () => {
+    if (!user) return { label: 'Public Assistance', color: 'bg-teal-500/10 text-teal-700 border-teal-500/20' };
+    if (role === 'admin') return { label: 'Admin Command', color: 'bg-primary/10 text-primary border-primary/20' };
+    if (role === 'lawyer') return { label: 'Professional Staff', color: 'bg-secondary/10 text-secondary border-secondary/20' };
+    return { label: 'Citizen Portal', color: 'bg-amber-500/10 text-amber-700 border-amber-500/20' };
+  };
+
   const getMenuItems = () => {
     if (!user) {
       return [
-        { icon: Compass, label: "Case Requirement Navigator", path: "/case-navigator" },
-        { icon: Calendar, label: "Book an appointment", path: "/book-appointment" },
+        { icon: Compass, label: "Legal Navigator", path: "/case-navigator" },
+        { icon: Calendar, label: "Book Appointment", path: "/book-appointment" },
         { icon: Search, label: "Manage Booking", path: "/manage-appointment" },
-        { icon: TrendingUp, label: "About Us", path: "/about" },
+        { icon: Heart, label: "About LexConnect", path: "/about" },
       ];
     }
 
     if (role === "client") {
       return [
-        { icon: LayoutDashboard, label: "Client Dashboard", path: "/dashboard/client" },
-        { icon: Compass, label: "Case Requirement Navigator", path: "/case-navigator" },
-        { icon: CalendarCheck, label: "Book an appointment", path: "/dashboard/client/book-appointment" },
+        { icon: LayoutDashboard, label: "My Dashboard", path: "/dashboard/client" },
+        { icon: Gavel, label: "My Active Case", path: "/dashboard/client" },
+        { icon: CalendarCheck, label: "Schedule Follow-up", path: "/dashboard/client/book-appointment" },
+        { icon: Compass, label: "Legal Navigator", path: "/case-navigator" },
       ];
     }
 
     if (role === "admin") {
       return [
-        { icon: LayoutDashboard, label: "Analytics Overview", path: "/dashboard/admin" },
+        { icon: LayoutDashboard, label: "System Analytics", path: "/dashboard/admin" },
         { icon: ShieldCheck, label: "Client Triage", path: "/dashboard/admin/triage" },
         { icon: Users, label: "Client Directory", path: "/dashboard/admin/users" },
         { icon: Briefcase, label: "Lawyer Directory", path: "/dashboard/admin/lawyers" },
@@ -80,15 +90,16 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
 
     if (role === "lawyer") {
       return [
-        { icon: LayoutDashboard, label: "Lawyer Home", path: "/dashboard/lawyer" },
+        { icon: LayoutDashboard, label: "Clinic Home", path: "/dashboard/lawyer" },
         { icon: Clock, label: "Clinical Schedule", path: "/dashboard/lawyer" },
-        { icon: FileText, label: "My Active Cases", path: "/dashboard/lawyer/cases" },
+        { icon: FileText, label: "My Case Registry", path: "/dashboard/lawyer/cases" },
       ];
     }
 
     return [];
   };
 
+  const portalInfo = getPortalInfo();
   const menuItems = getMenuItems();
 
   return (
@@ -111,10 +122,8 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
                 />
               </div>
             )}
-            <div className="px-3 py-1 bg-primary/10 rounded-full border border-primary/20">
-              <span className="text-[10px] uppercase tracking-widest font-black text-primary">
-                {role || 'Guest'} Portal
-              </span>
+            <div className={cn("px-3 py-1 rounded-full border text-[10px] uppercase tracking-widest font-black", portalInfo.color)}>
+              {portalInfo.label}
             </div>
           </SidebarHeader>
           

@@ -10,7 +10,7 @@ import { format } from "date-fns";
 import { 
   Calendar, Clock, CheckCircle2, XCircle, MoreVertical, 
   FileText, Users, Briefcase, TrendingUp, AlertCircle,
-  Scale, User, Phone, ChevronRight
+  Scale, User, Phone, ChevronRight, LayoutDashboard
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -72,16 +72,14 @@ export default function LawyerDashboard() {
             </Avatar>
             <div>
               <h1 className="text-3xl font-black text-secondary font-headline tracking-tight">
-                Atty. {lawyerData?.firstName} {lawyerData?.lastName}
+                Atty. {lawyerData?.firstName || lawyerData?.email?.split('@')[0]} {lawyerData?.lastName || ""}
               </h1>
-              <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-[0.2em]">Public Attorney Workstation</p>
+              <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-[0.2em]">Professional Staff Workstation</p>
             </div>
           </div>
-          <div className="flex gap-3">
-            <Badge className="bg-secondary text-white border-none px-4 py-2 rounded-full font-black text-[10px] uppercase tracking-widest shadow-md">
-              Office Active
-            </Badge>
-          </div>
+          <Badge className="bg-secondary text-white border-none px-4 py-2 rounded-full font-black text-[10px] uppercase tracking-widest shadow-md">
+            Clinical Registry Active
+          </Badge>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -118,23 +116,21 @@ export default function LawyerDashboard() {
           <Card className="border-none shadow-xl rounded-[2rem] bg-amber-400 text-amber-950 overflow-hidden">
             <CardContent className="p-8 space-y-1">
               <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Success Rate</p>
-              <p className="text-5xl font-black">92%</p>
-              <p className="text-xs font-bold opacity-80 pt-2">Monthly Resolution Metric</p>
+              <p className="text-5xl font-black">94%</p>
+              <p className="text-xs font-bold opacity-80 pt-2">Monthly Efficiency Metric</p>
             </CardContent>
           </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Daily Clinical Schedule */}
           <Card className="lg:col-span-2 border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
             <CardHeader className="bg-secondary/5 pb-4 border-b border-secondary/10">
               <div className="flex justify-between items-center">
                 <CardTitle className="text-lg font-bold text-secondary flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  Clinical Schedule
+                  <Clock className="h-5 w-5" /> Clinical Schedule
                 </CardTitle>
-                <Badge variant="outline" className="border-secondary/20 text-secondary font-black text-[9px] uppercase">
-                  {format(new Date(), "EEEE, MMMM dd")}
+                <Badge variant="outline" className="border-secondary/20 text-secondary font-black text-[9px] uppercase px-3 py-1">
+                  {format(new Date(), "EEEE, MMM dd")}
                 </Badge>
               </div>
             </CardHeader>
@@ -151,7 +147,7 @@ export default function LawyerDashboard() {
                           <span className="text-xl font-black text-secondary leading-none mt-1">{format(new Date(appt.date), "dd")}</span>
                         </div>
                         <div>
-                          <h4 className="font-bold text-secondary">{appt.guestName || appt.clientName || "Client"}</h4>
+                          <h4 className="font-bold text-secondary">{appt.guestName || appt.clientName || "Citizen Client"}</h4>
                           <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
                             <Badge variant="outline" className="text-[9px] font-black uppercase py-0 border-secondary/20 text-secondary">{appt.status}</Badge>
                             <span>•</span>
@@ -162,7 +158,7 @@ export default function LawyerDashboard() {
                       <div className="flex items-center gap-4">
                         <div className="text-right hidden sm:block">
                           <p className="text-sm font-black text-secondary">{appt.time}</p>
-                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Appointment Slot</p>
+                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Reserved Slot</p>
                         </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -172,14 +168,14 @@ export default function LawyerDashboard() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="rounded-2xl w-56 p-2">
                             <DropdownMenuItem onClick={() => updateStatus(appt.id, 'completed')} className="text-green-600 font-bold rounded-xl">
-                              <CheckCircle2 className="mr-2 h-4 w-4" /> Mark Completed
+                              <CheckCircle2 className="mr-2 h-4 w-4" /> Mark as Completed
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => updateStatus(appt.id, 'cancelled')} className="text-red-600 font-bold rounded-xl">
-                              <XCircle className="mr-2 h-4 w-4" /> Mark Cancelled
+                              <XCircle className="mr-2 h-4 w-4" /> Mark as Cancelled
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem className="font-bold rounded-xl">
-                              <User className="mr-2 h-4 w-4" /> View Client Info
+                              <User className="mr-2 h-4 w-4" /> Client History
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -189,7 +185,7 @@ export default function LawyerDashboard() {
                   {(!appointments || appointments.length === 0) && (
                     <div className="p-20 text-center space-y-4">
                       <Calendar className="h-16 w-16 text-secondary/10 mx-auto" />
-                      <p className="text-muted-foreground font-medium">No professional visits scheduled today.</p>
+                      <p className="text-muted-foreground font-medium">No professional visits scheduled for today.</p>
                     </div>
                   )}
                 </div>
@@ -198,7 +194,6 @@ export default function LawyerDashboard() {
           </Card>
 
           <div className="space-y-8">
-            {/* Active Clients Quick Access */}
             <Card className="border-none shadow-xl rounded-[2.5rem] bg-secondary text-white overflow-hidden">
               <CardHeader className="bg-white/10 p-6 border-b border-white/5">
                 <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
@@ -211,21 +206,21 @@ export default function LawyerDashboard() {
                     <div key={c.id} className="p-4 bg-white/10 rounded-2xl border border-white/5 flex items-center justify-between hover:bg-white/20 transition-all cursor-pointer">
                       <div className="flex items-center gap-3">
                         <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center font-black text-xs">
-                          {c.id.split('-').pop()}
+                          {c.id.split('-').pop()?.slice(0, 3)}
                         </div>
                         <div>
                           <p className="text-xs font-black leading-none mb-1">{c.caseType}</p>
-                          <p className="text-[9px] font-bold opacity-60 uppercase tracking-widest">Case Ref: {c.id}</p>
+                          <p className="text-[9px] font-bold opacity-60 uppercase tracking-widest">ID: {c.id}</p>
                         </div>
                       </div>
                       <ChevronRight className="h-4 w-4 opacity-40" />
                     </div>
                   ))}
                   {(!activeCases || activeCases.length === 0) && (
-                    <p className="text-center py-6 text-xs font-bold opacity-40 italic">No active legal matters.</p>
+                    <p className="text-center py-6 text-xs font-bold opacity-40 italic">Registry is currently empty.</p>
                   )}
                   <Button variant="link" className="w-full text-white font-black text-[10px] uppercase tracking-[0.2em] mt-2" onClick={() => router.push('/dashboard/lawyer/cases')}>
-                    View Complete Caseload
+                    Full Caseload Registry
                   </Button>
                 </div>
               </CardContent>
@@ -234,10 +229,10 @@ export default function LawyerDashboard() {
             <Card className="border-none shadow-xl rounded-[2.5rem] bg-amber-50 p-8 space-y-6 border border-amber-100">
               <div className="space-y-2">
                 <h3 className="font-black text-amber-900 flex items-center gap-2">
-                  <AlertCircle className="h-5 w-5" /> Clinic Notice
+                  <AlertCircle className="h-5 w-5" /> Professional Duty
                 </h3>
                 <p className="text-xs text-amber-800/70 font-medium leading-relaxed">
-                  Please ensure all completed appointments are marked in the system to maintain accurate efficiency metrics.
+                  Please update clinic results immediately after each session to maintain system-wide performance metrics.
                 </p>
               </div>
               <div className="p-4 bg-white rounded-2xl border border-amber-200 shadow-sm flex items-center gap-3">
@@ -245,8 +240,8 @@ export default function LawyerDashboard() {
                   <Scale className="h-4 w-4 text-amber-700" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-amber-900/40 uppercase">Merit Evaluation</p>
-                  <p className="text-[11px] font-bold text-amber-900">3 Cases require review</p>
+                  <p className="text-[10px] font-black text-amber-900/40 uppercase">Action Items</p>
+                  <p className="text-[11px] font-bold text-amber-900">Cases require review</p>
                 </div>
               </div>
             </Card>
