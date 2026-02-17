@@ -87,7 +87,7 @@ export default function RegisterPage() {
       if (isSystemAdmin) userRole = "admin";
       else if (isLawyer) userRole = "lawyer";
 
-      // Initialize Profile
+      // Initialize Profile Document
       const profileDocRef = doc(db, "users", user.uid, "profile", "profile");
       setDocumentNonBlocking(profileDocRef, {
         id: "profile",
@@ -113,11 +113,13 @@ export default function RegisterPage() {
           updatedAt: new Date().toISOString(),
         }, { merge: true });
       } else {
+        // Initialize Top-level Client User Document with sync-ready fields
         setDocumentNonBlocking(doc(db, "users", user.uid), {
           id: user.uid,
           mobileNumber: mobileNumber,
           email: user.email,
           role: "client",
+          fullName: `${firstName} ${lastName}`.trim(),
           profileId: "profile",
           updatedAt: new Date().toISOString(),
         }, { merge: true });

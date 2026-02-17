@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useAuth, useFirestore, useUser, useDoc, useMemoFirebase, setDocumentNonBlocking } from "@/firebase";
+import { useAuth, useFirestore, useUser, useDoc, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,13 +49,20 @@ export default function ProfilePage() {
 
   const handleUpdate = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!profileDocRef) return;
+    if (!profileDocRef || !user || !db) return;
 
-    // Use non-blocking write pattern
+    // Use non-blocking write pattern for sub-profile
     setDocumentNonBlocking(profileDocRef, {
       ...formState,
       updatedAt: new Date().toISOString(),
     }, { merge: true });
+
+    // Sync with top-level user document for directory visibility
+    const userRef = doc(db, "users", user.uid);
+    updateDocumentNonBlocking(userRef, {
+      fullName: `${formState.firstName} ${formState.lastName}`.trim(),
+      mobileNumber: formState.phoneNumber
+    });
 
     toast({ 
       title: "Update initiated", 

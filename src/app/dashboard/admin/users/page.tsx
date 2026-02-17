@@ -215,10 +215,19 @@ export default function AdminUsersPage() {
 
   const handleSaveProfile = () => {
     if (!db || !selectedClientId) return;
-    const ref = doc(db, "users", selectedClientId, "profile", "profile");
-    updateDocumentNonBlocking(ref, editProfile);
+    const profileDocRef = doc(db, "users", selectedClientId, "profile", "profile");
+    updateDocumentNonBlocking(profileDocRef, editProfile);
+    
+    // Sync with top-level user document for the directory list and system-wide visibility
+    const userRef = doc(db, "users", selectedClientId);
+    const fullName = `${editProfile.firstName} ${editProfile.lastName}`.trim();
+    updateDocumentNonBlocking(userRef, { 
+      fullName: fullName,
+      mobileNumber: editProfile.phoneNumber
+    });
+
     setIsEditingPersonal(false);
-    toast({ title: "Profile Saved", description: "Personal details updated successfully." });
+    toast({ title: "Profile Saved", description: "Personal details updated and synced across system." });
   };
 
   const handleSaveCase = () => {
@@ -323,7 +332,9 @@ export default function AdminUsersPage() {
                               <UserCircle className="h-6 w-6 text-primary" />
                             </div>
                             <div>
-                              <p className="font-black text-primary leading-none mb-1">{client.fullName || client.email?.split('@')[0]}</p>
+                              <p className="font-black text-primary leading-none mb-1">
+                                {client.fullName || client.email?.split('@')[0]}
+                              </p>
                               <p className="text-[10px] text-muted-foreground font-bold">{client.mobileNumber}</p>
                               <p className="text-[9px] text-muted-foreground/60">{client.email}</p>
                             </div>
