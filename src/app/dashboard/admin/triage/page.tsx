@@ -93,7 +93,7 @@ export default function AdminTriagePage() {
 
       toast({ 
         title: "Lawyer Assigned", 
-        description: `Reference ${selectedAppt.referenceCode} has been scheduled.` 
+        description: `Reference ${selectedAppt.referenceCode} has been confirmed and scheduled.` 
       });
       setSelectedAppt(null);
     } catch (e: any) {
@@ -135,7 +135,7 @@ export default function AdminTriagePage() {
         caseType: selectedAppt.caseType,
         status: "Active",
         initialAppointmentId: selectedAppt.id,
-        description: `Official Case initialized from intake review. Source: ${selectedAppt.referenceCode}`,
+        description: `Official Case initialized from triage review. Source: ${selectedAppt.referenceCode}`,
         createdAt: new Date().toISOString()
       }, { merge: true });
 
@@ -174,7 +174,7 @@ export default function AdminTriagePage() {
     }
   };
 
-  const handleRejectIntake = () => {
+  const handleRejectRequest = () => {
     if (!db || !selectedAppt || !rejectionReason) return;
     setIsProcessing(true);
 
@@ -187,13 +187,14 @@ export default function AdminTriagePage() {
 
     toast({ 
       variant: "destructive",
-      title: "Intake Closed", 
-      description: "Marked as Not Eligible." 
+      title: "Request Cancelled", 
+      description: `Appointment ${selectedAppt.referenceCode} has been marked as cancelled.` 
     });
     
     setTimeout(() => {
       setIsProcessing(false);
       setSelectedAppt(null);
+      setRejectionReason("");
     }, 800);
   };
 
@@ -203,7 +204,7 @@ export default function AdminTriagePage() {
     toast({
       variant: "destructive",
       title: "Request Deleted",
-      description: `Pending appointment ${refCode} removed.`
+      description: `Pending appointment ${refCode} has been permanently removed.`
     });
   };
 
@@ -257,9 +258,17 @@ export default function AdminTriagePage() {
                             <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-100 font-bold">{intake.caseType}</Badge>
                           </TableCell>
                           <TableCell className="text-xs font-medium text-muted-foreground">{format(new Date(intake.date), "PPP")}</TableCell>
-                          <TableCell className="text-right px-8">
+                          <TableCell className="text-right px-8 flex justify-end gap-2">
                             <Button size="sm" onClick={() => { setSelectedAppt(intake); setReviewMode("intake"); }} className="rounded-xl font-black bg-secondary hover:bg-secondary/90 shadow-md">
                               <Eye className="mr-2 h-4 w-4" /> Review Intake
+                            </Button>
+                            <Button 
+                              size="icon" 
+                              variant="ghost" 
+                              onClick={() => handleDeleteRequest(intake.id, intake.referenceCode)} 
+                              className="h-9 w-9 rounded-xl text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -376,7 +385,7 @@ export default function AdminTriagePage() {
                 </div>
                 <div className="space-y-4">
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Initial Visit Conducted</Label>
+                    <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Visit Date</Label>
                     <p className="text-base font-bold text-primary">{selectedAppt?.date ? format(new Date(selectedAppt.date), "PPP") : "---"}</p>
                     <p className="text-xs font-medium text-muted-foreground">{selectedAppt?.time}</p>
                   </div>
@@ -395,7 +404,7 @@ export default function AdminTriagePage() {
                     <SelectContent>
                       {lawyers?.map((lawyer) => (
                         <SelectItem key={lawyer.id} value={lawyer.id} className="font-bold">
-                          {lawyer.email.split('@')[0]} (Public Attorney)
+                          {lawyer.firstName ? `Atty. ${lawyer.firstName} ${lawyer.lastName}` : lawyer.email.split('@')[0]}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -419,35 +428,33 @@ export default function AdminTriagePage() {
                 )}
               </div>
 
-              {reviewMode === 'intake' && (
-                <div className="pt-6 border-t border-primary/5 space-y-4">
-                  <div className="flex items-center gap-2">
-                    <XCircle className="h-4 w-4 text-red-500" />
-                    <span className="text-xs font-black uppercase tracking-widest text-red-500">Close without Case Creation?</span>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-bold text-muted-foreground uppercase">Reason for Closing Intake</Label>
-                    <Textarea 
-                      placeholder="e.g., Household income exceeds limit, Case not covered."
-                      className="rounded-2xl border-primary/10 bg-white text-sm font-medium min-h-[100px]"
-                      value={rejectionReason}
-                      onChange={(e) => setRejectionReason(e.target.value)}
-                    />
-                  </div>
+              <div className="pt-6 border-t border-primary/5 space-y-4">
+                <div className="flex items-center gap-2">
+                  <XCircle className="h-4 w-4 text-red-500" />
+                  <span className="text-xs font-black uppercase tracking-widest text-red-500">Cancel or Reject Request?</span>
                 </div>
-              )}
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-bold text-muted-foreground uppercase">Reason for Cancellation</Label>
+                  <Textarea 
+                    placeholder="e.g., Household income exceeds limit, case type not covered, or requested time slot is unavailable."
+                    className="rounded-2xl border-primary/10 bg-white text-sm font-medium min-h-[100px]"
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
 
             <DialogFooter className="p-6 md:p-8 bg-muted/30 flex gap-4 shrink-0">
-              <Button variant="outline" onClick={() => setSelectedAppt(null)} className="flex-1 h-14 rounded-2xl font-bold">Cancel Review</Button>
-              {reviewMode === 'intake' && rejectionReason ? (
+              <Button variant="outline" onClick={() => setSelectedAppt(null)} className="flex-1 h-14 rounded-2xl font-bold">Close Dialog</Button>
+              {rejectionReason ? (
                 <Button 
                   variant="outline" 
                   disabled={isProcessing}
-                  onClick={handleRejectIntake}
+                  onClick={handleRejectRequest}
                   className="flex-1 h-14 rounded-2xl font-black border-red-200 text-red-600 hover:bg-red-50"
                 >
-                  Close Intake
+                  Cancel Request
                 </Button>
               ) : (
                 <Button 
@@ -459,7 +466,7 @@ export default function AdminTriagePage() {
                   )}
                 >
                   {isProcessing ? <Loader2 className="animate-spin h-6 w-6" /> : <ShieldCheck className="mr-2 h-6 w-6" />}
-                  {reviewMode === 'intake' ? "Create Case Record" : "Confirm Assignment"}
+                  {reviewMode === 'intake' ? "Confirm & Create Case" : "Confirm Assignment"}
                 </Button>
               )}
             </DialogFooter>
