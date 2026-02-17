@@ -8,11 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
 import { collection, query, where, doc } from "firebase/firestore";
-import { Search, Calendar, XCircle, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Search, Calendar, XCircle, Loader2, CheckCircle2, AlertCircle, Lock, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { sendOtpSms } from "@/ai/flows/sms-service";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 export default function ManageAppointmentPage() {
   const [refCode, setRefCode] = useState("");
@@ -20,26 +22,61 @@ export default function ManageAppointmentPage() {
   const db = useFirestore();
   const { toast } = useToast();
 
+  // Cancellation OTP States
+  const [isOtpOpen, setIsOtpOpen] = useState(false);
+  const [otpValue, setOtpValue] = useState("");
+  const [generatedOtp, setGeneratedOtp] = useState("");
+  const [isSmsSending, setIsSmsSending] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+
   const appointmentQuery = useMemoFirebase(() => {
     if (!db || !refCode || !searchTriggered) return null;
     return query(collection(db, "appointments"), where("referenceCode", "==", refCode.trim().toUpperCase()));
   }, [db, refCode, searchTriggered]);
 
   const { data: results, isLoading } = useCollection(appointmentQuery);
+  const appointment = results?.[0];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (refCode.trim()) setSearchTriggered(true);
   };
 
-  const handleCancel = (appointmentId: string) => {
-    if (!db) return;
-    const apptRef = doc(db, "appointments", appointmentId);
-    updateDocumentNonBlocking(apptRef, { status: "cancelled" });
-    toast({ title: "Appointment Cancelled", description: "Your visit has been removed from our schedule." });
+  const initiateCancellation = async () => {
+    if (!appointment) return;
+    setIsSmsSending(true);
+    try {
+      const result = await sendOtpSms(appointment.guestMobile || appointment.clientMobile);
+      if (result.success) {
+        setGeneratedOtp(result.code);
+        setIsOtpOpen(true);
+        toast({ title: "Cancellation Authorized", description: `Verification code sent to ${appointment.guestMobile || appointment.clientMobile}.` });
+      }
+    } catch (e) {
+      toast({ variant: "destructive", title: "Verification Failed", description: "Could not send authorization code." });
+    } finally {
+      setIsSmsSending(false);
+    }
   };
 
-  const appointment = results?.[0];
+  const handleVerifyAndCancel = () => {
+    if (otpValue !== generatedOtp) {
+      toast({ variant: "destructive", title: "Invalid Code", description: "The verification code is incorrect." });
+      return;
+    }
+
+    if (!db || !appointment) return;
+    setIsCancelling(true);
+
+    const apptRef = doc(db, "appointments", appointment.id);
+    updateDocumentNonBlocking(apptRef, { status: "cancelled" });
+
+    setTimeout(() => {
+      setIsCancelling(false);
+      setIsOtpOpen(false);
+      toast({ title: "Appointment Cancelled", description: "Your visit has been successfully removed from our schedule." });
+    }, 1000);
+  };
 
   return (
     <DashboardLayout role={null}>
@@ -119,17 +156,59 @@ export default function ManageAppointmentPage() {
               {appointment.status !== 'cancelled' && (
                 <Button 
                   variant="outline" 
+                  disabled={isSmsSending}
                   className="w-full h-14 border-red-200 text-red-600 hover:bg-red-50 rounded-2xl font-bold"
-                  onClick={() => handleCancel(appointment.id)}
+                  onClick={initiateCancellation}
                 >
-                  <XCircle className="mr-2 h-5 w-5" /> Cancel Appointment
+                  {isSmsSending ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : <XCircle className="mr-2 h-5 w-5" />}
+                  Cancel Appointment
                 </Button>
               )}
             </CardContent>
           </Card>
         )}
+
+        <Dialog open={isOtpOpen} onOpenChange={setIsOtpOpen}>
+          <DialogContent className="rounded-[3rem] max-w-md p-8">
+            <DialogHeader className="space-y-4">
+              <div className="flex justify-center">
+                <div className="p-3 bg-red-50 text-red-600 rounded-full">
+                  <Lock className="h-8 w-8" />
+                </div>
+              </div>
+              <DialogTitle className="text-2xl font-black text-center text-primary">Authorize Cancellation</DialogTitle>
+              <DialogDescription className="text-center font-medium">
+                To protect your schedule, please enter the code sent to your mobile ending in 
+                <span className="font-bold text-primary"> ****{appointment?.guestMobile?.slice(-4) || appointment?.clientMobile?.slice(-4)}</span>.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-6 space-y-4">
+              <Input 
+                className="h-16 text-center text-4xl font-black tracking-[0.5em] rounded-2xl border-primary/20"
+                maxLength={6}
+                placeholder="000000"
+                value={otpValue}
+                onChange={(e) => setOtpValue(e.target.value)}
+              />
+              <div className="text-center">
+                <Button variant="link" size="sm" className="text-xs font-bold text-muted-foreground" onClick={initiateCancellation} disabled={isSmsSending}>
+                  {isSmsSending ? "Sending..." : "Didn't receive code? Resend"}
+                </Button>
+              </div>
+            </div>
+            <DialogFooter className="flex gap-3">
+              <Button variant="outline" className="flex-1 rounded-xl font-bold" onClick={() => setIsOtpOpen(false)}>Close</Button>
+              <Button 
+                className="flex-1 rounded-xl font-black bg-red-600 hover:bg-red-700 text-white shadow-lg"
+                disabled={isCancelling || otpValue.length < 6}
+                onClick={handleVerifyAndCancel}
+              >
+                {isCancelling ? <Loader2 className="animate-spin h-5 w-5" /> : "Confirm Cancellation"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
 }
-

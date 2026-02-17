@@ -24,13 +24,15 @@ import {
   MapPin,
   Edit3,
   ShieldCheck,
-  ChevronLeft
+  ChevronLeft,
+  Lock
 } from "lucide-react";
 import { useFirestore, setDocumentNonBlocking, useCollection, useMemoFirebase } from "@/firebase";
 import { doc, collection, query, where } from "firebase/firestore";
-import { format, isWeekend, startOfToday, setHours, setMinutes, isBefore, parseISO } from "date-fns";
+import { format, isWeekend, startOfToday, setHours, setMinutes, isBefore } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { sendOtpSms } from "@/ai/flows/sms-service";
 
 // Statutory Holidays Logic
 const HOLIDAYS = [
@@ -53,7 +55,7 @@ function BookAppointmentContent() {
   const caseTypeParam = searchParams.get("caseType") || "Initial Consultation";
   const fromNavigator = searchParams.get("fromNavigator") === "true";
 
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [purpose, setPurpose] = useState(fromNavigator ? "consultation" : "consultation");
@@ -65,6 +67,11 @@ function BookAppointmentContent() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [refCode, setRefCode] = useState<string | null>(null);
+
+  // OTP States
+  const [otpValue, setOtpValue] = useState("");
+  const [generatedOtp, setGeneratedOtp] = useState("");
+  const [isSmsSending, setIsSmsSending] = useState(false);
 
   const getServiceLabel = (p: string) => {
     switch (p) {
@@ -130,7 +137,28 @@ function BookAppointmentContent() {
     return true;
   };
 
-  const handleBooking = async () => {
+  const handleTriggerOtp = async () => {
+    setIsSmsSending(true);
+    try {
+      const result = await sendOtpSms(guestInfo.mobile);
+      if (result.success) {
+        setGeneratedOtp(result.code);
+        setStep(4);
+        toast({ title: "Verification Sent", description: `A 6-digit code has been sent to ${guestInfo.mobile}.` });
+      }
+    } catch (error) {
+      toast({ variant: "destructive", title: "SMS Service Error", description: "Could not send verification code. Please try again." });
+    } finally {
+      setIsSmsSending(false);
+    }
+  };
+
+  const handleFinalBooking = async () => {
+    if (otpValue !== generatedOtp) {
+      toast({ variant: "destructive", title: "Invalid Code", description: "The verification code you entered is incorrect." });
+      return;
+    }
+
     if (!db || !selectedDate || !selectedTime) return;
     setIsSubmitting(true);
 
@@ -160,7 +188,7 @@ function BookAppointmentContent() {
 
     setTimeout(() => {
       setRefCode(code);
-      setStep(4);
+      setStep(5);
       setIsSubmitting(false);
       toast({
         title: "Booking Successful",
@@ -169,7 +197,7 @@ function BookAppointmentContent() {
     }, 1500);
   };
 
-  if (step === 4 && refCode) {
+  if (step === 5 && refCode) {
     return (
       <DashboardLayout role={null}>
         <div className="max-w-xl mx-auto py-12">
@@ -384,7 +412,7 @@ function BookAppointmentContent() {
                     <ShieldCheck className="h-8 w-8" />
                   </div>
                   <h3 className="text-2xl font-black text-primary font-headline">Review Your Booking</h3>
-                  <p className="text-muted-foreground font-medium">Please verify all information below before finalizing your appointment.</p>
+                  <p className="text-muted-foreground font-medium">Please verify all information below before identity verification.</p>
                 </div>
 
                 <div className="grid gap-6">
@@ -443,11 +471,62 @@ function BookAppointmentContent() {
                   </Button>
                   <Button 
                     className="flex-1 h-14 rounded-2xl text-lg font-black bg-primary text-white shadow-xl hover:bg-[#1A3B6B]"
-                    disabled={isSubmitting}
-                    onClick={handleBooking}
+                    disabled={isSmsSending}
+                    onClick={handleTriggerOtp}
                   >
-                    {isSubmitting ? <Loader2 className="animate-spin h-6 w-6" /> : "Confirm Booking"}
+                    {isSmsSending ? <Loader2 className="animate-spin h-6 w-6" /> : "Proceed to Verification"}
                   </Button>
+                </div>
+              </div>
+            )}
+
+            {step === 4 && (
+              <div className="max-w-lg mx-auto space-y-8 animate-in fade-in zoom-in-95 duration-500">
+                <div className="text-center space-y-4">
+                  <div className="inline-flex p-4 bg-secondary/10 text-secondary rounded-full">
+                    <Lock className="h-8 w-8" />
+                  </div>
+                  <h3 className="text-2xl font-black text-primary font-headline">Verify Identity</h3>
+                  <p className="text-sm text-muted-foreground font-medium">
+                    A 6-digit verification code was sent to <span className="font-bold text-primary">{guestInfo.mobile}</span>. 
+                    Please enter it below to finalize your booking.
+                  </p>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-black uppercase tracking-widest text-primary/60 ml-1">Access Code</Label>
+                    <Input 
+                      className="h-20 text-center text-5xl font-black tracking-[0.5em] rounded-3xl border-secondary/30 text-secondary bg-secondary/5 focus-visible:ring-secondary/20"
+                      maxLength={6}
+                      value={otpValue}
+                      onChange={(e) => setOtpValue(e.target.value)}
+                      placeholder="000000"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-3">
+                    <Button 
+                      className="w-full h-16 rounded-2xl text-lg font-black bg-secondary hover:bg-[#006666] text-white shadow-xl"
+                      disabled={isSubmitting || otpValue.length < 6}
+                      onClick={handleFinalBooking}
+                    >
+                      {isSubmitting ? <Loader2 className="animate-spin h-6 w-6" /> : "Verify & Finalize Booking"}
+                    </Button>
+                    <div className="flex justify-between items-center px-2">
+                       <Button variant="link" className="text-xs font-bold text-muted-foreground" onClick={() => setStep(3)}>
+                         Back to Review
+                       </Button>
+                       <Button 
+                         variant="link" 
+                         className="text-xs font-bold text-secondary" 
+                         disabled={isSmsSending}
+                         onClick={handleTriggerOtp}
+                       >
+                         {isSmsSending ? "Resending..." : "Resend Code"}
+                       </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
