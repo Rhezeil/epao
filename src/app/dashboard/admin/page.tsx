@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { Shield, Users, Briefcase, Calendar, CheckCircle2, AlertCircle, FileText, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 const COLORS = ['#1A237E', '#008080', '#F59E0B', '#EF4444'];
 
