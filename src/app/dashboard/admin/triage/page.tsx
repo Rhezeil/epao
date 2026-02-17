@@ -1,4 +1,3 @@
-
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -162,6 +161,7 @@ export default function AdminTriagePage() {
         id: clientId,
         mobileNumber: selectedAppt.guestMobile || selectedAppt.clientMobile || "",
         email: email,
+        fullName: selectedAppt.guestName || selectedAppt.clientName || "",
         role: "client",
         status: caseStatus,
         profileId: "profile",
@@ -327,7 +327,7 @@ export default function AdminTriagePage() {
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Citizen Name</TableHead>
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Category</TableHead>
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Visit Date</TableHead>
-                        <TableHead className="text-right px-8 text-[10px) font-black uppercase tracking-widest text-primary/40">Action</TableHead>
+                        <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Action</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

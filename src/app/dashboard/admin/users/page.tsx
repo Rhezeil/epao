@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking, setDocumentNonBlocking, updateDocumentNonBlocking, useDoc } from "@/firebase";
@@ -158,7 +157,8 @@ export default function AdminUsersPage() {
     if (!users) return [];
     return users.filter(u => 
       u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.mobileNumber?.includes(searchQuery)
+      u.mobileNumber?.includes(searchQuery) ||
+      u.fullName?.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [users, searchQuery]);
 
@@ -183,6 +183,7 @@ export default function AdminUsersPage() {
           email: email,
           role: "client",
           status: "New Intake",
+          fullName: newClient.name,
           incomeClassification: newClient.income,
           createdAt: new Date().toISOString()
         }, { merge: true });
@@ -284,7 +285,7 @@ export default function AdminUsersPage() {
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/30" />
                 <Input 
-                  placeholder="Search by email or mobile..." 
+                  placeholder="Search by name, email or mobile..." 
                   className="pl-9 h-11 rounded-xl border-primary/10 bg-white"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -322,8 +323,9 @@ export default function AdminUsersPage() {
                               <UserCircle className="h-6 w-6 text-primary" />
                             </div>
                             <div>
-                              <p className="font-black text-primary leading-none mb-1">{client.email?.split('@')[0]}</p>
-                              <p className="text-[10px] text-muted-foreground font-bold">{client.mobileNumber || client.email}</p>
+                              <p className="font-black text-primary leading-none mb-1">{client.fullName || client.email?.split('@')[0]}</p>
+                              <p className="text-[10px] text-muted-foreground font-bold">{client.mobileNumber}</p>
+                              <p className="text-[9px] text-muted-foreground/60">{client.email}</p>
                             </div>
                           </div>
                         </TableCell>
@@ -342,7 +344,7 @@ export default function AdminUsersPage() {
                             {lawyer ? (
                               <>
                                 <div className="h-2 w-2 rounded-full bg-green-500" />
-                                <span className="text-xs font-bold text-primary">{lawyer.email.split('@')[0]}</span>
+                                <span className="text-xs font-bold text-primary">{lawyer.firstName ? `Atty. ${lawyer.firstName}` : lawyer.email.split('@')[0]}</span>
                               </>
                             ) : (
                               <span className="text-xs font-bold text-muted-foreground italic">Unassigned</span>
@@ -414,7 +416,7 @@ export default function AdminUsersPage() {
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
                   <DialogTitle className="text-2xl font-black">
-                    {selectedProfile ? `${selectedProfile.firstName} ${selectedProfile.lastName}` : (selectedUser?.email?.split('@')[0] || "Client Profile")}
+                    {selectedProfile ? `${selectedProfile.firstName} ${selectedProfile.lastName}` : (selectedUser?.fullName || selectedUser?.email?.split('@')[0] || "Client Profile")}
                   </DialogTitle>
                   <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">
                     Citizen ID: {selectedUser?.id?.slice(0, 8)}...
@@ -586,7 +588,7 @@ export default function AdminUsersPage() {
                           <SelectContent>
                             {lawyers?.map((l) => (
                               <SelectItem key={l.id} value={l.id} className="font-bold">
-                                {l.email.split('@')[0]} (Public Attorney)
+                                {l.firstName ? `Atty. ${l.firstName}` : l.email.split('@')[0]}
                               </SelectItem>
                             ))}
                           </SelectContent>
