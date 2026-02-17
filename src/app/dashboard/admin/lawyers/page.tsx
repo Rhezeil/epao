@@ -17,12 +17,10 @@ import {
   Trash2, 
   UserCheck, 
   Search, 
-  ArrowUpDown, 
   Settings2,
   Edit3,
   Camera,
-  Scale,
-  ChevronRight
+  Scale
 } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -51,7 +49,6 @@ export default function AdminLawyersPage() {
   const [newLawyer, setNewLawyer] = useState({ email: "", password: "", firstName: "", lastName: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"name" | "activeCases" | "appointments">("name");
   
   // Reassignment State
   const [selectedLawyer, setSelectedLawyer] = useState<any>(null);
@@ -78,45 +75,23 @@ export default function AdminLawyersPage() {
   const { data: registeredLawyers, isLoading: isLawyersLoading } = useCollection(registeredLawyersQuery);
   const { data: allCases } = useCollection(casesQuery);
 
-  const apptsQuery = useMemoFirebase(() => {
-    if (!db || !user || role !== 'admin') return null;
-    return query(collection(db, "appointments"));
-  }, [db, user, role]);
-  const { data: allAppts } = useCollection(apptsQuery);
-
   const lawyerMetrics = useMemo(() => {
     if (!registeredLawyers) return [];
 
     return registeredLawyers.map(lawyer => {
-      const lawyerCases = allCases?.filter(c => c.lawyerId === lawyer.id) || [];
-      const lawyerAppts = allAppts?.filter(a => a.lawyerId === lawyer.id) || [];
-      const activeCount = lawyerCases.filter(c => c.status === 'Active').length;
-
       return {
         ...lawyer,
-        appointmentsHandled: lawyerAppts.filter(a => a.status === 'completed').length,
-        casesOpened: lawyerCases.length,
-        casesClosed: lawyerCases.filter(c => c.status === 'Closed').length,
-        activeCases: activeCount,
         status: lawyer.status || "Available"
       };
     });
-  }, [registeredLawyers, allCases, allAppts]);
+  }, [registeredLawyers]);
 
-  const filteredAndSortedLawyers = useMemo(() => {
-    let result = lawyerMetrics.filter(l => 
+  const filteredLawyers = useMemo(() => {
+    return lawyerMetrics.filter(l => 
       l.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       `${l.firstName} ${l.lastName}`.toLowerCase().includes(searchQuery.toLowerCase())
     );
-
-    if (sortBy === "activeCases") {
-      result.sort((a, b) => b.activeCases - a.activeCases);
-    } else if (sortBy === "appointments") {
-      result.sort((a, b) => b.appointmentsHandled - a.appointmentsHandled);
-    }
-
-    return result;
-  }, [lawyerMetrics, searchQuery, sortBy]);
+  }, [lawyerMetrics, searchQuery]);
 
   const handleAuthorizeLawyer = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -188,7 +163,7 @@ export default function AdminLawyersPage() {
         <div className="flex justify-between items-end">
           <div className="space-y-1">
             <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Lawyer Directory</h1>
-            <p className="text-muted-foreground font-medium">Manage staff profiles, monitor workloads, and assign photos.</p>
+            <p className="text-muted-foreground font-medium">Manage staff profiles and assign photos.</p>
           </div>
         </div>
 
@@ -206,7 +181,7 @@ export default function AdminLawyersPage() {
             <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
               <CardHeader className="bg-primary/5 pb-6">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                  <div className="relative w-full md:w-64">
+                  <div className="relative flex-1 max-w-md">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/30" />
                     <Input 
                       placeholder="Search attorneys..." 
@@ -215,17 +190,6 @@ export default function AdminLawyersPage() {
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
                   </div>
-                  <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
-                    <SelectTrigger className="h-11 w-[180px] rounded-xl border-primary/10 font-bold text-primary">
-                      <ArrowUpDown className="h-4 w-4 mr-2" />
-                      <SelectValue placeholder="Sort By" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="name">Sort by Name</SelectItem>
-                      <SelectItem value="activeCases">Workload Weight</SelectItem>
-                      <SelectItem value="appointments">Consultation Count</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
               </CardHeader>
               <CardContent className="p-0">
@@ -234,13 +198,12 @@ export default function AdminLawyersPage() {
                     <TableHeader className="bg-muted/30">
                       <TableRow>
                         <TableHead className="px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Attorney</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Workload</TableHead>
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Status</TableHead>
                         <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredAndSortedLawyers.map((lawyer) => (
+                      {filteredLawyers.map((lawyer) => (
                         <TableRow key={lawyer.id} className="hover:bg-primary/5 transition-colors group">
                           <TableCell className="px-8 py-6">
                             <div className="flex items-center gap-3">
@@ -257,11 +220,6 @@ export default function AdminLawyersPage() {
                                 <p className="text-[9px] text-muted-foreground font-black uppercase tracking-tighter">{lawyer.email}</p>
                               </div>
                             </div>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Badge className="font-black px-3 py-1 bg-primary">
-                              {lawyer.activeCases} Active
-                            </Badge>
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge variant="outline" className={cn(
