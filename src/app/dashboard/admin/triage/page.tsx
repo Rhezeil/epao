@@ -4,7 +4,7 @@
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { useAuth } from "@/components/auth-provider";
 import { useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
-import { collection, query, where, doc } from "firebase/firestore";
+import { collection, query, where, doc, or } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,11 @@ import {
   Eye,
   Info,
   Trash2,
-  Scale
+  Scale,
+  Search,
+  User,
+  Clock,
+  ClipboardList
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -30,6 +34,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { initializeApp, deleteApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
@@ -47,6 +52,13 @@ export default function AdminTriagePage() {
   const [caseStatus, setCaseStatus] = useState("Active Case");
   const [rejectionReason, setRejectionReason] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Screening Checklist States
+  const [screening, setScreening] = useState({
+    indigency: false,
+    merit: false,
+    idVerified: false
+  });
 
   // Queries
   const pendingQuery = useMemoFirebase(() => {
@@ -68,7 +80,6 @@ export default function AdminTriagePage() {
   const { data: completedIntakes, isLoading: isIntakeLoading } = useCollection(completedIntakeQuery);
   const { data: lawyers } = useCollection(lawyersQuery);
 
-  // Filter out completed intakes that already have Cases
   const casesQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'admin') return null;
     return query(collection(db, "cases"));
@@ -82,20 +93,28 @@ export default function AdminTriagePage() {
 
   const handleAssignLawyer = async () => {
     if (!db || !selectedAppt || !assignedLawyer) return;
+    if (!screening.indigency || !screening.merit || !screening.idVerified) {
+      toast({ variant: "destructive", title: "Incomplete Screening", description: "All eligibility tests must be passed before confirmation." });
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
       const apptRef = doc(db, "appointments", selectedAppt.id);
       updateDocumentNonBlocking(apptRef, {
         lawyerId: assignedLawyer,
-        status: "scheduled"
+        status: "scheduled",
+        screenedAt: new Date().toISOString(),
+        screeningDetails: screening
       });
 
       toast({ 
-        title: "Lawyer Assigned", 
-        description: `Reference ${selectedAppt.referenceCode} has been confirmed and scheduled.` 
+        title: "Client Qualified", 
+        description: `Reference ${selectedAppt.referenceCode} confirmed and lawyer assigned.` 
       });
       setSelectedAppt(null);
+      setScreening({ indigency: false, merit: false, idVerified: false });
     } catch (e: any) {
       toast({ variant: "destructive", title: "Error", description: e.message });
     } finally {
@@ -126,7 +145,6 @@ export default function AdminTriagePage() {
         }
       }
 
-      // 1. Create Official Case Record
       const caseRef = doc(db, "cases", caseId);
       setDocumentNonBlocking(caseRef, {
         id: caseId,
@@ -139,7 +157,6 @@ export default function AdminTriagePage() {
         createdAt: new Date().toISOString()
       }, { merge: true });
 
-      // 2. Ensure User Record exists
       const userRef = doc(db, "users", clientId || "");
       setDocumentNonBlocking(userRef, {
         id: clientId,
@@ -151,7 +168,6 @@ export default function AdminTriagePage() {
         createdAt: new Date().toISOString()
       }, { merge: true });
 
-      // 3. Initialize/Update profile
       const profileRef = doc(db, "users", clientId || "", "profile", "profile");
       setDocumentNonBlocking(profileRef, {
         id: "profile",
@@ -187,8 +203,8 @@ export default function AdminTriagePage() {
 
     toast({ 
       variant: "destructive",
-      title: "Request Cancelled", 
-      description: `Appointment ${selectedAppt.referenceCode} has been marked as cancelled.` 
+      title: "Qualification Failed", 
+      description: `Appointment ${selectedAppt.referenceCode} has been marked as Not Qualified.` 
     });
     
     setTimeout(() => {
@@ -204,7 +220,7 @@ export default function AdminTriagePage() {
     toast({
       variant: "destructive",
       title: "Request Deleted",
-      description: `Pending appointment ${refCode} has been permanently removed.`
+      description: `Reference ${refCode} permanently removed.`
     });
   };
 
@@ -214,88 +230,28 @@ export default function AdminTriagePage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Client Triage</h1>
-            <p className="text-muted-foreground font-medium">Evaluate intakes and initialize official legal records.</p>
+            <p className="text-muted-foreground font-medium">Screen new intakes and evaluate eligibility for free legal assistance.</p>
           </div>
         </div>
 
-        <Tabs defaultValue="intake" className="w-full">
+        <Tabs defaultValue="pending" className="w-full">
           <TabsList className="grid w-full grid-cols-2 max-w-xl bg-white/50 p-1 rounded-2xl border-2 border-primary/5 h-14">
-            <TabsTrigger value="intake" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
-              <ClipboardCheck className="h-4 w-4 mr-2" /> Intake Review Queue
-            </TabsTrigger>
             <TabsTrigger value="pending" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
-              <UserPlus className="h-4 w-4 mr-2" /> Assignment Queue
+              <ClipboardList className="h-4 w-4 mr-2" /> Triage Queue
+            </TabsTrigger>
+            <TabsTrigger value="intake" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
+              <ClipboardCheck className="h-4 w-4 mr-2" /> Intake Review
             </TabsTrigger>
           </TabsList>
 
-          {/* --- INTAKE REVIEW QUEUE --- */}
-          <TabsContent value="intake" className="mt-8">
-            <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden">
-              <CardHeader className="bg-primary/5 pb-6">
-                <CardTitle className="text-xl font-bold text-primary flex items-center gap-2">
-                  <CheckCircle2 className="h-6 w-6" /> Completed Consultations
-                </CardTitle>
-                <CardDescription>Review visits and convert to official Case files.</CardDescription>
-              </CardHeader>
-              <CardContent className="p-0">
-                {isIntakeLoading ? <div className="flex justify-center py-20"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div> : (
-                  <Table>
-                    <TableHeader className="bg-muted/30">
-                      <TableRow>
-                        <TableHead className="px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Reference</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Citizen Name</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Service Category</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Visit Date</TableHead>
-                        <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Action</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {triagableIntakes.map((intake) => (
-                        <TableRow key={intake.id} className="hover:bg-primary/5 transition-colors group">
-                          <TableCell className="px-8 font-black text-primary">{intake.referenceCode}</TableCell>
-                          <TableCell className="font-bold">{intake.guestName || intake.clientName || "Registered Citizen"}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-100 font-bold">{intake.caseType}</Badge>
-                          </TableCell>
-                          <TableCell className="text-xs font-medium text-muted-foreground">{format(new Date(intake.date), "PPP")}</TableCell>
-                          <TableCell className="text-right px-8 flex justify-end gap-2">
-                            <Button size="sm" onClick={() => { setSelectedAppt(intake); setReviewMode("intake"); }} className="rounded-xl font-black bg-secondary hover:bg-secondary/90 shadow-md">
-                              <Eye className="mr-2 h-4 w-4" /> Review Intake
-                            </Button>
-                            <Button 
-                              size="icon" 
-                              variant="ghost" 
-                              onClick={() => handleDeleteRequest(intake.id, intake.referenceCode)} 
-                              className="h-9 w-9 rounded-xl text-destructive hover:bg-destructive/10"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      {triagableIntakes.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={5} className="text-center py-20 text-muted-foreground italic font-medium">
-                            <Info className="h-8 w-8 mx-auto mb-2 opacity-20" />
-                            No completed intakes awaiting review.
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* --- ASSIGNMENT QUEUE --- */}
+          {/* --- TRIAGE QUEUE (PENDING APPOINTMENTS) --- */}
           <TabsContent value="pending" className="mt-8">
             <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden">
               <CardHeader className="bg-amber-50/50 pb-6">
                 <CardTitle className="text-xl font-bold text-amber-900 flex items-center gap-2">
-                  <AlertCircle className="h-6 w-6" /> Pending Appointments
+                  <Search className="h-6 w-6" /> Pending Eligibility Screening
                 </CardTitle>
-                <CardDescription>Assign lawyers to new visitor requests.</CardDescription>
+                <CardDescription>Evaluate indigent status and case merit for new requests.</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 {isPendingLoading ? <div className="flex justify-center py-20"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div> : (
@@ -304,8 +260,8 @@ export default function AdminTriagePage() {
                       <TableRow>
                         <TableHead className="px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Reference</TableHead>
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Citizen Name</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Service Category</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Submission</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Category</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Citizen Type</TableHead>
                         <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Action</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -315,12 +271,18 @@ export default function AdminTriagePage() {
                           <TableCell className="px-8 font-black text-primary">{appt.referenceCode}</TableCell>
                           <TableCell className="font-bold">{appt.guestName || appt.clientName || "Registered Citizen"}</TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="bg-primary/5 font-bold">{appt.caseType}</Badge>
+                            <Badge variant="outline" className="bg-primary/5 font-bold text-[10px]">{appt.caseType}</Badge>
                           </TableCell>
-                          <TableCell className="text-xs font-medium text-muted-foreground">{format(new Date(appt.createdAt), "MMM dd, p")}</TableCell>
+                          <TableCell>
+                            {!appt.clientId ? (
+                              <Badge className="bg-secondary text-white border-none font-black text-[9px] uppercase">First-Time Guest</Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-primary font-black text-[9px] uppercase border-primary/20">Registered Client</Badge>
+                            )}
+                          </TableCell>
                           <TableCell className="text-right px-8 flex justify-end gap-2">
                             <Button size="sm" onClick={() => { setSelectedAppt(appt); setReviewMode("assign"); }} className="rounded-xl font-black bg-primary hover:bg-primary/90 shadow-md">
-                              <UserPlus className="mr-2 h-4 w-4" /> Assign Lawyer
+                              <ShieldCheck className="mr-2 h-4 w-4" /> Start Screening
                             </Button>
                             <Button 
                               size="icon" 
@@ -336,7 +298,66 @@ export default function AdminTriagePage() {
                       {(!pendingAppointments || pendingAppointments.length === 0) && (
                         <TableRow>
                           <TableCell colSpan={5} className="text-center py-20 text-muted-foreground italic font-medium">
-                            No pending appointments requiring assignment.
+                            No pending requests requiring screening.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* --- INTAKE REVIEW (COMPLETED CONSULTATIONS) --- */}
+          <TabsContent value="intake" className="mt-8">
+            <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden">
+              <CardHeader className="bg-primary/5 pb-6">
+                <CardTitle className="text-xl font-bold text-primary flex items-center gap-2">
+                  <CheckCircle2 className="h-6 w-6" /> Consultation Completed
+                </CardTitle>
+                <CardDescription>Final review of visits to initialize official Case files.</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                {isIntakeLoading ? <div className="flex justify-center py-20"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div> : (
+                  <Table>
+                    <TableHeader className="bg-muted/30">
+                      <TableRow>
+                        <TableHead className="px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Reference</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Citizen Name</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Category</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Visit Date</TableHead>
+                        <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {triagableIntakes.map((intake) => (
+                        <TableRow key={intake.id} className="hover:bg-primary/5 transition-colors group">
+                          <TableCell className="px-8 font-black text-primary">{intake.referenceCode}</TableCell>
+                          <TableCell className="font-bold">{intake.guestName || intake.clientName || "Registered Citizen"}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-100 font-bold text-[10px]">{intake.caseType}</Badge>
+                          </TableCell>
+                          <TableCell className="text-xs font-medium text-muted-foreground">{format(new Date(intake.date), "PPP")}</TableCell>
+                          <TableCell className="text-right px-8 flex justify-end gap-2">
+                            <Button size="sm" onClick={() => { setSelectedAppt(intake); setReviewMode("intake"); }} className="rounded-xl font-black bg-secondary hover:bg-secondary/90 shadow-md">
+                              <Eye className="mr-2 h-4 w-4" /> Review & Convert
+                            </Button>
+                            <Button 
+                              size="icon" 
+                              variant="ghost" 
+                              onClick={() => handleDeleteRequest(intake.id, intake.referenceCode)} 
+                              className="h-9 w-9 rounded-xl text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {triagableIntakes.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-20 text-muted-foreground italic font-medium">
+                            No completed intakes awaiting Case conversion.
                           </TableCell>
                         </TableRow>
                       )}
@@ -348,8 +369,8 @@ export default function AdminTriagePage() {
           </TabsContent>
         </Tabs>
 
-        {/* --- DYNAMIC TRIAGE DIALOG --- */}
-        <Dialog open={!!selectedAppt} onOpenChange={() => { setSelectedAppt(null); setRejectionReason(""); }}>
+        {/* --- TRIAGE & SCREENING DIALOG --- */}
+        <Dialog open={!!selectedAppt} onOpenChange={() => { setSelectedAppt(null); setRejectionReason(""); setScreening({ indigency: false, merit: false, idVerified: false }); }}>
           <DialogContent className="rounded-[3rem] max-w-lg p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
             <DialogHeader className={cn(
               "p-6 md:p-8 text-white shrink-0",
@@ -358,44 +379,77 @@ export default function AdminTriagePage() {
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
                   <DialogTitle className="text-2xl md:text-3xl font-black tracking-tight">
-                    {reviewMode === 'intake' ? "Intake Review" : "Lawyer Assignment"}
+                    {reviewMode === 'intake' ? "Intake Review" : "Screening Process"}
                   </DialogTitle>
                   <DialogDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest">
-                    Citizen Reference: {selectedAppt?.referenceCode}
+                    Reference: {selectedAppt?.referenceCode}
                   </DialogDescription>
                 </div>
                 <div className="p-3 bg-white/20 rounded-2xl hidden sm:block">
-                  {reviewMode === 'intake' ? <ClipboardCheck className="h-8 w-8" /> : <UserPlus className="h-8 w-8" />}
+                  {reviewMode === 'intake' ? <ClipboardCheck className="h-8 w-8" /> : <ShieldCheck className="h-8 w-8" />}
                 </div>
               </div>
             </DialogHeader>
 
             <div className="p-6 md:p-10 space-y-8 flex-1 overflow-y-auto">
-              <div className="grid md:grid-cols-2 gap-8">
-                <div className="space-y-4">
-                  <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Citizen Profile</Label>
-                    <p className="font-black text-xl text-primary leading-none">{selectedAppt?.guestName || selectedAppt?.clientName || "Registered Account"}</p>
-                    <p className="text-sm font-bold text-muted-foreground">{selectedAppt?.guestMobile || selectedAppt?.clientMobile}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Service or Case Category</Label>
-                    <p className="text-base font-bold text-primary">{selectedAppt?.caseType}</p>
-                  </div>
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Citizen</Label>
+                  <p className="font-black text-primary leading-tight">{selectedAppt?.guestName || selectedAppt?.clientName || "Registered Account"}</p>
+                  <p className="text-xs font-bold text-muted-foreground">{selectedAppt?.guestMobile || selectedAppt?.clientMobile}</p>
                 </div>
-                <div className="space-y-4">
-                  <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Visit Date</Label>
-                    <p className="text-base font-bold text-primary">{selectedAppt?.date ? format(new Date(selectedAppt.date), "PPP") : "---"}</p>
-                    <p className="text-xs font-medium text-muted-foreground">{selectedAppt?.time}</p>
-                  </div>
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Service</Label>
+                  <p className="text-sm font-bold text-primary">{selectedAppt?.caseType}</p>
                 </div>
               </div>
+
+              {reviewMode === 'assign' && (
+                <div className="p-6 bg-primary/5 rounded-[2rem] border-2 border-dashed border-primary/10 space-y-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <ClipboardCheck className="h-4 w-4 text-primary" />
+                    <span className="text-[10px] font-black uppercase text-primary tracking-widest">Screening Checklist</span>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-3 bg-white/50 p-3 rounded-xl border">
+                      <Checkbox 
+                        id="indigency" 
+                        checked={screening.indigency}
+                        onCheckedChange={(checked) => setScreening({ ...screening, indigency: !!checked })}
+                      />
+                      <label htmlFor="indigency" className="text-xs font-bold text-primary leading-none cursor-pointer">
+                        Indigency Test (Income within PAO limits)
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-3 bg-white/50 p-3 rounded-xl border">
+                      <Checkbox 
+                        id="merit" 
+                        checked={screening.merit}
+                        onCheckedChange={(checked) => setScreening({ ...screening, merit: !!checked })}
+                      />
+                      <label htmlFor="merit" className="text-xs font-bold text-primary leading-none cursor-pointer">
+                        Merit Test (Legal basis for assistance)
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-3 bg-white/50 p-3 rounded-xl border">
+                      <Checkbox 
+                        id="idVerified" 
+                        checked={screening.idVerified}
+                        onCheckedChange={(checked) => setScreening({ ...screening, idVerified: !!checked })}
+                      />
+                      <label htmlFor="idVerified" className="text-xs font-bold text-primary leading-none cursor-pointer">
+                        Identity Verification (Valid ID presented)
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-6">
                 <div className="space-y-2">
                   <Label className="text-xs font-black uppercase tracking-widest text-primary/40 ml-1">
-                    {reviewMode === 'intake' ? "Assign Permanent Lawyer" : "Assign Lawyer for Visit"}
+                    {reviewMode === 'intake' ? "Assign Permanent Lawyer" : "Assign Lawyer for Consultation"}
                   </Label>
                   <Select value={assignedLawyer} onValueChange={setAssignedLawyer}>
                     <SelectTrigger className="h-14 rounded-2xl border-primary/20 bg-white font-bold shadow-sm">
@@ -419,9 +473,9 @@ export default function AdminTriagePage() {
                         <SelectValue placeholder="Select status" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Active Case">Active Case</SelectItem>
-                        <SelectItem value="Under Screening">Under Screening</SelectItem>
-                        <SelectItem value="New Intake">New Intake</SelectItem>
+                        <SelectItem value="Active Case" className="font-bold">Active Case</SelectItem>
+                        <SelectItem value="Under Screening" className="font-bold">Under Screening</SelectItem>
+                        <SelectItem value="New Intake" className="font-bold">New Intake</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -431,12 +485,11 @@ export default function AdminTriagePage() {
               <div className="pt-6 border-t border-primary/5 space-y-4">
                 <div className="flex items-center gap-2">
                   <XCircle className="h-4 w-4 text-red-500" />
-                  <span className="text-xs font-black uppercase tracking-widest text-red-500">Cancel or Reject Request?</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-red-500">Not Qualified / Reject?</span>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-bold text-muted-foreground uppercase">Reason for Cancellation</Label>
                   <Textarea 
-                    placeholder="e.g., Household income exceeds limit, case type not covered, or requested time slot is unavailable."
+                    placeholder="Reason for disqualification (e.g., Exceeds income limit)..."
                     className="rounded-2xl border-primary/10 bg-white text-sm font-medium min-h-[100px]"
                     value={rejectionReason}
                     onChange={(e) => setRejectionReason(e.target.value)}
@@ -446,7 +499,7 @@ export default function AdminTriagePage() {
             </div>
 
             <DialogFooter className="p-6 md:p-8 bg-muted/30 flex gap-4 shrink-0">
-              <Button variant="outline" onClick={() => setSelectedAppt(null)} className="flex-1 h-14 rounded-2xl font-bold">Close Dialog</Button>
+              <Button variant="outline" onClick={() => setSelectedAppt(null)} className="flex-1 h-14 rounded-2xl font-bold">Close</Button>
               {rejectionReason ? (
                 <Button 
                   variant="outline" 
@@ -454,19 +507,23 @@ export default function AdminTriagePage() {
                   onClick={handleRejectRequest}
                   className="flex-1 h-14 rounded-2xl font-black border-red-200 text-red-600 hover:bg-red-50"
                 >
-                  Cancel Request
+                  Mark Not Qualified
                 </Button>
               ) : (
                 <Button 
                   onClick={reviewMode === 'intake' ? handleCreateCase : handleAssignLawyer} 
-                  disabled={!assignedLawyer || isProcessing} 
+                  disabled={
+                    !assignedLawyer || 
+                    isProcessing || 
+                    (reviewMode === 'assign' && (!screening.indigency || !screening.merit || !screening.idVerified))
+                  } 
                   className={cn(
                     "flex-1 h-14 rounded-2xl font-black text-lg shadow-xl",
                     reviewMode === 'intake' ? "bg-secondary" : "bg-primary"
                   )}
                 >
                   {isProcessing ? <Loader2 className="animate-spin h-6 w-6" /> : <ShieldCheck className="mr-2 h-6 w-6" />}
-                  {reviewMode === 'intake' ? "Confirm & Create Case" : "Confirm Assignment"}
+                  {reviewMode === 'intake' ? "Confirm & Create Case" : "Qualify & Confirm"}
                 </Button>
               )}
             </DialogFooter>
