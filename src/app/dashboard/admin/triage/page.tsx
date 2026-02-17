@@ -1,4 +1,3 @@
-
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -287,7 +286,7 @@ export default function AdminTriagePage() {
               <CardHeader className="bg-amber-50/50 pb-6">
                 <CardTitle className="text-xl font-bold text-amber-900 flex items-center gap-2">
                   <AlertCircle className="h-6 w-6" /> Pending Appointments
-                </AlertCircle>
+                </CardTitle>
                 <CardDescription>Assign lawyers to new visitor requests.</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
