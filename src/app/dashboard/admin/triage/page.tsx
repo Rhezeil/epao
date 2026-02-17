@@ -275,7 +275,7 @@ export default function AdminTriagePage() {
                           </TableCell>
                           <TableCell>
                             {!appt.clientId ? (
-                              <Badge className="bg-secondary text-white border-none font-black text-[9px] uppercase">First-Time Guest</Badge>
+                              <Badge className="bg-secondary text-white border-none font-black text-[9px] uppercase">First-time client</Badge>
                             ) : (
                               <Badge variant="outline" className="text-primary font-black text-[9px] uppercase border-primary/20">Registered Client</Badge>
                             )}
@@ -327,7 +327,7 @@ export default function AdminTriagePage() {
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Citizen Name</TableHead>
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Category</TableHead>
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Visit Date</TableHead>
-                        <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Action</TableHead>
+                        <TableHead className="text-right px-8 text-[10px) font-black uppercase tracking-widest text-primary/40">Action</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
