@@ -24,12 +24,19 @@ service cloud.firestore {
     }
 
     match /roleLawyer/{lawyerId} {
-      allow read: if isSignedIn();
+      // Allow any signed-in user to fetch a specific lawyer (e.g., for appointment details)
+      allow get: if isSignedIn();
+      // Only admins can list the entire lawyer directory
+      allow list: if isAdmin();
+      // Admins and the lawyer themselves can update the profile
       allow write: if isAdmin() || (isSignedIn() && request.auth.uid == lawyerId);
     }
 
     match /users/{userId} {
-      allow read: if isAdmin() || isLawyer() || (isSignedIn() && request.auth.uid == userId);
+      allow get: if isAdmin() || isLawyer() || (isSignedIn() && request.auth.uid == userId);
+      // Only admins can list the full client directory
+      allow list: if isAdmin();
+      
       allow create: if isSignedIn();
       allow update: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
       allow delete: if isAdmin();
@@ -40,10 +47,16 @@ service cloud.firestore {
     }
 
     match /appointments/{apptId} {
-      // READ/LIST: Admins, Assigned Lawyers, Assigned Clients, or Public Search by referenceCode
-      allow read, list: if isAdmin() || 
-                        (isSignedIn() && (resource.data.clientId == request.auth.uid || resource.data.lawyerId == request.auth.uid)) ||
-                        (request.query.filters.referenceCode != null);
+      // Split READ/LIST into independent 'allow' paths to ensure query matching for different roles
+      allow list: if isAdmin();
+      allow list: if isSignedIn() && resource.data.clientId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.lawyerId == request.auth.uid;
+      allow list: if request.query.filters.referenceCode != null;
+      
+      // Individual document access
+      allow get: if isAdmin() || 
+                    (isSignedIn() && (resource.data.clientId == request.auth.uid || resource.data.lawyerId == request.auth.uid)) ||
+                    (resource.data.referenceCode != null);
       
       allow create: if true; // Public booking
       allow update: if isAdmin() || isLawyer() || (isSignedIn() && (resource.data.clientId == request.auth.uid || resource.data.lawyerId == request.auth.uid));
@@ -51,7 +64,14 @@ service cloud.firestore {
     }
 
     match /cases/{caseId} {
-      allow read, list: if isAdmin() || (isSignedIn() && (resource.data.clientId == request.auth.uid || resource.data.lawyerId == request.auth.uid));
+      // Admins can see all cases
+      allow list: if isAdmin();
+      // Clients and Lawyers can list their own cases
+      allow list: if isSignedIn() && resource.data.clientId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.lawyerId == request.auth.uid;
+      
+      allow get: if isAdmin() || (isSignedIn() && (resource.data.clientId == request.auth.uid || resource.data.lawyerId == request.auth.uid));
+      
       allow create: if isAdmin();
       allow update: if isAdmin() || (isLawyer() && resource.data.lawyerId == request.auth.uid);
       allow delete: if isAdmin();
