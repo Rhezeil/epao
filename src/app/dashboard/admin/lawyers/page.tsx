@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -23,7 +22,6 @@ import {
   ArrowUpDown, 
   Briefcase, 
   CheckCircle2, 
-  AlertCircle,
   Filter
 } from "lucide-react";
 import { initializeApp, deleteApp } from "firebase/app";
@@ -270,17 +268,6 @@ export default function AdminLawyersPage() {
             </Card>
 
             <div className="grid md:grid-cols-2 gap-6">
-               <Card className="border-none shadow-xl rounded-3xl bg-amber-50/50 border border-amber-100 p-6 flex items-start gap-4">
-                  <div className="p-3 bg-white rounded-2xl shadow-sm border border-amber-100 text-amber-600">
-                    <AlertCircle className="h-6 w-6" />
-                  </div>
-                  <div className="space-y-1">
-                    <h4 className="font-black text-amber-900 text-sm">High Caseload Warning</h4>
-                    <p className="text-xs text-amber-800/70 font-medium leading-relaxed">
-                      Lawyers with more than 5 active cases are highlighted in red. Consider triaging new matters to lawyers with lower active caseloads.
-                    </p>
-                  </div>
-               </Card>
                <Card className="border-none shadow-xl rounded-3xl bg-primary text-white p-6 flex items-start gap-4">
                   <div className="p-3 bg-white/20 rounded-2xl text-white">
                     <Filter className="h-6 w-6" />
