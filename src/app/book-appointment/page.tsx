@@ -216,7 +216,7 @@ function BookAppointmentContent() {
                 <div className="space-y-6">
                   <div className="space-y-4">
                     <Label className="text-xs font-black text-primary/60 uppercase tracking-widest">1. Select Visit Date</Label>
-                    <div className="p-4 bg-white rounded-3xl border border-primary/10 shadow-sm flex justify-center">
+                    <div className="p-4 bg-white rounded-3xl border border-primary/10 shadow-sm">
                       <Calendar
                         mode="single"
                         selected={selectedDate}
@@ -230,7 +230,7 @@ function BookAppointmentContent() {
                           { dayOfWeek: [0, 6] },
                           (date) => isHoliday(date)
                         ]}
-                        className="rounded-md border-none"
+                        className="w-full rounded-md border-none"
                       />
                     </div>
                   </div>
