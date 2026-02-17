@@ -54,10 +54,8 @@ function CaseNavigatorContent() {
 
     let results: string[] = [];
     if (q.length === 1) {
-      // Single letter matching: starting with that letter
       results = allCaseNames.filter(c => c.toLowerCase().startsWith(q));
     } else {
-      // Partial matching / keyword matching
       results = allCaseNames.filter(c => c.toLowerCase().includes(q));
     }
     
@@ -94,13 +92,11 @@ function CaseNavigatorContent() {
 
   const handleBookingRedirect = (caseName: string) => {
     const category = selectedCategory || 'General';
-    const queryParams = `?caseType=${encodeURIComponent(caseName)}&category=${encodeURIComponent(category)}`;
+    const queryParams = `?caseType=${encodeURIComponent(caseName)}&category=${encodeURIComponent(category)}&fromNavigator=true`;
     
     if (user && role === 'client') {
-      // If logged in as client, go to internal booking
       router.push(`/dashboard/client/book-appointment${queryParams}`);
     } else {
-      // For guests or non-clients, go directly to public booking (no redirect to login)
       router.push(`/book-appointment${queryParams}`);
     }
   };

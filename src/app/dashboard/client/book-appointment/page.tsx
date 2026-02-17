@@ -37,6 +37,7 @@ function BookAppointmentContent() {
   
   const caseTypeParam = searchParams.get("caseType") || "Follow-up Consultation";
   const categoryParam = searchParams.get("category") || "General";
+  const fromNavigator = searchParams.get("fromNavigator") === "true";
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string>("");
@@ -46,7 +47,7 @@ function BookAppointmentContent() {
 
   const getServiceLabel = (p: string) => {
     switch (p) {
-      case 'consultation': return 'Case Consultation';
+      case 'consultation': return 'Legal Consultation';
       case 'notarization': return 'Document Notarization';
       case 'document-preparation': return 'Document Preparation';
       case 'legal-advice': return 'Legal Advice';
@@ -70,7 +71,6 @@ function BookAppointmentContent() {
 
     for (let h = startHour; h < endHour; h++) {
       for (let m = 0; m < 60; m += 30) {
-        // Exclude 12:00 PM - 1:00 PM Break
         if (h === 12) continue;
 
         const ampm = h >= 12 ? 'PM' : 'AM';
@@ -79,7 +79,6 @@ function BookAppointmentContent() {
         
         const slotDate = selectedDate ? setMinutes(setHours(new Date(selectedDate), h), m) : null;
         
-        // Disable past times for today
         const isPast = slotDate ? isBefore(slotDate, now) : false;
         const isBooked = existingAppts?.some(a => a.time === timeString && a.status !== 'cancelled');
         
@@ -195,9 +194,9 @@ function BookAppointmentContent() {
                           <SelectValue placeholder="Select purpose" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="consultation">Case Consultation</SelectItem>
-                          <SelectItem value="notarization">Document Notarization</SelectItem>
-                          <SelectItem value="document-preparation">Document Preparation</SelectItem>
+                          <SelectItem value="consultation">Legal Consultation</SelectItem>
+                          {!fromNavigator && <SelectItem value="notarization">Document Notarization</SelectItem>}
+                          {!fromNavigator && <SelectItem value="document-preparation">Document Preparation</SelectItem>}
                           <SelectItem value="legal-advice">Legal Advice</SelectItem>
                         </SelectContent>
                       </Select>

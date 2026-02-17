@@ -19,16 +19,8 @@ import { useToast } from "@/hooks/use-toast";
 
 // Statutory Holidays Logic
 const HOLIDAYS = [
-  "2024-01-01", // New Year's Day
-  "2024-04-09", // Araw ng Kagitingan
-  "2024-05-01", // Labor Day
-  "2024-06-12", // Independence Day
-  "2024-08-26", // National Heroes Day
-  "2024-11-01", // All Saints' Day
-  "2024-11-30", // Bonifacio Day
-  "2024-12-25", // Christmas Day
-  "2024-12-30", // Rizal Day
-  "2025-01-01",
+  "2024-01-01", "2024-04-09", "2024-05-01", "2024-06-12", "2024-08-26",
+  "2024-11-01", "2024-11-30", "2024-12-25", "2024-12-30", "2025-01-01",
 ];
 
 const isHoliday = (date: Date) => {
@@ -43,6 +35,8 @@ function BookAppointmentContent() {
   const { toast } = useToast();
   
   const caseTypeParam = searchParams.get("caseType") || "Initial Consultation";
+  const fromNavigator = searchParams.get("fromNavigator") === "true";
+
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string>("");
@@ -53,7 +47,7 @@ function BookAppointmentContent() {
 
   const getServiceLabel = (p: string) => {
     switch (p) {
-      case 'consultation': return 'Case Consultation';
+      case 'consultation': return 'Legal Consultation';
       case 'notarization': return 'Document Notarization';
       case 'document-preparation': return 'Document Preparation';
       case 'legal-advice': return 'Legal Advice';
@@ -77,7 +71,6 @@ function BookAppointmentContent() {
 
     for (let h = startHour; h < endHour; h++) {
       for (let m = 0; m < 60; m += 30) {
-        // Exclude 12:00 PM - 1:00 PM Break
         if (h === 12) continue;
 
         const ampm = h >= 12 ? 'PM' : 'AM';
@@ -86,7 +79,6 @@ function BookAppointmentContent() {
         
         const slotDate = selectedDate ? setMinutes(setHours(new Date(selectedDate), h), m) : null;
         
-        // Disable past times for today
         const isPast = slotDate ? isBefore(slotDate, now) : false;
         const isBooked = existingAppts?.some(a => a.time === timeString && a.status !== 'cancelled');
         
@@ -203,9 +195,9 @@ function BookAppointmentContent() {
                         <SelectValue placeholder="Select purpose" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="consultation">Case Consultation</SelectItem>
-                        <SelectItem value="notarization">Document Notarization</SelectItem>
-                        <SelectItem value="document-preparation">Document Preparation</SelectItem>
+                        <SelectItem value="consultation">Legal Consultation</SelectItem>
+                        {!fromNavigator && <SelectItem value="notarization">Document Notarization</SelectItem>}
+                        {!fromNavigator && <SelectItem value="document-preparation">Document Preparation</SelectItem>}
                         <SelectItem value="legal-advice">Legal Advice</SelectItem>
                       </SelectContent>
                     </Select>
