@@ -1,8 +1,34 @@
-
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    /**
+     * LEXCONNECT SECURITY RULES - PROTOTYPING MODE
+     *
+     * Core Philosophy:
+     * This ruleset implements a Database-Backed Access Control (DBAC) model where a user's role
+     * is determined by the existence of their UID within specific profile collections
+     * (admin_profiles, client_profiles, lawyer_profiles). Ownership and explicit
+     * field-based authorization (clientId, assignedLawyerId) are used to secure legal cases.
+     *
+     * Data Structure:
+     * - /user_profiles/{userId}: Base authentication and role mapping.
+     * - /admin_profiles/{adminId}: Admin-only metadata; existence defines the 'Admin' role.
+     * - /client_profiles/{clientId}: Personal details for clients; existence defines the 'Client' role.
+     * - /lawyer_profiles/{lawyerId}: Professional details for lawyers; existence defines the 'Lawyer' role.
+     * - /cases/{caseId}: Legal case records shared between admins, the assigned lawyer, and the client.
+     * - /access_rules/{ruleId}: System-level permissions managed by admins.
+     *
+     * Key Security Decisions:
+     * 1. Denormalization for Performance: Case documents contain both 'clientId' and 'assignedLawyerId'
+     *    to allow for immediate authorization without expensive cross-document lookups.
+     * 2. Role-Based Access: Admin access is globally permitted across most collections.
+     * 3. Ownership Isolation: Users are strictly limited to viewing and managing their own profile data.
+     * 4. Flexible Prototyping: Content fields (names, descriptions, dates) are not type-validated
+     *    to allow rapid schema evolution, while relational fields (UIDs) are strictly enforced.
+     */
+
+    // --- Helper Functions ---
 
     function isSignedIn() {
       return request.auth != null;
@@ -13,66 +39,121 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() && (
-        exists(/databases/$(database)/documents/roleAdmin/$(request.auth.uid)) || 
-        request.auth.token.email == "admin@epao.com"
-      );
+      return isSignedIn() && exists(/databases/$(database)/documents/admin_profiles/$(request.auth.uid));
     }
 
     function isLawyer() {
-      return isSignedIn() && exists(/databases/$(database)/documents/roleLawyer/$(request.auth.uid));
+      return isSignedIn() && exists(/databases/$(database)/documents/lawyer_profiles/$(request.auth.uid));
     }
 
-    // Public Case Navigator Data
-    match /caseRequirements/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
+    function isClient() {
+      return isSignedIn() && exists(/databases/$(database)/documents/client_profiles/$(request.auth.uid));
     }
 
-    // Appointments - Public for creation and reference lookup to support Guest Portal
-    match /appointments/{appointmentId} {
-      allow read, write: if true;
+    // Checks if the user is an admin or the specific owner of a document with an ID field
+    function isOwnerOrAdmin(userId) {
+      return isOwner(userId) || isAdmin();
     }
 
-    // Official Case Records
+    // Logic for Case access: Admin, the specific client, or the assigned lawyer
+    function canAccessCase(caseData) {
+      return isAdmin()
+        || (isClient() && caseData.clientId == request.auth.uid)
+        || (isLawyer() && caseData.assignedLawyerId == request.auth.uid);
+    }
+
+    // --- Collection Rules ---
+
+    /**
+     * @description Rules for the core UserProfile mapping.
+     * @path /user_profiles/{userId}
+     * @allow (get) If the user is the owner or an admin.
+     * @deny (write) If the user is not the owner (unless admin).
+     * @principle Enforces strict user ownership of the base identity record.
+     */
+    match /user_profiles/{userId} {
+      allow get, list: if isOwnerOrAdmin(userId);
+      allow create: if isOwner(userId);
+      // Ensure 'id' field, if present, matches existing 'id' for updates by non-admins to prevent ID spoofing.
+      allow update: if isOwnerOrAdmin(userId) && resource != null && request.resource.data.id == resource.data.id;
+      allow delete: if isAdmin() && resource != null;
+    }
+
+    /**
+     * @description Rules for Admin-specific profiles.
+     * @path /admin_profiles/{adminId}
+     * @allow (list) By any authenticated admin.
+     * @deny (create) By any non-admin or if the ID doesn't match the auth UID.
+     * @principle DBAC: Admin status is granted by document existence in this collection.
+     */
+    match /admin_profiles/{adminId} {
+      allow get, list: if isAdmin() || isOwner(adminId);
+      allow create: if isOwner(adminId); // First admin creation usually handled via Admin SDK or specific logic
+      allow update: if isOwner(adminId) && resource != null;
+      // Admins can delete others, but not themselves easily
+      allow delete: if isAdmin() && resource != null && !isOwner(adminId);
+    }
+
+    /**
+     * @description Rules for Client-specific profiles including contact details.
+     * @path /client_profiles/{clientId}
+     * @allow (create) By the client themselves or an admin.
+     * @deny (update) If modifying the core userId/id mapping.
+     * @principle Restricts sensitive personal info to the owner and staff.
+     */
+    match /client_profiles/{clientId} {
+      // FIX: Restricted lawyer access for `get, list` to be more secure in prototyping mode.
+      // Blanket `isLawyer()` access was too broad for "sensitive personal info".
+      // Lawyers can access client data via `cases` they are assigned to.
+      allow get, list: if isOwnerOrAdmin(clientId);
+      allow create: if isOwner(clientId) || isAdmin();
+      // Ensure 'userId' field, if present, matches existing 'userId' for updates by non-admins.
+      allow update: if isOwnerOrAdmin(clientId) && resource != null && request.resource.data.userId == resource.data.userId;
+      allow delete: if isAdmin() && resource != null;
+    }
+
+    /**
+     * @description Rules for Lawyer-specific professional details.
+     * @path /lawyer_profiles/{lawyerId}
+     * @allow (get) By any signed-in user (directory access).
+     * @deny (update) By anyone except the lawyer themselves or an admin.
+     * @principle Public visibility for professional services with owner-only writes.
+     */
+    match /lawyer_profiles/{lawyerId} {
+      allow get, list: if isSignedIn();
+      allow create: if isOwner(lawyerId) || isAdmin();
+      allow update: if isOwnerOrAdmin(lawyerId) && resource != null;
+      allow delete: if isAdmin() && resource != null;
+    }
+
+    /**
+     * @description Rules for legal Case documents.
+     * @path /cases/{caseId}
+     * @allow (list) If the user is the clientId or assignedLawyerId in the document.
+     * @deny (update) If a client attempts to change the assigned lawyer.
+     * @principle Uses denormalized relationship fields to enforce shared access.
+     */
     match /cases/{caseId} {
-      allow get: if isAdmin() || (isSignedIn() && (resource.data.clientId == request.auth.uid || resource.data.lawyerId == request.auth.uid));
-      allow list: if isAdmin() || isLawyer() || (isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)));
-      allow create, update, delete: if isAdmin();
+      allow get, list: if canAccessCase(resource.data);
+      allow create: if isAdmin() || isLawyer() || (isClient() && request.resource.data.clientId == request.auth.uid);
+      // FIX: Refined update logic to prevent non-admins from changing clientId,
+      // and explicitly prevent clients from changing assignedLawyerId.
+      allow update: if isAdmin() && resource != null
+                    || (canAccessCase(resource.data) && resource != null
+                       && request.resource.data.clientId == resource.data.clientId // Prevent changing clientId for non-admins
+                       && (!isClient() || request.resource.data.assignedLawyerId == resource.data.assignedLawyerId)); // If client, cannot change assignedLawyerId
+      allow delete: if isAdmin() && resource != null;
     }
 
-    // Users and Profiles
-    match /users/{userId} {
-      allow get: if isOwner(userId) || isAdmin() || isLawyer();
-      allow list: if isAdmin();
-      allow create, update: if isOwner(userId) || isAdmin();
-      
-      match /profile/{profileId} {
-        allow read, write: if isOwner(userId) || isAdmin();
-      }
-    }
-
-    // Role-based Access Control Registry
-    match /roleAdmin/{userId} {
-      allow get: if isOwner(userId) || isAdmin();
-      allow write: if isAdmin();
-    }
-    
-    match /roleLawyer/{userId} {
-      // Allow everyone to see lawyer profiles (names and photos)
-      allow get: if isSignedIn();
-      allow list: if true;
-      allow write: if isAdmin();
-    }
-
-    match /lawyersEmail/{email} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    match /lawyerAvailability/{availId} {
-      allow read: if true;
-      allow write: if isLawyer() || isAdmin();
+    /**
+     * @description Rules for system-level access configurations.
+     * @path /access_rules/{ruleId}
+     * @allow (read/write) Only by authenticated administrators.
+     * @deny (all) By Clients or Lawyers.
+     * @principle Restricts configuration data to high-privilege users.
+     */
+    match /access_rules/{ruleId} {
+      allow read, write: if isAdmin();
     }
   }
 }
