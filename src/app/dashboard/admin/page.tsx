@@ -15,7 +15,8 @@ import {
   Shield, Users, Briefcase, Calendar, CheckCircle2, 
   AlertCircle, FileText, TrendingUp, Filter,
   ArrowUpRight, ArrowDownRight, MoreHorizontal,
-  Scale, Gavel, ClipboardList, ShieldCheck
+  Scale, Gavel, ClipboardList, ShieldCheck,
+  Loader2
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,7 @@ const COLORS = ['#1A237E', '#008080', '#F59E0B', '#EF4444', '#6366F1'];
 
 export default function AdminDashboard() {
   const db = useFirestore();
-  const { user, role } = useAuth();
+  const { user, role, loading } = useAuth();
   const [period, setPeriod] = useState("month");
 
   const casesQuery = useMemoFirebase(() => {
@@ -47,6 +48,19 @@ export default function AdminDashboard() {
   const { data: cases } = useCollection(casesQuery);
   const { data: appointments } = useCollection(apptsQuery);
   const { data: lawyers } = useCollection(lawyersQuery);
+
+  // SAFE GUARD: Do not mount or show UI until role is verified
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user || role !== 'admin') {
+    return null; // AuthProvider handles redirects
+  }
 
   // --- KPI Processing ---
   const activeCasesCount = cases?.filter(c => c.status === 'Active').length || 0;

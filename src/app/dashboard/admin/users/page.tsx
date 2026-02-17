@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking, setDocumentNonBlocking, updateDocumentNonBlocking, useDoc } from "@/firebase";
@@ -71,7 +72,7 @@ import { Textarea } from "@/components/ui/textarea";
 export default function AdminUsersPage() {
   const db = useFirestore();
   const { toast } = useToast();
-  const { user: currentUser, role: currentRole } = useAuth();
+  const { user: currentUser, role: currentRole, loading } = useAuth();
 
   // Search and Filters
   const [searchQuery, setSearchQuery] = useState("");
@@ -152,6 +153,17 @@ export default function AdminUsersPage() {
       });
     }
   }, [selectedProfile, selectedUser, activeCase]);
+
+  // SAFE GUARD
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!currentUser || currentRole !== 'admin') return null;
 
   const filteredUsers = useMemo(() => {
     if (!users) return [];

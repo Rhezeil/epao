@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -43,7 +44,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 export default function AdminLawyersPage() {
   const db = useFirestore();
   const { toast } = useToast();
-  const { user, role } = useAuth();
+  const { user, role, loading } = useAuth();
   
   // Controls
   const [newLawyer, setNewLawyer] = useState({ email: "", password: "", firstName: "", lastName: "" });
@@ -74,6 +75,17 @@ export default function AdminLawyersPage() {
 
   const { data: registeredLawyers, isLoading: isLawyersLoading } = useCollection(registeredLawyersQuery);
   const { data: allCases } = useCollection(casesQuery);
+
+  // SAFE GUARD
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user || role !== 'admin') return null;
 
   const lawyerMetrics = useMemo(() => {
     if (!registeredLawyers) return [];

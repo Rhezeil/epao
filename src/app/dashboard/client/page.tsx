@@ -6,7 +6,7 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, where, doc, onSnapshot } from "firebase/firestore";
-import { Briefcase, Calendar, FileText, User, ChevronRight, Gavel, Clock, Heart, ShieldCheck } from "lucide-react";
+import { Briefcase, Calendar, FileText, User, ChevronRight, Gavel, Clock, Heart, ShieldCheck, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function ClientDashboard() {
-  const { user, role } = useAuth();
+  const { user, role, loading } = useAuth();
   const db = useFirestore();
   const router = useRouter();
   const [assignedLawyer, setAssignedLawyer] = useState<any>(null);
@@ -49,6 +49,17 @@ export default function ClientDashboard() {
     }
     return () => unsub();
   }, [activeCase, db, role]);
+
+  // SAFE GUARD
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user || role !== 'client') return null;
 
   return (
     <DashboardLayout role="client">

@@ -65,6 +65,9 @@ service cloud.firestore {
       // PUBLIC LOOKUP: Allows the Manage Booking page to query by reference code
       allow list: if request.query.limit <= 10 && (request.query.where('referenceCode', '!=', null) || request.query.where('referenceCode', '==', request.query.limit));
 
+      // AVAILABILITY CHECK: Allows guest booking calendar to check dates
+      allow list: if request.query.where('dateString', '!=', null);
+
       // GET single document
       allow get: if isAdmin() || isLawyer() ||
         (isSignedIn() && (resource.data.lawyerId == request.auth.uid || resource.data.clientId == request.auth.uid)) ||

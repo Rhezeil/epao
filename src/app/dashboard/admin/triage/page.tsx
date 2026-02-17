@@ -1,3 +1,4 @@
+
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -41,7 +42,7 @@ import { firebaseConfig } from "@/firebase/config";
 
 export default function AdminTriagePage() {
   const db = useFirestore();
-  const { user, role } = useAuth();
+  const { user, role, loading } = useAuth();
   const { toast } = useToast();
   
   // States
@@ -89,6 +90,17 @@ export default function AdminTriagePage() {
     if (!completedIntakes || !allCases) return completedIntakes || [];
     return completedIntakes.filter(intake => !allCases.some(c => c.initialAppointmentId === intake.id));
   }, [completedIntakes, allCases]);
+
+  // SAFE GUARD
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user || role !== 'admin') return null;
 
   const handleAssignLawyer = async () => {
     if (!db || !selectedAppt || !assignedLawyer) return;

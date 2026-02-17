@@ -10,7 +10,8 @@ import { format } from "date-fns";
 import { 
   Calendar, Clock, CheckCircle2, XCircle, MoreVertical, 
   FileText, Users, Briefcase, TrendingUp, AlertCircle,
-  Scale, User, Phone, ChevronRight, LayoutDashboard
+  Scale, User, Phone, ChevronRight, LayoutDashboard,
+  Loader2
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
 
 export default function LawyerDashboard() {
-  const { user, role } = useAuth();
+  const { user, role, loading } = useAuth();
   const db = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
@@ -51,6 +52,19 @@ export default function LawyerDashboard() {
 
   const { data: appointments, isLoading: isApptsLoading } = useCollection(apptsQuery);
   const { data: activeCases } = useCollection(casesQuery);
+
+  // SAFE GUARD: Do not mount or show UI until role is verified
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-secondary" />
+      </div>
+    );
+  }
+
+  if (!user || role !== 'lawyer') {
+    return null; // AuthProvider handles redirects
+  }
 
   const updateStatus = (apptId: string, status: string) => {
     if (!db) return;
@@ -136,10 +150,10 @@ export default function LawyerDashboard() {
             </CardHeader>
             <CardContent className="p-0">
               {isApptsLoading ? (
-                <div className="p-20 flex justify-center"><AlertCircle className="animate-spin h-10 w-10 text-secondary/20" /></div>
+                <div className="p-20 flex justify-center"><Loader2 className="animate-spin h-10 w-10 text-secondary/20" /></div>
               ) : (
                 <div className="divide-y divide-secondary/5">
-                  {appointments?.slice(0, 5).map((appt) => (
+                  {appointments?.slice(0, 10).map((appt) => (
                     <div key={appt.id} className="p-6 flex items-center justify-between hover:bg-secondary/5 transition-colors">
                       <div className="flex items-center gap-4">
                         <div className="h-14 w-14 rounded-2xl bg-secondary/5 flex flex-col items-center justify-center border border-secondary/10">

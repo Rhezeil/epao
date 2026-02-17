@@ -40,7 +40,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 export default function LawyerCasesPage() {
-  const { user, role } = useAuth();
+  const { user, role, loading } = useAuth();
   const db = useFirestore();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
@@ -51,6 +51,17 @@ export default function LawyerCasesPage() {
   }, [db, user, role]);
 
   const { data: cases, isLoading } = useCollection(casesQuery);
+
+  // SAFE GUARD
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-secondary" />
+      </div>
+    );
+  }
+
+  if (!user || role !== 'lawyer') return null;
 
   const filteredCases = useMemo(() => {
     if (!cases) return [];
