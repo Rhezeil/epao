@@ -328,20 +328,6 @@ export default function AdminTriagePage() {
                 </div>
               </div>
 
-              <div className="p-6 bg-primary/5 rounded-[2rem] border border-primary/10 space-y-4">
-                <div className="flex items-center gap-2 text-primary font-black uppercase text-[10px] tracking-widest">
-                  <FileText className="h-4 w-4" /> Eligibility Checklist
-                </div>
-                <div className="grid grid-cols-1 gap-2">
-                  <div className="flex items-center gap-3 text-sm font-bold text-[#1A3B6B]">
-                    <CheckCircle2 className="h-4 w-4 text-green-600" /> Proof of Indigency Verified
-                  </div>
-                  <div className="flex items-center gap-3 text-sm font-bold text-[#1A3B6B]">
-                    <CheckCircle2 className="h-4 w-4 text-green-600" /> Merit Test Passed (Legal Basis Confirmed)
-                  </div>
-                </div>
-              </div>
-
               <div className="space-y-6">
                 <div className="space-y-2">
                   <Label className="text-xs font-black uppercase tracking-widest text-primary/40 ml-1">Assign Permanent Lawyer</Label>
