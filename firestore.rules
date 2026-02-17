@@ -49,10 +49,10 @@ service cloud.firestore {
     }
 
     match /appointments/{apptId} {
-      allow read: if isAdmin() || isLawyer() || (isSignedIn() && (resource.data.clientId == request.auth.uid || resource.data.guestMobile != null));
-      allow list: if isAdmin() || isLawyer();
+      allow read: if isAdmin() || isLawyer() || (isSignedIn() && (resource.data.clientId == request.auth.uid || resource.data.lawyerId == request.auth.uid || resource.data.guestMobile != null));
+      allow list: if isAdmin() || isLawyer() || (isSignedIn() && (resource.data.clientId == request.auth.uid || resource.data.lawyerId == request.auth.uid));
       allow create: if true; // Public booking
-      allow update: if isAdmin() || isLawyer() || (isSignedIn() && resource.data.clientId == request.auth.uid);
+      allow update: if isAdmin() || isLawyer() || (isSignedIn() && (resource.data.clientId == request.auth.uid || resource.data.lawyerId == request.auth.uid));
       allow delete: if isAdmin();
     }
 
