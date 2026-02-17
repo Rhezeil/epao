@@ -1,4 +1,3 @@
-
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -213,7 +212,7 @@ export default function AdminTriagePage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Client Triage</h1>
-            <p className="text-muted-foreground font-medium">Initialize official legal records and manage lawyer assignments.</p>
+            <p className="text-muted-foreground font-medium">Evaluate intakes and initialize official legal records.</p>
           </div>
         </div>
 
@@ -341,27 +340,27 @@ export default function AdminTriagePage() {
 
         {/* --- DYNAMIC TRIAGE DIALOG --- */}
         <Dialog open={!!selectedAppt} onOpenChange={() => { setSelectedAppt(null); setRejectionReason(""); }}>
-          <DialogContent className="rounded-[3rem] max-w-lg p-0 overflow-hidden border-none shadow-2xl">
+          <DialogContent className="rounded-[3rem] max-w-lg p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
             <DialogHeader className={cn(
-              "p-8 text-white",
+              "p-6 md:p-8 text-white shrink-0",
               reviewMode === 'intake' ? "bg-secondary" : "bg-primary"
             )}>
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
-                  <DialogTitle className="text-3xl font-black tracking-tight">
+                  <DialogTitle className="text-2xl md:text-3xl font-black tracking-tight">
                     {reviewMode === 'intake' ? "Intake Review" : "Lawyer Assignment"}
                   </DialogTitle>
                   <DialogDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest">
-                    Reference: {selectedAppt?.referenceCode}
+                    Citizen Reference: {selectedAppt?.referenceCode}
                   </DialogDescription>
                 </div>
-                <div className="p-3 bg-white/20 rounded-2xl">
+                <div className="p-3 bg-white/20 rounded-2xl hidden sm:block">
                   {reviewMode === 'intake' ? <ClipboardCheck className="h-8 w-8" /> : <UserPlus className="h-8 w-8" />}
                 </div>
               </div>
             </DialogHeader>
 
-            <div className="p-10 space-y-8 max-h-[70vh] overflow-y-auto">
+            <div className="p-6 md:p-10 space-y-8 flex-1 overflow-y-auto">
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="space-y-4">
                   <div className="space-y-1">
@@ -376,7 +375,7 @@ export default function AdminTriagePage() {
                 </div>
                 <div className="space-y-4">
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Visit Logged</Label>
+                    <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Initial Visit Conducted</Label>
                     <p className="text-base font-bold text-primary">{selectedAppt?.date ? format(new Date(selectedAppt.date), "PPP") : "---"}</p>
                     <p className="text-xs font-medium text-muted-foreground">{selectedAppt?.time}</p>
                   </div>
@@ -390,7 +389,7 @@ export default function AdminTriagePage() {
                   </Label>
                   <Select value={assignedLawyer} onValueChange={setAssignedLawyer}>
                     <SelectTrigger className="h-14 rounded-2xl border-primary/20 bg-white font-bold shadow-sm">
-                      <SelectValue placeholder="Select a lawyer" />
+                      <SelectValue placeholder="Select an authorized public attorney" />
                     </SelectTrigger>
                     <SelectContent>
                       {lawyers?.map((lawyer) => (
@@ -438,9 +437,9 @@ export default function AdminTriagePage() {
               )}
             </div>
 
-            <DialogFooter className="p-8 bg-muted/30 flex gap-4">
-              <Button variant="outline" onClick={() => setSelectedAppt(null)} className="flex-1 h-14 rounded-2xl font-bold">Cancel</Button>
-              {reviewMode === 'intake' && rejectionReason && (
+            <DialogFooter className="p-6 md:p-8 bg-muted/30 flex gap-4 shrink-0">
+              <Button variant="outline" onClick={() => setSelectedAppt(null)} className="flex-1 h-14 rounded-2xl font-bold">Cancel Review</Button>
+              {reviewMode === 'intake' && rejectionReason ? (
                 <Button 
                   variant="outline" 
                   disabled={isProcessing}
@@ -449,8 +448,7 @@ export default function AdminTriagePage() {
                 >
                   Close Intake
                 </Button>
-              )}
-              {(!rejectionReason || reviewMode === 'assign') && (
+              ) : (
                 <Button 
                   onClick={reviewMode === 'intake' ? handleCreateCase : handleAssignLawyer} 
                   disabled={!assignedLawyer || isProcessing} 

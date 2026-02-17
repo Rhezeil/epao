@@ -362,8 +362,8 @@ export default function AdminUsersPage() {
 
         {/* --- ADD CLIENT DIALOG --- */}
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogContent className="rounded-[3rem] max-w-lg p-0 overflow-hidden border-none shadow-2xl">
-            <DialogHeader className="p-8 bg-primary text-white">
+          <DialogContent className="rounded-[3rem] max-w-lg p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
+            <DialogHeader className="p-8 bg-primary text-white shrink-0">
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
                   <DialogTitle className="text-3xl font-black tracking-tight">Register Citizen</DialogTitle>
@@ -372,76 +372,78 @@ export default function AdminUsersPage() {
                 <UserPlus className="h-10 w-10 text-white/20" />
               </div>
             </DialogHeader>
-            <form onSubmit={handleAddClient} className="p-10 space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
+            <form onSubmit={handleAddClient} className="flex-1 overflow-y-auto">
+              <div className="p-10 space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Full Legal Name</Label>
+                    <Input 
+                      placeholder="Juan Dela Cruz" 
+                      value={newClient.name} 
+                      onChange={e => setNewClient({...newClient, name: e.target.value})} 
+                      required 
+                      className="h-12 rounded-xl border-primary/10"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Mobile Number</Label>
+                    <Input 
+                      placeholder="09123456789" 
+                      value={newClient.mobile} 
+                      onChange={e => setNewClient({...newClient, mobile: e.target.value})} 
+                      required 
+                      className="h-12 rounded-xl border-primary/10"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Email (Optional)</Label>
+                    <Input 
+                      type="email" 
+                      placeholder="name@example.com" 
+                      value={newClient.email} 
+                      onChange={e => setNewClient({...newClient, email: e.target.value})} 
+                      className="h-12 rounded-xl border-primary/10"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Income Classification</Label>
+                    <Select value={newClient.income} onValueChange={v => setNewClient({...newClient, income: v})}>
+                      <SelectTrigger className="h-12 rounded-xl border-primary/10">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Indigent">Indigent (Qualified)</SelectItem>
+                        <SelectItem value="Lower Class">Lower Class</SelectItem>
+                        <SelectItem value="Middle Class">Middle Class (Evaluation Required)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Full Legal Name</Label>
+                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Residential Address</Label>
                   <Input 
-                    placeholder="Juan Dela Cruz" 
-                    value={newClient.name} 
-                    onChange={e => setNewClient({...newClient, name: e.target.value})} 
+                    placeholder="Street, Barangay, City" 
+                    value={newClient.address} 
+                    onChange={e => setNewClient({...newClient, address: e.target.value})} 
                     required 
                     className="h-12 rounded-xl border-primary/10"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Mobile Number</Label>
-                  <Input 
-                    placeholder="09123456789" 
-                    value={newClient.mobile} 
-                    onChange={e => setNewClient({...newClient, mobile: e.target.value})} 
-                    required 
-                    className="h-12 rounded-xl border-primary/10"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Email (Optional)</Label>
-                  <Input 
-                    type="email" 
-                    placeholder="name@example.com" 
-                    value={newClient.email} 
-                    onChange={e => setNewClient({...newClient, email: e.target.value})} 
-                    className="h-12 rounded-xl border-primary/10"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Income Classification</Label>
-                  <Select value={newClient.income} onValueChange={v => setNewClient({...newClient, income: v})}>
-                    <SelectTrigger className="h-12 rounded-xl border-primary/10">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Indigent">Indigent (Qualified)</SelectItem>
-                      <SelectItem value="Lower Class">Lower Class</SelectItem>
-                      <SelectItem value="Middle Class">Middle Class (Evaluation Required)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Residential Address</Label>
-                <Input 
-                  placeholder="Street, Barangay, City" 
-                  value={newClient.address} 
-                  onChange={e => setNewClient({...newClient, address: e.target.value})} 
-                  required 
-                  className="h-12 rounded-xl border-primary/10"
-                />
-              </div>
-              <DialogFooter className="pt-4">
-                <Button variant="outline" type="button" onClick={() => setIsAddDialogOpen(false)} className="h-14 rounded-2xl font-bold flex-1">Cancel</Button>
-                <Button type="submit" disabled={isSubmitting} className="h-14 rounded-2xl font-black bg-primary text-white flex-1 shadow-xl">
-                  {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : "Confirm Registration"}
-                </Button>
-              </DialogFooter>
             </form>
+            <DialogFooter className="p-8 bg-muted/30 flex gap-4 shrink-0">
+              <Button variant="outline" type="button" onClick={() => setIsAddDialogOpen(false)} className="h-14 rounded-2xl font-bold flex-1">Cancel</Button>
+              <Button type="submit" disabled={isSubmitting} className="h-14 rounded-2xl font-black bg-primary text-white flex-1 shadow-xl" onClick={(e) => { e.preventDefault(); (e.currentTarget.closest('form') as any)?.requestSubmit(); }}>
+                {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : "Confirm Registration"}
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
 
         {/* --- DETAILS & PROFILE OVERLAY --- */}
         <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-          <DialogContent className="rounded-[3rem] max-w-2xl p-0 overflow-hidden border-none shadow-2xl">
-            <DialogHeader className="p-8 bg-secondary text-white">
+          <DialogContent className="rounded-[3rem] max-w-2xl p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
+            <DialogHeader className="p-6 md:p-8 bg-secondary text-white shrink-0">
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
                   <DialogTitle className="text-2xl font-black">
@@ -454,7 +456,7 @@ export default function AdminUsersPage() {
                 <Badge className="bg-white text-secondary font-black px-4 py-2 rounded-xl">{selectedUser?.status || "Active"}</Badge>
               </div>
             </DialogHeader>
-            <div className="p-10 overflow-y-auto max-h-[70vh]">
+            <div className="p-6 md:p-10 overflow-y-auto flex-1">
               <Tabs defaultValue="profile" className="w-full">
                 <TabsList className="grid w-full grid-cols-3 bg-muted/50 p-1 rounded-2xl h-14">
                   <TabsTrigger value="profile" className="rounded-xl font-bold">Personal</TabsTrigger>
@@ -564,7 +566,7 @@ export default function AdminUsersPage() {
                 </TabsContent>
               </Tabs>
             </div>
-            <DialogFooter className="p-8 bg-muted/30">
+            <DialogFooter className="p-6 md:p-8 bg-muted/30 shrink-0">
               <Button onClick={() => setIsDetailsOpen(false)} className="w-full h-14 rounded-2xl font-black bg-primary text-white shadow-xl">Close Resident Record</Button>
             </DialogFooter>
           </DialogContent>
