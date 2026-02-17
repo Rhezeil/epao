@@ -28,14 +28,16 @@ import {
   ArrowRightLeft,
   Settings2,
   Calendar,
-  Eye,
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator
+  Eye
 } from "lucide-react";
+import { 
+  DropdownMenu, 
+  DropdownMenuTrigger, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator 
+} from "@/components/ui/dropdown-menu";
 import { initializeApp, deleteApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { firebaseConfig } from "@/firebase/config";
@@ -134,7 +136,6 @@ export default function AdminLawyersPage() {
       } catch (authError: any) {
         if (authError.code === 'auth/email-already-in-use') {
           // If already in Auth, we still need a UID to create the firestore record
-          // For prototype simplicity, we assume if it's already in auth it's the same user or we handle elsewhere
           throw authError;
         } else {
           throw authError;
