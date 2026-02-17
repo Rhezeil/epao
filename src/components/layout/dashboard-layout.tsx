@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -71,7 +70,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     if (role === "admin") {
       return [
         { icon: LayoutDashboard, label: "Analytics Overview", path: "/dashboard/admin" },
-        { icon: ShieldCheck, label: "Triage & Cases", path: "/dashboard/admin/triage" },
+        { icon: ShieldCheck, label: "Client Triage", path: "/dashboard/admin/triage" },
         { icon: Users, label: "Users Registry", path: "/dashboard/admin/users" },
         { icon: Briefcase, label: "Lawyers", path: "/dashboard/admin/lawyers" },
         { icon: Database, label: "Legal Standards", path: "/dashboard/admin/case-requirements" },
