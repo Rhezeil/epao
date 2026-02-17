@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking, setDocumentNonBlocking, updateDocumentNonBlocking, useDoc } from "@/firebase";
@@ -490,14 +489,6 @@ export default function AdminUsersPage() {
                         <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Eligibility Status</Label>
                         <p className="font-black text-secondary">{selectedUser?.incomeClassification || "Indigent"}</p>
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">Verified Priority Rank</p>
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Account Security</Label>
-                        <div className="flex gap-2">
-                          <Badge variant={selectedUser?.accountLocked ? "destructive" : "outline"} className="font-black text-[9px]">
-                            {selectedUser?.accountLocked ? "LOCKED" : "UNLOCKED"}
-                          </Badge>
-                        </div>
                       </div>
                     </div>
                   </div>
