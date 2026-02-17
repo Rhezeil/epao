@@ -21,17 +21,17 @@ export default function ClientDashboard() {
 
   // Fetch Client's official case
   const casesQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
+    if (!db || !user || role !== 'client') return null;
     return query(collection(db, "cases"), where("clientId", "==", user.uid));
-  }, [db, user]);
+  }, [db, user, role]);
 
   const { data: cases, isLoading: isCasesLoading } = useCollection(casesQuery);
 
   // Fetch upcoming appointments
   const apptsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
+    if (!db || !user || role !== 'client') return null;
     return query(collection(db, "appointments"), where("clientId", "==", user.uid));
-  }, [db, user]);
+  }, [db, user, role]);
 
   const { data: appts, isLoading: isApptsLoading } = useCollection(apptsQuery);
 
@@ -39,14 +39,14 @@ export default function ClientDashboard() {
 
   useEffect(() => {
     async function fetchLawyer() {
-      if (activeCase?.lawyerId && db) {
+      if (activeCase?.lawyerId && db && role === 'client') {
         const lawyerRef = doc(db, "roleLawyer", activeCase.lawyerId);
         const snap = await getDoc(lawyerRef);
         if (snap.exists()) setAssignedLawyer(snap.data());
       }
     }
     fetchLawyer();
-  }, [activeCase, db]);
+  }, [activeCase, db, role]);
 
   return (
     <DashboardLayout role="client">
@@ -177,7 +177,7 @@ export default function ClientDashboard() {
                   </>
                 ) : (
                   <div className="text-center py-6">
-                    <p className="text-xs text-muted-foreground font-medium italic leading-relaxed">Your assigned attorney will appear here once your case is triaged.</p>
+                    <p className="text-xs text-muted-foreground font-medium italic leading-relaxed">Your assigned lawyer will appear here once your case is triaged.</p>
                   </div>
                 )}
               </CardContent>

@@ -3,6 +3,7 @@
 
 import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { useAuth } from "@/components/auth-provider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query } from "firebase/firestore";
@@ -25,11 +26,23 @@ const COLORS = ['#1A237E', '#008080', '#F59E0B', '#EF4444', '#6366F1'];
 
 export default function AdminDashboard() {
   const db = useFirestore();
+  const { user, role } = useAuth();
   const [period, setPeriod] = useState("month");
 
-  const casesQuery = useMemoFirebase(() => db ? query(collection(db, "cases")) : null, [db]);
-  const apptsQuery = useMemoFirebase(() => db ? query(collection(db, "appointments")) : null, [db]);
-  const lawyersQuery = useMemoFirebase(() => db ? query(collection(db, "roleLawyer")) : null, [db]);
+  const casesQuery = useMemoFirebase(() => {
+    if (!db || !user || role !== 'admin') return null;
+    return query(collection(db, "cases"));
+  }, [db, user, role]);
+
+  const apptsQuery = useMemoFirebase(() => {
+    if (!db || !user || role !== 'admin') return null;
+    return query(collection(db, "appointments"));
+  }, [db, user, role]);
+
+  const lawyersQuery = useMemoFirebase(() => {
+    if (!db || !user || role !== 'admin') return null;
+    return query(collection(db, "roleLawyer"));
+  }, [db, user, role]);
 
   const { data: cases } = useCollection(casesQuery);
   const { data: appointments } = useCollection(apptsQuery);

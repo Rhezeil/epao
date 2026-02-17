@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -49,8 +50,15 @@ export default function AdminLawyersPage() {
   }, [db, user, role]);
 
   // Fetch all cases and appointments for metrics
-  const casesQuery = useMemoFirebase(() => db ? query(collection(db, "cases")) : null, [db]);
-  const apptsQuery = useMemoFirebase(() => db ? query(collection(db, "appointments")) : null, [db]);
+  const casesQuery = useMemoFirebase(() => {
+    if (!db || !user || role !== 'admin') return null;
+    return query(collection(db, "cases"));
+  }, [db, user, role]);
+
+  const apptsQuery = useMemoFirebase(() => {
+    if (!db || !user || role !== 'admin') return null;
+    return query(collection(db, "appointments"));
+  }, [db, user, role]);
 
   const { data: registeredLawyers, isLoading: isLawyersLoading } = useCollection(registeredLawyersQuery);
   const { data: allCases } = useCollection(casesQuery);

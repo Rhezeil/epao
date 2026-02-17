@@ -20,23 +20,23 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 export default function LawyerDashboard() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const db = useFirestore();
   const { toast } = useToast();
 
   const apptsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
+    if (!db || !user || role !== 'lawyer') return null;
     return query(
       collection(db, "appointments"), 
       where("lawyerId", "==", user.uid),
       orderBy("date", "asc")
     );
-  }, [db, user]);
+  }, [db, user, role]);
 
   const casesQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
+    if (!db || !user || role !== 'lawyer') return null;
     return query(collection(db, "cases"), where("lawyerId", "==", user.uid));
-  }, [db, user]);
+  }, [db, user, role]);
 
   const { data: appointments, isLoading: isApptsLoading } = useCollection(apptsQuery);
   const { data: cases } = useCollection(casesQuery);

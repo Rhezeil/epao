@@ -2,6 +2,7 @@
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { useAuth } from "@/components/auth-provider";
 import { useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
 import { collection, query, where, doc, getDoc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -18,17 +19,26 @@ import { Label } from "@/components/ui/label";
 
 export default function AdminTriagePage() {
   const db = useFirestore();
+  const { user, role } = useAuth();
   const { toast } = useToast();
   const [selectedAppt, setSelectedAppt] = useState<any>(null);
   const [assignedLawyer, setAssignedLawyer] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Fetch only pending initial appointments
-  const pendingQuery = useMemoFirebase(() => db ? query(collection(db, "appointments"), where("status", "==", "pending")) : null, [db]);
+  const pendingQuery = useMemoFirebase(() => {
+    if (!db || !user || role !== 'admin') return null;
+    return query(collection(db, "appointments"), where("status", "==", "pending"));
+  }, [db, user, role]);
+  
   const { data: appointments, isLoading } = useCollection(pendingQuery);
 
   // Fetch lawyers for assignment
-  const lawyersQuery = useMemoFirebase(() => db ? query(collection(db, "roleLawyer")) : null, [db]);
+  const lawyersQuery = useMemoFirebase(() => {
+    if (!db || !user || role !== 'admin') return null;
+    return query(collection(db, "roleLawyer"));
+  }, [db, user, role]);
+  
   const { data: lawyers } = useCollection(lawyersQuery);
 
   const handleTriage = async () => {
