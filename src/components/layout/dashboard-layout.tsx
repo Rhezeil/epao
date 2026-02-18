@@ -63,7 +63,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
         { icon: Compass, label: "Case Requirements Navigator", path: "/case-navigator" },
         { icon: Calendar, label: "Book Appointment", path: "/book-appointment" },
         { icon: Search, label: "Manage Booking", path: "/manage-appointment" },
-        { icon: Heart, label: "About LexConnect", path: "/about" },
+        { icon: Heart, label: "About Us", path: "/about" },
       ];
     }
 
