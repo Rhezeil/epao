@@ -280,7 +280,7 @@ function BookAppointmentContent() {
                       <Label className="text-xs font-black text-primary/60 uppercase tracking-widest">3. Select Time Slot</Label>
                       <div className="flex gap-2 text-[8px] font-bold uppercase">
                         <span className="flex items-center gap-1"><div className="w-2 h-2 bg-green-500 rounded-full" /> Available</span>
-                        <span className="flex items-center gap-1"><div className="w-2 h-2 bg-red-500 rounded-full" /> Booked</span>
+                        <span className="flex items-center gap-1"><div className="w-2 h-2 bg-red-500 rounded-full" /> not available</span>
                         <span className="flex items-center gap-1"><div className="w-2 h-2 bg-yellow-400 rounded-full" /> Selected</span>
                       </div>
                     </div>
