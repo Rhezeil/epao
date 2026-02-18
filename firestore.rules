@@ -25,22 +25,30 @@ service cloud.firestore {
 
     match /appointments/{apptId} {
       // Split List Rules for Query Guarantee
+      
+      // Admin: Full system oversight
       allow list: if isAdmin();
+      
+      // Staff (Lawyer): Access their assigned consultations
       allow list: if isSignedIn() && resource.data.lawyerId == request.auth.uid;
+      
+      // Registered Citizen (Client): Access their own booking history
       allow list: if isSignedIn() && resource.data.clientId == request.auth.uid;
+      
+      // Public Guest: Check availability (requires filtering by dateString)
+      allow list: if resource.data.dateString != null;
+      
+      // Public Guest: Manage Booking (requires filtering by referenceCode)
       allow list: if resource.data.referenceCode != null;
 
-      allow get: if isAdmin() || (isSignedIn() &&
-           (resource.data.lawyerId == request.auth.uid
-            || resource.data.clientId == request.auth.uid))
-            || resource.data.referenceCode != null;
+      // GET logic for individual records
+      allow get: if isAdmin() 
+                 || (isSignedIn() && (resource.data.lawyerId == request.auth.uid || resource.data.clientId == request.auth.uid))
+                 || resource.data.referenceCode != null;
 
-      allow create: if true;
-      allow update: if isAdmin()
-        || (isSignedIn() &&
-           (resource.data.lawyerId == request.auth.uid
-            || resource.data.clientId == request.auth.uid));
-
+      allow create: if true; // Unauthenticated booking allowed
+      allow update: if isAdmin() 
+                    || (isSignedIn() && (resource.data.lawyerId == request.auth.uid || resource.data.clientId == request.auth.uid));
       allow delete: if isAdmin();
     }
 
@@ -52,7 +60,9 @@ service cloud.firestore {
       allow list: if isSignedIn() && resource.data.lawyerId == request.auth.uid;
       allow list: if isSignedIn() && resource.data.clientId == request.auth.uid;
 
-      allow get: if isAdmin() || (isSignedIn() && (resource.data.lawyerId == request.auth.uid || resource.data.clientId == request.auth.uid));
+      allow get: if isAdmin()
+        || (isSignedIn() && (resource.data.lawyerId == request.auth.uid || resource.data.clientId == request.auth.uid));
+      
       allow create: if isAdmin();
       allow update: if isAdmin() || (isSignedIn() && resource.data.lawyerId == request.auth.uid);
       allow delete: if isAdmin();
@@ -63,7 +73,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow get: if isAdmin() || isLawyer() || (isSignedIn() && request.auth.uid == userId);
       allow list: if isAdmin();
-      allow create: if isSignedIn();
+      allow create: if true; // Citizen registration
       allow update: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
       
       match /profile/{profileId} {
@@ -76,8 +86,8 @@ service cloud.firestore {
     }
 
     match /roleLawyer/{lawyerId} {
-      allow get: if isSignedIn();
-      allow list: if isAdmin();
+      allow list: if true; // Public list for system-wide assignment oversight
+      allow get: if true; // Public profile view
       allow write: if isAdmin() || (isSignedIn() && request.auth.uid == lawyerId);
     }
 
