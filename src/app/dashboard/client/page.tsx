@@ -21,7 +21,7 @@ export default function ClientDashboard() {
   const router = useRouter();
   const [assignedLawyer, setAssignedLawyer] = useState<any>(null);
 
-  // EVEN SAFER PATTERN: Do not mount queries until role is confirmed
+  // Hooks must be at top level
   const casesQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'client') return null;
     return query(collection(db, "cases"), where("clientId", "==", user.uid));
@@ -48,7 +48,7 @@ export default function ClientDashboard() {
     return () => unsub();
   }, [activeCase, db, role]);
 
-  // SAFE GUARD: Do not show UI until role is verified
+  // SAFE GUARD: Early returns must be AFTER hooks
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">

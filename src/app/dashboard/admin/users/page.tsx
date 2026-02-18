@@ -122,6 +122,7 @@ export default function AdminUsersPage() {
     if (!db || !selectedClientId) return null;
     return doc(db, "users", selectedClientId, "profile", "profile");
   }, [db, selectedClientId]);
+  
   const { data: selectedProfile } = useDoc(profileRef);
 
   const selectedUser = useMemo(() => 
@@ -133,6 +134,15 @@ export default function AdminUsersPage() {
     cases?.find(c => c.clientId === selectedClientId), 
     [cases, selectedClientId]
   );
+
+  const filteredUsers = useMemo(() => {
+    if (!users) return [];
+    return users.filter(u => 
+      u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.mobileNumber?.includes(searchQuery) ||
+      u.fullName?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [users, searchQuery]);
 
   useEffect(() => {
     if (selectedProfile) {
@@ -165,15 +175,6 @@ export default function AdminUsersPage() {
 
   if (!currentUser || currentRole !== 'admin') return null;
 
-  const filteredUsers = useMemo(() => {
-    if (!users) return [];
-    return users.filter(u => 
-      u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.mobileNumber?.includes(searchQuery) ||
-      u.fullName?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [users, searchQuery]);
-
   const handleAddClient = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!db) return;
@@ -182,38 +183,34 @@ export default function AdminUsersPage() {
     try {
       const email = newClient.email || `${newClient.mobile}@epao.mobile`;
       
-      try {
-        const secondaryApp = initializeApp(firebaseConfig, "client-creation-" + Date.now());
-        const secondaryAuth = getAuth(secondaryApp);
-        const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, "password123");
-        const uid = userCredential.user.uid;
-        
-        const userRef = doc(db, "users", uid);
-        setDocumentNonBlocking(userRef, {
-          id: uid,
-          mobileNumber: newClient.mobile,
-          email: email,
-          role: "client",
-          status: "New Intake",
-          fullName: newClient.name,
-          incomeClassification: newClient.income,
-          createdAt: new Date().toISOString()
-        }, { merge: true });
+      const secondaryApp = initializeApp(firebaseConfig, "client-creation-" + Date.now());
+      const secondaryAuth = getAuth(secondaryApp);
+      const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, "password123");
+      const uid = userCredential.user.uid;
+      
+      const userRef = doc(db, "users", uid);
+      setDocumentNonBlocking(userRef, {
+        id: uid,
+        mobileNumber: newClient.mobile,
+        email: email,
+        role: "client",
+        status: "New Intake",
+        fullName: newClient.name,
+        incomeClassification: newClient.income,
+        createdAt: new Date().toISOString()
+      }, { merge: true });
 
-        const profileRef = doc(db, "users", uid, "profile", "profile");
-        setDocumentNonBlocking(profileRef, {
-          id: "profile",
-          firstName: newClient.name.split(' ')[0],
-          lastName: newClient.name.split(' ').slice(1).join(' '),
-          phoneNumber: newClient.mobile,
-          address: newClient.address,
-          createdAt: new Date().toISOString()
-        }, { merge: true });
+      const profileRef = doc(db, "users", uid, "profile", "profile");
+      setDocumentNonBlocking(profileRef, {
+        id: "profile",
+        firstName: newClient.name.split(' ')[0],
+        lastName: newClient.name.split(' ').slice(1).join(' '),
+        phoneNumber: newClient.mobile,
+        address: newClient.address,
+        createdAt: new Date().toISOString()
+      }, { merge: true });
 
-        await deleteApp(secondaryApp);
-      } catch (authError: any) {
-        if (authError.code !== 'auth/email-already-in-use') throw authError;
-      }
+      await deleteApp(secondaryApp);
 
       toast({ title: "Client Registered", description: `${newClient.name} added to directory.` });
       setIsAddDialogOpen(false);

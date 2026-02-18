@@ -76,7 +76,26 @@ export default function AdminLawyersPage() {
   const { data: registeredLawyers, isLoading: isLawyersLoading } = useCollection(registeredLawyersQuery);
   const { data: allCases } = useCollection(casesQuery);
 
-  // SAFE GUARD
+  const lawyerMetrics = useMemo(() => {
+    if (!registeredLawyers) return [];
+    return registeredLawyers.map(lawyer => ({
+      ...lawyer,
+      status: lawyer.status || "Available"
+    }));
+  }, [registeredLawyers]);
+
+  const filteredLawyers = useMemo(() => {
+    return lawyerMetrics.filter(l => 
+      l.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      `${l.firstName} ${l.lastName}`.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [lawyerMetrics, searchQuery]);
+
+  const currentLawyerCases = useMemo(() => {
+    if (!selectedLawyer || !allCases) return [];
+    return allCases.filter(c => c.lawyerId === selectedLawyer.id && c.status === 'Active');
+  }, [selectedLawyer, allCases]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -86,24 +105,6 @@ export default function AdminLawyersPage() {
   }
 
   if (!user || role !== 'admin') return null;
-
-  const lawyerMetrics = useMemo(() => {
-    if (!registeredLawyers) return [];
-
-    return registeredLawyers.map(lawyer => {
-      return {
-        ...lawyer,
-        status: lawyer.status || "Available"
-      };
-    });
-  }, [registeredLawyers]);
-
-  const filteredLawyers = useMemo(() => {
-    return lawyerMetrics.filter(l => 
-      l.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      `${l.firstName} ${l.lastName}`.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [lawyerMetrics, searchQuery]);
 
   const handleAuthorizeLawyer = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,8 +121,6 @@ export default function AdminLawyersPage() {
       try {
         const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, newLawyer.password);
         newUserId = userCredential.user.uid;
-      } catch (authError: any) {
-        throw authError;
       } finally {
         await deleteApp(secondaryApp);
       }
@@ -163,11 +162,6 @@ export default function AdminLawyersPage() {
     updateDocumentNonBlocking(doc(db, "cases", caseId), { lawyerId: newLawyerId });
     toast({ title: "Case Reassigned", description: "Legal Case successfully moved." });
   };
-
-  const currentLawyerCases = useMemo(() => {
-    if (!selectedLawyer || !allCases) return [];
-    return allCases.filter(c => c.lawyerId === selectedLawyer.id && c.status === 'Active');
-  }, [selectedLawyer, allCases]);
 
   return (
     <DashboardLayout role="admin">

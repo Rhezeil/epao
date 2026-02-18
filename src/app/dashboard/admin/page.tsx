@@ -37,7 +37,6 @@ export default function AdminDashboard() {
 
   const apptsQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'admin') return null;
-    // satisfying the "must have a where clause" best practice
     return query(collection(db, "appointments"), where("status", "!=", "deleted"));
   }, [db, user, role]);
 
@@ -49,18 +48,6 @@ export default function AdminDashboard() {
   const { data: cases } = useCollection(casesQuery);
   const { data: appointments } = useCollection(apptsQuery);
   const { data: lawyers } = useCollection(lawyersQuery);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!user || role !== 'admin') {
-    return null;
-  }
 
   const activeCasesCount = cases?.filter(c => c.status === 'Active').length || 0;
   const pendingApptsCount = appointments?.filter(a => a.status === 'pending').length || 0;
@@ -78,6 +65,18 @@ export default function AdminDashboard() {
     { name: 'Cancelled', value: appointments?.filter(a => a.status === 'cancelled').length || 0 },
     { name: 'Rescheduled', value: appointments?.filter(a => a.status === 'rescheduled').length || 0 },
   ].filter(stat => stat.value > 0), [appointments]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user || role !== 'admin') {
+    return null;
+  }
 
   return (
     <DashboardLayout role="admin">

@@ -76,14 +76,14 @@ export default function AdminTriagePage() {
     return query(collection(db, "roleLawyer"));
   }, [db, user, role]);
 
-  const { data: pendingAppointments, isLoading: isPendingLoading } = useCollection(pendingQuery);
-  const { data: completedIntakes, isLoading: isIntakeLoading } = useCollection(completedIntakeQuery);
-  const { data: lawyers } = useCollection(lawyersQuery);
-
   const casesQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'admin') return null;
     return query(collection(db, "cases"));
   }, [db, user, role]);
+
+  const { data: pendingAppointments, isLoading: isPendingLoading } = useCollection(pendingQuery);
+  const { data: completedIntakes, isLoading: isIntakeLoading } = useCollection(completedIntakeQuery);
+  const { data: lawyers } = useCollection(lawyersQuery);
   const { data: allCases } = useCollection(casesQuery);
 
   const triagableIntakes = useMemo(() => {
@@ -256,7 +256,6 @@ export default function AdminTriagePage() {
             </TabsTrigger>
           </TabsList>
 
-          {/* --- TRIAGE QUEUE (PENDING APPOINTMENTS) --- */}
           <TabsContent value="pending" className="mt-8">
             <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden">
               <CardHeader className="bg-amber-50/50 pb-6">
@@ -321,7 +320,6 @@ export default function AdminTriagePage() {
             </Card>
           </TabsContent>
 
-          {/* --- INTAKE REVIEW (COMPLETED CONSULTATIONS) --- */}
           <TabsContent value="intake" className="mt-8">
             <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden">
               <CardHeader className="bg-primary/5 pb-6">
@@ -381,7 +379,6 @@ export default function AdminTriagePage() {
           </TabsContent>
         </Tabs>
 
-        {/* --- TRIAGE & SCREENING DIALOG --- */}
         <Dialog open={!!selectedAppt} onOpenChange={() => { setSelectedAppt(null); setRejectionReason(""); setScreening({ indigency: false, merit: false, idVerified: false }); }}>
           <DialogContent className="rounded-[3rem] max-w-lg p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
             <DialogHeader className={cn(

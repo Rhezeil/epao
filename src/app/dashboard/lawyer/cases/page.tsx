@@ -46,6 +46,14 @@ export default function LawyerCasesPage() {
 
   const { data: cases, isLoading } = useCollection(casesQuery ? casesQuery : null);
 
+  const filteredCases = useMemo(() => {
+    if (!cases) return [];
+    return cases.filter(c => 
+      c.id.toLowerCase().includes(search.toLowerCase()) ||
+      c.caseType.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [cases, search]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -55,14 +63,6 @@ export default function LawyerCasesPage() {
   }
 
   if (!user || role !== 'lawyer') return null;
-
-  const filteredCases = useMemo(() => {
-    if (!cases) return [];
-    return cases.filter(c => 
-      c.id.toLowerCase().includes(search.toLowerCase()) ||
-      c.caseType.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [cases, search]);
 
   const handleUpdateStatus = (caseId: string, status: string) => {
     if (!db) return;
