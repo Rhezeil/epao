@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -61,7 +60,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   const getMenuItems = () => {
     if (!user) {
       return [
-        { icon: Compass, label: "Legal Navigator", path: "/case-navigator" },
+        { icon: Compass, label: "Case Requirements Navigator", path: "/case-navigator" },
         { icon: Calendar, label: "Book Appointment", path: "/book-appointment" },
         { icon: Search, label: "Manage Booking", path: "/manage-appointment" },
         { icon: Heart, label: "About LexConnect", path: "/about" },
@@ -73,7 +72,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
         { icon: LayoutDashboard, label: "My Dashboard", path: "/dashboard/client" },
         { icon: Gavel, label: "My Active Case", path: "/dashboard/client" },
         { icon: CalendarCheck, label: "Schedule Follow-up", path: "/dashboard/client/book-appointment" },
-        { icon: Compass, label: "Legal Navigator", path: "/case-navigator" },
+        { icon: Compass, label: "Case Requirements Navigator", path: "/case-navigator" },
       ];
     }
 
