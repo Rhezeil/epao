@@ -1,101 +1,116 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ===== HELPER FUNCTIONS =====
+    /**
+     * LEXCONNECT SECURITY RULES - PROTOTYPING PHASE
+     * 
+     * Core Philosophy:
+     * This ruleset implements a strict ownership-based access model with role-based markers. 
+     * Security is enforced at the path level and validated through internal document fields 
+     * to ensure relational integrity. 
+     * 
+     * Data Structure:
+     * - /users/{userId}: Primary profile storage.
+     * - /roles_admin/{adminId} & /roles_lawyer/{lawyerId}: Sidecar collections for role verification.
+     * - /users/{lawyerId}/availability/{availabilityId}: Lawyer-specific schedule subcollections.
+     * 
+     * Key Security Decisions:
+     * 1. Ownership via Path: Documents under user-specific paths are protected by matching the 
+     *    uid to the path wildcard.
+     * 2. Role-Based Access: Global roles (Admin, Lawyer) are determined by the existence of 
+     *    marker documents in dedicated collections, avoiding slow field-based filtering.
+     * 3. Availability Visibility: Lawyer availability is readable by any authenticated user 
+     *    to support the booking process, while write access is strictly for the owner.
+     * 4. Relational Integrity: On creation, documents must include a field (e.g., lawyerId) 
+     *    that matches their location in the hierarchy.
+     */
 
+    // --- GLOBAL HELPER FUNCTIONS ---
+
+    /** @description Checks if the request is from an authenticated user. */
     function isSignedIn() {
       return request.auth != null;
     }
 
+    /** @description Checks if the authenticated user's UID matches the provided ID. */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /** @description Checks if the document exists and the user is the owner. Used for update/delete. */
+    function isExistingOwner(userId) {
+      return resource != null && isOwner(userId);
+    }
+
+    /** @description Checks if the user has an Admin role via the marker collection. */
     function isAdmin() {
-      return exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
-    function isLawyer() {
-      return exists(/databases/$(database)/documents/roleLawyer/$(request.auth.uid));
-    }
+    // The 'isLawyer' function was identified as unused. It has been removed.
+    // If it is intended for future use, it can be re-added when needed.
+    // function isLawyer() {
+    //   return isSignedIn() && exists(/databases/$(database)/documents/roles_lawyer/$(request.auth.uid));
+    // }
 
-    function isClient() {
-      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
-    }
+    // --- COLLECTION RULES ---
 
-    // ===== APPOINTMENTS =====
-
-    match /appointments/{apptId} {
-      // Split List Rules for Query Guarantee
-      
-      // Admin: Full system oversight
-      allow list: if isAdmin();
-      
-      // Staff (Lawyer): Access their assigned consultations
-      allow list: if isSignedIn() && resource.data.lawyerId == request.auth.uid;
-      
-      // Registered Citizen (Client): Access their own booking history
-      allow list: if isSignedIn() && resource.data.clientId == request.auth.uid;
-      
-      // Public Guest: Check availability (requires filtering by dateString)
-      allow list: if resource.data.dateString != null;
-      
-      // Public Guest: Manage Booking (requires filtering by referenceCode)
-      allow list: if resource.data.referenceCode != null;
-
-      // GET logic for individual records
-      allow get: if isAdmin() 
-                 || (isSignedIn() && (resource.data.lawyerId == request.auth.uid || resource.data.clientId == request.auth.uid))
-                 || resource.data.referenceCode != null;
-
-      allow create: if true; // Unauthenticated booking allowed
-      allow update: if isAdmin() 
-                    || (isSignedIn() && (resource.data.lawyerId == request.auth.uid || resource.data.clientId == request.auth.uid));
-      allow delete: if isAdmin();
-    }
-
-    // ===== CASES =====
-
-    match /cases/{caseId} {
-      // Split List Rules for Query Guarantee
-      allow list: if isAdmin();
-      allow list: if isSignedIn() && resource.data.lawyerId == request.auth.uid;
-      allow list: if isSignedIn() && resource.data.clientId == request.auth.uid;
-
-      allow get: if isAdmin()
-        || (isSignedIn() && (resource.data.lawyerId == request.auth.uid || resource.data.clientId == request.auth.uid));
-      
-      allow create: if isAdmin();
-      allow update: if isAdmin() || (isSignedIn() && resource.data.lawyerId == request.auth.uid);
-      allow delete: if isAdmin();
-    }
-
-    // ===== USER REGISTRY =====
-
+    /**
+     * @description Rules for user profile documents. Users manage their own profiles.
+     * @path /users/{userId}
+     * @allow (get) If user is the owner or an admin.
+     * @deny (update) If user attempts to modify a profile that is not their own.
+     * @principle Ownership and Self-Creation validation.
+     */
     match /users/{userId} {
-      allow get: if isAdmin() || isLawyer() || (isSignedIn() && request.auth.uid == userId);
+      allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      allow create: if true; // Citizen registration
-      allow update: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
-      
-      match /profile/{profileId} {
-        allow read, write: if isAdmin() || isLawyer() || (isSignedIn() && request.auth.uid == userId);
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId) || isAdmin();
+
+      /**
+       * @description Rules for lawyer availability entries. Lawyers manage their own calendar.
+       * @path /users/{lawyerId}/availability/{availabilityId}
+       * @allow (list) Any signed-in user can view a lawyer's availability for booking.
+       * @deny (create) If the lawyerId in the data does not match the path.
+       * @principle Owner-only writes with public (authenticated) read access.
+       */
+      match /availability/{availabilityId} {
+        allow get, list: if isSignedIn();
+        // Corrected 'lawyerId' to 'userId' as 'userId' is the path variable for the parent document.
+        allow create: if isOwner(userId) && request.resource.data.lawyerId == userId;
+        // Corrected 'lawyerId' to 'userId' as 'userId' is the path variable for the parent document.
+        allow update: if isExistingOwner(userId) && request.resource.data.lawyerId == resource.data.lawyerId;
+        // Corrected 'lawyerId' to 'userId' as 'userId' is the path variable for the parent document.
+        allow delete: if isExistingOwner(userId);
       }
     }
 
-    match /admins/{adminId} {
-      allow read, write: if isSignedIn() && (request.auth.uid == adminId || isAdmin());
+    /**
+     * @description Marker collection for Admin roles. Read-only for most; write-restricted.
+     * @path /roles_admin/{adminId}
+     * @allow (get) If signed in to verify roles.
+     * @deny (create) If not a system-level process or existing Admin.
+     * @principle Role-based structural segregation.
+     */
+    match /roles_admin/{adminId} {
+      allow get: if isSignedIn();
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin(); 
     }
 
-    match /roleLawyer/{lawyerId} {
-      allow list: if true; // Public list for system-wide assignment oversight
-      allow get: if true; // Public profile view
-      allow write: if isAdmin() || (isSignedIn() && request.auth.uid == lawyerId);
-    }
-
-    // ===== REFERENCE DATA =====
-
-    match /caseRequirements/{reqId} {
-      allow read: if true;
-      allow write: if isAdmin();
+    /**
+     * @description Marker collection for Lawyer roles. Allows verification of lawyer status.
+     * @path /roles_lawyer/{lawyerId}
+     * @allow (get) Any authenticated user can verify a lawyer's status.
+     * @deny (write) Restricted to Admin management.
+     * @principle Role-based structural segregation.
+     */
+    match /roles_lawyer/{lawyerId} {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isAdmin();
     }
   }
 }

@@ -4,7 +4,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "UserProfile",
       "type": "object",
-      "description": "Represents a fundamental user account in the LexConnect system, storing common information and defining the user's role.",
+      "description": "Stores general information for all users of the LexConnect application, including their role and basic profile details. This entity is central to role-based authentication and user profile management, differentiating between admin, client, and lawyer roles.",
       "properties": {
         "id": {
           "type": "string",
@@ -12,12 +12,20 @@
         },
         "email": {
           "type": "string",
-          "description": "The user's email address, used as a unique identifier for authentication.",
+          "description": "The user's email address, used for login and communication.",
           "format": "email"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The first name of the user."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The last name of the user."
         },
         "role": {
           "type": "string",
-          "description": "The assigned role of the user (Admin, Client, or Lawyer)."
+          "description": "The role of the user within the application. Possible values are 'Admin', 'Client', or 'Lawyer', determining access control and permissions."
         },
         "createdAt": {
           "type": "string",
@@ -33,161 +41,142 @@
       "required": [
         "id",
         "email",
+        "firstName",
+        "lastName",
         "role",
         "createdAt",
         "updatedAt"
       ]
     },
-    "AdminProfile": {
+    "LawyerAvailability": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "AdminProfile",
+      "title": "LawyerAvailability",
       "type": "object",
-      "description": "Stores specific profile details for administrators.",
+      "description": "Manages the availability schedule for lawyers, allowing them to specify dates, time slots, and reasons for unavailability (e.g., leave, half-day) which can be displayed on a calendar.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier (UID)."
+          "description": "Unique identifier for the LawyerAvailability entity."
         },
-        "email": {
-          "type": "string"
-        },
-        "role": {
+        "lawyerId": {
           "type": "string",
-          "default": "admin"
+          "description": "Reference to the UserProfile entity for the lawyer associated with this availability entry. (Relationship: UserProfile 1:N LawyerAvailability)"
         },
-        "firstName": {
-          "type": "string"
+        "date": {
+          "type": "string",
+          "description": "The specific date for which this availability entry applies.",
+          "format": "date"
         },
-        "lastName": {
-          "type": "string"
+        "availabilityType": {
+          "type": "string",
+          "description": "Specifies the nature of the availability for the given date. Possible values include 'FullDayAvailable', 'PartialDayAvailable', 'FullDayUnavailable', 'PartialDayUnavailable'."
+        },
+        "startTime": {
+          "type": "string",
+          "description": "The start time of the availability or unavailability slot on the specified date. Required for 'PartialDayAvailable' and 'PartialDayUnavailable' types.",
+          "format": "time"
+        },
+        "endTime": {
+          "type": "string",
+          "description": "The end time of the availability or unavailability slot on the specified date. Required for 'PartialDayAvailable' and 'PartialDayUnavailable' types.",
+          "format": "time"
+        },
+        "reason": {
+          "type": "string",
+          "description": "An optional reason or note for the availability entry, especially important for 'FullDayUnavailable' (e.g., 'Annual Leave', 'Sick Leave') or 'PartialDayUnavailable' (e.g., 'Court Hearing')."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when this availability entry was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when this availability entry was last updated.",
+          "format": "date-time"
         }
       },
       "required": [
         "id",
-        "email",
-        "role"
+        "lawyerId",
+        "date",
+        "availabilityType",
+        "createdAt",
+        "updatedAt"
       ]
-    },
-    "ClientProfile": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "ClientProfile",
-      "type": "object",
-      "description": "Stores detailed personal and case-related information for registered citizens.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier (UID)."
-        },
-        "fullName": {
-          "type": "string",
-          "description": "The citizen's full legal name."
-        },
-        "mobileNumber": {
-          "type": "string",
-          "description": "Primary contact number."
-        },
-        "email": {
-          "type": "string"
-        },
-        "address": {
-          "type": "string"
-        },
-        "status": {
-          "type": "string",
-          "description": "Current system status (e.g., 'Active Case', 'New Intake', 'Closed Case')."
-        },
-        "incomeClassification": {
-          "type": "string",
-          "enum": ["Indigent", "Low Income", "Not Qualified"]
-        }
-      },
-      "required": [
-        "id",
-        "fullName",
-        "mobileNumber"
-      ]
-    },
-    "LawyerProfile": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "LawyerProfile",
-      "type": "object",
-      "description": "Stores professional information for PAO attorneys.",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "email": {
-          "type": "string"
-        },
-        "firstName": {
-          "type": "string"
-        },
-        "lastName": {
-          "type": "string"
-        },
-        "photoUrl": {
-          "type": "string"
-        },
-        "status": {
-          "type": "string",
-          "enum": ["Available", "Onsite", "On Leave"]
-        }
-      },
-      "required": [
-        "id",
-        "email"
-      ]
-    },
-    "Appointment": {
-      "title": "Appointment",
-      "type": "object",
-      "description": "Represents a scheduled visit or intake request.",
-      "properties": {
-        "id": { "type": "string" },
-        "referenceCode": { "type": "string" },
-        "clientId": { "type": "string" },
-        "lawyerId": { "type": "string" },
-        "status": { "type": "string", "enum": ["pending", "scheduled", "completed", "cancelled", "rescheduled"] },
-        "dateString": { "type": "string" },
-        "time": { "type": "string" }
-      }
     }
   },
   "auth": {
     "providers": [
-      "password"
+      "password",
+      "anonymous"
     ]
   },
   "firestore": {
     "structure": [
       {
-        "path": "/admins/{adminId}",
+        "path": "/users/{userId}",
         "definition": {
-          "entityName": "AdminProfile",
-          "description": "Administrators with system-wide oversight."
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores the profile information for all users (Admins, Clients, Lawyers). The `userId` in the path MUST match `request.auth.uid` for a user to access their own profile. For authorization, roles should be checked via the dedicated role collections (e.g., `/roles_admin/{adminId}`)."
         }
       },
       {
-        "path": "/roleLawyer/{lawyerId}",
+        "path": "/roles_admin/{adminId}",
         "definition": {
-          "entityName": "LawyerProfile",
-          "description": "Authorized public attorneys."
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "A dedicated collection to mark users as administrators for role-based access control. The existence of a document for a given `adminId` (which MUST be `request.auth.uid`) grants admin privileges. The document typically contains only the `id` field referencing the admin's user ID.",
+          "params": [
+            {
+              "name": "adminId",
+              "description": "The unique identifier of the user who has the Admin role. Corresponds to `request.auth.uid`."
+            }
+          ]
         }
       },
       {
-        "path": "/users/{clientId}",
+        "path": "/roles_lawyer/{lawyerId}",
         "definition": {
-          "entityName": "ClientProfile",
-          "description": "Registered citizens and their case history."
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "A dedicated collection to mark users as lawyers for role-based access control. The existence of a document for a given `lawyerId` (which MUST be `request.auth.uid`) grants lawyer-specific privileges, such as managing availability. The document typically contains only the `id` field referencing the lawyer's user ID.",
+          "params": [
+            {
+              "name": "lawyerId",
+              "description": "The unique identifier of the user who has the Lawyer role. Corresponds to `request.auth.uid`."
+            }
+          ]
         }
       },
       {
-        "path": "/appointments/{apptId}",
+        "path": "/users/{lawyerId}/availability/{availabilityId}",
         "definition": {
-          "entityName": "Appointment",
-          "description": "Client visit logs and requests."
+          "entityName": "LawyerAvailability",
+          "schema": {
+            "$ref": "#/backend/entities/LawyerAvailability"
+          },
+          "description": "Stores specific availability entries for individual lawyers. This is a subcollection under a lawyer's user path. Each document explicitly includes the `lawyerId` field, which MUST match the `{lawyerId}` wildcard in the path, ensuring robust, denormalized ownership for authorization independence. Write access is restricted to the owning lawyer (`request.auth.uid == lawyerId`), while read access can be granted to other authenticated users (e.g., clients) to facilitate booking.",
+          "params": [
+            {
+              "name": "lawyerId",
+              "description": "The unique identifier of the lawyer to whom this availability entry belongs. Corresponds to the `request.auth.uid` for write operations."
+            },
+            {
+              "name": "availabilityId",
+              "description": "The unique identifier for a specific availability entry for the lawyer."
+            }
+          ]
         }
       }
-    ]
+    ],
+    "reasoning": "The proposed Firestore structure prioritizes secure, scalable, and debuggable authorization rules in accordance with the provided core design principles and strategy mandates. \n\n**Authorization Independence via Denormalization:**\n- For `LawyerAvailability` documents, the `lawyerId` is explicitly included in the document itself and is also part of the hierarchical path `/users/{lawyerId}/availability/{availabilityId}`. This dual presence ensures that security rules can verify ownership and access permissions directly from the document data or the path, e.g., `request.auth.uid == lawyerId` and `resource.data.lawyerId == lawyerId`. This eliminates the need for expensive and non-atomic `get()` operations to parent documents, thus ensuring authorization independence. For `UserProfile` documents at `/users/{userId}`, ownership is directly tied to the path wildcard `{userId}` matching `request.auth.uid`.\n\n**Support for Query-Aware Security Rules (QAPs):**\n- **Structural Segregation:** Roles are not inferred from the `UserProfile` document's `role` field for authorization; instead, dedicated, segregated collections like `/roles_admin/{adminId}` and `/roles_lawyer/{lawyerId}` are used. The existence of a document in these collections signifies a user's role. This allows rules to be simple and efficient, e.g., `allow read: if exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));`. This directly supports QAPs as a query for 'admin' roles would implicitly check the `/roles_admin` collection, not filter data based on content.\n- **Homogeneous Security Posture:** The `/users/{lawyerId}/availability/{availabilityId}` collection provides a homogeneous security posture for all documents within a given lawyer's availability subcollection. A lawyer can read/write their own availability, and clients (or other authenticated users) can read *any specific lawyer's* availability entries. This design allows for efficient `list` operations (QAPs) because a user can query `/users/{specificLawyerId}/availability` and the rules can grant access to all documents within that collection without needing to filter based on individual document content or `get()` operations. For example, a client could query a lawyer's availability for a given month, and the rules would permit reading all those documents without filtering out any they are not allowed to see.\n\nThis structure ensures that rules are explicit, atomic, and scale effectively, providing a robust foundation for the LexConnect application."
   }
 }
