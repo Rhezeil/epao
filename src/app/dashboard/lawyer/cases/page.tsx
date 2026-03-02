@@ -4,9 +4,9 @@
 import { useAuth } from "@/components/auth-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
-import { collection, query, where, doc } from "firebase/firestore";
-import { format } from "date-fns";
+import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase";
+import { collection, query, where, doc, getDoc, setDoc } from "firebase/firestore";
+import { format, startOfToday, isWeekend, setHours, setMinutes, isBefore } from "date-fns";
 import { 
   FileText, 
   Scale, 
@@ -14,7 +14,10 @@ import {
   CheckCircle2,
   AlertCircle,
   Settings2,
-  Loader2
+  Loader2,
+  CalendarCheck,
+  Clock,
+  ChevronRight
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -26,16 +29,41 @@ import {
   DropdownMenuContent, 
   DropdownMenuItem, 
   DropdownMenuLabel, 
-  DropdownMenuTrigger 
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Calendar } from "@/components/ui/calendar";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const HOLIDAYS = [
+  "2024-01-01", "2024-04-09", "2024-05-01", "2024-06-12", "2024-08-26",
+  "2024-11-01", "2024-11-30", "2024-12-25", "2024-12-30", 
+  "2025-01-01", "2025-02-25", "2025-04-17", "2025-04-18", "2025-05-01"
+];
+
+const isHoliday = (date: Date) => {
+  const ds = format(date, "yyyy-MM-dd");
+  return HOLIDAYS.includes(ds);
+};
 
 export default function LawyerCasesPage() {
   const { user, role, loading } = useAuth();
   const db = useFirestore();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
+
+  // Quick Booking State
+  const [selectedCaseForBooking, setSelectedCaseForBooking] = useState<any>(null);
+  const [bookingForm, setBookingForm] = useState({
+    date: undefined as Date | undefined,
+    time: "",
+    purpose: "consultation"
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const casesQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'lawyer') return null;
@@ -54,6 +82,33 @@ export default function LawyerCasesPage() {
       c.caseType.toLowerCase().includes(search.toLowerCase())
     );
   }, [cases, search]);
+
+  // Slot Logic for Booking Dialog
+  const bookingDateStr = bookingForm.date ? format(bookingForm.date, "yyyy-MM-dd") : null;
+  const globalApptsQuery = useMemoFirebase(() => {
+    if (!db || !bookingDateStr) return null;
+    return query(collection(db, "appointments"), where("dateString", "==", bookingDateStr));
+  }, [db, bookingDateStr]);
+  const { data: globalAppts } = useCollection(globalApptsQuery);
+
+  const timeSlots = useMemo(() => {
+    const slots = [];
+    const now = new Date();
+    for (let h = 8; h <= 16; h++) {
+      for (let m = 0; m < 60; m += 30) {
+        if (h === 12) continue;
+        if (h === 16 && m > 30) continue;
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const displayHour = h % 12 || 12;
+        const timeString = `${displayHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
+        const slotDate = bookingForm.date ? setMinutes(setHours(new Date(bookingForm.date), h), m) : null;
+        const isPast = slotDate ? isBefore(slotDate, now) : false;
+        const isBooked = globalAppts?.some(a => a.lawyerId === user?.uid && a.time === timeString && a.status !== 'cancelled');
+        slots.push({ time: timeString, isBooked, isPast });
+      }
+    }
+    return slots;
+  }, [bookingForm.date, globalAppts, user]);
 
   if (loading) {
     return (
@@ -75,11 +130,48 @@ export default function LawyerCasesPage() {
     toast({ title: "Case Updated", description: `Case ${caseId} is now ${status}.` });
   };
 
-  const handleViewFile = (caseId: string) => {
-    toast({
-      title: "Digital File Locked",
-      description: `Detailed records for Case ${caseId} are currently being audited for confidentiality.`
-    });
+  const handleCreateAppointment = async () => {
+    if (!db || !user || !selectedCaseForBooking || !bookingForm.date || !bookingForm.time) return;
+    setIsSubmitting(true);
+
+    try {
+      // Fetch client details
+      const clientDoc = await getDoc(doc(db, "users", selectedCaseForBooking.clientId));
+      const clientData = clientDoc.exists() ? clientDoc.data() : null;
+
+      const apptId = crypto.randomUUID();
+      const refCode = `PAO-${Math.floor(100000 + Math.random() * 900000)}`;
+      
+      const data = {
+        id: apptId,
+        lawyerId: user.uid,
+        clientId: selectedCaseForBooking.clientId,
+        referenceCode: refCode,
+        caseId: selectedCaseForBooking.id,
+        caseType: selectedCaseForBooking.caseType,
+        purpose: bookingForm.purpose,
+        clientName: clientData?.fullName || "Registered Client",
+        clientMobile: clientData?.mobileNumber || "",
+        clientEmail: clientData?.email || "",
+        date: bookingForm.date.toISOString(),
+        dateString: format(bookingForm.date, "yyyy-MM-dd"),
+        time: bookingForm.time,
+        status: "scheduled",
+        type: "follow-up",
+        bookedBy: "lawyer",
+        createdAt: new Date().toISOString()
+      };
+
+      setDocumentNonBlocking(doc(db, "appointments", apptId), data, { merge: true });
+      
+      toast({ title: "Appointment Set", description: `Follow-up for ${selectedCaseForBooking.id} scheduled for ${format(bookingForm.date, "MMM dd")}.` });
+      setSelectedCaseForBooking(null);
+      setBookingForm({ date: undefined, time: "", purpose: "consultation" });
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Booking Failed", description: e.message });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -151,10 +243,10 @@ export default function LawyerCasesPage() {
                           <Button 
                             variant="ghost" 
                             size="sm" 
-                            onClick={() => handleViewFile(c.id)}
-                            className="h-9 rounded-xl font-bold text-[10px] uppercase text-secondary hover:bg-secondary/10"
+                            onClick={() => setSelectedCaseForBooking(c)}
+                            className="h-9 rounded-xl font-bold text-[10px] uppercase text-primary hover:bg-primary/5 gap-2"
                           >
-                            View File
+                            <CalendarCheck className="h-3 w-3" /> Schedule Visit
                           </Button>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -191,6 +283,108 @@ export default function LawyerCasesPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* --- BOOKING DIALOG --- */}
+        <Dialog open={!!selectedCaseForBooking} onOpenChange={() => setSelectedCaseForBooking(null)}>
+          <DialogContent className="rounded-[3rem] max-w-4xl p-0 overflow-hidden border-none shadow-2xl max-h-[95vh] flex flex-col">
+            <DialogHeader className="p-8 bg-primary text-white shrink-0">
+              <div className="flex justify-between items-center">
+                <div className="space-y-1">
+                  <DialogTitle className="text-2xl font-black">Schedule Visit</DialogTitle>
+                  <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">
+                    Case: {selectedCaseForBooking?.id}
+                  </DialogDescription>
+                </div>
+                <CalendarCheck className="h-8 w-8 opacity-40" />
+              </div>
+            </DialogHeader>
+            <div className="p-10 space-y-8 flex-1 overflow-y-auto">
+              <div className="grid lg:grid-cols-2 gap-12">
+                <div className="space-y-6">
+                  <div className="p-6 bg-primary/5 rounded-[2rem] border-2 border-dashed border-primary/10 space-y-2">
+                    <p className="text-[10px] font-black uppercase text-primary tracking-widest">Client Matter</p>
+                    <p className="text-lg font-black text-primary leading-tight">{selectedCaseForBooking?.caseType}</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Service Classification</Label>
+                    <Select value={bookingForm.purpose} onValueChange={(v) => setBookingForm({...bookingForm, purpose: v})}>
+                      <SelectTrigger className="h-14 rounded-2xl border-primary/20 bg-primary/5 font-bold">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="consultation" className="font-bold">Legal Consultation</SelectItem>
+                        <SelectItem value="notarization" className="font-bold">Document Notarization</SelectItem>
+                        <SelectItem value="document-preparation" className="font-bold">Document Preparation</SelectItem>
+                        <SelectItem value="legal-advice" className="font-bold">Legal Advice</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Visit Date</Label>
+                    <div className="p-4 bg-primary/5 rounded-3xl border border-primary/10 shadow-inner">
+                      <Calendar
+                        mode="single"
+                        selected={bookingForm.date}
+                        onSelect={(d) => setBookingForm({...bookingForm, date: d, time: ""})}
+                        className="rounded-md border-none mx-auto"
+                        disabled={[
+                          { before: startOfToday() },
+                          { dayOfWeek: [0, 6] },
+                          (date) => isHoliday(date)
+                        ]}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Daily Availability</Label>
+                    {!bookingForm.date ? (
+                      <div className="h-[200px] flex flex-col items-center justify-center text-muted-foreground bg-primary/5 rounded-3xl border border-dashed">
+                        <Clock className="h-10 w-10 mb-2 opacity-20" />
+                        <p className="text-[10px] font-bold">Pick a date above</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-2 max-h-[400px] overflow-y-auto p-1 scrollbar-hide">
+                        {timeSlots.map(slot => (
+                          <Button
+                            key={slot.time}
+                            disabled={slot.isBooked || slot.isPast}
+                            variant={bookingForm.time === slot.time ? "default" : "outline"}
+                            className={cn(
+                              "h-12 rounded-xl font-bold transition-all border-2",
+                              bookingForm.time === slot.time 
+                                ? "bg-primary text-white border-primary shadow-md scale-105" 
+                                : slot.isBooked || slot.isPast
+                                ? "bg-red-50 text-red-300 border-red-100 opacity-50 cursor-not-allowed" 
+                                : "bg-white text-primary border-primary/10 hover:bg-primary/5"
+                            )}
+                            onClick={() => setBookingForm({...bookingForm, time: slot.time})}
+                          >
+                            {slot.time}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <DialogFooter className="p-8 bg-muted/30 gap-3 shrink-0">
+              <Button variant="outline" onClick={() => setSelectedCaseForBooking(null)} className="rounded-xl font-bold">Cancel</Button>
+              <Button 
+                onClick={handleCreateAppointment} 
+                disabled={!bookingForm.date || !bookingForm.time || isSubmitting}
+                className="bg-primary text-white font-black rounded-xl px-10 shadow-lg hover:scale-105 transition-transform"
+              >
+                {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : "Finalize Appointment"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

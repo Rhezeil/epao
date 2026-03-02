@@ -5,8 +5,8 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAuth } from "@/components/auth-provider";
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc, setDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
-import { collection, query, where, doc } from "firebase/firestore";
-import { format, startOfToday, isWeekend, isBefore, eachDayOfInterval, addDays } from "date-fns";
+import { collection, query, where, doc, getDoc } from "firebase/firestore";
+import { format, startOfToday, isWeekend, isBefore, eachDayOfInterval, addDays, setHours, setMinutes } from "date-fns";
 import { 
   Calendar as CalendarIcon, 
   Clock, 
@@ -23,7 +23,8 @@ import {
   Trash2,
   AlertCircle,
   FileText,
-  Info
+  Info,
+  CalendarCheck
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,7 +35,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -60,6 +61,17 @@ const REASONS = {
   ]
 };
 
+const HOLIDAYS = [
+  "2024-01-01", "2024-04-09", "2024-05-01", "2024-06-12", "2024-08-26",
+  "2024-11-01", "2024-11-30", "2024-12-25", "2024-12-30", 
+  "2025-01-01", "2025-02-25", "2025-04-17", "2025-04-18", "2025-05-01"
+];
+
+const isHoliday = (date: Date) => {
+  const ds = format(date, "yyyy-MM-dd");
+  return HOLIDAYS.includes(ds);
+};
+
 export default function LawyerDashboard() {
   const { user, role, loading } = useAuth();
   const db = useFirestore();
@@ -69,6 +81,7 @@ export default function LawyerDashboard() {
   // UI State
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [isAvailabilityOpen, setIsAvailabilityOpen] = useState(false);
+  const [isBookingOpen, setIsBookingOpen] = useState(false);
   
   // Availability Form State
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -82,6 +95,15 @@ export default function LawyerDashboard() {
     reasonCategory: "Work-Related Reasons for Leave",
     specificReason: REASONS["Work-Related Reasons for Leave"][0]
   });
+
+  // Client Booking State
+  const [bookingForm, setBookingForm] = useState({
+    caseId: "",
+    date: undefined as Date | undefined,
+    time: "",
+    purpose: "consultation"
+  });
+  const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
 
   // Queries
   const lawyerRef = useMemoFirebase(() => {
@@ -113,10 +135,7 @@ export default function LawyerDashboard() {
     return collection(db, "users", user.uid, "availability");
   }, [db, user, role]);
 
-  const { data: appointments, isLoading: isApptsLoading } = useCollection(availabilityQuery ? availabilityQuery : null);
-  
-  // Need to fix the useCollection usage above, it was accidentally pointing to availabilityQuery twice in logic
-  const { data: apptsData } = useCollection(apptsQuery);
+  const { data: apptsData, isLoading: isApptsLoading } = useCollection(apptsQuery);
   const { data: activeCases } = useCollection(casesQuery);
   const { data: availabilityList } = useCollection(availabilityQuery);
 
@@ -125,7 +144,7 @@ export default function LawyerDashboard() {
     if (!apptsData || !selectedDate) return [];
     const dateStr = format(selectedDate, "yyyy-MM-dd");
     return apptsData
-      .filter(appt => appt.dateString === dateStr)
+      .filter(appt => appt.dateString === dateStr && appt.status !== 'deleted')
       .sort((a, b) => a.time.localeCompare(b.time));
   }, [apptsData, selectedDate]);
 
@@ -137,7 +156,7 @@ export default function LawyerDashboard() {
 
   const apptDates = useMemo(() => {
     if (!apptsData) return [];
-    return apptsData.map(a => new Date(a.date));
+    return apptsData.filter(a => a.status !== 'cancelled').map(a => new Date(a.date));
   }, [apptsData]);
 
   const leaveDates = useMemo(() => {
@@ -146,6 +165,34 @@ export default function LawyerDashboard() {
       .filter(a => a.availabilityType?.includes('Leave'))
       .map(a => new Date(a.date));
   }, [availabilityList]);
+
+  // Reschedule / Booking Slot Logic
+  const bookingDateStr = bookingForm.date ? format(bookingForm.date, "yyyy-MM-dd") : null;
+  const globalApptsQuery = useMemoFirebase(() => {
+    if (!db || !bookingDateStr) return null;
+    return query(collection(db, "appointments"), where("dateString", "==", bookingDateStr));
+  }, [db, bookingDateStr]);
+  const { data: globalAppts } = useCollection(globalApptsQuery);
+
+  const timeSlots = useMemo(() => {
+    const slots = [];
+    const now = new Date();
+    for (let h = 8; h <= 16; h++) {
+      for (let m = 0; m < 60; m += 30) {
+        if (h === 12) continue;
+        if (h === 16 && m > 30) continue;
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const displayHour = h % 12 || 12;
+        const timeString = `${displayHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
+        const slotDate = bookingForm.date ? setMinutes(setHours(new Date(bookingForm.date), h), m) : null;
+        const isPast = slotDate ? isBefore(slotDate, now) : false;
+        // Check lawyer's own appts for this slot
+        const isBooked = globalAppts?.some(a => a.lawyerId === user?.uid && a.time === timeString && a.status !== 'cancelled');
+        slots.push({ time: timeString, isBooked, isPast });
+      }
+    }
+    return slots;
+  }, [bookingForm.date, globalAppts, user]);
 
   // Handlers
   const updateStatus = (apptId: string, status: string) => {
@@ -199,6 +246,57 @@ export default function LawyerDashboard() {
     }
   };
 
+  const handleScheduleBooking = async () => {
+    if (!db || !user || !bookingForm.caseId || !bookingForm.date || !bookingForm.time) {
+      toast({ variant: "destructive", title: "Missing Information", description: "Please complete all booking fields." });
+      return;
+    }
+
+    setIsSubmittingBooking(true);
+    try {
+      const selectedCase = activeCases?.find(c => c.id === bookingForm.caseId);
+      if (!selectedCase) throw new Error("Selected case not found.");
+
+      // Fetch client details
+      const clientDoc = await getDoc(doc(db, "users", selectedCase.clientId));
+      const clientData = clientDoc.exists() ? clientDoc.data() : null;
+
+      const apptId = crypto.randomUUID();
+      const refCode = `PAO-${Math.floor(100000 + Math.random() * 900000)}`;
+      const apptRef = doc(db, "appointments", apptId);
+
+      const data = {
+        id: apptId,
+        lawyerId: user.uid,
+        clientId: selectedCase.clientId,
+        referenceCode: refCode,
+        caseId: selectedCase.id,
+        caseType: selectedCase.caseType,
+        purpose: bookingForm.purpose,
+        clientName: clientData?.fullName || "Registered Client",
+        clientMobile: clientData?.mobileNumber || "",
+        clientEmail: clientData?.email || "",
+        date: bookingForm.date.toISOString(),
+        dateString: format(bookingForm.date, "yyyy-MM-dd"),
+        time: bookingForm.time,
+        status: "scheduled",
+        type: "follow-up",
+        bookedBy: "lawyer",
+        createdAt: new Date().toISOString()
+      };
+
+      setDocumentNonBlocking(apptRef, data, { merge: true });
+      
+      toast({ title: "Appointment Scheduled", description: `Visit for ${data.clientName} confirmed. Ref: ${refCode}` });
+      setIsBookingOpen(false);
+      setBookingForm({ caseId: "", date: undefined, time: "", purpose: "consultation" });
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Booking Failed", description: e.message });
+    } finally {
+      setIsSubmittingBooking(false);
+    }
+  };
+
   const handleDeleteAvailability = () => {
     if (!db || !user || !selectedDayAvail) return;
     const availRef = doc(db, "users", user.uid, "availability", selectedDayAvail.id);
@@ -248,33 +346,42 @@ export default function LawyerDashboard() {
             </div>
           </div>
           
-          <Button 
-            onClick={() => {
-              if (selectedDayAvail) {
-                setAvailForm({
-                  type: selectedDayAvail.availabilityType,
-                  startTime: selectedDayAvail.startTime || "08:00",
-                  endTime: selectedDayAvail.endTime || "17:00",
-                  reasonCategory: selectedDayAvail.reasonCategory || "Work-Related Reasons for Leave",
-                  specificReason: selectedDayAvail.specificReason || REASONS["Work-Related Reasons for Leave"][0]
-                });
-                setDateRange({ from: selectedDate, to: selectedDate });
-              } else {
-                setAvailForm({
-                  type: "FullDayAvailable",
-                  startTime: "08:00",
-                  endTime: "17:00",
-                  reasonCategory: "Work-Related Reasons for Leave",
-                  specificReason: REASONS["Work-Related Reasons for Leave"][0]
-                });
-                setDateRange({ from: selectedDate, to: selectedDate });
-              }
-              setIsAvailabilityOpen(true);
-            }}
-            className="rounded-full font-black text-[10px] uppercase tracking-widest shadow-md bg-secondary hover:bg-secondary/90 px-6 h-11"
-          >
-            <Plus className="mr-2 h-4 w-4" /> Manage Availability
-          </Button>
+          <div className="flex gap-3">
+            <Button 
+              onClick={() => setIsBookingOpen(true)}
+              className="rounded-full font-black text-[10px] uppercase tracking-widest shadow-md bg-primary hover:bg-primary/90 px-6 h-11 text-white"
+            >
+              <CalendarCheck className="mr-2 h-4 w-4" /> Schedule Client Visit
+            </Button>
+            <Button 
+              onClick={() => {
+                if (selectedDayAvail) {
+                  setAvailForm({
+                    type: selectedDayAvail.availabilityType,
+                    startTime: selectedDayAvail.startTime || "08:00",
+                    endTime: selectedDayAvail.endTime || "17:00",
+                    reasonCategory: selectedDayAvail.reasonCategory || "Work-Related Reasons for Leave",
+                    specificReason: selectedDayAvail.specificReason || REASONS["Work-Related Reasons for Leave"][0]
+                  });
+                  setDateRange({ from: selectedDate, to: selectedDate });
+                } else {
+                  setAvailForm({
+                    type: "FullDayAvailable",
+                    startTime: "08:00",
+                    endTime: "17:00",
+                    reasonCategory: "Work-Related Reasons for Leave",
+                    specificReason: REASONS["Work-Related Reasons for Leave"][0]
+                  });
+                  setDateRange({ from: selectedDate, to: selectedDate });
+                }
+                setIsAvailabilityOpen(true);
+              }}
+              variant="outline"
+              className="rounded-full font-black text-[10px] uppercase tracking-widest shadow-sm border-2 border-secondary/20 text-secondary px-6 h-11"
+            >
+              <Plus className="mr-2 h-4 w-4" /> Manage Availability
+            </Button>
+          </div>
         </div>
 
         {/* --- METRICS --- */}
@@ -298,7 +405,7 @@ export default function LawyerDashboard() {
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Today's Consultations</p>
                   <p className="text-5xl font-black">
-                    {apptsData?.filter(a => a.dateString === format(new Date(), "yyyy-MM-dd")).length || 0}
+                    {apptsData?.filter(a => a.dateString === format(new Date(), "yyyy-MM-dd") && a.status !== 'cancelled').length || 0}
                   </p>
                 </div>
                 <div className="p-3 bg-secondary/5 rounded-2xl">
@@ -583,6 +690,114 @@ export default function LawyerDashboard() {
                 className="bg-secondary text-white font-black rounded-xl px-10 shadow-lg hover:scale-105 transition-transform"
               >
                 Apply Schedule Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* --- CLIENT BOOKING DIALOG --- */}
+        <Dialog open={isBookingOpen} onOpenChange={setIsBookingOpen}>
+          <DialogContent className="rounded-[3rem] max-w-4xl p-0 overflow-hidden border-none shadow-2xl max-h-[95vh] flex flex-col">
+            <DialogHeader className="p-8 bg-primary text-white shrink-0">
+              <DialogTitle className="text-2xl font-black">Schedule Follow-up Visit</DialogTitle>
+              <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">
+                Directly book an appointment for an existing client
+              </DialogDescription>
+            </DialogHeader>
+            <div className="p-10 space-y-8 flex-1 overflow-y-auto">
+              <div className="grid lg:grid-cols-2 gap-12">
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">1. Select Handle Case</Label>
+                    <Select value={bookingForm.caseId} onValueChange={(v) => setBookingForm({...bookingForm, caseId: v})}>
+                      <SelectTrigger className="h-14 rounded-2xl border-primary/20 bg-primary/5 font-bold">
+                        <SelectValue placeholder="Select one of your active cases" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {activeCases?.map(c => (
+                          <SelectItem key={c.id} value={c.id} className="font-bold">
+                            {c.caseType} ({c.id})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">2. Service Type</Label>
+                    <Select value={bookingForm.purpose} onValueChange={(v) => setBookingForm({...bookingForm, purpose: v})}>
+                      <SelectTrigger className="h-14 rounded-2xl border-primary/20 bg-primary/5 font-bold">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="consultation" className="font-bold">Legal Consultation</SelectItem>
+                        <SelectItem value="notarization" className="font-bold">Document Notarization</SelectItem>
+                        <SelectItem value="document-preparation" className="font-bold">Document Preparation</SelectItem>
+                        <SelectItem value="legal-advice" className="font-bold">Legal Advice</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">3. Select Date</Label>
+                    <div className="p-4 bg-primary/5 rounded-3xl border border-primary/10 shadow-inner">
+                      <Calendar
+                        mode="single"
+                        selected={bookingForm.date}
+                        onSelect={(d) => setBookingForm({...bookingForm, date: d, time: ""})}
+                        className="rounded-md border-none mx-auto"
+                        disabled={[
+                          { before: startOfToday() },
+                          { dayOfWeek: [0, 6] },
+                          (date) => isHoliday(date)
+                        ]}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">4. Select Time Slot</Label>
+                    {!bookingForm.date ? (
+                      <div className="h-[200px] flex flex-col items-center justify-center text-muted-foreground bg-primary/5 rounded-3xl border border-dashed">
+                        <Clock className="h-10 w-10 mb-2 opacity-20" />
+                        <p className="text-[10px] font-bold">Pick a date to see availability</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-2 max-h-[400px] overflow-y-auto p-1 scrollbar-hide">
+                        {timeSlots.map(slot => (
+                          <Button
+                            key={slot.time}
+                            disabled={slot.isBooked || slot.isPast}
+                            variant={bookingForm.time === slot.time ? "default" : "outline"}
+                            className={cn(
+                              "h-12 rounded-xl font-bold transition-all border-2",
+                              bookingForm.time === slot.time 
+                                ? "bg-primary text-white border-primary shadow-md scale-105" 
+                                : slot.isBooked || slot.isPast
+                                ? "bg-red-50 text-red-300 border-red-100 opacity-50 cursor-not-allowed" 
+                                : "bg-white text-primary border-primary/10 hover:bg-primary/5"
+                            )}
+                            onClick={() => setBookingForm({...bookingForm, time: slot.time})}
+                          >
+                            {slot.time}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <DialogFooter className="p-8 bg-muted/30 gap-3 shrink-0">
+              <Button variant="outline" onClick={() => setIsBookingOpen(false)} className="rounded-xl font-bold">Cancel</Button>
+              <Button 
+                onClick={handleScheduleBooking} 
+                disabled={!bookingForm.caseId || !bookingForm.date || !bookingForm.time || isSubmittingBooking}
+                className="bg-primary text-white font-black rounded-xl px-10 shadow-lg hover:scale-105 transition-transform"
+              >
+                {isSubmittingBooking ? <Loader2 className="animate-spin h-5 w-5" /> : "Confirm Official Booking"}
               </Button>
             </DialogFooter>
           </DialogContent>
