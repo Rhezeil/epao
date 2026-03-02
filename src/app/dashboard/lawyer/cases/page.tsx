@@ -4,8 +4,8 @@
 import { useAuth } from "@/components/auth-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase";
-import { collection, query, where, doc, getDoc, setDoc } from "firebase/firestore";
+import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
+import { collection, query, where, doc, getDoc } from "firebase/firestore";
 import { format, startOfToday, isWeekend, setHours, setMinutes, isBefore } from "date-fns";
 import { 
   FileText, 
@@ -17,6 +17,11 @@ import {
   Loader2,
   CalendarCheck,
   Clock,
+  User,
+  Phone,
+  Mail,
+  MapPin,
+  Info,
   ChevronRight
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -63,6 +68,11 @@ export default function LawyerCasesPage() {
     time: "",
     purpose: "consultation"
   });
+  
+  // Profile State
+  const [selectedClientIdForProfile, setSelectedClientIdForProfile] = useState<string | null>(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const casesQuery = useMemoFirebase(() => {
@@ -82,6 +92,25 @@ export default function LawyerCasesPage() {
       c.caseType.toLowerCase().includes(search.toLowerCase())
     );
   }, [cases, search]);
+
+  // Fetch client details for profile view
+  const clientDocRef = useMemoFirebase(() => {
+    if (!db || !selectedClientIdForProfile) return null;
+    return doc(db, "users", selectedClientIdForProfile);
+  }, [db, selectedClientIdForProfile]);
+  
+  const profileDocRef = useMemoFirebase(() => {
+    if (!db || !selectedClientIdForProfile) return null;
+    return doc(db, "users", selectedClientIdForProfile, "profile", "profile");
+  }, [db, selectedClientIdForProfile]);
+
+  const { data: clientUser } = useDoc(clientDocRef);
+  const { data: clientProfile } = useDoc(profileDocRef);
+
+  const selectedCaseForProfile = useMemo(() => {
+    if (!selectedClientIdForProfile || !cases) return null;
+    return cases.find(c => c.clientId === selectedClientIdForProfile);
+  }, [selectedClientIdForProfile, cases]);
 
   // Slot Logic for Booking Dialog
   const bookingDateStr = bookingForm.date ? format(bookingForm.date, "yyyy-MM-dd") : null;
@@ -243,10 +272,18 @@ export default function LawyerCasesPage() {
                           <Button 
                             variant="ghost" 
                             size="sm" 
+                            onClick={() => { setSelectedClientIdForProfile(c.clientId); setIsProfileOpen(true); }}
+                            className="h-9 rounded-xl font-bold text-[10px] uppercase text-secondary hover:bg-secondary/5 gap-2"
+                          >
+                            <User className="h-3 w-3" /> View Profile
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
                             onClick={() => setSelectedCaseForBooking(c)}
                             className="h-9 rounded-xl font-bold text-[10px] uppercase text-primary hover:bg-primary/5 gap-2"
                           >
-                            <CalendarCheck className="h-3 w-3" /> Schedule Visit
+                            <CalendarCheck className="h-3 w-3" /> Schedule
                           </Button>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -283,6 +320,80 @@ export default function LawyerCasesPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* --- CLIENT PROFILE DIALOG --- */}
+        <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
+          <DialogContent className="rounded-[3rem] max-w-2xl p-0 overflow-hidden border-none shadow-2xl">
+            <DialogHeader className="p-8 bg-secondary text-white">
+              <div className="flex justify-between items-center">
+                <div className="space-y-1">
+                  <DialogTitle className="text-3xl font-black">
+                    {clientProfile ? `${clientProfile.firstName} ${clientProfile.lastName}` : (clientUser?.fullName || "Citizen Profile")}
+                  </DialogTitle>
+                  <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">
+                    Reference ID: {selectedClientIdForProfile?.slice(0, 8)}...
+                  </DialogDescription>
+                </div>
+                <div className="p-4 bg-white/20 rounded-[2rem]">
+                  <User className="h-8 w-8" />
+                </div>
+              </div>
+            </DialogHeader>
+            <div className="p-10 space-y-10">
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                  <div className="space-y-1">
+                    <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Contact Details</Label>
+                    <p className="font-bold text-secondary flex items-center gap-3">
+                      <Phone className="h-4 w-4 text-secondary/40" /> {clientUser?.mobileNumber || clientProfile?.phoneNumber || "N/A"}
+                    </p>
+                    <p className="font-bold text-secondary flex items-center gap-3">
+                      <Mail className="h-4 w-4 text-secondary/40" /> {clientUser?.email || "N/A"}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Home Address</Label>
+                    <p className="text-sm font-bold text-secondary flex items-start gap-3 leading-relaxed">
+                      <MapPin className="h-4 w-4 text-secondary/40 shrink-0 mt-0.5" /> 
+                      {clientProfile?.address || "Address not provided in registry."}
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-6">
+                  <div className="space-y-1">
+                    <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Classification</Label>
+                    <Badge className="bg-secondary text-white font-black px-4 py-1.5 rounded-full uppercase text-[10px] tracking-wider">
+                      {clientUser?.incomeClassification || "Indigent"}
+                    </Badge>
+                    <p className="text-[9px] text-muted-foreground font-bold mt-1 ml-1">Verified Priority Rank</p>
+                  </div>
+                  {selectedCaseForProfile && (
+                    <div className="space-y-1 p-4 bg-secondary/5 rounded-2xl border border-secondary/10">
+                      <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Handled Case</Label>
+                      <p className="text-xs font-black text-secondary">{selectedCaseForProfile.caseType}</p>
+                      <p className="text-[9px] font-bold text-secondary/60">ID: {selectedCaseForProfile.id}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-6 bg-amber-50 rounded-[2rem] border border-amber-100 flex items-start gap-4 shadow-sm">
+                <Info className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-xs font-black text-amber-900 uppercase tracking-widest">Privacy Reminder</p>
+                  <p className="text-xs text-amber-800/70 font-medium leading-relaxed">
+                    This information is provided for official legal correspondence and case management only. Ensure all data is handled according to PAO privacy protocols.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <DialogFooter className="p-8 bg-muted/30">
+              <Button onClick={() => setIsProfileOpen(false)} className="w-full h-14 rounded-2xl font-black bg-secondary text-white shadow-xl">
+                Close Profile
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* --- BOOKING DIALOG --- */}
         <Dialog open={!!selectedCaseForBooking} onOpenChange={() => setSelectedCaseForBooking(null)}>
