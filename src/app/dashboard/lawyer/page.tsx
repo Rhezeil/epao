@@ -6,11 +6,22 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useAuth } from "@/components/auth-provider";
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc } from "@/firebase";
 import { collection, query, where, doc } from "firebase/firestore";
-import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, addDays } from "date-fns";
+import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, addDays, isSameDay } from "date-fns";
 import { 
-  Calendar, Clock, CheckCircle2, XCircle, MoreVertical, 
-  Briefcase, Scale, User, ChevronRight, Loader2,
-  CalendarDays, CalendarRange, Filter
+  Calendar as CalendarIcon, 
+  Clock, 
+  CheckCircle2, 
+  XCircle, 
+  MoreVertical, 
+  Briefcase, 
+  Scale, 
+  User, 
+  ChevronRight, 
+  Loader2,
+  CalendarDays, 
+  CalendarRange, 
+  Filter,
+  Check
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,6 +35,7 @@ import { useRouter } from "next/navigation";
 import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Calendar } from "@/components/ui/calendar";
 
 export default function LawyerDashboard() {
   const { user, role, loading } = useAuth();
@@ -31,6 +43,7 @@ export default function LawyerDashboard() {
   const { toast } = useToast();
   const router = useRouter();
   const [scheduleView, setScheduleView] = useState<"daily" | "weekly" | "monthly">("daily");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
   const lawyerRef = useMemoFirebase(() => {
     if (!db || !user || role !== 'lawyer') return null;
@@ -62,25 +75,31 @@ export default function LawyerDashboard() {
   const filteredSchedule = useMemo(() => {
     if (!appointments) return [];
     const now = new Date();
+    const referenceDate = selectedDate || now;
     
     return appointments.filter(appt => {
       const apptDate = new Date(appt.date);
       if (scheduleView === "daily") {
-        return format(apptDate, "yyyy-MM-dd") === format(now, "yyyy-MM-dd");
+        return format(apptDate, "yyyy-MM-dd") === format(referenceDate, "yyyy-MM-dd");
       }
       if (scheduleView === "weekly") {
-        const start = startOfWeek(now, { weekStartsOn: 1 });
-        const end = endOfWeek(now, { weekStartsOn: 1 });
+        const start = startOfWeek(referenceDate, { weekStartsOn: 1 });
+        const end = endOfWeek(referenceDate, { weekStartsOn: 1 });
         return isWithinInterval(apptDate, { start, end });
       }
       if (scheduleView === "monthly") {
-        const start = startOfMonth(now);
-        const end = endOfMonth(now);
+        const start = startOfMonth(referenceDate);
+        const end = endOfMonth(referenceDate);
         return isWithinInterval(apptDate, { start, end });
       }
       return true;
     }).sort((a, b) => a.date.localeCompare(b.date));
-  }, [appointments, scheduleView]);
+  }, [appointments, scheduleView, selectedDate]);
+
+  const apptDates = useMemo(() => {
+    if (!appointments) return [];
+    return appointments.map(a => new Date(a.date));
+  }, [appointments]);
 
   if (loading) {
     return (
@@ -116,6 +135,7 @@ export default function LawyerDashboard() {
   return (
     <DashboardLayout role="lawyer">
       <div className="space-y-8 pb-12">
+        {/* --- HEADER --- */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="flex items-center gap-6">
             <Avatar className="h-20 w-20 border-4 border-white shadow-xl">
@@ -166,6 +186,7 @@ export default function LawyerDashboard() {
           </div>
         </div>
 
+        {/* --- METRICS --- */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="border-none shadow-xl rounded-[2rem] bg-secondary text-white overflow-hidden relative group">
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
@@ -190,7 +211,7 @@ export default function LawyerDashboard() {
                   </p>
                 </div>
                 <div className="p-3 bg-secondary/5 rounded-2xl">
-                  <Calendar className="h-6 w-6 text-secondary" />
+                  <Clock className="h-6 w-6 text-secondary" />
                 </div>
               </div>
               <p className="text-xs font-bold text-muted-foreground pt-2">Scheduled Sessions</p>
@@ -206,13 +227,14 @@ export default function LawyerDashboard() {
           </Card>
         </div>
 
+        {/* --- SCHEDULE WORKSTATION --- */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <Card className="lg:col-span-2 border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
             <CardHeader className="bg-secondary/5 pb-4 border-b border-secondary/10">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-secondary text-white rounded-xl">
-                    <Clock className="h-5 w-5" />
+                    <CalendarIcon className="h-5 w-5" />
                   </div>
                   <CardTitle className="text-lg font-bold text-secondary">Office Schedule</CardTitle>
                 </div>
@@ -227,66 +249,108 @@ export default function LawyerDashboard() {
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              {isApptsLoading ? (
-                <div className="p-20 flex justify-center"><Loader2 className="animate-spin h-10 w-10 text-secondary/20" /></div>
-              ) : (
-                <div className="divide-y divide-secondary/5">
-                  {filteredSchedule.map((appt) => (
-                    <div key={appt.id} className="p-6 flex items-center justify-between hover:bg-secondary/5 transition-colors">
-                      <div className="flex items-center gap-4">
-                        <div className="h-14 w-14 rounded-2xl bg-secondary/5 flex flex-col items-center justify-center border border-secondary/10">
-                          <span className="text-[10px] font-black text-secondary uppercase leading-none">{format(new Date(appt.date), "MMM")}</span>
-                          <span className="text-xl font-black text-secondary leading-none mt-1">{format(new Date(appt.date), "dd")}</span>
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-secondary">{appt.guestName || appt.clientName || "Citizen Client"}</h4>
-                          <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                            <Badge variant="outline" className="text-[9px] font-black uppercase py-0 border-secondary/20 text-secondary">{appt.status}</Badge>
-                            <span>•</span>
-                            <span>{appt.caseType}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <div className="text-right hidden sm:block">
-                          <p className="text-sm font-black text-secondary">{appt.time}</p>
-                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
-                            {scheduleView === 'daily' ? 'Reserved Slot' : format(new Date(appt.date), "EEEE")}
-                          </p>
-                        </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-secondary/5">
-                              <MoreVertical className="h-4 w-4 text-secondary" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="rounded-2xl w-56 p-2">
-                            <DropdownMenuItem onClick={() => updateStatus(appt.id, 'completed')} className="text-green-600 font-bold rounded-xl cursor-pointer">
-                              <CheckCircle2 className="mr-2 h-4 w-4" /> Mark as Completed
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => updateStatus(appt.id, 'cancelled')} className="text-red-600 font-bold rounded-xl cursor-pointer">
-                              <XCircle className="mr-2 h-4 w-4" /> Mark as Cancelled
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="font-bold rounded-xl cursor-pointer">
-                              <User className="mr-2 h-4 w-4" /> Client History
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+              <div className="grid grid-cols-1 xl:grid-cols-12">
+                {/* --- CALENDAR SIDEBAR --- */}
+                <div className="xl:col-span-5 p-6 border-r border-secondary/5 bg-secondary/[0.02]">
+                  <div className="space-y-4">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary/40 ml-2">Select Date</p>
+                    <div className="bg-white rounded-3xl p-2 shadow-sm border border-secondary/5">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={setSelectedDate}
+                        className="rounded-md border-none"
+                        modifiers={{ hasAppt: apptDates }}
+                        modifiersStyles={{ 
+                          hasAppt: { 
+                            fontWeight: 'bold', 
+                            textDecoration: 'underline',
+                            color: 'hsl(var(--secondary))'
+                          } 
+                        }}
+                      />
+                    </div>
+                    <div className="px-4 py-3 bg-white rounded-2xl border border-dashed border-secondary/20">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-secondary" />
+                        <span className="text-[10px] font-bold text-secondary/60 uppercase">Dates with consultations</span>
                       </div>
                     </div>
-                  ))}
-                  {filteredSchedule.length === 0 && (
-                    <div className="p-20 text-center space-y-4">
-                      {scheduleView === 'daily' ? <CalendarDays className="h-16 w-16 text-secondary/10 mx-auto" /> : <CalendarRange className="h-16 w-16 text-secondary/10 mx-auto" />}
-                      <p className="text-sm font-bold text-muted-foreground">
-                        {scheduleView === 'daily' ? 'No consultations scheduled for today.' : 
-                         scheduleView === 'weekly' ? 'No appointments found for this week.' : 'No records for the selected month.'}
-                      </p>
+                  </div>
+                </div>
+
+                {/* --- DETAILED REGISTRY --- */}
+                <div className="xl:col-span-7 divide-y divide-secondary/5">
+                  <div className="p-6 bg-secondary/5 border-b border-secondary/10">
+                    <h3 className="text-sm font-black text-secondary flex items-center gap-2">
+                      <Clock className="h-4 w-4" /> 
+                      {scheduleView === 'daily' ? format(selectedDate || new Date(), "PPPP") : 
+                       scheduleView === 'weekly' ? "Weekly Overview" : "Monthly Forecast"}
+                    </h3>
+                  </div>
+                  {isApptsLoading ? (
+                    <div className="p-20 flex justify-center"><Loader2 className="animate-spin h-10 w-10 text-secondary/20" /></div>
+                  ) : (
+                    <div className="max-h-[500px] overflow-y-auto">
+                      {filteredSchedule.map((appt) => (
+                        <div key={appt.id} className="p-6 flex items-center justify-between hover:bg-secondary/5 transition-colors group">
+                          <div className="flex items-center gap-4">
+                            <div className="h-14 w-14 rounded-2xl bg-secondary/5 flex flex-col items-center justify-center border border-secondary/10">
+                              <span className="text-[10px] font-black text-secondary uppercase leading-none">{format(new Date(appt.date), "MMM")}</span>
+                              <span className="text-xl font-black text-secondary leading-none mt-1">{format(new Date(appt.date), "dd")}</span>
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-secondary">{appt.guestName || appt.clientName || "Citizen Client"}</h4>
+                              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                                <Badge variant="outline" className="text-[9px] font-black uppercase py-0 border-secondary/20 text-secondary">{appt.status}</Badge>
+                                <span>•</span>
+                                <span>{appt.caseType}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="text-right hidden sm:block">
+                              <p className="text-sm font-black text-secondary">{appt.time}</p>
+                              <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
+                                {scheduleView === 'daily' ? 'Reserved Slot' : format(new Date(appt.date), "EEEE")}
+                              </p>
+                            </div>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-secondary/5">
+                                  <MoreVertical className="h-4 w-4 text-secondary" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="rounded-2xl w-56 p-2">
+                                <DropdownMenuItem onClick={() => updateStatus(appt.id, 'completed')} className="text-green-600 font-bold rounded-xl cursor-pointer">
+                                  <CheckCircle2 className="mr-2 h-4 w-4" /> Mark as Completed
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => updateStatus(appt.id, 'cancelled')} className="text-red-600 font-bold rounded-xl cursor-pointer">
+                                  <XCircle className="mr-2 h-4 w-4" /> Mark as Cancelled
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem className="font-bold rounded-xl cursor-pointer" onClick={() => router.push(`/dashboard/lawyer/cases`)}>
+                                  <User className="mr-2 h-4 w-4" /> Client Case File
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
+                      ))}
+                      {filteredSchedule.length === 0 && (
+                        <div className="p-20 text-center space-y-4">
+                          {scheduleView === 'daily' ? <CalendarDays className="h-16 w-16 text-secondary/10 mx-auto" /> : <CalendarRange className="h-16 w-16 text-secondary/10 mx-auto" />}
+                          <p className="text-sm font-bold text-muted-foreground">
+                            {scheduleView === 'daily' ? 'No consultations scheduled for this date.' : 
+                             scheduleView === 'weekly' ? 'No appointments found for this week.' : 'No records for the selected month.'}
+                          </p>
+                          <Button variant="outline" size="sm" onClick={() => setSelectedDate(new Date())} className="rounded-xl font-bold">Return to Today</Button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
-              )}
+              </div>
             </CardContent>
           </Card>
 
@@ -333,7 +397,7 @@ export default function LawyerDashboard() {
                 </p>
               </div>
               <div className="grid grid-cols-1 gap-2">
-                <Button variant="outline" size="sm" className="rounded-xl font-bold bg-white" onClick={() => setScheduleView("daily")}>Today's Session</Button>
+                <Button variant="outline" size="sm" className="rounded-xl font-bold bg-white" onClick={() => { setSelectedDate(new Date()); setScheduleView("daily"); }}>Today's Session</Button>
                 <Button variant="outline" size="sm" className="rounded-xl font-bold bg-white" onClick={() => router.push('/dashboard/lawyer/cases')}>Open Full Registry</Button>
               </div>
             </Card>
