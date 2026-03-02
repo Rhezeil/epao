@@ -333,7 +333,7 @@ export default function LawyerDashboard() {
                         }}
                         modifiersStyles={{ 
                           hasAppt: { fontWeight: 'black', textDecoration: 'underline', color: 'hsl(var(--primary))' },
-                          hasAvail: { border: '2px solid hsl(var(--secondary))', borderRadius: '12px' }
+                          hasAvail: { border: '2px solid #EF4444', borderRadius: '12px' }
                         }}
                       />
                     </div>
@@ -343,7 +343,7 @@ export default function LawyerDashboard() {
                         <span className="text-[9px] font-bold text-muted-foreground uppercase">Scheduled Consultation</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-secondary" />
+                        <div className="h-2 w-2 rounded-full bg-red-500" />
                         <span className="text-[9px] font-bold text-muted-foreground uppercase">Special Availability Set</span>
                       </div>
                     </div>
@@ -395,10 +395,10 @@ export default function LawyerDashboard() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="rounded-2xl w-56 p-2">
                                 <DropdownMenuItem onClick={() => updateStatus(appt.id, 'completed')} className="text-green-600 font-bold rounded-xl cursor-pointer">
-                                  <CheckCircle2 className="mr-2 h-4 w-4" /> Mark as Completed
+                                  <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" /> Mark as Completed
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => updateStatus(appt.id, 'cancelled')} className="text-red-600 font-bold rounded-xl cursor-pointer">
-                                  <XCircle className="mr-2 h-4 w-4" /> Mark as Cancelled
+                                  <XCircle className="mr-2 h-4 w-4 text-red-600" /> Mark as Cancelled
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem className="font-bold rounded-xl cursor-pointer" onClick={() => router.push(`/dashboard/lawyer/cases`)}>
