@@ -34,7 +34,8 @@ import {
   Mail,
   Scale,
   Save,
-  X
+  X,
+  UserCheck
 } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -86,6 +87,12 @@ export default function AdminUsersPage() {
   const [isEditingCase, setIsEditingCase] = useState(false);
   const [editProfile, setEditProfile] = useState<any>({});
   const [editCase, setEditCase] = useState<any>({});
+
+  // Assignment State for New Case
+  const [newCaseData, setNewCaseData] = useState({
+    caseType: "Initial Legal Assistance",
+    lawyerId: ""
+  });
 
   // New Client State
   const [newClient, setNewClient] = useState({
@@ -227,7 +234,7 @@ export default function AdminUsersPage() {
     const profileDocRef = doc(db, "users", selectedClientId, "profile", "profile");
     updateDocumentNonBlocking(profileDocRef, editProfile);
     
-    // Sync with top-level user document for the directory list and system-wide visibility
+    // Sync with top-level user document
     const userRef = doc(db, "users", selectedClientId);
     const fullName = `${editProfile.firstName} ${editProfile.lastName}`.trim();
     updateDocumentNonBlocking(userRef, { 
@@ -245,6 +252,32 @@ export default function AdminUsersPage() {
     updateDocumentNonBlocking(ref, editCase);
     setIsEditingCase(false);
     toast({ title: "Case Saved", description: "Legal Case record updated." });
+  };
+
+  const handleCreateInitialCase = () => {
+    if (!db || !selectedClientId || !newCaseData.lawyerId) return;
+    
+    setIsSubmitting(true);
+    const year = new Date().getFullYear();
+    const caseId = `CASE-${year}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const caseRef = doc(db, "cases", caseId);
+    
+    setDocumentNonBlocking(caseRef, {
+      id: caseId,
+      clientId: selectedClientId,
+      lawyerId: newCaseData.lawyerId,
+      caseType: newCaseData.caseType,
+      status: "Active",
+      description: "Direct case assignment from Admin Directory.",
+      createdAt: new Date().toISOString()
+    }, { merge: true });
+
+    updateDocumentNonBlocking(doc(db, "users", selectedClientId), { status: "Active Case" });
+    
+    setTimeout(() => {
+      setIsSubmitting(false);
+      toast({ title: "Case Created", description: `Record ${caseId} assigned successfully.` });
+    }, 800);
   };
 
   const handleUpdateStatus = (userId: string, newStatus: string) => {
@@ -594,7 +627,7 @@ export default function AdminUsersPage() {
                       </div>
 
                       <div className="space-y-4">
-                        <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Attorney Assignment</Label>
+                        <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Attorney Assignment (Assign/Reassign)</Label>
                         <Select 
                           value={activeCase.lawyerId} 
                           onValueChange={(v) => handleReassignLawyer(activeCase.id, v)}
@@ -602,25 +635,66 @@ export default function AdminUsersPage() {
                           <SelectTrigger className="h-14 rounded-2xl border-primary/20 bg-white font-bold shadow-sm">
                             <div className="flex items-center gap-2">
                               <Briefcase className="h-4 w-4 text-secondary" />
-                              <SelectValue placeholder="Assign a lawyer" />
+                              <SelectValue placeholder="Select handling attorney" />
                             </div>
                           </SelectTrigger>
                           <SelectContent>
                             {lawyers?.map((l) => (
                               <SelectItem key={l.id} value={l.id} className="font-bold">
-                                {l.firstName ? `Atty. ${l.firstName}` : l.email.split('@')[0]}
+                                {l.firstName ? `Atty. ${l.firstName} ${l.lastName}` : l.email.split('@')[0]}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
-                        <p className="text-[10px] text-muted-foreground font-medium text-center italic">Changes to assignment are logged in the audit trail.</p>
+                        <p className="text-[10px] text-muted-foreground font-medium text-center italic">Assigning a new lawyer will instantly update their workstation.</p>
                       </div>
                     </div>
                   ) : (
-                    <div className="text-center py-12 bg-muted/20 rounded-3xl border-2 border-dashed border-primary/10">
-                      <FileText className="h-12 w-12 mx-auto text-primary/10 mb-2" />
-                      <p className="text-sm font-bold text-muted-foreground">No active legal Cases initialized.</p>
-                      <Button variant="link" className="mt-2 text-secondary font-black uppercase text-[10px] tracking-widest">Convert Intake to Case</Button>
+                    <div className="space-y-6">
+                      <div className="p-8 bg-primary/5 rounded-[2rem] border-2 border-dashed border-primary/10 text-center">
+                        <Scale className="h-12 w-12 text-primary/20 mx-auto mb-4" />
+                        <h4 className="text-lg font-black text-primary mb-2">Initialize Legal Record</h4>
+                        <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+                          Assign an attorney to start the official legal process for this citizen.
+                        </p>
+                        
+                        <div className="grid gap-4 text-left max-w-sm mx-auto">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">Case Category</Label>
+                            <Input 
+                              value={newCaseData.caseType} 
+                              onChange={e => setNewCaseData({...newCaseData, caseType: e.target.value})}
+                              placeholder="e.g. Qualified Theft"
+                              className="h-12 rounded-xl border-primary/10 bg-white"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">Assign Attorney</Label>
+                            <Select 
+                              value={newCaseData.lawyerId} 
+                              onValueChange={v => setNewCaseData({...newCaseData, lawyerId: v})}
+                            >
+                              <SelectTrigger className="h-12 rounded-xl border-primary/10 bg-white">
+                                <SelectValue placeholder="Select Handling Lawyer" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {lawyers?.map(l => (
+                                  <SelectItem key={l.id} value={l.id} className="font-bold">
+                                    {l.firstName ? `Atty. ${l.firstName} ${l.lastName}` : l.email.split('@')[0]}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <Button 
+                            className="w-full h-12 bg-primary text-white font-black rounded-xl mt-4 shadow-lg"
+                            disabled={!newCaseData.lawyerId || isSubmitting}
+                            onClick={handleCreateInitialCase}
+                          >
+                            {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : "Create & Assign Case"}
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </TabsContent>
@@ -635,6 +709,57 @@ export default function AdminUsersPage() {
             </div>
             <DialogFooter className="p-6 md:p-8 bg-muted/30 shrink-0">
               <Button onClick={() => setIsDetailsOpen(false)} className="w-full h-14 rounded-2xl font-black bg-primary text-white shadow-xl">Close Resident Record</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* --- ADD CLIENT DIALOG --- */}
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogContent className="rounded-[3rem] max-w-lg p-0 overflow-hidden border-none shadow-2xl">
+            <DialogHeader className="p-8 bg-primary text-white">
+              <DialogTitle className="text-2xl font-black">Register New Citizen</DialogTitle>
+              <DialogDescription className="text-white/60 font-medium">Add a new client to the PAO registry system.</DialogDescription>
+            </DialogHeader>
+            <div className="p-8 space-y-6">
+              <div className="grid gap-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Full Name</Label>
+                  <Input value={newClient.name} onChange={e => setNewClient({...newClient, name: e.target.value})} className="h-12 rounded-xl" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Mobile</Label>
+                    <Input value={newClient.mobile} onChange={e => setNewClient({...newClient, mobile: e.target.value})} className="h-12 rounded-xl" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Classification</Label>
+                    <Select value={newClient.income} onValueChange={v => setNewClient({...newClient, income: v})}>
+                      <SelectTrigger className="h-12 rounded-xl">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Indigent">Indigent</SelectItem>
+                        <SelectItem value="Low Income">Low Income</SelectItem>
+                        <SelectItem value="Government Employee">Govt Employee</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Email (Optional)</Label>
+                  <Input value={newClient.email} onChange={e => setNewClient({...newClient, email: e.target.value})} className="h-12 rounded-xl" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Address</Label>
+                  <Input value={newClient.address} onChange={e => setNewClient({...newClient, address: e.target.value})} className="h-12 rounded-xl" />
+                </div>
+              </div>
+            </div>
+            <DialogFooter className="p-8 bg-muted/30">
+              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="rounded-xl h-12">Cancel</Button>
+              <Button onClick={handleAddClient} disabled={isSubmitting} className="rounded-xl h-12 bg-primary font-black px-10">
+                {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : "Register Citizen"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

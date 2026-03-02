@@ -21,7 +21,8 @@ import {
   Settings2,
   Edit3,
   Camera,
-  Scale
+  Scale,
+  ArrowRightLeft
 } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -160,7 +161,10 @@ export default function AdminLawyersPage() {
   const handleSingleCaseReassign = (caseId: string, newLawyerId: string) => {
     if (!db || !caseId || !newLawyerId) return;
     updateDocumentNonBlocking(doc(db, "cases", caseId), { lawyerId: newLawyerId });
-    toast({ title: "Case Reassigned", description: "Legal Case successfully moved." });
+    toast({ 
+      title: "Case Reassigned", 
+      description: "Legal Case successfully moved to another attorney." 
+    });
   };
 
   return (
@@ -169,7 +173,7 @@ export default function AdminLawyersPage() {
         <div className="flex justify-between items-end">
           <div className="space-y-1">
             <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Lawyer Directory</h1>
-            <p className="text-muted-foreground font-medium">Manage staff profiles and assign photos.</p>
+            <p className="text-muted-foreground font-medium">Manage staff profiles and oversee caseload distribution.</p>
           </div>
         </div>
 
@@ -204,89 +208,98 @@ export default function AdminLawyersPage() {
                     <TableHeader className="bg-muted/30">
                       <TableRow>
                         <TableHead className="px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Attorney</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Active Cases</TableHead>
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Status</TableHead>
                         <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredLawyers.map((lawyer) => (
-                        <TableRow key={lawyer.id} className="hover:bg-primary/5 transition-colors group">
-                          <TableCell className="px-8 py-6">
-                            <div className="flex items-center gap-3">
-                              <Avatar className="h-12 w-12 border-2 border-white shadow-sm">
-                                <AvatarImage src={lawyer.photoUrl} className="object-cover" />
-                                <AvatarFallback className="bg-primary/10 text-primary font-black">
-                                  {lawyer.firstName?.[0] || lawyer.email[0].toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <p className="font-black text-primary leading-none mb-1">
-                                  {lawyer.firstName ? `${lawyer.firstName} ${lawyer.lastName}` : lawyer.email.split('@')[0]}
-                                </p>
-                                <p className="text-[9px] text-muted-foreground font-black uppercase tracking-tighter">{lawyer.email}</p>
+                      {filteredLawyers.map((lawyer) => {
+                        const activeCount = allCases?.filter(c => c.lawyerId === lawyer.id && c.status === 'Active').length || 0;
+                        return (
+                          <TableRow key={lawyer.id} className="hover:bg-primary/5 transition-colors group">
+                            <TableCell className="px-8 py-6">
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-12 w-12 border-2 border-white shadow-sm">
+                                  <AvatarImage src={lawyer.photoUrl} className="object-cover" />
+                                  <AvatarFallback className="bg-primary/10 text-primary font-black">
+                                    {lawyer.firstName?.[0] || lawyer.email[0].toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <p className="font-black text-primary leading-none mb-1">
+                                    {lawyer.firstName ? `${lawyer.firstName} ${lawyer.lastName}` : lawyer.email.split('@')[0]}
+                                  </p>
+                                  <p className="text-[9px] text-muted-foreground font-black uppercase tracking-tighter">{lawyer.email}</p>
+                                </div>
                               </div>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Badge variant="outline" className={cn(
-                              "font-black text-[9px] uppercase",
-                              lawyer.status === 'Available' ? 'border-green-200 text-green-700 bg-green-50' : 
-                              lawyer.status === 'Onsite' ? 'border-blue-200 text-blue-700 bg-blue-50' :
-                              'border-amber-200 text-amber-700 bg-amber-50'
-                            )}>
-                              {lawyer.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right px-8">
-                            <div className="flex justify-end gap-2">
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-9 w-9 rounded-xl text-primary hover:bg-primary/5"
-                                onClick={() => { 
-                                  setSelectedLawyer(lawyer); 
-                                  setEditLawyerData({ 
-                                    firstName: lawyer.firstName || "",
-                                    lastName: lawyer.lastName || "",
-                                    phoneNumber: lawyer.phoneNumber || "",
-                                    photoUrl: lawyer.photoUrl || "",
-                                    status: lawyer.status 
-                                  }); 
-                                  setIsEditOpen(true); 
-                                }}
-                              >
-                                <Edit3 className="h-4 w-4" />
-                              </Button>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-primary/5">
-                                    <Settings2 className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="rounded-2xl p-2 w-56">
-                                  <DropdownMenuLabel className="text-[10px] font-black uppercase text-primary/40 px-2 pb-2">Quick Status</DropdownMenuLabel>
-                                  <DropdownMenuItem onClick={() => updateDocumentNonBlocking(doc(db, "roleLawyer", lawyer.id), { status: "Available" })} className="rounded-xl font-bold">
-                                    Mark as Available
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => updateDocumentNonBlocking(doc(db, "roleLawyer", lawyer.id), { status: "Onsite" })} className="rounded-xl font-bold">
-                                    Mark as Onsite
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => updateDocumentNonBlocking(doc(db, "roleLawyer", lawyer.id), { status: "On Leave" })} className="rounded-xl font-bold">
-                                    Mark as On Leave
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem 
-                                    onClick={() => deleteDocumentNonBlocking(doc(db, "roleLawyer", lawyer.id))}
-                                    className="text-destructive font-bold rounded-xl"
-                                  >
-                                    <Trash2 className="mr-2 h-4 w-4" /> Deactivate
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="font-bold border-primary/10 text-primary">
+                                {activeCount} Cases
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Badge variant="outline" className={cn(
+                                "font-black text-[9px] uppercase",
+                                lawyer.status === 'Available' ? 'border-green-200 text-green-700 bg-green-50' : 
+                                lawyer.status === 'Onsite' ? 'border-blue-200 text-blue-700 bg-blue-50' :
+                                'border-amber-200 text-amber-700 bg-amber-50'
+                              )}>
+                                {lawyer.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right px-8">
+                              <div className="flex justify-end gap-2">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-9 w-9 rounded-xl text-primary hover:bg-primary/5"
+                                  onClick={() => { 
+                                    setSelectedLawyer(lawyer); 
+                                    setEditLawyerData({ 
+                                      firstName: lawyer.firstName || "",
+                                      lastName: lawyer.lastName || "",
+                                      phoneNumber: lawyer.phoneNumber || "",
+                                      photoUrl: lawyer.photoUrl || "",
+                                      status: lawyer.status 
+                                    }); 
+                                    setIsEditOpen(true); 
+                                  }}
+                                >
+                                  <Edit3 className="h-4 w-4" />
+                                </Button>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-primary/5">
+                                      <Settings2 className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="rounded-2xl p-2 w-56">
+                                    <DropdownMenuLabel className="text-[10px] font-black uppercase text-primary/40 px-2 pb-2">Quick Status</DropdownMenuLabel>
+                                    <DropdownMenuItem onClick={() => updateDocumentNonBlocking(doc(db, "roleLawyer", lawyer.id), { status: "Available" })} className="rounded-xl font-bold">
+                                      Mark as Available
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => updateDocumentNonBlocking(doc(db, "roleLawyer", lawyer.id), { status: "Onsite" })} className="rounded-xl font-bold">
+                                      Mark as Onsite
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => updateDocumentNonBlocking(doc(db, "roleLawyer", lawyer.id), { status: "On Leave" })} className="rounded-xl font-bold">
+                                      Mark as On Leave
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem 
+                                      onClick={() => deleteDocumentNonBlocking(doc(db, "roleLawyer", lawyer.id))}
+                                      className="text-destructive font-bold rounded-xl"
+                                    >
+                                      <Trash2 className="mr-2 h-4 w-4" /> Deactivate
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 )}
@@ -393,7 +406,7 @@ export default function AdminLawyersPage() {
                         <TableRow>
                           <TableHead className="px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Case ID</TableHead>
                           <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Type</TableHead>
-                          <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Reassign To</TableHead>
+                          <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Reassign Attorney</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -403,13 +416,16 @@ export default function AdminLawyersPage() {
                             <TableCell className="text-xs font-bold">{c.caseType}</TableCell>
                             <TableCell className="text-right px-8">
                               <Select onValueChange={(newLawyerId) => handleSingleCaseReassign(c.id, newLawyerId)}>
-                                <SelectTrigger className="h-9 w-40 rounded-lg text-[10px] font-bold">
-                                  <SelectValue placeholder="Select Lawyer" />
+                                <SelectTrigger className="h-10 w-48 rounded-xl text-xs font-bold bg-white border-primary/10">
+                                  <div className="flex items-center gap-2">
+                                    <ArrowRightLeft className="h-3 w-3 text-muted-foreground" />
+                                    <SelectValue placeholder="Move handling to..." />
+                                  </div>
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {lawyerMetrics.filter(l => l.id !== selectedLawyer?.id).map(l => (
+                                  {registeredLawyers?.filter(l => l.id !== selectedLawyer?.id).map(l => (
                                     <SelectItem key={l.id} value={l.id} className="text-xs font-bold">
-                                      {l.firstName || l.email.split('@')[0]}
+                                      {l.firstName ? `Atty. ${l.firstName} ${l.lastName}` : l.email.split('@')[0]}
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
