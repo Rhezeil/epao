@@ -24,7 +24,8 @@ import {
   AlertCircle,
   FileText,
   Info,
-  CalendarCheck
+  CalendarCheck,
+  Gavel
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -186,7 +187,6 @@ export default function LawyerDashboard() {
         const timeString = `${displayHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
         const slotDate = bookingForm.date ? setMinutes(setHours(new Date(bookingForm.date), h), m) : null;
         const isPast = slotDate ? isBefore(slotDate, now) : false;
-        // Check lawyer's own appts for this slot
         const isBooked = globalAppts?.some(a => a.lawyerId === user?.uid && a.time === timeString && a.status !== 'cancelled');
         slots.push({ time: timeString, isBooked, isPast });
       }
@@ -257,7 +257,6 @@ export default function LawyerDashboard() {
       const selectedCase = activeCases?.find(c => c.id === bookingForm.caseId);
       if (!selectedCase) throw new Error("Selected case not found.");
 
-      // Fetch client details
       const clientDoc = await getDoc(doc(db, "users", selectedCase.clientId));
       const clientData = clientDoc.exists() ? clientDoc.data() : null;
 
@@ -493,7 +492,7 @@ export default function LawyerDashboard() {
                               <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
                                 <Badge variant="outline" className="text-[9px] font-black uppercase py-0 border-secondary/20 text-secondary">{appt.status}</Badge>
                                 <span>•</span>
-                                <span>{appt.caseType}</span>
+                                <span className="font-bold text-secondary">{appt.caseType}</span>
                               </div>
                             </div>
                           </div>
@@ -551,10 +550,10 @@ export default function LawyerDashboard() {
                     <div key={c.id} className="p-4 bg-white/10 rounded-2xl border border-white/5 flex items-center justify-between hover:bg-white/20 transition-all cursor-pointer" onClick={() => router.push('/dashboard/lawyer/cases')}>
                       <div className="flex items-center gap-3">
                         <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center font-black text-xs">
-                          {c.id.split('-').pop()?.slice(0, 3)}
+                          <Gavel className="h-4 w-4" />
                         </div>
                         <div>
-                          <p className="text-xs font-black leading-none mb-1">{c.caseType}</p>
+                          <p className="text-xs font-black leading-none mb-1 text-white">{c.caseType}</p>
                           <p className="text-[9px] font-bold opacity-60 uppercase tracking-widest">ID: {c.id}</p>
                         </div>
                       </div>

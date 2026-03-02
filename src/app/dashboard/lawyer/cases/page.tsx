@@ -22,7 +22,8 @@ import {
   Mail,
   MapPin,
   Info,
-  ChevronRight
+  ChevronRight,
+  Gavel
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -164,7 +165,6 @@ export default function LawyerCasesPage() {
     setIsSubmitting(true);
 
     try {
-      // Fetch client details
       const clientDoc = await getDoc(doc(db, "users", selectedCaseForBooking.clientId));
       const clientData = clientDoc.exists() ? clientDoc.data() : null;
 
@@ -214,7 +214,7 @@ export default function LawyerCasesPage() {
           <div className="relative w-full md:w-72">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary/30" />
             <Input 
-              placeholder="Search Case ID or Type..." 
+              placeholder="Search Classification or ID..." 
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="pl-9 h-11 rounded-xl border-secondary/10 bg-white focus-visible:ring-secondary/20 font-bold"
@@ -238,7 +238,7 @@ export default function LawyerCasesPage() {
               <Table>
                 <TableHeader className="bg-muted/30">
                   <TableRow>
-                    <TableHead className="px-8 font-black text-[10px] uppercase tracking-widest text-secondary/40">Legal Matter</TableHead>
+                    <TableHead className="px-8 font-black text-[10px] uppercase tracking-widest text-secondary/40">Case Classification</TableHead>
                     <TableHead className="font-black text-[10px] uppercase tracking-widest text-secondary/40">Status</TableHead>
                     <TableHead className="font-black text-[10px] uppercase tracking-widest text-secondary/40">Date Opened</TableHead>
                     <TableHead className="font-black text-[10px] uppercase tracking-widest text-secondary/40">Case ID</TableHead>
@@ -249,7 +249,7 @@ export default function LawyerCasesPage() {
                   {filteredCases.map((c) => (
                     <TableRow key={c.id} className="hover:bg-secondary/5 transition-colors group">
                       <TableCell className="px-8 py-6">
-                        <p className="font-black text-secondary leading-none">{c.caseType}</p>
+                        <p className="font-black text-secondary leading-none text-base">{c.caseType}</p>
                       </TableCell>
                       <TableCell>
                         <Badge className={cn(
@@ -339,15 +339,40 @@ export default function LawyerCasesPage() {
                 </div>
               </div>
             </DialogHeader>
-            <div className="p-10 space-y-10 flex-1 overflow-y-auto">
-              <div className="grid md:grid-cols-2 gap-8">
+            <div className="p-10 space-y-8 flex-1 overflow-y-auto scrollbar-hide">
+              {/* --- CASE SUMMARY BOX --- */}
+              {selectedCaseForProfile && (
+                <div className="space-y-4 p-8 bg-secondary/5 rounded-[2.5rem] border-2 border-dashed border-secondary/10">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-white rounded-2xl shadow-sm">
+                      <Gavel className="h-6 w-6 text-secondary" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Official Case classification</Label>
+                      <p className="text-2xl font-black text-secondary leading-tight">{selectedCaseForProfile.caseType}</p>
+                      <p className="text-[10px] font-black text-secondary/60 tracking-[0.2em] uppercase">ID: {selectedCaseForProfile.id}</p>
+                    </div>
+                  </div>
+                  
+                  {selectedCaseForProfile.description && (
+                    <div className="pt-4 border-t border-secondary/10">
+                      <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest mb-1 block">Case Background / Description</Label>
+                      <p className="text-sm text-secondary/80 font-medium italic leading-relaxed">
+                        {selectedCaseForProfile.description}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="grid md:grid-cols-2 gap-10">
                 <div className="space-y-6">
                   <div className="space-y-1">
                     <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Contact Details</Label>
-                    <p className="font-bold text-secondary flex items-center gap-3">
+                    <p className="font-bold text-secondary flex items-center gap-3 text-base">
                       <Phone className="h-4 w-4 text-secondary/40" /> {clientUser?.mobileNumber || clientProfile?.phoneNumber || "N/A"}
                     </p>
-                    <p className="font-bold text-secondary flex items-center gap-3">
+                    <p className="font-bold text-secondary flex items-center gap-3 text-base">
                       <Mail className="h-4 w-4 text-secondary/40" /> {clientUser?.email || "N/A"}
                     </p>
                   </div>
@@ -361,35 +386,27 @@ export default function LawyerCasesPage() {
                 </div>
                 <div className="space-y-6">
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Classification</Label>
-                    <Badge className="bg-secondary text-white font-black px-4 py-1.5 rounded-full uppercase text-[10px] tracking-wider">
+                    <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Eligibility Status</Label>
+                    <Badge className="bg-secondary text-white font-black px-4 py-1.5 rounded-full uppercase text-[10px] tracking-wider border-none shadow-sm">
                       {clientUser?.incomeClassification || "Indigent"}
                     </Badge>
-                    <p className="text-[9px] text-muted-foreground font-bold mt-1 ml-1">Verified Priority Rank</p>
+                    <p className="text-[9px] text-muted-foreground font-black mt-2 ml-1 uppercase tracking-tighter">Verified Priority Rank</p>
                   </div>
-                  {selectedCaseForProfile && (
-                    <div className="space-y-1 p-4 bg-secondary/5 rounded-2xl border border-secondary/10">
-                      <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Handled Case</Label>
-                      <p className="text-xs font-black text-secondary">{selectedCaseForProfile.caseType}</p>
-                      <p className="text-[9px] font-bold text-secondary/60">ID: {selectedCaseForProfile.id}</p>
+                  <div className="p-6 bg-amber-50 rounded-[2rem] border border-amber-100 flex items-start gap-4 shadow-sm">
+                    <Info className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black text-amber-900 uppercase tracking-widest">Privacy Protocol</p>
+                      <p className="text-[11px] text-amber-800/70 font-bold leading-relaxed">
+                        Data for official legal correspondence only.
+                      </p>
                     </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="p-6 bg-amber-50 rounded-[2rem] border border-amber-100 flex items-start gap-4 shadow-sm">
-                <Info className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <p className="text-xs font-black text-amber-900 uppercase tracking-widest">Privacy Reminder</p>
-                  <p className="text-xs text-amber-800/70 font-medium leading-relaxed">
-                    This information is provided for official legal correspondence and case management only. Ensure all data is handled according to PAO privacy protocols.
-                  </p>
+                  </div>
                 </div>
               </div>
             </div>
             <DialogFooter className="p-8 bg-muted/30 shrink-0">
-              <Button onClick={() => setIsProfileOpen(false)} className="w-full h-14 rounded-2xl font-black bg-secondary text-white shadow-xl">
-                Close Profile
+              <Button onClick={() => setIsProfileOpen(false)} className="w-full h-14 rounded-2xl font-black bg-secondary text-white shadow-xl hover:scale-[1.02] transition-transform">
+                Close Citizen Record
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -409,12 +426,14 @@ export default function LawyerCasesPage() {
                 <CalendarCheck className="h-8 w-8 opacity-40" />
               </div>
             </DialogHeader>
-            <div className="p-10 space-y-8 flex-1 overflow-y-auto">
+            <div className="p-10 space-y-8 flex-1 overflow-y-auto scrollbar-hide">
               <div className="grid lg:grid-cols-2 gap-12">
                 <div className="space-y-6">
-                  <div className="p-6 bg-primary/5 rounded-[2rem] border-2 border-dashed border-primary/10 space-y-2">
-                    <p className="text-[10px] font-black uppercase text-primary tracking-widest">Client Matter</p>
-                    <p className="text-lg font-black text-primary leading-tight">{selectedCaseForBooking?.caseType}</p>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Case Classification</Label>
+                    <div className="p-6 bg-primary/5 rounded-[2rem] border-2 border-dashed border-primary/10">
+                      <p className="text-lg font-black text-primary leading-tight">{selectedCaseForBooking?.caseType}</p>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
@@ -456,7 +475,7 @@ export default function LawyerCasesPage() {
                     {!bookingForm.date ? (
                       <div className="h-[200px] flex flex-col items-center justify-center text-muted-foreground bg-primary/5 rounded-3xl border border-dashed">
                         <Clock className="h-10 w-10 mb-2 opacity-20" />
-                        <p className="text-[10px] font-bold">Pick a date above</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest">Pick a date above</p>
                       </div>
                     ) : (
                       <div className="grid grid-cols-2 gap-2 max-h-[400px] overflow-y-auto p-1 scrollbar-hide">
@@ -485,11 +504,11 @@ export default function LawyerCasesPage() {
               </div>
             </div>
             <DialogFooter className="p-8 bg-muted/30 gap-3 shrink-0">
-              <Button variant="outline" onClick={() => setSelectedCaseForBooking(null)} className="rounded-xl font-bold">Cancel</Button>
+              <Button variant="outline" onClick={() => setSelectedCaseForBooking(null)} className="rounded-xl font-bold h-12 px-8">Cancel</Button>
               <Button 
                 onClick={handleCreateAppointment} 
                 disabled={!bookingForm.date || !bookingForm.time || isSubmitting}
-                className="bg-primary text-white font-black rounded-xl px-10 shadow-lg hover:scale-105 transition-transform"
+                className="bg-primary text-white font-black rounded-xl px-10 h-12 shadow-lg hover:scale-105 transition-transform"
               >
                 {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : "Finalize Appointment"}
               </Button>
