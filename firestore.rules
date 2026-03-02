@@ -74,12 +74,16 @@ service cloud.firestore {
     match /admins/{adminId} {
       allow get: if isSignedIn();
       allow list: if isAdmin();
-      allow write: if isAdmin();
+      // Allow bootstrap admin to create their doc, otherwise require admin privileges for writes
+      allow create: if isOwner(adminId) && request.auth.token.email == "admin@epao.com";
+      allow update, delete: if isAdmin();
     }
 
     match /roleLawyer/{lawyerId} {
       allow get, list: if isSignedIn();
-      allow create, update: if isOwner(lawyerId) || isAdmin();
+      // Allow creation by the user themselves (bootstrap) or by an existing admin
+      allow create: if isOwner(lawyerId) || isAdmin();
+      allow update: if isOwner(lawyerId) || isAdmin();
       allow delete: if isAdmin();
     }
     
