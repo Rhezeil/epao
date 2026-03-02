@@ -6,27 +6,31 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useAuth } from "@/components/auth-provider";
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc } from "@/firebase";
 import { collection, query, where, doc } from "firebase/firestore";
-import { format } from "date-fns";
+import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, addDays } from "date-fns";
 import { 
   Calendar, Clock, CheckCircle2, XCircle, MoreVertical, 
-  Briefcase, Scale, User, ChevronRight, Loader2
+  Briefcase, Scale, User, ChevronRight, Loader2,
+  CalendarDays, CalendarRange, Filter
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
-  DropdownMenuTrigger, DropdownMenuSeparator 
+  DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
+import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function LawyerDashboard() {
   const { user, role, loading } = useAuth();
   const db = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
+  const [scheduleView, setScheduleView] = useState<"daily" | "weekly" | "monthly">("daily");
 
   const lawyerRef = useMemoFirebase(() => {
     if (!db || !user || role !== 'lawyer') return null;
@@ -52,8 +56,31 @@ export default function LawyerDashboard() {
     );
   }, [db, user, role]);
 
-  const { data: appointments, isLoading: isApptsLoading } = useCollection(apptsQuery ? apptsQuery : null);
-  const { data: activeCases } = useCollection(casesQuery ? casesQuery : null);
+  const { data: appointments, isLoading: isApptsLoading } = useCollection(apptsQuery);
+  const { data: activeCases } = useCollection(casesQuery);
+
+  const filteredSchedule = useMemo(() => {
+    if (!appointments) return [];
+    const now = new Date();
+    
+    return appointments.filter(appt => {
+      const apptDate = new Date(appt.date);
+      if (scheduleView === "daily") {
+        return format(apptDate, "yyyy-MM-dd") === format(now, "yyyy-MM-dd");
+      }
+      if (scheduleView === "weekly") {
+        const start = startOfWeek(now, { weekStartsOn: 1 });
+        const end = endOfWeek(now, { weekStartsOn: 1 });
+        return isWithinInterval(apptDate, { start, end });
+      }
+      if (scheduleView === "monthly") {
+        const start = startOfMonth(now);
+        const end = endOfMonth(now);
+        return isWithinInterval(apptDate, { start, end });
+      }
+      return true;
+    }).sort((a, b) => a.date.localeCompare(b.date));
+  }, [appointments, scheduleView]);
 
   if (loading) {
     return (
@@ -74,6 +101,16 @@ export default function LawyerDashboard() {
     toast({ title: `Status Updated`, description: `Appointment marked as ${status}.` });
   };
 
+  const handleSetAvailability = (status: "Available" | "Onsite" | "On Leave") => {
+    if (!db || !user) return;
+    const ref = doc(db, "roleLawyer", user.uid);
+    updateDocumentNonBlocking(ref, { status });
+    toast({ 
+      title: "Availability Updated", 
+      description: `Your status has been set to ${status}.` 
+    });
+  };
+
   const isLeave = lawyerData?.status === 'On Leave';
 
   return (
@@ -91,15 +128,42 @@ export default function LawyerDashboard() {
               <h1 className="text-3xl font-black text-secondary font-headline tracking-tight">
                 Atty. {lawyerData?.firstName || lawyerData?.email?.split('@')[0]} {lawyerData?.lastName || ""}
               </h1>
-              <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-[0.2em]">Professional Staff Workstation</p>
+              <div className="flex items-center gap-2 mt-1">
+                <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-[0.2em]">Professional Staff Workstation</p>
+                <Badge variant="outline" className={cn(
+                  "font-black text-[9px] uppercase px-2 py-0 border-secondary/20",
+                  isLeave ? "text-amber-600 bg-amber-50" : "text-secondary bg-secondary/5"
+                )}>
+                  {lawyerData?.status || "Available"}
+                </Badge>
+              </div>
             </div>
           </div>
-          <Badge className={cn(
-            "text-white border-none px-4 py-2 rounded-full font-black text-[10px] uppercase tracking-widest shadow-md transition-colors",
-            isLeave ? "bg-amber-500" : "bg-secondary"
-          )}>
-            {isLeave ? "On Leave" : "Active"}
-          </Badge>
+          
+          <div className="flex gap-3">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className={cn(
+                  "rounded-full font-black text-[10px] uppercase tracking-widest shadow-md transition-colors px-6 h-11",
+                  isLeave ? "bg-amber-500 hover:bg-amber-600" : "bg-secondary hover:bg-secondary/90"
+                )}>
+                  Update Availability
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="rounded-2xl w-56 p-2">
+                <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Set Duty Status</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => handleSetAvailability("Available")} className="rounded-xl font-bold cursor-pointer">
+                  <div className="w-2 h-2 rounded-full bg-green-500 mr-2" /> Mark Available
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleSetAvailability("Onsite")} className="rounded-xl font-bold cursor-pointer">
+                  <div className="w-2 h-2 rounded-full bg-blue-500 mr-2" /> Mark Onsite
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleSetAvailability("On Leave")} className="rounded-xl font-bold cursor-pointer text-amber-600">
+                  <div className="w-2 h-2 rounded-full bg-amber-500 mr-2" /> Mark On Leave
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -145,13 +209,21 @@ export default function LawyerDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <Card className="lg:col-span-2 border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
             <CardHeader className="bg-secondary/5 pb-4 border-b border-secondary/10">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-lg font-bold text-secondary flex items-center gap-2">
-                  <Clock className="h-5 w-5" /> Clinical Schedule
-                </CardTitle>
-                <Badge variant="outline" className="border-secondary/20 text-secondary font-black text-[9px] uppercase px-3 py-1">
-                  {format(new Date(), "EEEE, MMM dd")}
-                </Badge>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-secondary text-white rounded-xl">
+                    <Clock className="h-5 w-5" />
+                  </div>
+                  <CardTitle className="text-lg font-bold text-secondary">Clinical Schedule</CardTitle>
+                </div>
+                
+                <Tabs value={scheduleView} onValueChange={(v) => setScheduleView(v as any)} className="w-full sm:w-auto">
+                  <TabsList className="bg-white/50 border border-secondary/10 rounded-xl h-10 p-1">
+                    <TabsTrigger value="daily" className="rounded-lg text-[10px] font-black uppercase data-[state=active]:bg-secondary data-[state=active]:text-white">Daily</TabsTrigger>
+                    <TabsTrigger value="weekly" className="rounded-lg text-[10px] font-black uppercase data-[state=active]:bg-secondary data-[state=active]:text-white">Weekly</TabsTrigger>
+                    <TabsTrigger value="monthly" className="rounded-lg text-[10px] font-black uppercase data-[state=active]:bg-secondary data-[state=active]:text-white">Monthly</TabsTrigger>
+                  </TabsList>
+                </Tabs>
               </div>
             </CardHeader>
             <CardContent className="p-0">
@@ -159,9 +231,7 @@ export default function LawyerDashboard() {
                 <div className="p-20 flex justify-center"><Loader2 className="animate-spin h-10 w-10 text-secondary/20" /></div>
               ) : (
                 <div className="divide-y divide-secondary/5">
-                  {[...(appointments || [])]
-                    .sort((a, b) => a.date.localeCompare(b.date))
-                    .slice(0, 10).map((appt) => (
+                  {filteredSchedule.map((appt) => (
                     <div key={appt.id} className="p-6 flex items-center justify-between hover:bg-secondary/5 transition-colors">
                       <div className="flex items-center gap-4">
                         <div className="h-14 w-14 rounded-2xl bg-secondary/5 flex flex-col items-center justify-center border border-secondary/10">
@@ -180,7 +250,9 @@ export default function LawyerDashboard() {
                       <div className="flex items-center gap-4">
                         <div className="text-right hidden sm:block">
                           <p className="text-sm font-black text-secondary">{appt.time}</p>
-                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Reserved Slot</p>
+                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
+                            {scheduleView === 'daily' ? 'Reserved Slot' : format(new Date(appt.date), "EEEE")}
+                          </p>
                         </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -189,14 +261,14 @@ export default function LawyerDashboard() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="rounded-2xl w-56 p-2">
-                            <DropdownMenuItem onClick={() => updateStatus(appt.id, 'completed')} className="text-green-600 font-bold rounded-xl">
+                            <DropdownMenuItem onClick={() => updateStatus(appt.id, 'completed')} className="text-green-600 font-bold rounded-xl cursor-pointer">
                               <CheckCircle2 className="mr-2 h-4 w-4" /> Mark as Completed
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => updateStatus(appt.id, 'cancelled')} className="text-red-600 font-bold rounded-xl">
+                            <DropdownMenuItem onClick={() => updateStatus(appt.id, 'cancelled')} className="text-red-600 font-bold rounded-xl cursor-pointer">
                               <XCircle className="mr-2 h-4 w-4" /> Mark as Cancelled
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="font-bold rounded-xl">
+                            <DropdownMenuItem className="font-bold rounded-xl cursor-pointer">
                               <User className="mr-2 h-4 w-4" /> Client History
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -204,10 +276,13 @@ export default function LawyerDashboard() {
                       </div>
                     </div>
                   ))}
-                  {(!appointments || appointments.length === 0) && (
+                  {filteredSchedule.length === 0 && (
                     <div className="p-20 text-center space-y-4">
-                      <Calendar className="h-16 w-16 text-secondary/10 mx-auto" />
-                      <p className="text-muted-foreground font-medium">No professional visits scheduled for today.</p>
+                      {scheduleView === 'daily' ? <CalendarDays className="h-16 w-16 text-secondary/10 mx-auto" /> : <CalendarRange className="h-16 w-16 text-secondary/10 mx-auto" />}
+                      <p className="text-sm font-bold text-muted-foreground">
+                        {scheduleView === 'daily' ? 'No consultations scheduled for today.' : 
+                         scheduleView === 'weekly' ? 'No appointments found for this week.' : 'No records for the selected month.'}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -219,13 +294,13 @@ export default function LawyerDashboard() {
             <Card className="border-none shadow-xl rounded-[2.5rem] bg-secondary text-white overflow-hidden">
               <CardHeader className="bg-white/10 p-6 border-b border-white/5">
                 <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
-                  <User className="h-4 w-4" /> My Active Clients
+                  <User className="h-4 w-4" /> Active Clients ({activeCases?.length || 0})
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
                 <div className="space-y-4">
-                  {activeCases?.slice(0, 3).map((c) => (
-                    <div key={c.id} className="p-4 bg-white/10 rounded-2xl border border-white/5 flex items-center justify-between hover:bg-white/20 transition-all cursor-pointer">
+                  {activeCases?.slice(0, 5).map((c) => (
+                    <div key={c.id} className="p-4 bg-white/10 rounded-2xl border border-white/5 flex items-center justify-between hover:bg-white/20 transition-all cursor-pointer" onClick={() => router.push('/dashboard/lawyer/cases')}>
                       <div className="flex items-center gap-3">
                         <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center font-black text-xs">
                           {c.id.split('-').pop()?.slice(0, 3)}
@@ -251,20 +326,15 @@ export default function LawyerDashboard() {
             <Card className="border-none shadow-xl rounded-[2.5rem] bg-amber-50 p-8 space-y-6 border border-amber-100">
               <div className="space-y-2">
                 <h3 className="font-black text-amber-900 flex items-center gap-2">
-                  <Clock className="h-5 w-5" /> Professional Duty
+                  <Filter className="h-5 w-5" /> Professional Duty
                 </h3>
                 <p className="text-xs text-amber-800/70 font-medium leading-relaxed">
-                  Please update clinic results immediately after each session to maintain system-wide performance metrics.
+                  Toggle your availability to manage clinic walk-ins. Status changes are reflected in the public portal immediately.
                 </p>
               </div>
-              <div className="p-4 bg-white rounded-2xl border border-amber-200 shadow-sm flex items-center gap-3">
-                <div className="p-2 bg-amber-100 rounded-lg">
-                  <Scale className="h-4 w-4 text-amber-700" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-black text-amber-900/40 uppercase">Action Items</p>
-                  <p className="text-[11px] font-bold text-amber-900">Cases require review</p>
-                </div>
+              <div className="grid grid-cols-1 gap-2">
+                <Button variant="outline" size="sm" className="rounded-xl font-bold bg-white" onClick={() => setScheduleView("daily")}>Today's Session</Button>
+                <Button variant="outline" size="sm" className="rounded-xl font-bold bg-white" onClick={() => router.push('/dashboard/lawyer/cases')}>Open Full Registry</Button>
               </div>
             </Card>
           </div>
