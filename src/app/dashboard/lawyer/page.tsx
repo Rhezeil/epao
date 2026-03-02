@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useAuth } from "@/components/auth-provider";
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc, setDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
 import { collection, query, where, doc } from "firebase/firestore";
-import { format, startOfToday, isWeekend, isBefore } from "date-fns";
+import { format, startOfToday, isWeekend, isBefore, eachDayOfInterval } from "date-fns";
 import { 
   Calendar as CalendarIcon, 
   Clock, 
@@ -22,7 +22,8 @@ import {
   Plus,
   Trash2,
   AlertCircle,
-  FileText
+  FileText,
+  Info
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -55,10 +56,12 @@ export default function LawyerDashboard() {
     type: "FullDayAvailable",
     startTime: "08:00",
     endTime: "17:00",
-    reason: ""
+    reasonCategory: "Work-Related Reasons for Leave",
+    reasonDetails: "",
+    endDate: undefined as Date | undefined
   });
 
-  // Queries (Moved to top level before any early returns)
+  // Queries
   const lawyerRef = useMemoFirebase(() => {
     if (!db || !user || role !== 'lawyer') return null;
     return doc(db, "roleLawyer", user.uid);
@@ -140,25 +143,44 @@ export default function LawyerDashboard() {
 
   const handleSaveAvailability = () => {
     if (!db || !user || !selectedDate) return;
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
-    const id = selectedDayAvail?.id || dateStr;
-    const availRef = doc(db, "users", user.uid, "availability", id);
 
-    const data = {
-      id,
-      lawyerId: user.uid,
-      date: dateStr,
-      availabilityType: availForm.type,
-      startTime: availForm.type.includes('Partial') ? availForm.startTime : null,
-      endTime: availForm.type.includes('Partial') ? availForm.endTime : null,
-      reason: availForm.reason || "",
-      updatedAt: new Date().toISOString(),
-      createdAt: selectedDayAvail?.createdAt || new Date().toISOString()
-    };
+    // Determine range
+    const start = selectedDate;
+    const end = availForm.endDate || selectedDate;
+    
+    try {
+      const dates = eachDayOfInterval({ start, end });
+      
+      dates.forEach(d => {
+        const dateStr = format(d, "yyyy-MM-dd");
+        const availRef = doc(db, "users", user.uid, "availability", dateStr);
 
-    setDocumentNonBlocking(availRef, data, { merge: true });
-    setIsAvailabilityOpen(false);
-    toast({ title: "Schedule Updated", description: `Your status for ${dateStr} has been saved.` });
+        const data = {
+          id: dateStr,
+          lawyerId: user.uid,
+          date: dateStr,
+          availabilityType: availForm.type,
+          startTime: availForm.type.includes('Partial') ? availForm.startTime : null,
+          endTime: availForm.type.includes('Partial') ? availForm.endTime : null,
+          reasonCategory: availForm.reasonCategory,
+          reason: availForm.reasonDetails || "",
+          updatedAt: new Date().toISOString(),
+          createdAt: new Date().toISOString()
+        };
+
+        setDocumentNonBlocking(availRef, data, { merge: true });
+      });
+
+      setIsAvailabilityOpen(false);
+      toast({ 
+        title: "Schedule Synchronized", 
+        description: dates.length > 1 
+          ? `Status updated for ${dates.length} days.` 
+          : `Availability saved for ${format(start, "MMM dd")}.` 
+      });
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Invalid Range", description: "End date must be after the start date." });
+    }
   };
 
   const handleDeleteAvailability = () => {
@@ -168,7 +190,7 @@ export default function LawyerDashboard() {
     toast({ title: "Entry Removed", description: "Date returned to standard office availability." });
   };
 
-  const isLeave = lawyerData?.status === 'On Leave';
+  const isLeave = lawyerData?.status === 'On Leave' || selectedDayAvail?.availabilityType?.includes('Unavailable');
 
   return (
     <DashboardLayout role="lawyer">
@@ -192,7 +214,7 @@ export default function LawyerDashboard() {
                   "font-black text-[9px] uppercase px-2 py-0 border-secondary/20",
                   isLeave ? "text-amber-600 bg-amber-50" : "text-secondary bg-secondary/5"
                 )}>
-                  {lawyerData?.status || "Available"}
+                  {selectedDayAvail ? selectedDayAvail.availabilityType : (lawyerData?.status || "Available")}
                 </Badge>
               </div>
             </div>
@@ -205,14 +227,25 @@ export default function LawyerDashboard() {
                   type: selectedDayAvail.availabilityType,
                   startTime: selectedDayAvail.startTime || "08:00",
                   endTime: selectedDayAvail.endTime || "17:00",
-                  reason: selectedDayAvail.reason || ""
+                  reasonCategory: selectedDayAvail.reasonCategory || "Work-Related Reasons for Leave",
+                  reasonDetails: selectedDayAvail.reason || "",
+                  endDate: undefined
+                });
+              } else {
+                setAvailState({
+                  type: "FullDayAvailable",
+                  startTime: "08:00",
+                  endTime: "17:00",
+                  reasonCategory: "Work-Related Reasons for Leave",
+                  reasonDetails: "",
+                  endDate: undefined
                 });
               }
               setIsAvailabilityOpen(true);
             }}
             className="rounded-full font-black text-[10px] uppercase tracking-widest shadow-md bg-secondary hover:bg-secondary/90 px-6 h-11"
           >
-            <Plus className="mr-2 h-4 w-4" /> Set Availability
+            <Plus className="mr-2 h-4 w-4" /> Manage Availability
           </Button>
         </div>
 
@@ -408,7 +441,7 @@ export default function LawyerDashboard() {
                   <AlertCircle className="h-5 w-5" /> Schedule Policy
                 </h3>
                 <p className="text-xs text-amber-800/70 font-medium leading-relaxed">
-                  Mark your availability to help the Admin office coordinate triage assignments effectively.
+                  Mark your availability to help the Admin office coordinate triage assignments effectively. You can now apply leave status to a date range.
                 </p>
               </div>
               <div className="grid grid-cols-1 gap-2">
@@ -421,14 +454,14 @@ export default function LawyerDashboard() {
 
         {/* --- AVAILABILITY DIALOG --- */}
         <Dialog open={isAvailabilityOpen} onOpenChange={setIsAvailabilityOpen}>
-          <DialogContent className="rounded-[3rem] max-w-lg p-0 overflow-hidden border-none shadow-2xl">
-            <DialogHeader className="p-8 bg-secondary text-white">
+          <DialogContent className="rounded-[3rem] max-w-lg p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
+            <DialogHeader className="p-8 bg-secondary text-white shrink-0">
               <DialogTitle className="text-2xl font-black">Manage Availability</DialogTitle>
               <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">
-                Setting status for {selectedDate ? format(selectedDate, "MMMM dd, yyyy") : "..."}
+                Start Date: {selectedDate ? format(selectedDate, "MMMM dd, yyyy") : "..."}
               </DialogDescription>
             </DialogHeader>
-            <div className="p-10 space-y-6">
+            <div className="p-10 space-y-6 flex-1 overflow-y-auto">
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Availability Status</Label>
                 <Select value={availForm.type} onValueChange={(v) => setAvailState({...availForm, type: v})}>
@@ -444,6 +477,23 @@ export default function LawyerDashboard() {
                 </Select>
               </div>
 
+              {availForm.type.includes('Unavailable') && (
+                <div className="space-y-4 p-4 bg-amber-50 rounded-2xl border border-amber-100 animate-in fade-in">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-amber-900/40 tracking-widest flex items-center gap-2">
+                      <CalendarDays className="h-3 w-3" /> Apply Range? (End Date)
+                    </Label>
+                    <Input 
+                      type="date" 
+                      className="h-12 rounded-xl bg-white"
+                      value={availForm.endDate ? format(availForm.endDate, "yyyy-MM-dd") : ""}
+                      onChange={(e) => setAvailState({...availForm, endDate: e.target.value ? new Date(e.target.value) : undefined})}
+                    />
+                    <p className="text-[9px] text-amber-800/60 italic ml-1">Leave blank if applying to selected date only.</p>
+                  </div>
+                </div>
+              )}
+
               {availForm.type.includes('Partial') && (
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -457,17 +507,32 @@ export default function LawyerDashboard() {
                 </div>
               )}
 
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Reason / Note</Label>
-                <Textarea 
-                  placeholder="e.g. Annual Leave, Court Hearing in Manila, etc." 
-                  value={availForm.reason} 
-                  onChange={e => setAvailState({...availForm, reason: e.target.value})}
-                  className="rounded-xl min-h-[100px]"
-                />
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Reason Category</Label>
+                  <Select value={availForm.reasonCategory} onValueChange={(v) => setAvailState({...availForm, reasonCategory: v})}>
+                    <SelectTrigger className="h-12 rounded-xl border-secondary/10 bg-secondary/5 font-bold">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Work-Related Reasons for Leave" className="font-bold">Work-Related Reasons for Leave</SelectItem>
+                      <SelectItem value="Personal Reasons for Leave" className="font-bold">Personal Reasons for Leave</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Specific Details / Notes</Label>
+                  <Textarea 
+                    placeholder="Provide specific context (e.g. Hearing in Branch 12, Medical Checkup, etc.)" 
+                    value={availForm.reasonDetails} 
+                    onChange={e => setAvailState({...availForm, reasonDetails: e.target.value})}
+                    className="rounded-xl min-h-[100px]"
+                  />
+                </div>
               </div>
             </div>
-            <DialogFooter className="p-8 bg-muted/30 gap-3">
+            <DialogFooter className="p-8 bg-muted/30 gap-3 shrink-0">
               {selectedDayAvail && (
                 <Button variant="ghost" onClick={handleDeleteAvailability} className="text-red-600 font-bold hover:bg-red-50">
                   <Trash2 className="mr-2 h-4 w-4" /> Reset Date
