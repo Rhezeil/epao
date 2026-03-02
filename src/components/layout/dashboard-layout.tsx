@@ -53,7 +53,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   const getPortalInfo = () => {
     if (!user) return { label: 'Public Assistance', color: 'bg-teal-500/10 text-teal-700 border-teal-500/20' };
     if (role === 'admin') return { label: 'Admin Command', color: 'bg-primary/10 text-primary border-primary/20' };
-    if (role === 'lawyer') return { label: 'Professional Staff', color: 'bg-secondary/10 text-secondary border-secondary/20' };
+    if (role === 'lawyer') return { label: 'Lawyer Portal', color: 'bg-secondary/10 text-secondary border-secondary/20' };
     return { label: 'Citizen Portal', color: 'bg-amber-500/10 text-amber-700 border-amber-500/20' };
   };
 
