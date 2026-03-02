@@ -4,9 +4,9 @@
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAuth } from "@/components/auth-provider";
-import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc, setDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
 import { collection, query, where, doc } from "firebase/firestore";
-import { format } from "date-fns";
+import { format, startOfToday, isWeekend, isBefore } from "date-fns";
 import { 
   Calendar as CalendarIcon, 
   Clock, 
@@ -18,7 +18,11 @@ import {
   ChevronRight, 
   Loader2,
   CalendarDays, 
-  Check
+  Check,
+  Plus,
+  Trash2,
+  AlertCircle,
+  FileText
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,14 +36,29 @@ import { useRouter } from "next/navigation";
 import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function LawyerDashboard() {
   const { user, role, loading } = useAuth();
   const db = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
+  
+  // UI State
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [isAvailabilityOpen, setIsAvailabilityOpen] = useState(false);
+  const [availForm, setAvailState] = useState({
+    type: "FullDayAvailable",
+    startTime: "08:00",
+    endTime: "17:00",
+    reason: ""
+  });
 
+  // Queries (Moved to top level before any early returns)
   const lawyerRef = useMemoFirebase(() => {
     if (!db || !user || role !== 'lawyer') return null;
     return doc(db, "roleLawyer", user.uid);
@@ -64,23 +83,41 @@ export default function LawyerDashboard() {
     );
   }, [db, user, role]);
 
+  const availabilityQuery = useMemoFirebase(() => {
+    if (!db || !user || role !== 'lawyer') return null;
+    return collection(db, "users", user.uid, "availability");
+  }, [db, user, role]);
+
   const { data: appointments, isLoading: isApptsLoading } = useCollection(apptsQuery);
   const { data: activeCases } = useCollection(casesQuery);
+  const { data: availabilityList } = useCollection(availabilityQuery);
 
+  // Derived Data
   const filteredSchedule = useMemo(() => {
     if (!appointments || !selectedDate) return [];
     const dateStr = format(selectedDate, "yyyy-MM-dd");
-    
-    return appointments.filter(appt => {
-      return appt.dateString === dateStr;
-    }).sort((a, b) => a.time.localeCompare(b.time));
+    return appointments
+      .filter(appt => appt.dateString === dateStr)
+      .sort((a, b) => a.time.localeCompare(b.time));
   }, [appointments, selectedDate]);
+
+  const selectedDayAvail = useMemo(() => {
+    if (!availabilityList || !selectedDate) return null;
+    const ds = format(selectedDate, "yyyy-MM-dd");
+    return availabilityList.find(a => a.date === ds);
+  }, [availabilityList, selectedDate]);
 
   const apptDates = useMemo(() => {
     if (!appointments) return [];
     return appointments.map(a => new Date(a.date));
   }, [appointments]);
 
+  const availDates = useMemo(() => {
+    if (!availabilityList) return [];
+    return availabilityList.map(a => new Date(a.date));
+  }, [availabilityList]);
+
+  // Early returns
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -93,6 +130,7 @@ export default function LawyerDashboard() {
     return null;
   }
 
+  // Handlers
   const updateStatus = (apptId: string, status: string) => {
     if (!db) return;
     const ref = doc(db, "appointments", apptId);
@@ -100,14 +138,34 @@ export default function LawyerDashboard() {
     toast({ title: `Status Updated`, description: `Appointment marked as ${status}.` });
   };
 
-  const handleSetAvailability = (status: "Available" | "Onsite" | "On Leave") => {
-    if (!db || !user) return;
-    const ref = doc(db, "roleLawyer", user.uid);
-    updateDocumentNonBlocking(ref, { status });
-    toast({ 
-      title: "Availability Updated", 
-      description: `Your status has been set to ${status}.` 
-    });
+  const handleSaveAvailability = () => {
+    if (!db || !user || !selectedDate) return;
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    const id = selectedDayAvail?.id || dateStr;
+    const availRef = doc(db, "users", user.uid, "availability", id);
+
+    const data = {
+      id,
+      lawyerId: user.uid,
+      date: dateStr,
+      availabilityType: availForm.type,
+      startTime: availForm.type.includes('Partial') ? availForm.startTime : null,
+      endTime: availForm.type.includes('Partial') ? availForm.endTime : null,
+      reason: availForm.reason || "",
+      updatedAt: new Date().toISOString(),
+      createdAt: selectedDayAvail?.createdAt || new Date().toISOString()
+    };
+
+    setDocumentNonBlocking(availRef, data, { merge: true });
+    setIsAvailabilityOpen(false);
+    toast({ title: "Schedule Updated", description: `Your status for ${dateStr} has been saved.` });
+  };
+
+  const handleDeleteAvailability = () => {
+    if (!db || !user || !selectedDayAvail) return;
+    const availRef = doc(db, "users", user.uid, "availability", selectedDayAvail.id);
+    deleteDocumentNonBlocking(availRef);
+    toast({ title: "Entry Removed", description: "Date returned to standard office availability." });
   };
 
   const isLeave = lawyerData?.status === 'On Leave';
@@ -129,7 +187,7 @@ export default function LawyerDashboard() {
                 Atty. {lawyerData?.firstName || lawyerData?.email?.split('@')[0]} {lawyerData?.lastName || ""}
               </h1>
               <div className="flex items-center gap-2 mt-1">
-                <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-[0.2em]">Professional Staff Workstation</p>
+                <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-[0.2em]">Public Attorney Workstation</p>
                 <Badge variant="outline" className={cn(
                   "font-black text-[9px] uppercase px-2 py-0 border-secondary/20",
                   isLeave ? "text-amber-600 bg-amber-50" : "text-secondary bg-secondary/5"
@@ -140,30 +198,22 @@ export default function LawyerDashboard() {
             </div>
           </div>
           
-          <div className="flex gap-3">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button className={cn(
-                  "rounded-full font-black text-[10px] uppercase tracking-widest shadow-md transition-colors px-6 h-11",
-                  isLeave ? "bg-amber-500 hover:bg-amber-600" : "bg-secondary hover:bg-secondary/90"
-                )}>
-                  Update Availability
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="rounded-2xl w-56 p-2">
-                <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Set Duty Status</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => handleSetAvailability("Available")} className="rounded-xl font-bold cursor-pointer">
-                  <div className="w-2 h-2 rounded-full bg-green-500 mr-2" /> Mark Available
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleSetAvailability("Onsite")} className="rounded-xl font-bold cursor-pointer">
-                  <div className="w-2 h-2 rounded-full bg-blue-500 mr-2" /> Mark Onsite
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleSetAvailability("On Leave")} className="rounded-xl font-bold cursor-pointer text-amber-600">
-                  <div className="w-2 h-2 rounded-full bg-amber-500 mr-2" /> Mark On Leave
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <Button 
+            onClick={() => {
+              if (selectedDayAvail) {
+                setAvailState({
+                  type: selectedDayAvail.availabilityType,
+                  startTime: selectedDayAvail.startTime || "08:00",
+                  endTime: selectedDayAvail.endTime || "17:00",
+                  reason: selectedDayAvail.reason || ""
+                });
+              }
+              setIsAvailabilityOpen(true);
+            }}
+            className="rounded-full font-black text-[10px] uppercase tracking-widest shadow-md bg-secondary hover:bg-secondary/90 px-6 h-11"
+          >
+            <Plus className="mr-2 h-4 w-4" /> Set Availability
+          </Button>
         </div>
 
         {/* --- METRICS --- */}
@@ -200,9 +250,9 @@ export default function LawyerDashboard() {
 
           <Card className="border-none shadow-xl rounded-[2rem] bg-amber-400 text-amber-950 overflow-hidden">
             <CardContent className="p-8 space-y-1">
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Success Rate</p>
-              <p className="text-5xl font-black">94%</p>
-              <p className="text-xs font-bold opacity-80 pt-2">Monthly Efficiency Metric</p>
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Current Status</p>
+              <p className="text-3xl font-black truncate">{selectedDayAvail?.availabilityType.replace(/([A-Z])/g, ' $1').trim() || "Standard Duty"}</p>
+              <p className="text-xs font-bold opacity-80 pt-2">{selectedDayAvail?.reason || "Normal business hours"}</p>
             </CardContent>
           </Card>
         </div>
@@ -230,20 +280,24 @@ export default function LawyerDashboard() {
                         selected={selectedDate}
                         onSelect={setSelectedDate}
                         className="rounded-md border-none"
-                        modifiers={{ hasAppt: apptDates }}
+                        modifiers={{ 
+                          hasAppt: apptDates,
+                          hasAvail: availDates 
+                        }}
                         modifiersStyles={{ 
-                          hasAppt: { 
-                            fontWeight: 'bold', 
-                            textDecoration: 'underline',
-                            color: 'hsl(var(--secondary))'
-                          } 
+                          hasAppt: { fontWeight: 'black', textDecoration: 'underline', color: 'hsl(var(--primary))' },
+                          hasAvail: { border: '2px solid hsl(var(--secondary))', borderRadius: '12px' }
                         }}
                       />
                     </div>
-                    <div className="px-4 py-3 bg-white rounded-2xl border border-dashed border-secondary/20">
+                    <div className="space-y-2 p-4 bg-white rounded-2xl border border-dashed border-secondary/20">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-primary" />
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase">Scheduled Consultation</span>
+                      </div>
                       <div className="flex items-center gap-2">
                         <div className="h-2 w-2 rounded-full bg-secondary" />
-                        <span className="text-[10px] font-bold text-secondary/60 uppercase">Dates with consultations</span>
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase">Special Availability Set</span>
                       </div>
                     </div>
                   </div>
@@ -251,11 +305,16 @@ export default function LawyerDashboard() {
 
                 {/* --- DETAILED REGISTRY --- */}
                 <div className="xl:col-span-7 divide-y divide-secondary/5">
-                  <div className="p-6 bg-secondary/5 border-b border-secondary/10">
+                  <div className="p-6 bg-secondary/5 border-b border-secondary/10 flex justify-between items-center">
                     <h3 className="text-sm font-black text-secondary flex items-center gap-2">
                       <Clock className="h-4 w-4" /> 
                       {selectedDate ? format(selectedDate, "PPPP") : "Daily Consultations"}
                     </h3>
+                    {selectedDayAvail && (
+                      <Badge className="bg-secondary/10 text-secondary border-none font-black text-[9px] uppercase">
+                        {selectedDayAvail.availabilityType}
+                      </Badge>
+                    )}
                   </div>
                   {isApptsLoading ? (
                     <div className="p-20 flex justify-center"><Loader2 className="animate-spin h-10 w-10 text-secondary/20" /></div>
@@ -280,9 +339,7 @@ export default function LawyerDashboard() {
                           <div className="flex items-center gap-4">
                             <div className="text-right hidden sm:block">
                               <p className="text-sm font-black text-secondary">{appt.time}</p>
-                              <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
-                                Reserved Slot
-                              </p>
+                              <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Reserved Slot</p>
                             </div>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
@@ -309,9 +366,7 @@ export default function LawyerDashboard() {
                       {filteredSchedule.length === 0 && (
                         <div className="p-20 text-center space-y-4">
                           <CalendarDays className="h-16 w-16 text-secondary/10 mx-auto" />
-                          <p className="text-sm font-bold text-muted-foreground">
-                            No consultations scheduled for this date.
-                          </p>
+                          <p className="text-sm font-bold text-muted-foreground">No consultations scheduled for this date.</p>
                           <Button variant="outline" size="sm" onClick={() => setSelectedDate(new Date())} className="rounded-xl font-bold">Return to Today</Button>
                         </div>
                       )}
@@ -358,19 +413,79 @@ export default function LawyerDashboard() {
             <Card className="border-none shadow-xl rounded-[2.5rem] bg-amber-50 p-8 space-y-6 border border-amber-100">
               <div className="space-y-2">
                 <h3 className="font-black text-amber-900 flex items-center gap-2">
-                  <CalendarIcon className="h-5 w-5" /> Professional Duty
+                  <AlertCircle className="h-5 w-5" /> Schedule Policy
                 </h3>
                 <p className="text-xs text-amber-800/70 font-medium leading-relaxed">
-                  Select any date on the calendar to view your specific consultation lineup for that business day.
+                  Mark your availability to help the Admin office coordinate triage assignments effectively.
                 </p>
               </div>
               <div className="grid grid-cols-1 gap-2">
-                <Button variant="outline" size="sm" className="rounded-xl font-bold bg-white" onClick={() => setSelectedDate(new Date())}>Today's Session</Button>
-                <Button variant="outline" size="sm" className="rounded-xl font-bold bg-white" onClick={() => router.push('/dashboard/lawyer/cases')}>Open Full Registry</Button>
+                <Button variant="outline" size="sm" className="rounded-xl font-bold bg-white" onClick={() => setSelectedDate(new Date())}>View Today</Button>
+                <Button variant="outline" size="sm" className="rounded-xl font-bold bg-white" onClick={() => router.push('/dashboard/lawyer/cases')}>Manage Cases</Button>
               </div>
             </Card>
           </div>
         </div>
+
+        {/* --- AVAILABILITY DIALOG --- */}
+        <Dialog open={isAvailabilityOpen} onOpenChange={setIsAvailabilityOpen}>
+          <DialogContent className="rounded-[3rem] max-w-lg p-0 overflow-hidden border-none shadow-2xl">
+            <DialogHeader className="p-8 bg-secondary text-white">
+              <DialogTitle className="text-2xl font-black">Manage Availability</DialogTitle>
+              <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">
+                Setting status for {selectedDate ? format(selectedDate, "MMMM dd, yyyy") : "..."}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="p-10 space-y-6">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Availability Status</Label>
+                <Select value={availForm.type} onValueChange={(v) => setAvailState({...availForm, type: v})}>
+                  <SelectTrigger className="h-12 rounded-xl border-secondary/10 bg-secondary/5 font-bold">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="FullDayAvailable" className="font-bold">Full Day Available</SelectItem>
+                    <SelectItem value="PartialDayAvailable" className="font-bold">Partial Day Available</SelectItem>
+                    <SelectItem value="FullDayUnavailable" className="font-bold text-red-600">Full Day Leave (Sick/Annual)</SelectItem>
+                    <SelectItem value="PartialDayUnavailable" className="font-bold text-amber-600">Partial Leave (Court/Meeting)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {availForm.type.includes('Partial') && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Start Time</Label>
+                    <Input type="time" value={availForm.startTime} onChange={e => setAvailState({...availForm, startTime: e.target.value})} className="h-12 rounded-xl" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">End Time</Label>
+                    <Input type="time" value={availForm.endTime} onChange={e => setAvailState({...availForm, endTime: e.target.value})} className="h-12 rounded-xl" />
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Reason / Note</Label>
+                <Textarea 
+                  placeholder="e.g. Annual Leave, Court Hearing in Manila, etc." 
+                  value={availForm.reason} 
+                  onChange={e => setAvailState({...availForm, reason: e.target.value})}
+                  className="rounded-xl min-h-[100px]"
+                />
+              </div>
+            </div>
+            <DialogFooter className="p-8 bg-muted/30 gap-3">
+              {selectedDayAvail && (
+                <Button variant="ghost" onClick={handleDeleteAvailability} className="text-red-600 font-bold hover:bg-red-50">
+                  <Trash2 className="mr-2 h-4 w-4" /> Reset Date
+                </Button>
+              )}
+              <Button variant="outline" onClick={() => setIsAvailabilityOpen(false)} className="rounded-xl font-bold">Cancel</Button>
+              <Button onClick={handleSaveAvailability} className="bg-secondary text-white font-black rounded-xl px-8 shadow-lg">Save Status</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
