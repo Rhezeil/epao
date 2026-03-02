@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useAuth } from "@/components/auth-provider";
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc, setDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
 import { collection, query, where, doc } from "firebase/firestore";
-import { format, startOfToday, isWeekend, isBefore, eachDayOfInterval } from "date-fns";
+import { format, startOfToday, isWeekend, isBefore, eachDayOfInterval, addDays } from "date-fns";
 import { 
   Calendar as CalendarIcon, 
   Clock, 
@@ -41,7 +41,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { DateRange } from "react-day-picker";
 
 export default function LawyerDashboard() {
   const { user, role, loading } = useAuth();
@@ -52,13 +52,17 @@ export default function LawyerDashboard() {
   // UI State
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [isAvailabilityOpen, setIsAvailabilityOpen] = useState(false);
-  const [availForm, setAvailState] = useState({
+  
+  // Availability Form State
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: new Date(),
+    to: new Date()
+  });
+  const [availForm, setAvailForm] = useState({
     type: "FullDayAvailable",
     startTime: "08:00",
     endTime: "17:00",
-    reasonCategory: "Work-Related Reasons for Leave",
-    reasonDetails: "",
-    endDate: undefined as Date | undefined
+    reasonCategory: "Work-Related Reasons for Leave"
   });
 
   // Queries
@@ -120,19 +124,6 @@ export default function LawyerDashboard() {
     return availabilityList.map(a => new Date(a.date));
   }, [availabilityList]);
 
-  // Early returns
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-secondary" />
-      </div>
-    );
-  }
-
-  if (!user || role !== 'lawyer') {
-    return null;
-  }
-
   // Handlers
   const updateStatus = (apptId: string, status: string) => {
     if (!db) return;
@@ -142,11 +133,13 @@ export default function LawyerDashboard() {
   };
 
   const handleSaveAvailability = () => {
-    if (!db || !user || !selectedDate) return;
+    if (!db || !user || !dateRange?.from) {
+      toast({ variant: "destructive", title: "Selection Required", description: "Please select at least one date on the calendar." });
+      return;
+    };
 
-    // Determine range
-    const start = selectedDate;
-    const end = availForm.endDate || selectedDate;
+    const start = dateRange.from;
+    const end = dateRange.to || dateRange.from;
     
     try {
       const dates = eachDayOfInterval({ start, end });
@@ -163,7 +156,6 @@ export default function LawyerDashboard() {
           startTime: availForm.type.includes('Partial') ? availForm.startTime : null,
           endTime: availForm.type.includes('Partial') ? availForm.endTime : null,
           reasonCategory: availForm.reasonCategory,
-          reason: availForm.reasonDetails || "",
           updatedAt: new Date().toISOString(),
           createdAt: new Date().toISOString()
         };
@@ -179,7 +171,7 @@ export default function LawyerDashboard() {
           : `Availability saved for ${format(start, "MMM dd")}.` 
       });
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Invalid Range", description: "End date must be after the start date." });
+      toast({ variant: "destructive", title: "Sync Error", description: "Could not apply availability to selected range." });
     }
   };
 
@@ -189,6 +181,18 @@ export default function LawyerDashboard() {
     deleteDocumentNonBlocking(availRef);
     toast({ title: "Entry Removed", description: "Date returned to standard office availability." });
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-secondary" />
+      </div>
+    );
+  }
+
+  if (!user || role !== 'lawyer') {
+    return null;
+  }
 
   const isLeave = lawyerData?.status === 'On Leave' || selectedDayAvail?.availabilityType?.includes('Unavailable');
 
@@ -223,23 +227,21 @@ export default function LawyerDashboard() {
           <Button 
             onClick={() => {
               if (selectedDayAvail) {
-                setAvailState({
+                setAvailForm({
                   type: selectedDayAvail.availabilityType,
                   startTime: selectedDayAvail.startTime || "08:00",
                   endTime: selectedDayAvail.endTime || "17:00",
-                  reasonCategory: selectedDayAvail.reasonCategory || "Work-Related Reasons for Leave",
-                  reasonDetails: selectedDayAvail.reason || "",
-                  endDate: undefined
+                  reasonCategory: selectedDayAvail.reasonCategory || "Work-Related Reasons for Leave"
                 });
+                setDateRange({ from: selectedDate, to: selectedDate });
               } else {
-                setAvailState({
+                setAvailForm({
                   type: "FullDayAvailable",
                   startTime: "08:00",
                   endTime: "17:00",
-                  reasonCategory: "Work-Related Reasons for Leave",
-                  reasonDetails: "",
-                  endDate: undefined
+                  reasonCategory: "Work-Related Reasons for Leave"
                 });
+                setDateRange({ from: selectedDate, to: selectedDate });
               }
               setIsAvailabilityOpen(true);
             }}
@@ -295,7 +297,6 @@ export default function LawyerDashboard() {
             </CardHeader>
             <CardContent className="p-0">
               <div className="grid grid-cols-1 xl:grid-cols-12">
-                {/* --- CALENDAR SIDEBAR --- */}
                 <div className="xl:col-span-5 p-6 border-r border-secondary/5 bg-secondary/[0.02]">
                   <div className="space-y-4">
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary/40 ml-2">Navigate Calendar</p>
@@ -328,7 +329,6 @@ export default function LawyerDashboard() {
                   </div>
                 </div>
 
-                {/* --- DETAILED REGISTRY --- */}
                 <div className="xl:col-span-7 divide-y divide-secondary/5">
                   <div className="p-6 bg-secondary/5 border-b border-secondary/10 flex justify-between items-center">
                     <h3 className="text-sm font-black text-secondary flex items-center gap-2">
@@ -441,7 +441,7 @@ export default function LawyerDashboard() {
                   <AlertCircle className="h-5 w-5" /> Schedule Policy
                 </h3>
                 <p className="text-xs text-amber-800/70 font-medium leading-relaxed">
-                  Mark your availability to help the Admin office coordinate triage assignments effectively. You can now apply leave status to a date range.
+                  Mark your availability to help the Admin office coordinate triage assignments effectively. Select dates on the availability calendar to set leaves.
                 </p>
               </div>
               <div className="grid grid-cols-1 gap-2">
@@ -454,92 +454,94 @@ export default function LawyerDashboard() {
 
         {/* --- AVAILABILITY DIALOG --- */}
         <Dialog open={isAvailabilityOpen} onOpenChange={setIsAvailabilityOpen}>
-          <DialogContent className="rounded-[3rem] max-w-lg p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
+          <DialogContent className="rounded-[3rem] max-w-4xl p-0 overflow-hidden border-none shadow-2xl max-h-[95vh] flex flex-col">
             <DialogHeader className="p-8 bg-secondary text-white shrink-0">
-              <DialogTitle className="text-2xl font-black">Manage Availability</DialogTitle>
+              <DialogTitle className="text-2xl font-black">Manage Professional Availability</DialogTitle>
               <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">
-                Start Date: {selectedDate ? format(selectedDate, "MMMM dd, yyyy") : "..."}
+                Select dates and status for office coordination
               </DialogDescription>
             </DialogHeader>
-            <div className="p-10 space-y-6 flex-1 overflow-y-auto">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Availability Status</Label>
-                <Select value={availForm.type} onValueChange={(v) => setAvailState({...availForm, type: v})}>
-                  <SelectTrigger className="h-12 rounded-xl border-secondary/10 bg-secondary/5 font-bold">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="FullDayAvailable" className="font-bold">Full Day Available</SelectItem>
-                    <SelectItem value="PartialDayAvailable" className="font-bold">Partial Day Available</SelectItem>
-                    <SelectItem value="FullDayUnavailable" className="font-bold text-red-600">Full Day Leave (Sick/Annual)</SelectItem>
-                    <SelectItem value="PartialDayUnavailable" className="font-bold text-amber-600">Partial Leave (Court/Meeting)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {availForm.type.includes('Unavailable') && (
-                <div className="space-y-4 p-4 bg-amber-50 rounded-2xl border border-amber-100 animate-in fade-in">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-amber-900/40 tracking-widest flex items-center gap-2">
-                      <CalendarDays className="h-3 w-3" /> Apply Range? (End Date)
-                    </Label>
-                    <Input 
-                      type="date" 
-                      className="h-12 rounded-xl bg-white"
-                      value={availForm.endDate ? format(availForm.endDate, "yyyy-MM-dd") : ""}
-                      onChange={(e) => setAvailState({...availForm, endDate: e.target.value ? new Date(e.target.value) : undefined})}
+            <div className="p-10 space-y-8 flex-1 overflow-y-auto">
+              <div className="grid lg:grid-cols-2 gap-12">
+                {/* --- CALENDAR SELECTION --- */}
+                <div className="space-y-4">
+                  <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest ml-2">1. Select Affected Dates</Label>
+                  <div className="p-4 bg-secondary/5 rounded-3xl border border-secondary/10 shadow-inner">
+                    <Calendar
+                      mode="range"
+                      selected={dateRange}
+                      onSelect={setDateRange}
+                      className="rounded-md border-none mx-auto"
+                      disabled={{ before: startOfToday() }}
                     />
-                    <p className="text-[9px] text-amber-800/60 italic ml-1">Leave blank if applying to selected date only.</p>
+                  </div>
+                  <div className="flex items-center gap-2 p-3 bg-amber-50 rounded-xl border border-amber-100">
+                    <Info className="h-4 w-4 text-amber-600" />
+                    <p className="text-[10px] font-bold text-amber-800">Selected: {dateRange?.from ? format(dateRange.from, "MMM dd") : "..."} {dateRange?.to ? `to ${format(dateRange.to, "MMM dd")}` : ""}</p>
                   </div>
                 </div>
-              )}
 
-              {availForm.type.includes('Partial') && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Start Time</Label>
-                    <Input type="time" value={availForm.startTime} onChange={e => setAvailState({...availForm, startTime: e.target.value})} className="h-12 rounded-xl" />
+                {/* --- STATUS & REASON --- */}
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">2. Availability Type</Label>
+                      <Select value={availForm.type} onValueChange={(v) => setAvailForm({...availForm, type: v})}>
+                        <SelectTrigger className="h-12 rounded-xl border-secondary/10 bg-secondary/5 font-bold">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="FullDayAvailable" className="font-bold">Full Day Available</SelectItem>
+                          <SelectItem value="PartialDayAvailable" className="font-bold">Partial Day Available</SelectItem>
+                          <SelectItem value="FullDayUnavailable" className="font-bold text-red-600">Full Day Leave (Sick/Annual)</SelectItem>
+                          <SelectItem value="PartialDayUnavailable" className="font-bold text-amber-600">Partial Leave (Court/Meeting)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {availForm.type.includes('Partial') && (
+                      <div className="grid grid-cols-2 gap-4 animate-in fade-in zoom-in-95">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Start Time</Label>
+                          <Input type="time" value={availForm.startTime} onChange={e => setAvailForm({...availForm, startTime: e.target.value})} className="h-12 rounded-xl" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">End Time</Label>
+                          <Input type="time" value={availForm.endTime} onChange={e => setAvailForm({...availForm, endTime: e.target.value})} className="h-12 rounded-xl" />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">3. Reason Category</Label>
+                      <Select value={availForm.reasonCategory} onValueChange={(v) => setAvailForm({...availForm, reasonCategory: v})}>
+                        <SelectTrigger className="h-12 rounded-xl border-secondary/10 bg-secondary/5 font-bold">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Work-Related Reasons for Leave" className="font-bold">Work-Related Reasons for Leave</SelectItem>
+                          <SelectItem value="Personal Reasons for Leave" className="font-bold">Personal Reasons for Leave</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">End Time</Label>
-                    <Input type="time" value={availForm.endTime} onChange={e => setAvailState({...availForm, endTime: e.target.value})} className="h-12 rounded-xl" />
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Reason Category</Label>
-                  <Select value={availForm.reasonCategory} onValueChange={(v) => setAvailState({...availForm, reasonCategory: v})}>
-                    <SelectTrigger className="h-12 rounded-xl border-secondary/10 bg-secondary/5 font-bold">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Work-Related Reasons for Leave" className="font-bold">Work-Related Reasons for Leave</SelectItem>
-                      <SelectItem value="Personal Reasons for Leave" className="font-bold">Personal Reasons for Leave</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Specific Details / Notes</Label>
-                  <Textarea 
-                    placeholder="Provide specific context (e.g. Hearing in Branch 12, Medical Checkup, etc.)" 
-                    value={availForm.reasonDetails} 
-                    onChange={e => setAvailState({...availForm, reasonDetails: e.target.value})}
-                    className="rounded-xl min-h-[100px]"
-                  />
                 </div>
               </div>
             </div>
             <DialogFooter className="p-8 bg-muted/30 gap-3 shrink-0">
               {selectedDayAvail && (
                 <Button variant="ghost" onClick={handleDeleteAvailability} className="text-red-600 font-bold hover:bg-red-50">
-                  <Trash2 className="mr-2 h-4 w-4" /> Reset Date
+                  <Trash2 className="mr-2 h-4 w-4" /> Reset Today
                 </Button>
               )}
               <Button variant="outline" onClick={() => setIsAvailabilityOpen(false)} className="rounded-xl font-bold">Cancel</Button>
-              <Button onClick={handleSaveAvailability} className="bg-secondary text-white font-black rounded-xl px-8 shadow-lg hover:scale-105 transition-transform">Save Status</Button>
+              <Button 
+                onClick={handleSaveAvailability} 
+                disabled={!dateRange?.from}
+                className="bg-secondary text-white font-black rounded-xl px-10 shadow-lg hover:scale-105 transition-transform"
+              >
+                Apply Schedule Changes
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

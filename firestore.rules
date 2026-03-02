@@ -51,7 +51,7 @@ service cloud.firestore {
      */
     match /cases/{caseId} {
       allow get: if isSignedIn();
-      allow list: if isSignedIn();
+      allow list: if isSignedIn(); // Allow listing for dashboard workstation
       allow create: if isAdmin();
       allow update: if isLawyer() || isAdmin();
       allow delete: if isAdmin();
