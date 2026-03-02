@@ -124,11 +124,11 @@ export default function AdminUsersPage() {
   const { data: cases } = useCollection(casesQuery);
   const { data: lawyers } = useCollection(lawyersQuery);
 
-  // Fetch profile for selected user
+  // Guard profile listener with current user check to avoid Permission Denied on initial load
   const profileRef = useMemoFirebase(() => {
-    if (!db || !selectedClientId) return null;
+    if (!db || !selectedClientId || !currentUser) return null;
     return doc(db, "users", selectedClientId, "profile", "profile");
-  }, [db, selectedClientId]);
+  }, [db, selectedClientId, currentUser]);
   
   const { data: selectedProfile } = useDoc(profileRef);
 
@@ -171,7 +171,6 @@ export default function AdminUsersPage() {
     }
   }, [selectedProfile, selectedUser, activeCase]);
 
-  // SAFE GUARD
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">

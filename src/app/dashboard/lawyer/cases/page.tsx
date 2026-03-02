@@ -94,16 +94,16 @@ export default function LawyerCasesPage() {
     );
   }, [cases, search]);
 
-  // Fetch client details for profile view
+  // Guard profile fetchers with current user to prevent Permission Denied race condition
   const clientDocRef = useMemoFirebase(() => {
-    if (!db || !selectedClientIdForProfile) return null;
+    if (!db || !selectedClientIdForProfile || !user) return null;
     return doc(db, "users", selectedClientIdForProfile);
-  }, [db, selectedClientIdForProfile]);
+  }, [db, selectedClientIdForProfile, user]);
   
   const profileDocRef = useMemoFirebase(() => {
-    if (!db || !selectedClientIdForProfile) return null;
+    if (!db || !selectedClientIdForProfile || !user) return null;
     return doc(db, "users", selectedClientIdForProfile, "profile", "profile");
-  }, [db, selectedClientIdForProfile]);
+  }, [db, selectedClientIdForProfile, user]);
 
   const { data: clientUser } = useDoc(clientDocRef);
   const { data: clientProfile } = useDoc(profileDocRef);
