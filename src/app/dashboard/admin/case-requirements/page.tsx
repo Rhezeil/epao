@@ -30,12 +30,12 @@ export default function CaseRequirementsManager() {
     setIsSeeding(true);
     
     try {
-      const promises = allCaseNames.map(caseName => {
-        const id = caseName.toLowerCase().replace(/[\s/]+/g, '-');
+      allCaseNames.forEach(caseName => {
+        const id = caseName.toLowerCase().replace(/[\s/().,]+/g, '-').replace(/-+$/, '');
         const docRef = doc(db, "caseRequirements", id);
         const data = caseSpecificData[caseName] || { requirements: [], steps: universalPaoFlow, description: "" };
         
-        return setDocumentNonBlocking(docRef, {
+        setDocumentNonBlocking(docRef, {
           caseName: caseName,
           requirements: data.requirements,
           steps: data.steps,
@@ -44,8 +44,8 @@ export default function CaseRequirementsManager() {
       });
 
       toast({
-        title: "Seeding Started",
-        description: `Initializing ${allCaseNames.length} cases with separated requirements and steps.`
+        title: "Seeding Initialized",
+        description: `Updating ${allCaseNames.length} statutory standards in background.`
       });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Seeding Failed", description: error.message });
@@ -82,7 +82,7 @@ export default function CaseRequirementsManager() {
   const handleSaveIndividual = () => {
     if (!db || !selectedCase) return;
 
-    const id = selectedCase.toLowerCase().replace(/[\s/]+/g, '-');
+    const id = selectedCase.toLowerCase().replace(/[\s/().,]+/g, '-').replace(/-+$/, '');
     const docRef = doc(db, "caseRequirements", id);
 
     setDocumentNonBlocking(docRef, {
@@ -93,100 +93,104 @@ export default function CaseRequirementsManager() {
     }, { merge: true });
 
     toast({
-      title: "Saved",
-      description: `Requirements and Process Flow for ${selectedCase} updated.`
+      title: "Standards Saved",
+      description: `Procedural roadmap for ${selectedCase} has been officially updated.`
     });
   };
 
   return (
     <DashboardLayout role="admin">
-      <div className="space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold font-headline">Legal Database Manager</h1>
-          <p className="text-muted-foreground">Manage dynamic requirements and interactive process flows for all PAO case types.</p>
+      <div className="space-y-8 pb-12">
+        <div className="flex justify-between items-end">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Statutory Standards Manager</h1>
+            <p className="text-muted-foreground font-medium">Manage dynamic requirements and interactive roadmap flows for all PAO services.</p>
+          </div>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
-          <Card className="md:col-span-1">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Database className="h-5 w-5 text-primary" />
-                Database Actions
+          <Card className="md:col-span-1 border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
+            <CardHeader className="bg-primary/5 pb-6">
+              <CardTitle className="text-lg font-bold text-primary flex items-center gap-2">
+                <Database className="h-5 w-5" />
+                System Seeding
               </CardTitle>
-              <CardDescription>
-                Bulk initialize the system with statutory standards.
-              </CardDescription>
+              <CardDescription className="text-xs">Bulk initialize statutory standards.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-8">
               <Button 
                 onClick={handleSeedAll} 
                 disabled={isSeeding}
-                className="w-full bg-secondary hover:bg-secondary/90 h-12"
+                className="w-full bg-primary hover:bg-primary/90 h-14 rounded-2xl font-black text-white shadow-lg"
               >
-                {isSeeding ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <UploadCloud className="mr-2 h-4 w-4" />}
-                Seed All Standards
+                {isSeeding ? <Loader2 className="animate-spin mr-2 h-5 w-5" /> : <UploadCloud className="mr-2 h-5 w-5" />}
+                Seed All Legal Standards
               </Button>
+              <p className="text-[9px] text-center text-muted-foreground mt-4 italic">Warning: This will overwrite default values with PAO statutory defaults.</p>
             </CardContent>
           </Card>
 
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Plus className="h-5 w-5 text-primary" />
-                Case Editor
+          <Card className="md:col-span-2 border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
+            <CardHeader className="bg-primary/5 pb-6">
+              <CardTitle className="text-lg font-bold text-primary flex items-center gap-2">
+                <Plus className="h-5 w-5" />
+                Requirement Editor
               </CardTitle>
-              <CardDescription>
-                Define detailed requirements and roadmap steps for a specific matter.
-              </CardDescription>
+              <CardDescription className="text-xs">Define specific evidence and roadmap for a legal matter.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+            <CardContent className="space-y-8 p-10">
+              <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label>Case Name</Label>
+                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Case Classification</Label>
                   <Input 
                     placeholder="e.g. Qualified Theft" 
                     value={selectedCase} 
                     onChange={(e) => setSelectedCase(e.target.value)}
+                    className="h-12 rounded-xl border-primary/10"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Short Description</Label>
+                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Short Description</Label>
                   <Input 
-                    placeholder="Legal basis or article reference" 
+                    placeholder="Statutory basis (e.g. RPC Art. 310)" 
                     value={description} 
                     onChange={(e) => setDescription(e.target.value)}
+                    className="h-12 rounded-xl border-primary/10"
                   />
                 </div>
               </div>
 
               <Tabs defaultValue="requirements" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="requirements" className="flex items-center gap-2">
-                    <ClipboardList className="h-4 w-4" /> Documents
+                <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1 rounded-2xl h-14">
+                  <TabsTrigger value="requirements" className="rounded-xl font-bold flex items-center gap-2">
+                    <ClipboardList className="h-4 w-4" /> Document Checklist
                   </TabsTrigger>
-                  <TabsTrigger value="steps" className="flex items-center gap-2">
-                    <Layers className="h-4 w-4" /> Process Steps
+                  <TabsTrigger value="steps" className="rounded-xl font-bold flex items-center gap-2">
+                    <Layers className="h-4 w-4" /> Action Roadmap
                   </TabsTrigger>
                 </TabsList>
                 
-                <TabsContent value="requirements" className="space-y-4 pt-4">
+                <TabsContent value="requirements" className="space-y-6 pt-6">
                   <div className="space-y-2">
-                    <Label>Add Case Evidence Requirement</Label>
-                    <div className="flex gap-2">
+                    <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Add Documentary Evidence</Label>
+                    <div className="flex gap-3">
                       <Input 
                         placeholder="e.g. CCTV Footage, Demand Letter" 
                         value={newReq} 
                         onChange={(e) => setNewReq(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && addRequirement()}
+                        className="h-12 rounded-xl border-primary/10"
                       />
-                      <Button size="icon" onClick={addRequirement} variant="outline"><Plus className="h-4 w-4" /></Button>
+                      <Button size="icon" onClick={addRequirement} variant="outline" className="h-12 w-12 rounded-xl border-2 border-primary/10 text-primary">
+                        <Plus className="h-5 w-5" />
+                      </Button>
                     </div>
                   </div>
-                  <div className="grid gap-2">
+                  <div className="grid gap-2 max-h-[300px] overflow-y-auto pr-2 scrollbar-hide">
                     {requirements.map((req, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg text-sm border">
-                        <span>{req}</span>
-                        <Button variant="ghost" size="icon" onClick={() => removeRequirement(idx)} className="h-6 w-6 text-destructive">
+                      <div key={idx} className="flex items-center justify-between p-4 bg-primary/5 rounded-xl border border-primary/10 group">
+                        <span className="text-sm font-bold text-primary">{req}</span>
+                        <Button variant="ghost" size="icon" onClick={() => removeRequirement(idx)} className="h-8 w-8 text-destructive hover:bg-destructive/10">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -194,52 +198,52 @@ export default function CaseRequirementsManager() {
                   </div>
                 </TabsContent>
 
-                <TabsContent value="steps" className="space-y-4 pt-4">
-                  <div className="space-y-4">
+                <TabsContent value="steps" className="space-y-6 pt-6">
+                  <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 scrollbar-hide">
                     {steps.map((step, idx) => (
-                      <div key={idx} className="p-4 border rounded-xl bg-muted/10 space-y-3 relative">
+                      <div key={idx} className="p-6 border-2 border-dashed border-primary/10 rounded-[2rem] bg-primary/[0.02] space-y-4 relative">
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="absolute top-2 right-2 h-6 w-6 text-destructive"
+                          className="absolute top-4 right-4 h-8 w-8 text-destructive"
                           onClick={() => removeStep(idx)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
-                        <div className="grid grid-cols-4 gap-3">
+                        <div className="grid grid-cols-4 gap-4">
                           <div className="col-span-1">
-                            <Label className="text-xs">Step #</Label>
-                            <Input type="number" value={step.step} onChange={(e) => updateStep(idx, 'step', parseInt(e.target.value))} />
+                            <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Step #</Label>
+                            <Input type="number" value={step.step} onChange={(e) => updateStep(idx, 'step', parseInt(e.target.value))} className="h-10 rounded-lg" />
                           </div>
                           <div className="col-span-3">
-                            <Label className="text-xs">Title</Label>
-                            <Input value={step.title} onChange={(e) => updateStep(idx, 'title', e.target.value)} />
+                            <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Phase Title</Label>
+                            <Input value={step.title} onChange={(e) => updateStep(idx, 'title', e.target.value)} className="h-10 rounded-lg" />
                           </div>
                         </div>
                         <div>
-                          <Label className="text-xs">Guidance Content</Label>
+                          <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Guidance Instruction</Label>
                           <Textarea 
-                            className="text-xs" 
-                            rows={2} 
+                            className="text-xs rounded-xl min-h-[80px]" 
+                            rows={3} 
                             value={step.content} 
                             onChange={(e) => updateStep(idx, 'content', e.target.value)} 
                           />
                         </div>
                       </div>
                     ))}
-                    <Button variant="outline" size="sm" onClick={addStep} className="w-full">
-                      <Plus className="mr-2 h-4 w-4" /> Add Custom Step
+                    <Button variant="outline" size="sm" onClick={addStep} className="w-full h-12 rounded-xl border-2 border-dashed border-primary/20 text-primary font-black uppercase tracking-widest text-[10px] hover:bg-primary/5">
+                      <Plus className="mr-2 h-4 w-4" /> Add Custom Roadmap Phase
                     </Button>
                   </div>
                 </TabsContent>
               </Tabs>
 
               <Button 
-                className="w-full h-12 bg-primary shadow-lg" 
+                className="w-full h-16 bg-primary text-white font-black text-lg rounded-2xl shadow-xl hover:scale-[1.02] transition-transform" 
                 onClick={handleSaveIndividual}
                 disabled={!selectedCase}
               >
-                <Save className="mr-2 h-4 w-4" /> Commit Changes to Database
+                <Save className="mr-2 h-6 w-6" /> Commit Changes to Registry
               </Button>
             </CardContent>
           </Card>

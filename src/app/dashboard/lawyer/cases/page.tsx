@@ -23,7 +23,10 @@ import {
   MapPin,
   Info,
   ChevronRight,
-  Gavel
+  Gavel,
+  FolderOpen,
+  Plus,
+  File
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -44,6 +47,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Calendar } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const HOLIDAYS = [
   "2024-01-01", "2024-04-09", "2024-05-01", "2024-06-12", "2024-08-26",
@@ -74,6 +78,11 @@ export default function LawyerCasesPage() {
   const [selectedClientIdForProfile, setSelectedClientIdForProfile] = useState<string | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
+  // Folder State
+  const [selectedCaseForFolder, setSelectedCaseForFolder] = useState<any>(null);
+  const [isFolderOpen, setIsFolderOpen] = useState(false);
+  const [newDoc, setNewDoc] = useState({ name: "", folder: "Evidence" });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const casesQuery = useMemoFirebase(() => {
@@ -94,7 +103,14 @@ export default function LawyerCasesPage() {
     );
   }, [cases, search]);
 
-  // Guard profile fetchers with current user to prevent Permission Denied race condition
+  // Folder Documents Query
+  const docsQuery = useMemoFirebase(() => {
+    if (!db || !selectedCaseForFolder) return null;
+    return collection(db, "cases", selectedCaseForFolder.id, "documents");
+  }, [db, selectedCaseForFolder]);
+  const { data: caseDocs } = useCollection(docsQuery);
+
+  // Client Fetchers
   const clientDocRef = useMemoFirebase(() => {
     if (!db || !selectedClientIdForProfile || !user) return null;
     return doc(db, "users", selectedClientIdForProfile);
@@ -193,7 +209,7 @@ export default function LawyerCasesPage() {
 
       setDocumentNonBlocking(doc(db, "appointments", apptId), data, { merge: true });
       
-      toast({ title: "Appointment Set", description: `Follow-up for ${selectedCaseForBooking.id} scheduled for ${format(bookingForm.date, "MMM dd")}.` });
+      toast({ title: "Appointment Set", description: `Follow-up for ${selectedCaseForBooking.id} scheduled.` });
       setSelectedCaseForBooking(null);
       setBookingForm({ date: undefined, time: "", purpose: "consultation" });
     } catch (e: any) {
@@ -203,13 +219,28 @@ export default function LawyerCasesPage() {
     }
   };
 
+  const handleSaveDoc = () => {
+    if (!db || !selectedCaseForFolder || !newDoc.name) return;
+    const docId = crypto.randomUUID();
+    const docRef = doc(db, "cases", selectedCaseForFolder.id, "documents", docId);
+    setDocumentNonBlocking(docRef, {
+      id: docId,
+      name: newDoc.name,
+      folder: newDoc.folder,
+      uploadDate: new Date().toISOString(),
+      uploadedBy: user.uid
+    }, { merge: true });
+    setNewDoc({ name: "", folder: "Evidence" });
+    toast({ title: "Document Saved", description: `Successfully added to ${newDoc.folder}.` });
+  };
+
   return (
     <DashboardLayout role="lawyer">
       <div className="space-y-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-black text-secondary font-headline tracking-tight">Case Registry</h1>
-            <p className="text-muted-foreground font-medium">Manage and progress legal matters assigned to your district office.</p>
+            <p className="text-muted-foreground font-medium">Manage matters and case files assigned to your workstation.</p>
           </div>
           <div className="relative w-full md:w-72">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary/30" />
@@ -217,7 +248,7 @@ export default function LawyerCasesPage() {
               placeholder="Search Classification or ID..." 
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-9 h-11 rounded-xl border-secondary/10 bg-white focus-visible:ring-secondary/20 font-bold"
+              className="pl-9 h-11 rounded-xl border-secondary/10 bg-white"
             />
           </div>
         </div>
@@ -228,7 +259,7 @@ export default function LawyerCasesPage() {
               <div className="p-2 bg-secondary text-white rounded-xl">
                 <Scale className="h-5 w-5" />
               </div>
-              <CardTitle className="text-xl font-bold text-secondary">My Professional Caseload</CardTitle>
+              <CardTitle className="text-xl font-bold text-secondary">Workload Registry</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="p-0">
@@ -238,9 +269,8 @@ export default function LawyerCasesPage() {
               <Table>
                 <TableHeader className="bg-muted/30">
                   <TableRow>
-                    <TableHead className="px-8 font-black text-[10px] uppercase tracking-widest text-secondary/40">Case Classification</TableHead>
+                    <TableHead className="px-8 font-black text-[10px] uppercase tracking-widest text-secondary/40">Classification</TableHead>
                     <TableHead className="font-black text-[10px] uppercase tracking-widest text-secondary/40">Status</TableHead>
-                    <TableHead className="font-black text-[10px] uppercase tracking-widest text-secondary/40">Date Opened</TableHead>
                     <TableHead className="font-black text-[10px] uppercase tracking-widest text-secondary/40">Case ID</TableHead>
                     <TableHead className="text-right px-8 font-black text-[10px] uppercase tracking-widest text-secondary/40">Actions</TableHead>
                   </TableRow>
@@ -254,36 +284,21 @@ export default function LawyerCasesPage() {
                       <TableCell>
                         <Badge className={cn(
                           "font-black text-[9px] uppercase px-3",
-                          c.status === 'Active' ? 'bg-green-500' : 
-                          c.status === 'Closed' ? 'bg-gray-500' : 
-                          c.status === 'For Compliance' ? 'bg-amber-500' : 'bg-secondary'
+                          c.status === 'Active' ? 'bg-green-500' : 'bg-gray-500'
                         )}>
                           {c.status}
                         </Badge>
-                      </TableCell>
-                      <TableCell className="text-xs font-bold text-secondary">
-                        {c.createdAt ? format(new Date(c.createdAt), "MMM dd, yyyy") : '---'}
                       </TableCell>
                       <TableCell className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">
                         {c.id}
                       </TableCell>
                       <TableCell className="text-right px-8">
                         <div className="flex justify-end gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => { setSelectedClientIdForProfile(c.clientId); setIsProfileOpen(true); }}
-                            className="h-9 rounded-xl font-bold text-[10px] uppercase text-secondary hover:bg-secondary/5 gap-2"
-                          >
-                            <User className="h-3 w-3" /> View Profile
+                          <Button variant="ghost" size="icon" onClick={() => { setSelectedCaseForFolder(c); setIsFolderOpen(true); }} className="h-9 w-9 rounded-xl text-primary hover:bg-primary/5">
+                            <FolderOpen className="h-4 w-4" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => setSelectedCaseForBooking(c)}
-                            className="h-9 rounded-xl font-bold text-[10px] uppercase text-primary hover:bg-primary/5 gap-2"
-                          >
-                            <CalendarCheck className="h-3 w-3" /> Schedule
+                          <Button variant="ghost" size="icon" onClick={() => { setSelectedClientIdForProfile(c.clientId); setIsProfileOpen(true); }} className="h-9 w-9 rounded-xl text-secondary hover:bg-secondary/5">
+                            <User className="h-4 w-4" />
                           </Button>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -291,16 +306,17 @@ export default function LawyerCasesPage() {
                                 <Settings2 className="h-4 w-4 text-secondary" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="rounded-2xl w-56 p-2">
-                              <DropdownMenuLabel className="text-[10px] font-black uppercase text-secondary/40 tracking-widest px-2 pb-2">Status Actions</DropdownMenuLabel>
-                              <DropdownMenuItem onClick={() => handleUpdateStatus(c.id, "Active")} className="rounded-xl font-bold cursor-pointer">
+                            <DropdownMenuContent align="end" className="rounded-2xl w-56">
+                              <DropdownMenuLabel className="text-[10px] font-black uppercase text-secondary/40 px-2 pb-2">Status Actions</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => handleUpdateStatus(c.id, "Active")} className="rounded-xl font-bold">
                                 <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" /> Mark as Active
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleUpdateStatus(c.id, "For Compliance")} className="rounded-xl font-bold cursor-pointer">
-                                <AlertCircle className="mr-2 h-4 w-4 text-amber-600" /> Mark For Compliance
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleUpdateStatus(c.id, "Closed")} className="rounded-xl font-bold cursor-pointer">
+                              <DropdownMenuItem onClick={() => handleUpdateStatus(c.id, "Closed")} className="rounded-xl font-bold">
                                 <FileText className="mr-2 h-4 w-4 text-muted-foreground" /> Close Legal Case
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => setSelectedCaseForBooking(c)} className="rounded-xl font-bold text-primary">
+                                <CalendarCheck className="mr-2 h-4 w-4" /> Schedule Visit
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -308,18 +324,91 @@ export default function LawyerCasesPage() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {filteredCases.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-20 text-muted-foreground italic font-medium">
-                        No Case records found in your workstation.
-                      </TableCell>
-                    </TableRow>
-                  )}
                 </TableBody>
               </Table>
             )}
           </CardContent>
         </Card>
+
+        {/* --- CASE FOLDER DIALOG --- */}
+        <Dialog open={isFolderOpen} onOpenChange={setIsFolderOpen}>
+          <DialogContent className="rounded-[3rem] max-w-4xl p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
+            <DialogHeader className="p-8 bg-primary text-white shrink-0">
+              <div className="flex justify-between items-center">
+                <div className="space-y-1">
+                  <DialogTitle className="text-3xl font-black">Case Digital Folder</DialogTitle>
+                  <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">
+                    Registry ID: {selectedCaseForFolder?.id}
+                  </DialogDescription>
+                </div>
+                <FolderOpen className="h-10 w-10 opacity-40" />
+              </div>
+            </DialogHeader>
+            <div className="p-8 flex-1 overflow-y-auto space-y-8">
+              <div className="bg-primary/5 p-6 rounded-[2rem] border-2 border-dashed border-primary/10 flex flex-col sm:flex-row gap-4 items-end">
+                <div className="flex-1 space-y-2 w-full">
+                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Document Name</Label>
+                  <Input placeholder="e.g. Sworn Statement" value={newDoc.name} onChange={e => setNewDoc({...newDoc, name: e.target.value})} className="h-12 rounded-xl bg-white border-primary/10" />
+                </div>
+                <div className="w-full sm:w-48 space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Select Folder</Label>
+                  <Select value={newDoc.folder} onValueChange={v => setNewDoc({...newDoc, folder: v})}>
+                    <SelectTrigger className="h-12 rounded-xl bg-white border-primary/10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["Evidence", "Pleadings", "Court Orders", "Correspondence"].map(f => (
+                        <SelectItem key={f} value={f} className="font-bold">{f}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button onClick={handleSaveDoc} className="h-12 px-8 rounded-xl bg-primary text-white font-black">
+                  <Plus className="mr-2 h-4 w-4" /> Add Record
+                </Button>
+              </div>
+
+              <Tabs defaultValue="Evidence" className="w-full">
+                <TabsList className="grid w-full grid-cols-4 bg-muted/50 p-1 rounded-2xl h-14">
+                  {["Evidence", "Pleadings", "Court Orders", "Correspondence"].map(f => (
+                    <TabsTrigger key={f} value={f} className="rounded-xl font-bold text-[10px] uppercase">{f}</TabsTrigger>
+                  ))}
+                </TabsList>
+                {["Evidence", "Pleadings", "Court Orders", "Correspondence"].map(f => (
+                  <TabsContent key={f} value={f} className="mt-6">
+                    <div className="grid gap-3">
+                      {caseDocs?.filter(d => d.folder === f).map(doc => (
+                        <div key={doc.id} className="p-4 bg-white rounded-2xl border border-primary/5 shadow-sm flex items-center justify-between hover:border-primary/20 transition-colors group">
+                          <div className="flex items-center gap-4">
+                            <div className="p-2 bg-primary/5 rounded-xl group-hover:bg-primary/10 transition-colors">
+                              <File className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                              <p className="font-bold text-primary">{doc.name}</p>
+                              <p className="text-[9px] text-muted-foreground font-black uppercase tracking-tighter">
+                                Uploaded: {format(new Date(doc.uploadDate), "PPP p")}
+                              </p>
+                            </div>
+                          </div>
+                          <Badge variant="outline" className="font-black text-[8px] uppercase border-primary/10">Ref: {doc.id.slice(0, 8)}</Badge>
+                        </div>
+                      ))}
+                      {caseDocs?.filter(d => d.folder === f).length === 0 && (
+                        <div className="py-12 text-center bg-muted/10 rounded-3xl border border-dashed border-primary/10">
+                          <FileText className="h-10 w-10 text-primary/10 mx-auto mb-2" />
+                          <p className="text-xs font-bold text-muted-foreground italic">No document records found in this folder.</p>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                ))}
+              </Tabs>
+            </div>
+            <DialogFooter className="p-8 bg-muted/30 shrink-0">
+              <Button onClick={() => setIsFolderOpen(false)} className="w-full h-14 rounded-2xl font-black bg-primary text-white shadow-xl">Close Workstation Folder</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* --- CLIENT PROFILE DIALOG --- */}
         <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
@@ -339,8 +428,7 @@ export default function LawyerCasesPage() {
                 </div>
               </div>
             </DialogHeader>
-            <div className="p-10 space-y-8 flex-1 overflow-y-auto scrollbar-hide">
-              {/* --- CASE SUMMARY BOX --- */}
+            <div className="p-10 space-y-8 flex-1 overflow-y-auto">
               {selectedCaseForProfile && (
                 <div className="space-y-4 p-8 bg-secondary/5 rounded-[2.5rem] border-2 border-dashed border-secondary/10">
                   <div className="flex items-start gap-4">
@@ -348,23 +436,18 @@ export default function LawyerCasesPage() {
                       <Gavel className="h-6 w-6 text-secondary" />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Official Case classification</Label>
+                      <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Handled Case Classification</Label>
                       <p className="text-2xl font-black text-secondary leading-tight">{selectedCaseForProfile.caseType}</p>
                       <p className="text-[10px] font-black text-secondary/60 tracking-[0.2em] uppercase">ID: {selectedCaseForProfile.id}</p>
                     </div>
                   </div>
-                  
                   {selectedCaseForProfile.description && (
                     <div className="pt-4 border-t border-secondary/10">
-                      <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest mb-1 block">Case Background / Description</Label>
-                      <p className="text-sm text-secondary/80 font-medium italic leading-relaxed">
-                        {selectedCaseForProfile.description}
-                      </p>
+                      <p className="text-sm text-secondary/80 font-medium italic leading-relaxed">{selectedCaseForProfile.description}</p>
                     </div>
                   )}
                 </div>
               )}
-
               <div className="grid md:grid-cols-2 gap-10">
                 <div className="space-y-6">
                   <div className="space-y-1">
@@ -380,7 +463,7 @@ export default function LawyerCasesPage() {
                     <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Home Address</Label>
                     <p className="text-sm font-bold text-secondary flex items-start gap-3 leading-relaxed">
                       <MapPin className="h-4 w-4 text-secondary/40 shrink-0 mt-0.5" /> 
-                      {clientProfile?.address || "Address not provided in registry."}
+                      {clientProfile?.address || "Address not provided."}
                     </p>
                   </div>
                 </div>
@@ -390,24 +473,16 @@ export default function LawyerCasesPage() {
                     <Badge className="bg-secondary text-white font-black px-4 py-1.5 rounded-full uppercase text-[10px] tracking-wider border-none shadow-sm">
                       {clientUser?.incomeClassification || "Indigent"}
                     </Badge>
-                    <p className="text-[9px] text-muted-foreground font-black mt-2 ml-1 uppercase tracking-tighter">Verified Priority Rank</p>
                   </div>
-                  <div className="p-6 bg-amber-50 rounded-[2rem] border border-amber-100 flex items-start gap-4 shadow-sm">
+                  <div className="p-6 bg-amber-50 rounded-[2rem] border border-amber-100 flex items-start gap-4">
                     <Info className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-black text-amber-900 uppercase tracking-widest">Privacy Protocol</p>
-                      <p className="text-[11px] text-amber-800/70 font-bold leading-relaxed">
-                        Data for official legal correspondence only.
-                      </p>
-                    </div>
+                    <p className="text-[11px] text-amber-800/70 font-bold leading-relaxed">Privacy Protocol: Data for official legal correspondence only.</p>
                   </div>
                 </div>
               </div>
             </div>
             <DialogFooter className="p-8 bg-muted/30 shrink-0">
-              <Button onClick={() => setIsProfileOpen(false)} className="w-full h-14 rounded-2xl font-black bg-secondary text-white shadow-xl hover:scale-[1.02] transition-transform">
-                Close Citizen Record
-              </Button>
+              <Button onClick={() => setIsProfileOpen(false)} className="w-full h-14 rounded-2xl font-black bg-secondary text-white shadow-xl">Close Citizen Record</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -418,7 +493,7 @@ export default function LawyerCasesPage() {
             <DialogHeader className="p-8 bg-primary text-white shrink-0">
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
-                  <DialogTitle className="text-2xl font-black">Schedule Visit</DialogTitle>
+                  <DialogTitle className="text-2xl font-black">Schedule Follow-up</DialogTitle>
                   <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">
                     Case: {selectedCaseForBooking?.id}
                   </DialogDescription>
@@ -435,7 +510,6 @@ export default function LawyerCasesPage() {
                       <p className="text-lg font-black text-primary leading-tight">{selectedCaseForBooking?.caseType}</p>
                     </div>
                   </div>
-
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Service Classification</Label>
                     <Select value={bookingForm.purpose} onValueChange={(v) => setBookingForm({...bookingForm, purpose: v})}>
@@ -450,7 +524,6 @@ export default function LawyerCasesPage() {
                       </SelectContent>
                     </Select>
                   </div>
-
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Visit Date</Label>
                     <div className="p-4 bg-primary/5 rounded-3xl border border-primary/10 shadow-inner">
@@ -459,16 +532,11 @@ export default function LawyerCasesPage() {
                         selected={bookingForm.date}
                         onSelect={(d) => setBookingForm({...bookingForm, date: d, time: ""})}
                         className="rounded-md border-none mx-auto"
-                        disabled={[
-                          { before: startOfToday() },
-                          { dayOfWeek: [0, 6] },
-                          (date) => isHoliday(date)
-                        ]}
+                        disabled={[{ before: startOfToday() }, { dayOfWeek: [0, 6] }, (date) => isHoliday(date)]}
                       />
                     </div>
                   </div>
                 </div>
-
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Daily Availability</Label>
@@ -486,11 +554,7 @@ export default function LawyerCasesPage() {
                             variant={bookingForm.time === slot.time ? "default" : "outline"}
                             className={cn(
                               "h-12 rounded-xl font-bold transition-all border-2",
-                              bookingForm.time === slot.time 
-                                ? "bg-primary text-white border-primary shadow-md scale-105" 
-                                : slot.isBooked || slot.isPast
-                                ? "bg-red-50 text-red-300 border-red-100 opacity-50 cursor-not-allowed" 
-                                : "bg-white text-primary border-primary/10 hover:bg-primary/5"
+                              bookingForm.time === slot.time ? "bg-primary text-white border-primary" : "bg-white text-primary border-primary/10"
                             )}
                             onClick={() => setBookingForm({...bookingForm, time: slot.time})}
                           >
@@ -505,11 +569,7 @@ export default function LawyerCasesPage() {
             </div>
             <DialogFooter className="p-8 bg-muted/30 gap-3 shrink-0">
               <Button variant="outline" onClick={() => setSelectedCaseForBooking(null)} className="rounded-xl font-bold h-12 px-8">Cancel</Button>
-              <Button 
-                onClick={handleCreateAppointment} 
-                disabled={!bookingForm.date || !bookingForm.time || isSubmitting}
-                className="bg-primary text-white font-black rounded-xl px-10 h-12 shadow-lg hover:scale-105 transition-transform"
-              >
+              <Button onClick={handleCreateAppointment} disabled={!bookingForm.date || !bookingForm.time || isSubmitting} className="bg-primary text-white font-black rounded-xl px-10 h-12 shadow-lg">
                 {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : "Finalize Appointment"}
               </Button>
             </DialogFooter>

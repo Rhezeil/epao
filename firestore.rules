@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -21,7 +22,10 @@ service cloud.firestore {
     }
 
     function isLawyer() {
-      return isSignedIn() && exists(/databases/$(database)/documents/roleLawyer/$(request.auth.uid));
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/roleLawyer/$(request.auth.uid)) ||
+        request.auth.token.email.lower().endsWith("@lawyers.com")
+      );
     }
 
     // --- COLLECTION RULES ---
@@ -36,9 +40,6 @@ service cloud.firestore {
       allow update: if isExistingOwner(userId) || isAdmin();
       allow delete: if isAdmin();
 
-      /**
-       * @description Detailed contact and profile information.
-       */
       match /profile/{profileId} {
         allow get: if isOwner(userId) || isAdmin() || isLawyer();
         allow list: if isOwner(userId) || isAdmin() || isLawyer();
@@ -47,9 +48,6 @@ service cloud.firestore {
         allow delete: if isAdmin();
       }
 
-      /**
-       * @description Lawyer Availability rules.
-       */
       match /availability/{availabilityId} {
         allow get, list: if isSignedIn();
         allow create: if isOwner(userId);
@@ -58,14 +56,28 @@ service cloud.firestore {
     }
 
     /**
-     * @description Rules for official Legal Cases.
+     * @description Statutory Case Requirements & Procedures.
+     */
+    match /caseRequirements/{reqId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+    }
+
+    /**
+     * @description Rules for official Legal Cases and Documents.
      */
     match /cases/{caseId} {
       allow get: if isSignedIn();
-      allow list: if isSignedIn(); // Allow listing for dashboard workstation
+      allow list: if isSignedIn();
       allow create: if isAdmin();
       allow update: if isLawyer() || isAdmin();
       allow delete: if isAdmin();
+
+      match /documents/{docId} {
+        allow get, list: if isSignedIn();
+        allow create, update: if isLawyer() || isAdmin();
+        allow delete: if isAdmin();
+      }
     }
 
     /**
@@ -74,7 +86,7 @@ service cloud.firestore {
     match /appointments/{apptId} {
       allow get: if isSignedIn() || (request.query.filters.referenceCode != null);
       allow list: if isSignedIn() || (request.query.filters.dateString != null) || (request.query.filters.referenceCode != null);
-      allow create: if true; // Allow public booking
+      allow create: if true; 
       allow update: if isSignedIn() || (request.resource.data.status == 'cancelled');
       allow delete: if isAdmin();
     }
@@ -85,14 +97,12 @@ service cloud.firestore {
     match /admins/{adminId} {
       allow get: if isSignedIn();
       allow list: if isAdmin();
-      // Allow bootstrap admin to create their doc, otherwise require admin privileges for writes
       allow create: if isOwner(adminId) && request.auth.token.email == "admin@epao.com";
       allow update, delete: if isAdmin();
     }
 
     match /roleLawyer/{lawyerId} {
       allow get, list: if isSignedIn();
-      // Allow creation by the user themselves (bootstrap) or by an existing admin
       allow create: if isOwner(lawyerId) || isAdmin();
       allow update: if isOwner(lawyerId) || isAdmin();
       allow delete: if isAdmin();
