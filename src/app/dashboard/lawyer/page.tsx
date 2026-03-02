@@ -184,7 +184,7 @@ export default function LawyerDashboard() {
             <CardContent className="p-8 space-y-1">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Today's Clinic</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Today's Consultations</p>
                   <p className="text-5xl font-black">
                     {appointments?.filter(a => a.dateString === format(new Date(), "yyyy-MM-dd")).length || 0}
                   </p>
@@ -193,7 +193,7 @@ export default function LawyerDashboard() {
                   <Calendar className="h-6 w-6 text-secondary" />
                 </div>
               </div>
-              <p className="text-xs font-bold text-muted-foreground pt-2">Scheduled Consultations</p>
+              <p className="text-xs font-bold text-muted-foreground pt-2">Scheduled Sessions</p>
             </CardContent>
           </Card>
 
@@ -214,7 +214,7 @@ export default function LawyerDashboard() {
                   <div className="p-2 bg-secondary text-white rounded-xl">
                     <Clock className="h-5 w-5" />
                   </div>
-                  <CardTitle className="text-lg font-bold text-secondary">Clinical Schedule</CardTitle>
+                  <CardTitle className="text-lg font-bold text-secondary">Office Schedule</CardTitle>
                 </div>
                 
                 <Tabs value={scheduleView} onValueChange={(v) => setScheduleView(v as any)} className="w-full sm:w-auto">
@@ -329,7 +329,7 @@ export default function LawyerDashboard() {
                   <Filter className="h-5 w-5" /> Professional Duty
                 </h3>
                 <p className="text-xs text-amber-800/70 font-medium leading-relaxed">
-                  Toggle your availability to manage clinic walk-ins. Status changes are reflected in the public portal immediately.
+                  Toggle your availability to manage office walk-ins. Status changes are reflected in the public portal immediately.
                 </p>
               </div>
               <div className="grid grid-cols-1 gap-2">
