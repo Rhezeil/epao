@@ -89,7 +89,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     if (role === "lawyer") {
       return [
         { icon: LayoutDashboard, label: "Clinic Home", path: "/dashboard/lawyer" },
-        { icon: Clock, label: "Clinical Schedule", path: "/dashboard/lawyer" },
+        { icon: Clock, label: "My Schedule", path: "/dashboard/lawyer" },
         { icon: FileText, label: "My Case Registry", path: "/dashboard/lawyer/cases" },
       ];
     }
