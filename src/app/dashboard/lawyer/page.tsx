@@ -43,6 +43,23 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { DateRange } from "react-day-picker";
 
+const REASONS = {
+  "Work-Related Reasons for Leave": [
+    "Mandatory Continuing Professional Development (CPD)",
+    "Official Business/Official Time",
+    "Legal/Official Matters",
+    "Court Attendance",
+    "Unexpected Office Suspension",
+    "Inquest/Jail Visitation Duty Recovery",
+    "Documenting/Filing Leave for Conflicts"
+  ],
+  "Personal Reasons for Leave": [
+    "Illness or Medical Attention",
+    "Family Emergencies",
+    "Vacation/Rest"
+  ]
+};
+
 export default function LawyerDashboard() {
   const { user, role, loading } = useAuth();
   const db = useFirestore();
@@ -62,7 +79,8 @@ export default function LawyerDashboard() {
     type: "FullDayAvailable",
     startTime: "08:00",
     endTime: "17:00",
-    reasonCategory: "Work-Related Reasons for Leave"
+    reasonCategory: "Work-Related Reasons for Leave",
+    specificReason: REASONS["Work-Related Reasons for Leave"][0]
   });
 
   // Queries
@@ -95,8 +113,8 @@ export default function LawyerDashboard() {
     return collection(db, "users", user.uid, "availability");
   }, [db, user, role]);
 
-  const { data: appointments, isLoading: isApptsLoading } = useCollection(availabilityQuery ? apptsQuery : null);
-  const { data: activeCases } = useCollection(availabilityQuery ? casesQuery : null);
+  const { data: appointments, isLoading: isApptsLoading } = useCollection(apptsQuery);
+  const { data: activeCases } = useCollection(casesQuery);
   const { data: availabilityList } = useCollection(availabilityQuery);
 
   // Derived Data
@@ -156,6 +174,7 @@ export default function LawyerDashboard() {
           startTime: availForm.type.includes('Partial') ? availForm.startTime : null,
           endTime: availForm.type.includes('Partial') ? availForm.endTime : null,
           reasonCategory: availForm.reasonCategory,
+          specificReason: availForm.specificReason,
           updatedAt: new Date().toISOString(),
           createdAt: new Date().toISOString()
         };
@@ -194,7 +213,7 @@ export default function LawyerDashboard() {
     return null;
   }
 
-  const isLeave = lawyerData?.status === 'On Leave' || selectedDayAvail?.availabilityType?.includes('Unavailable');
+  const isLeave = lawyerData?.status === 'On Leave' || selectedDayAvail?.availabilityType?.includes('Leave');
 
   return (
     <DashboardLayout role="lawyer">
@@ -231,7 +250,8 @@ export default function LawyerDashboard() {
                   type: selectedDayAvail.availabilityType,
                   startTime: selectedDayAvail.startTime || "08:00",
                   endTime: selectedDayAvail.endTime || "17:00",
-                  reasonCategory: selectedDayAvail.reasonCategory || "Work-Related Reasons for Leave"
+                  reasonCategory: selectedDayAvail.reasonCategory || "Work-Related Reasons for Leave",
+                  specificReason: selectedDayAvail.specificReason || REASONS["Work-Related Reasons for Leave"][0]
                 });
                 setDateRange({ from: selectedDate, to: selectedDate });
               } else {
@@ -239,7 +259,8 @@ export default function LawyerDashboard() {
                   type: "FullDayAvailable",
                   startTime: "08:00",
                   endTime: "17:00",
-                  reasonCategory: "Work-Related Reasons for Leave"
+                  reasonCategory: "Work-Related Reasons for Leave",
+                  specificReason: REASONS["Work-Related Reasons for Leave"][0]
                 });
                 setDateRange({ from: selectedDate, to: selectedDate });
               }
@@ -493,8 +514,8 @@ export default function LawyerDashboard() {
                         <SelectContent>
                           <SelectItem value="FullDayAvailable" className="font-bold">Full Day Available</SelectItem>
                           <SelectItem value="PartialDayAvailable" className="font-bold">Partial Day Available</SelectItem>
-                          <SelectItem value="FullDayUnavailable" className="font-bold text-red-600">Full Day Leave</SelectItem>
-                          <SelectItem value="PartialDayUnavailable" className="font-bold text-amber-600">Partial Leave</SelectItem>
+                          <SelectItem value="FullDayLeave" className="font-bold text-red-600">Full Day Leave</SelectItem>
+                          <SelectItem value="PartialLeave" className="font-bold text-amber-600">Partial Leave</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -512,17 +533,45 @@ export default function LawyerDashboard() {
                       </div>
                     )}
 
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">3. Reason Category</Label>
-                      <Select value={availForm.reasonCategory} onValueChange={(v) => setAvailForm({...availForm, reasonCategory: v})}>
-                        <SelectTrigger className="h-12 rounded-xl border-secondary/10 bg-secondary/5 font-bold">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Work-Related Reasons for Leave" className="font-bold">Work-Related Reasons for Leave</SelectItem>
-                          <SelectItem value="Personal Reasons for Leave" className="font-bold">Personal Reasons for Leave</SelectItem>
-                        </SelectContent>
-                      </Select>
+                    <div className="space-y-4 pt-2 border-t border-secondary/5">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">3. Reason Category</Label>
+                        <Select 
+                          value={availForm.reasonCategory} 
+                          onValueChange={(v) => setAvailForm({
+                            ...availForm, 
+                            reasonCategory: v, 
+                            specificReason: REASONS[v as keyof typeof REASONS][0]
+                          })}
+                        >
+                          <SelectTrigger className="h-12 rounded-xl border-secondary/10 bg-secondary/5 font-bold">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Work-Related Reasons for Leave" className="font-bold">Work-Related Reasons for Leave</SelectItem>
+                            <SelectItem value="Personal Reasons for Leave" className="font-bold">Personal Reasons for Leave</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2 animate-in slide-in-from-top-2">
+                        <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">4. Specific Reason</Label>
+                        <Select 
+                          value={availForm.specificReason} 
+                          onValueChange={(v) => setAvailForm({...availForm, specificReason: v})}
+                        >
+                          <SelectTrigger className="h-auto py-3 rounded-xl border-secondary/10 bg-secondary/5 font-bold text-left">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {REASONS[availForm.reasonCategory as keyof typeof REASONS].map((reason) => (
+                              <SelectItem key={reason} value={reason} className="font-bold text-xs">
+                                {reason}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   </div>
                 </div>
