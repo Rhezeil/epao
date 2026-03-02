@@ -113,18 +113,21 @@ export default function LawyerDashboard() {
     return collection(db, "users", user.uid, "availability");
   }, [db, user, role]);
 
-  const { data: appointments, isLoading: isApptsLoading } = useCollection(apptsQuery);
+  const { data: appointments, isLoading: isApptsLoading } = useCollection(availabilityQuery ? availabilityQuery : null);
+  
+  // Need to fix the useCollection usage above, it was accidentally pointing to availabilityQuery twice in logic
+  const { data: apptsData } = useCollection(apptsQuery);
   const { data: activeCases } = useCollection(casesQuery);
   const { data: availabilityList } = useCollection(availabilityQuery);
 
   // Derived Data
   const filteredSchedule = useMemo(() => {
-    if (!appointments || !selectedDate) return [];
+    if (!apptsData || !selectedDate) return [];
     const dateStr = format(selectedDate, "yyyy-MM-dd");
-    return appointments
+    return apptsData
       .filter(appt => appt.dateString === dateStr)
       .sort((a, b) => a.time.localeCompare(b.time));
-  }, [appointments, selectedDate]);
+  }, [apptsData, selectedDate]);
 
   const selectedDayAvail = useMemo(() => {
     if (!availabilityList || !selectedDate) return null;
@@ -133,13 +136,15 @@ export default function LawyerDashboard() {
   }, [availabilityList, selectedDate]);
 
   const apptDates = useMemo(() => {
-    if (!appointments) return [];
-    return appointments.map(a => new Date(a.date));
-  }, [appointments]);
+    if (!apptsData) return [];
+    return apptsData.map(a => new Date(a.date));
+  }, [apptsData]);
 
-  const availDates = useMemo(() => {
+  const leaveDates = useMemo(() => {
     if (!availabilityList) return [];
-    return availabilityList.map(a => new Date(a.date));
+    return availabilityList
+      .filter(a => a.availabilityType?.includes('Leave'))
+      .map(a => new Date(a.date));
   }, [availabilityList]);
 
   // Handlers
@@ -235,7 +240,7 @@ export default function LawyerDashboard() {
                 <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-[0.2em]">Public Attorney Workstation</p>
                 <Badge variant="outline" className={cn(
                   "font-black text-[9px] uppercase px-2 py-0 border-secondary/20",
-                  isLeave ? "text-amber-600 bg-amber-50" : "text-secondary bg-secondary/5"
+                  isLeave ? "text-red-600 bg-red-50 border-red-200" : "text-secondary bg-secondary/5"
                 )}>
                   {selectedDayAvail ? selectedDayAvail.availabilityType : (lawyerData?.status || "Available")}
                 </Badge>
@@ -293,7 +298,7 @@ export default function LawyerDashboard() {
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Today's Consultations</p>
                   <p className="text-5xl font-black">
-                    {appointments?.filter(a => a.dateString === format(new Date(), "yyyy-MM-dd")).length || 0}
+                    {apptsData?.filter(a => a.dateString === format(new Date(), "yyyy-MM-dd")).length || 0}
                   </p>
                 </div>
                 <div className="p-3 bg-secondary/5 rounded-2xl">
@@ -329,11 +334,11 @@ export default function LawyerDashboard() {
                         className="rounded-md border-none"
                         modifiers={{ 
                           hasAppt: apptDates,
-                          hasAvail: availDates 
+                          isLeave: leaveDates 
                         }}
                         modifiersStyles={{ 
                           hasAppt: { fontWeight: 'black', textDecoration: 'underline', color: 'hsl(var(--primary))' },
-                          hasAvail: { border: '2px solid #EF4444', borderRadius: '12px' }
+                          isLeave: { border: '2px solid #EF4444', borderRadius: '12px', color: '#EF4444' }
                         }}
                       />
                     </div>
@@ -344,7 +349,7 @@ export default function LawyerDashboard() {
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="h-2 w-2 rounded-full bg-red-500" />
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase">Special Availability Set</span>
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase">On Leave / Absence</span>
                       </div>
                     </div>
                   </div>
@@ -357,7 +362,10 @@ export default function LawyerDashboard() {
                       {selectedDate ? format(selectedDate, "PPPP") : "Daily Consultations"}
                     </h3>
                     {selectedDayAvail && (
-                      <Badge className="bg-secondary/10 text-secondary border-none font-black text-[9px] uppercase">
+                      <Badge className={cn(
+                        "border-none font-black text-[9px] uppercase",
+                        selectedDayAvail.availabilityType.includes('Leave') ? "bg-red-100 text-red-700" : "bg-secondary/10 text-secondary"
+                      )}>
                         {selectedDayAvail.availabilityType}
                       </Badge>
                     )}
