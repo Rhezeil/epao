@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useAuth } from "@/components/auth-provider";
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc } from "@/firebase";
 import { collection, query, where, doc } from "firebase/firestore";
-import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, addDays, isSameDay } from "date-fns";
+import { format } from "date-fns";
 import { 
   Calendar as CalendarIcon, 
   Clock, 
@@ -14,13 +14,10 @@ import {
   XCircle, 
   MoreVertical, 
   Briefcase, 
-  Scale, 
   User, 
   ChevronRight, 
   Loader2,
   CalendarDays, 
-  CalendarRange, 
-  Filter,
   Check
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +31,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
 import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
 
 export default function LawyerDashboard() {
@@ -42,7 +38,6 @@ export default function LawyerDashboard() {
   const db = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
-  const [scheduleView, setScheduleView] = useState<"daily" | "weekly" | "monthly">("daily");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
   const lawyerRef = useMemoFirebase(() => {
@@ -73,28 +68,13 @@ export default function LawyerDashboard() {
   const { data: activeCases } = useCollection(casesQuery);
 
   const filteredSchedule = useMemo(() => {
-    if (!appointments) return [];
-    const now = new Date();
-    const referenceDate = selectedDate || now;
+    if (!appointments || !selectedDate) return [];
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
     
     return appointments.filter(appt => {
-      const apptDate = new Date(appt.date);
-      if (scheduleView === "daily") {
-        return format(apptDate, "yyyy-MM-dd") === format(referenceDate, "yyyy-MM-dd");
-      }
-      if (scheduleView === "weekly") {
-        const start = startOfWeek(referenceDate, { weekStartsOn: 1 });
-        const end = endOfWeek(referenceDate, { weekStartsOn: 1 });
-        return isWithinInterval(apptDate, { start, end });
-      }
-      if (scheduleView === "monthly") {
-        const start = startOfMonth(referenceDate);
-        const end = endOfMonth(referenceDate);
-        return isWithinInterval(apptDate, { start, end });
-      }
-      return true;
-    }).sort((a, b) => a.date.localeCompare(b.date));
-  }, [appointments, scheduleView, selectedDate]);
+      return appt.dateString === dateStr;
+    }).sort((a, b) => a.time.localeCompare(b.time));
+  }, [appointments, selectedDate]);
 
   const apptDates = useMemo(() => {
     if (!appointments) return [];
@@ -231,21 +211,11 @@ export default function LawyerDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <Card className="lg:col-span-2 border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
             <CardHeader className="bg-secondary/5 pb-4 border-b border-secondary/10">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-secondary text-white rounded-xl">
-                    <CalendarIcon className="h-5 w-5" />
-                  </div>
-                  <CardTitle className="text-lg font-bold text-secondary">Office Schedule</CardTitle>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-secondary text-white rounded-xl">
+                  <CalendarIcon className="h-5 w-5" />
                 </div>
-                
-                <Tabs value={scheduleView} onValueChange={(v) => setScheduleView(v as any)} className="w-full sm:w-auto">
-                  <TabsList className="bg-white/50 border border-secondary/10 rounded-xl h-10 p-1">
-                    <TabsTrigger value="daily" className="rounded-lg text-[10px] font-black uppercase data-[state=active]:bg-secondary data-[state=active]:text-white">Daily</TabsTrigger>
-                    <TabsTrigger value="weekly" className="rounded-lg text-[10px] font-black uppercase data-[state=active]:bg-secondary data-[state=active]:text-white">Weekly</TabsTrigger>
-                    <TabsTrigger value="monthly" className="rounded-lg text-[10px] font-black uppercase data-[state=active]:bg-secondary data-[state=active]:text-white">Monthly</TabsTrigger>
-                  </TabsList>
-                </Tabs>
+                <CardTitle className="text-lg font-bold text-secondary">Office Schedule</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="p-0">
@@ -253,7 +223,7 @@ export default function LawyerDashboard() {
                 {/* --- CALENDAR SIDEBAR --- */}
                 <div className="xl:col-span-5 p-6 border-r border-secondary/5 bg-secondary/[0.02]">
                   <div className="space-y-4">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary/40 ml-2">Select Date</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary/40 ml-2">Navigate Calendar</p>
                     <div className="bg-white rounded-3xl p-2 shadow-sm border border-secondary/5">
                       <Calendar
                         mode="single"
@@ -284,8 +254,7 @@ export default function LawyerDashboard() {
                   <div className="p-6 bg-secondary/5 border-b border-secondary/10">
                     <h3 className="text-sm font-black text-secondary flex items-center gap-2">
                       <Clock className="h-4 w-4" /> 
-                      {scheduleView === 'daily' ? format(selectedDate || new Date(), "PPPP") : 
-                       scheduleView === 'weekly' ? "Weekly Overview" : "Monthly Forecast"}
+                      {selectedDate ? format(selectedDate, "PPPP") : "Daily Consultations"}
                     </h3>
                   </div>
                   {isApptsLoading ? (
@@ -312,7 +281,7 @@ export default function LawyerDashboard() {
                             <div className="text-right hidden sm:block">
                               <p className="text-sm font-black text-secondary">{appt.time}</p>
                               <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
-                                {scheduleView === 'daily' ? 'Reserved Slot' : format(new Date(appt.date), "EEEE")}
+                                Reserved Slot
                               </p>
                             </div>
                             <DropdownMenu>
@@ -339,10 +308,9 @@ export default function LawyerDashboard() {
                       ))}
                       {filteredSchedule.length === 0 && (
                         <div className="p-20 text-center space-y-4">
-                          {scheduleView === 'daily' ? <CalendarDays className="h-16 w-16 text-secondary/10 mx-auto" /> : <CalendarRange className="h-16 w-16 text-secondary/10 mx-auto" />}
+                          <CalendarDays className="h-16 w-16 text-secondary/10 mx-auto" />
                           <p className="text-sm font-bold text-muted-foreground">
-                            {scheduleView === 'daily' ? 'No consultations scheduled for this date.' : 
-                             scheduleView === 'weekly' ? 'No appointments found for this week.' : 'No records for the selected month.'}
+                            No consultations scheduled for this date.
                           </p>
                           <Button variant="outline" size="sm" onClick={() => setSelectedDate(new Date())} className="rounded-xl font-bold">Return to Today</Button>
                         </div>
@@ -390,14 +358,14 @@ export default function LawyerDashboard() {
             <Card className="border-none shadow-xl rounded-[2.5rem] bg-amber-50 p-8 space-y-6 border border-amber-100">
               <div className="space-y-2">
                 <h3 className="font-black text-amber-900 flex items-center gap-2">
-                  <Filter className="h-5 w-5" /> Professional Duty
+                  <CalendarIcon className="h-5 w-5" /> Professional Duty
                 </h3>
                 <p className="text-xs text-amber-800/70 font-medium leading-relaxed">
-                  Toggle your availability to manage office walk-ins. Status changes are reflected in the public portal immediately.
+                  Select any date on the calendar to view your specific consultation lineup for that business day.
                 </p>
               </div>
               <div className="grid grid-cols-1 gap-2">
-                <Button variant="outline" size="sm" className="rounded-xl font-bold bg-white" onClick={() => { setSelectedDate(new Date()); setScheduleView("daily"); }}>Today's Session</Button>
+                <Button variant="outline" size="sm" className="rounded-xl font-bold bg-white" onClick={() => setSelectedDate(new Date())}>Today's Session</Button>
                 <Button variant="outline" size="sm" className="rounded-xl font-bold bg-white" onClick={() => router.push('/dashboard/lawyer/cases')}>Open Full Registry</Button>
               </div>
             </Card>
