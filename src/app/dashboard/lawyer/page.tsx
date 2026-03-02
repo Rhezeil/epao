@@ -493,8 +493,8 @@ export default function LawyerDashboard() {
                         <SelectContent>
                           <SelectItem value="FullDayAvailable" className="font-bold">Full Day Available</SelectItem>
                           <SelectItem value="PartialDayAvailable" className="font-bold">Partial Day Available</SelectItem>
-                          <SelectItem value="FullDayUnavailable" className="font-bold text-red-600">Full Day Leave (Sick/Annual)</SelectItem>
-                          <SelectItem value="PartialDayUnavailable" className="font-bold text-amber-600">Partial Leave (Court/Meeting)</SelectItem>
+                          <SelectItem value="FullDayUnavailable" className="font-bold text-red-600">Full Day Leave</SelectItem>
+                          <SelectItem value="PartialDayUnavailable" className="font-bold text-amber-600">Partial Leave</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
