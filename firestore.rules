@@ -27,7 +27,7 @@ service cloud.firestore {
     // --- COLLECTION RULES ---
 
     /**
-     * @description Rules for user profile documents.
+     * @description Rules for user profile documents and subcollections.
      */
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin() || isLawyer();
@@ -35,6 +35,17 @@ service cloud.firestore {
       allow create: if isOwner(userId);
       allow update: if isExistingOwner(userId) || isAdmin();
       allow delete: if isAdmin();
+
+      /**
+       * @description Detailed contact and profile information.
+       */
+      match /profile/{profileId} {
+        allow get: if isOwner(userId) || isAdmin() || isLawyer();
+        allow list: if isOwner(userId) || isAdmin() || isLawyer();
+        allow create: if isOwner(userId) || isAdmin();
+        allow update: if isOwner(userId) || isAdmin();
+        allow delete: if isAdmin();
+      }
 
       /**
        * @description Lawyer Availability rules.
