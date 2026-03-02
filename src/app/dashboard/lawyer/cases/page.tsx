@@ -29,6 +29,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 
 export default function LawyerCasesPage() {
   const { user, role, loading } = useAuth();
@@ -44,7 +45,7 @@ export default function LawyerCasesPage() {
     );
   }, [db, user, role]);
 
-  const { data: cases, isLoading } = useCollection(casesQuery ? casesQuery : null);
+  const { data: cases, isLoading } = useCollection(casesQuery);
 
   const filteredCases = useMemo(() => {
     if (!cases) return [];
@@ -72,6 +73,13 @@ export default function LawyerCasesPage() {
       ...(status === 'Closed' ? { closedAt: new Date().toISOString() } : { closedAt: null })
     });
     toast({ title: "Case Updated", description: `Case ${caseId} is now ${status}.` });
+  };
+
+  const handleViewFile = (caseId: string) => {
+    toast({
+      title: "Digital File Locked",
+      description: `Detailed records for Case ${caseId} are currently being audited for confidentiality.`
+    });
   };
 
   return (
@@ -140,7 +148,12 @@ export default function LawyerCasesPage() {
                       </TableCell>
                       <TableCell className="text-right px-8">
                         <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="sm" className="h-9 rounded-xl font-bold text-[10px] uppercase text-secondary hover:bg-secondary/10">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleViewFile(c.id)}
+                            className="h-9 rounded-xl font-bold text-[10px] uppercase text-secondary hover:bg-secondary/10"
+                          >
                             View File
                           </Button>
                           <DropdownMenu>
@@ -151,13 +164,13 @@ export default function LawyerCasesPage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="rounded-2xl w-56 p-2">
                               <DropdownMenuLabel className="text-[10px] font-black uppercase text-secondary/40 tracking-widest px-2 pb-2">Status Actions</DropdownMenuLabel>
-                              <DropdownMenuItem onClick={() => handleUpdateStatus(c.id, "Active")} className="rounded-xl font-bold">
+                              <DropdownMenuItem onClick={() => handleUpdateStatus(c.id, "Active")} className="rounded-xl font-bold cursor-pointer">
                                 <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" /> Mark as Active
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleUpdateStatus(c.id, "For Compliance")} className="rounded-xl font-bold">
+                              <DropdownMenuItem onClick={() => handleUpdateStatus(c.id, "For Compliance")} className="rounded-xl font-bold cursor-pointer">
                                 <AlertCircle className="mr-2 h-4 w-4 text-amber-600" /> Mark For Compliance
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleUpdateStatus(c.id, "Closed")} className="rounded-xl font-bold">
+                              <DropdownMenuItem onClick={() => handleUpdateStatus(c.id, "Closed")} className="rounded-xl font-bold cursor-pointer">
                                 <FileText className="mr-2 h-4 w-4 text-muted-foreground" /> Close Legal Case
                               </DropdownMenuItem>
                             </DropdownMenuContent>

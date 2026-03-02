@@ -91,8 +91,8 @@ export default function LawyerDashboard() {
     return collection(db, "users", user.uid, "availability");
   }, [db, user, role]);
 
-  const { data: appointments, isLoading: isApptsLoading } = useCollection(apptsQuery);
-  const { data: activeCases } = useCollection(casesQuery);
+  const { data: appointments, isLoading: isApptsLoading } = useCollection(availabilityQuery ? apptsQuery : null);
+  const { data: activeCases } = useCollection(availabilityQuery ? casesQuery : null);
   const { data: availabilityList } = useCollection(availabilityQuery);
 
   // Derived Data
@@ -258,7 +258,7 @@ export default function LawyerDashboard() {
             <CardContent className="p-8 space-y-1 relative z-10">
               <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Active Caseload</p>
               <p className="text-5xl font-black">{activeCases?.length || 0}</p>
-              <p className="text-xs font-bold opacity-80 pt-2 flex items-center gap-1 cursor-pointer" onClick={() => router.push('/dashboard/lawyer/cases')}>
+              <p className="text-xs font-bold opacity-80 pt-2 flex items-center gap-1 cursor-pointer hover:opacity-100" onClick={() => router.push('/dashboard/lawyer/cases')}>
                 Manage Registry <ChevronRight className="h-3 w-3" />
               </p>
             </CardContent>
@@ -428,7 +428,7 @@ export default function LawyerDashboard() {
                   {(!activeCases || activeCases.length === 0) && (
                     <p className="text-center py-6 text-xs font-bold opacity-40 italic">Registry is currently empty.</p>
                   )}
-                  <Button variant="link" className="w-full text-white font-black text-[10px] uppercase tracking-[0.2em] mt-2" onClick={() => router.push('/dashboard/lawyer/cases')}>
+                  <Button variant="link" className="w-full text-white font-black text-[10px] uppercase tracking-[0.2em] mt-2 hover:opacity-80 transition-opacity" onClick={() => router.push('/dashboard/lawyer/cases')}>
                     Full Caseload Registry
                   </Button>
                 </div>
@@ -445,8 +445,8 @@ export default function LawyerDashboard() {
                 </p>
               </div>
               <div className="grid grid-cols-1 gap-2">
-                <Button variant="outline" size="sm" className="rounded-xl font-bold bg-white" onClick={() => setSelectedDate(new Date())}>View Today</Button>
-                <Button variant="outline" size="sm" className="rounded-xl font-bold bg-white" onClick={() => router.push('/dashboard/lawyer/cases')}>Manage Cases</Button>
+                <Button variant="outline" size="sm" className="rounded-xl font-bold bg-white border-amber-200 hover:bg-amber-100 transition-colors" onClick={() => setSelectedDate(new Date())}>View Today</Button>
+                <Button variant="outline" size="sm" className="rounded-xl font-bold bg-white border-amber-200 hover:bg-amber-100 transition-colors" onClick={() => router.push('/dashboard/lawyer/cases')}>Manage Cases</Button>
               </div>
             </Card>
           </div>
@@ -539,7 +539,7 @@ export default function LawyerDashboard() {
                 </Button>
               )}
               <Button variant="outline" onClick={() => setIsAvailabilityOpen(false)} className="rounded-xl font-bold">Cancel</Button>
-              <Button onClick={handleSaveAvailability} className="bg-secondary text-white font-black rounded-xl px-8 shadow-lg">Save Status</Button>
+              <Button onClick={handleSaveAvailability} className="bg-secondary text-white font-black rounded-xl px-8 shadow-lg hover:scale-105 transition-transform">Save Status</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
