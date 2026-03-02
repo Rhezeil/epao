@@ -20,6 +20,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 export default function LawyerDashboard() {
   const { user, role, loading } = useAuth();
@@ -73,6 +74,8 @@ export default function LawyerDashboard() {
     toast({ title: `Status Updated`, description: `Appointment marked as ${status}.` });
   };
 
+  const isLeave = lawyerData?.status === 'On Leave';
+
   return (
     <DashboardLayout role="lawyer">
       <div className="space-y-8 pb-12">
@@ -91,8 +94,11 @@ export default function LawyerDashboard() {
               <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-[0.2em]">Professional Staff Workstation</p>
             </div>
           </div>
-          <Badge className="bg-secondary text-white border-none px-4 py-2 rounded-full font-black text-[10px] uppercase tracking-widest shadow-md">
-            Clinical Registry Active
+          <Badge className={cn(
+            "text-white border-none px-4 py-2 rounded-full font-black text-[10px] uppercase tracking-widest shadow-md transition-colors",
+            isLeave ? "bg-amber-500" : "bg-secondary"
+          )}>
+            {isLeave ? "On Leave" : "Active"}
           </Badge>
         </div>
 
