@@ -217,7 +217,7 @@ export default function LawyerDashboard() {
         </div>
 
         {/* --- METRICS --- */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="border-none shadow-xl rounded-[2rem] bg-secondary text-white overflow-hidden relative group">
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
               <Briefcase className="h-24 w-24" />
@@ -245,14 +245,6 @@ export default function LawyerDashboard() {
                 </div>
               </div>
               <p className="text-xs font-bold text-muted-foreground pt-2">Scheduled Sessions</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-none shadow-xl rounded-[2rem] bg-amber-400 text-amber-950 overflow-hidden">
-            <CardContent className="p-8 space-y-1">
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Current Status</p>
-              <p className="text-3xl font-black truncate">{selectedDayAvail?.availabilityType.replace(/([A-Z])/g, ' $1').trim() || "Standard Duty"}</p>
-              <p className="text-xs font-bold opacity-80 pt-2">{selectedDayAvail?.reason || "Normal business hours"}</p>
             </CardContent>
           </Card>
         </div>
@@ -343,7 +335,7 @@ export default function LawyerDashboard() {
                             </div>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-secondary/5">
+                                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-secondary/5">
                                   <MoreVertical className="h-4 w-4 text-secondary" />
                                 </Button>
                               </DropdownMenuTrigger>
