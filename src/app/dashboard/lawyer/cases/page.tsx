@@ -323,8 +323,8 @@ export default function LawyerCasesPage() {
 
         {/* --- CLIENT PROFILE DIALOG --- */}
         <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
-          <DialogContent className="rounded-[3rem] max-w-2xl p-0 overflow-hidden border-none shadow-2xl">
-            <DialogHeader className="p-8 bg-secondary text-white">
+          <DialogContent className="rounded-[3rem] max-w-2xl p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
+            <DialogHeader className="p-8 bg-secondary text-white shrink-0">
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
                   <DialogTitle className="text-3xl font-black">
@@ -339,7 +339,7 @@ export default function LawyerCasesPage() {
                 </div>
               </div>
             </DialogHeader>
-            <div className="p-10 space-y-10">
+            <div className="p-10 space-y-10 flex-1 overflow-y-auto">
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="space-y-6">
                   <div className="space-y-1">
@@ -387,7 +387,7 @@ export default function LawyerCasesPage() {
                 </div>
               </div>
             </div>
-            <DialogFooter className="p-8 bg-muted/30">
+            <DialogFooter className="p-8 bg-muted/30 shrink-0">
               <Button onClick={() => setIsProfileOpen(false)} className="w-full h-14 rounded-2xl font-black bg-secondary text-white shadow-xl">
                 Close Profile
               </Button>
