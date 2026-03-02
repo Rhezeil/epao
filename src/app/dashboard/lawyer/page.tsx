@@ -455,21 +455,6 @@ export default function LawyerDashboard() {
                 </div>
               </CardContent>
             </Card>
-
-            <Card className="border-none shadow-xl rounded-[2.5rem] bg-amber-50 p-8 space-y-6 border border-amber-100">
-              <div className="space-y-2">
-                <h3 className="font-black text-amber-900 flex items-center gap-2">
-                  <AlertCircle className="h-5 w-5" /> Schedule Policy
-                </h3>
-                <p className="text-xs text-amber-800/70 font-medium leading-relaxed">
-                  Mark your availability to help the Admin office coordinate triage assignments effectively. Select dates on the availability calendar to set leaves.
-                </p>
-              </div>
-              <div className="grid grid-cols-1 gap-2">
-                <Button variant="outline" size="sm" className="rounded-xl font-bold bg-white border-amber-200 hover:bg-amber-100 transition-colors" onClick={() => setSelectedDate(new Date())}>View Today</Button>
-                <Button variant="outline" size="sm" className="rounded-xl font-bold bg-white border-amber-200 hover:bg-amber-100 transition-colors" onClick={() => router.push('/dashboard/lawyer/cases')}>Manage Cases</Button>
-              </div>
-            </Card>
           </div>
         </div>
 
