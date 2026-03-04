@@ -10,20 +10,20 @@ import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
 import { doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { User, Shield, Lock, Phone, Mail, Camera } from "lucide-react";
+import { User, Shield, Lock, Phone, Mail, Camera, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function ProfilePage() {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
-  const { role } = useAuth();
+  const { role, loading: authLoading } = useAuth();
 
   // Memoize the document reference for the profile based on role
   const profileDocRef = useMemoFirebase(() => {
     if (!db || !user || !role) return null;
     if (role === 'lawyer') return doc(db, "roleLawyer", user.uid);
-    if (role === 'admin') return doc(db, "roleAdmin", user.uid);
+    if (role === 'admin') return doc(db, "admins", user.uid);
     return doc(db, "users", user.uid, "profile", "profile");
   }, [db, user, role]);
 
@@ -37,46 +37,72 @@ export default function ProfilePage() {
     photoUrl: ""
   });
 
+  const [isSaving, setIsSaving] = useState(false);
+
   useEffect(() => {
     if (profileData) {
       setFormState({
         firstName: profileData.firstName || "",
         lastName: profileData.lastName || "",
-        phoneNumber: profileData.phoneNumber || profileData.contactNumber || "",
+        phoneNumber: profileData.phoneNumber || profileData.contactNumber || profileData.mobileNumber || "",
         address: profileData.address || "",
         photoUrl: profileData.photoUrl || ""
       });
     }
   }, [profileData]);
 
-  const handleUpdate = (e: React.FormEvent) => {
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profileDocRef || !user || !db || !role) return;
 
-    if (role === 'client') {
-      // Sync client sub-profile and top-level doc
-      setDocumentNonBlocking(profileDocRef, {
-        ...formState,
-        updatedAt: new Date().toISOString(),
-      }, { merge: true });
+    setIsSaving(true);
 
-      updateDocumentNonBlocking(doc(db, "users", user.uid), {
-        fullName: `${formState.firstName} ${formState.lastName}`.trim(),
-        mobileNumber: formState.phoneNumber
+    try {
+      if (role === 'client') {
+        // Sync client sub-profile and top-level doc
+        setDocumentNonBlocking(profileDocRef, {
+          ...formState,
+          updatedAt: new Date().toISOString(),
+        }, { merge: true });
+
+        updateDocumentNonBlocking(doc(db, "users", user.uid), {
+          fullName: `${formState.firstName} ${formState.lastName}`.trim(),
+          mobileNumber: formState.phoneNumber,
+          updatedAt: new Date().toISOString()
+        });
+      } else {
+        // Direct role doc update for lawyers/admins
+        updateDocumentNonBlocking(profileDocRef, {
+          ...formState,
+          updatedAt: new Date().toISOString(),
+        });
+      }
+
+      toast({ 
+        title: "Settings Updated", 
+        description: "Your profile information has been saved successfully." 
       });
-    } else {
-      // Direct role doc update for lawyers/admins
-      updateDocumentNonBlocking(profileDocRef, {
-        ...formState,
-        updatedAt: new Date().toISOString(),
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Update Failed",
+        description: "Could not save your changes. Please try again."
       });
+    } finally {
+      setIsSaving(false);
     }
-
-    toast({ 
-      title: "Settings Updated", 
-      description: "Your profile information has been saved successfully." 
-    });
   };
+
+  if (authLoading || (isProfileLoading && !profileData)) {
+    return (
+      <DashboardLayout role={role}>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Loading Profile Data...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   if (!role) return null;
 
@@ -85,8 +111,12 @@ export default function ProfilePage() {
       <div className="max-w-3xl mx-auto space-y-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Professional Profile</h1>
-            <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest mt-1">Manage your identity within LexConnect</p>
+            <h1 className="text-3xl font-black text-primary font-headline tracking-tight">
+              {role === 'client' ? "Citizen Account Profile" : "Professional Profile"}
+            </h1>
+            <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest mt-1">
+              {role === 'client' ? "Manage your contact details for legal coordination" : "Manage your identity within LexConnect"}
+            </p>
           </div>
           <Avatar className="h-20 w-20 border-4 border-white shadow-xl">
             <AvatarImage src={formState.photoUrl} className="object-cover" />
@@ -117,6 +147,7 @@ export default function ProfilePage() {
                     className="h-12 rounded-xl border-primary/10 bg-primary/5 focus-visible:ring-primary/20 font-bold"
                     value={formState.firstName} 
                     onChange={(e) => setFormState({...formState, firstName: e.target.value})} 
+                    placeholder="Enter first name"
                   />
                 </div>
                 <div className="space-y-2">
@@ -125,10 +156,11 @@ export default function ProfilePage() {
                     className="h-12 rounded-xl border-primary/10 bg-primary/5 focus-visible:ring-primary/20 font-bold"
                     value={formState.lastName} 
                     onChange={(e) => setFormState({...formState, lastName: e.target.value})} 
+                    placeholder="Enter last name"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Work Email</Label>
+                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Account Email</Label>
                   <Input 
                     className="h-12 rounded-xl bg-muted/50 border-none font-bold text-muted-foreground"
                     value={user?.email || ""} 
@@ -136,19 +168,21 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Contact Number</Label>
+                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Mobile / Contact Number</Label>
                   <Input 
                     className="h-12 rounded-xl border-primary/10 bg-primary/5 focus-visible:ring-primary/20 font-bold"
                     value={formState.phoneNumber} 
                     onChange={(e) => setFormState({...formState, phoneNumber: e.target.value})} 
+                    placeholder="09XXXXXXXXX"
                   />
                 </div>
                 <div className="col-span-1 md:col-span-2 space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Home/Office Address</Label>
+                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Complete Home Address</Label>
                   <Input 
                     className="h-12 rounded-xl border-primary/10 bg-primary/5 focus-visible:ring-primary/20 font-bold"
                     value={formState.address} 
                     onChange={(e) => setFormState({...formState, address: e.target.value})} 
+                    placeholder="House No., Street, Barangay, City"
                   />
                 </div>
                 {(role === 'lawyer' || role === 'admin') && (
@@ -168,7 +202,8 @@ export default function ProfilePage() {
               </div>
 
               <div className="pt-4 border-t border-primary/5">
-                <Button type="submit" className="h-12 px-10 rounded-2xl bg-primary text-white font-black shadow-lg hover:scale-105 transition-all">
+                <Button type="submit" disabled={isSaving} className="h-12 px-10 rounded-2xl bg-primary text-white font-black shadow-lg hover:scale-105 transition-all">
+                  {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                   Commit Profile Updates
                 </Button>
               </div>
@@ -191,7 +226,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <p className="text-sm font-black text-primary">Login Password</p>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Last changed 3 months ago</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Managed via secure portal</p>
                 </div>
               </div>
               <Button variant="outline" className="rounded-xl font-black text-[10px] uppercase tracking-widest border-2">Change Password</Button>
