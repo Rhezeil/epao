@@ -4,7 +4,7 @@
 import { useAuth } from "@/components/auth-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, useDoc } from "@/firebase";
 import { collection, query, where, doc, onSnapshot } from "firebase/firestore";
 import { 
   Briefcase, 
@@ -50,8 +50,14 @@ export default function ClientDashboard() {
     return query(collection(db, "appointments"), where("clientId", "==", user.uid));
   }, [db, user, role]);
 
+  const profileRef = useMemoFirebase(() => {
+    if (!db || !user || role !== 'client') return null;
+    return doc(db, "users", user.uid, "profile", "profile");
+  }, [db, user, role]);
+
   const { data: cases, isLoading: isCasesLoading } = useCollection(casesQuery);
   const { data: appts, isLoading: isApptsLoading } = useCollection(apptsQuery);
+  const { data: profile } = useDoc(profileRef);
 
   const activeCase = cases?.[0];
 
@@ -94,6 +100,8 @@ export default function ClientDashboard() {
     return null;
   }
 
+  const displayName = profile?.firstName || user?.email?.split('@')[0] || "User";
+
   return (
     <DashboardLayout role="client">
       <div className="space-y-8">
@@ -103,7 +111,7 @@ export default function ClientDashboard() {
               <Heart className="h-8 w-8" />
             </div>
             <div>
-              <p className="text-muted-foreground font-medium">Welcome back. Track your legal journey and upcoming visits.</p>
+              <p className="text-muted-foreground font-medium">Welcome back, {displayName}. Track your legal journey and upcoming visits.</p>
             </div>
           </div>
           <Badge className="bg-primary/10 text-primary border-none px-4 py-2 rounded-full font-bold">
