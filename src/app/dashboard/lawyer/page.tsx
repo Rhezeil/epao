@@ -1,3 +1,4 @@
+
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -362,8 +363,8 @@ export default function LawyerDashboard() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" onClick={() => updateStatus(n.id, 'scheduled')} className="h-8 rounded-lg bg-amber-600 text-white font-black text-[10px] uppercase">Confirm</Button>
-                    <Button size="sm" variant="ghost" onClick={() => { setSelectedApptToReschedule(n); setIsRescheduleOpen(true); }} className="h-8 rounded-lg text-amber-700 font-black text-[10px] uppercase">Reschedule</Button>
+                    <Button size="sm" onClick={() => updateStatus(n.id, 'scheduled')} className="h-8 rounded-lg bg-amber-600 text-white font-black text-[10px] uppercase shadow-sm">Confirm</Button>
+                    <Button size="sm" variant="ghost" onClick={() => { setSelectedApptToReschedule(n); setIsRescheduleOpen(true); }} className="h-8 rounded-lg text-amber-700 font-black text-[10px] uppercase hover:bg-amber-100/50">Reschedule</Button>
                     <Button size="sm" variant="ghost" onClick={() => updateStatus(n.id, 'cancelled')} className="h-8 rounded-lg text-red-600 font-black text-[10px] uppercase hover:bg-red-50">Cancel</Button>
                   </div>
                 </div>
@@ -479,6 +480,7 @@ export default function LawyerDashboard() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="rounded-2xl w-56 p-2">
+                                <DropdownMenuLabel className="text-[10px] font-black uppercase text-secondary/40 px-2 pb-2">Status Actions</DropdownMenuLabel>
                                 <DropdownMenuItem onClick={() => updateStatus(appt.id, 'completed')} className="text-green-600 font-bold rounded-xl cursor-pointer">
                                   <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" /> Mark as Completed
                                 </DropdownMenuItem>
@@ -486,7 +488,7 @@ export default function LawyerDashboard() {
                                   <Edit3 className="mr-2 h-4 w-4" /> Reschedule Visit
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => updateStatus(appt.id, 'cancelled')} className="text-red-600 font-bold rounded-xl cursor-pointer">
-                                  <XCircle className="mr-2 h-4 w-4 text-red-600" /> Cancel Booking
+                                  <XCircle className="mr-2 h-4 w-4 text-red-600" /> Mark as Cancelled
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem className="font-bold rounded-xl cursor-pointer" onClick={() => router.push(`/dashboard/lawyer/cases`)}>
