@@ -89,7 +89,8 @@ service cloud.firestore {
     match /appointments/{appointmentId} {
       // Guests search by date (availability) or reference code (management). 
       // Admins manage registry. Clients see their own.
-      allow read: if true; 
+      // Explicitly allow list for lawyers and admins to view registries.
+      allow get, list: if true; 
       allow create: if true;
       allow update: if true; 
       allow delete: if isAdmin();
