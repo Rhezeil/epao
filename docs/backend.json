@@ -16,7 +16,7 @@
     },
     "CaseRequirement": {
       "title": "CaseRequirement",
-      "description": "Statutory documentary requirements and roadmaps for legal matters.",
+      "description": "Statutory documentary requirements and roadmaps for legal cases.",
       "type": "object",
       "properties": {
         "caseName": { "type": "string" },
@@ -27,7 +27,7 @@
     },
     "Appointment": {
       "title": "Appointment",
-      "description": "A scheduled legal consultation or follow-up.",
+      "description": "A scheduled legal consultation or follow-up visit.",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
@@ -42,7 +42,7 @@
     },
     "LegalCase": {
       "title": "LegalCase",
-      "description": "An official legal record handled by a public attorney.",
+      "description": "An official legal case record handled by a public attorney.",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
@@ -56,7 +56,7 @@
     },
     "CaseDocument": {
       "title": "CaseDocument",
-      "description": "Metadata for a document stored in a case folder.",
+      "description": "Metadata for a document stored in a case digital folder.",
       "type": "object",
       "properties": {
         "id": { "type": "string" },

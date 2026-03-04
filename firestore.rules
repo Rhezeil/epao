@@ -18,8 +18,8 @@ service cloud.firestore {
     /** @description Checks if the user is a registered Admin. */
     function isAdmin() {
       return isSignedIn() && (
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
-        request.auth.token.email == "admin@epao.com"
+        request.auth.token.email == "admin@epao.com" ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
       );
     }
 
@@ -65,7 +65,6 @@ service cloud.firestore {
     match /users/{userId} {
       allow get: if isSignedIn();
       allow list: if isAdmin();
-      // FIX: Allow admins to create records for other users during registration/triage
       allow create: if isSignedIn() && (isOwner(userId) || isAdmin());
       allow update: if isOwner(userId) || isAdmin();
       allow delete: if isAdmin();
@@ -92,7 +91,7 @@ service cloud.firestore {
       allow get: if true;
       allow list: if isAdmin(); 
       allow create: if true;
-      allow update: if true; // Guests can reschedule/cancel if they have the ID/Ref
+      allow update: if true; 
       allow delete: if isAdmin();
     }
 
@@ -106,7 +105,7 @@ service cloud.firestore {
       allow delete: if isAdmin();
 
       match /documents/{docId} {
-        allow read, write: if isSignedIn(); // Metadata folder for lawyer workstation
+        allow read, write: if isSignedIn(); 
       }
     }
 
