@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, Suspense, useMemo, useEffect } from "react";
@@ -31,7 +32,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import { useFirestore, setDocumentNonBlocking, useCollection, useMemoFirebase, useDoc } from "@/firebase";
-import { doc, collection, query, where } from "firebase/firestore";
+import { doc, collection, query, where, onSnapshot } from "firebase/firestore";
 import { format, isWeekend, startOfToday, setHours, setMinutes, isBefore, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -54,12 +55,32 @@ function BookAppointmentContent() {
   const db = useFirestore();
   const { toast } = useToast();
 
+  const [assignedLawyer, setAssignedLawyer] = useState<any>(null);
+
   // Fetch client profile for pre-filling
   const profileDocRef = useMemoFirebase(() => {
     if (!db || !user) return null;
     return doc(db, "users", user.uid, "profile", "profile");
   }, [db, user]);
   const { data: profile } = useDoc(profileDocRef);
+
+  // Fetch client case to find the lawyer
+  const casesQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return query(collection(db, "cases"), where("clientId", "==", user.uid));
+  }, [db, user]);
+  const { data: cases } = useCollection(casesQuery);
+  const activeCase = cases?.[0];
+
+  useEffect(() => {
+    let unsub = () => {};
+    if (activeCase?.lawyerId && db) {
+      unsub = onSnapshot(doc(db, "roleLawyer", activeCase.lawyerId), (snap) => {
+        if (snap.exists()) setAssignedLawyer(snap.data());
+      });
+    }
+    return () => unsub();
+  }, [activeCase, db]);
   
   const caseTypeParam = searchParams.get("caseType") || "Follow-up Consultation";
   const categoryParam = searchParams.get("category") || "General";
@@ -155,6 +176,7 @@ function BookAppointmentContent() {
     const appointmentData = {
       id: appointmentId,
       clientId: user.uid,
+      lawyerId: activeCase?.lawyerId || null,
       referenceCode: refCode,
       caseCategory: categoryParam,
       caseType: caseTypeParam,
@@ -192,7 +214,7 @@ function BookAppointmentContent() {
             </div>
             <div className="space-y-2">
               <h2 className="text-3xl font-black text-primary font-headline">Visit Confirmed</h2>
-              <p className="text-muted-foreground font-medium">Your follow-up session has been successfully added to your lawyer's schedule.</p>
+              <p className="text-muted-foreground font-medium">Your follow-up session has been successfully added to the schedule.</p>
             </div>
             <div className="bg-primary/5 p-6 rounded-3xl space-y-2 border-2 border-dashed border-primary/20">
               <p className="text-[10px] font-black text-primary uppercase tracking-widest">Confirmation Code</p>
@@ -212,6 +234,12 @@ function BookAppointmentContent() {
       <div className="max-w-6xl mx-auto space-y-8 px-4">
         <div className="space-y-2">
           <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Schedule Follow-up</h1>
+          {assignedLawyer && (
+            <p className="text-sm font-bold text-secondary flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4" /> 
+              Booking with Atty. {assignedLawyer.firstName} {assignedLawyer.lastName}
+            </p>
+          )}
         </div>
 
         <Card className="border-none shadow-xl bg-white/80 backdrop-blur-md rounded-[2.5rem] overflow-hidden">
@@ -269,7 +297,7 @@ function BookAppointmentContent() {
                     {!selectedDate ? (
                       <div className="h-[300px] flex flex-col items-center justify-center text-muted-foreground bg-primary/5 rounded-3xl border border-dashed">
                         <Clock className="h-10 w-10 mb-2 opacity-20" />
-                        <p className="text-sm font-bold text-center">Select a date to view your lawyer's availability.</p>
+                        <p className="text-sm font-bold text-center">Select a date to view availability.</p>
                       </div>
                     ) : (
                       <div className="grid grid-cols-2 gap-2 max-h-[350px] overflow-y-auto p-2 scrollbar-hide">
@@ -283,8 +311,8 @@ function BookAppointmentContent() {
                               selectedTime === slot.time 
                                 ? "bg-yellow-400 text-black border-yellow-500" 
                                 : slot.isBooked || slot.isPast
-                                ? "bg-red-500 text-white border-red-600 opacity-80" 
-                                : "bg-green-500 text-white border-green-600 hover:bg-green-600"
+                                ? "bg-red-50 text-red-300 border-red-100 opacity-50" 
+                                : "bg-green-500 text-white border-green-600 hover:bg-green-600 shadow-sm"
                             )}
                             onClick={() => setSelectedTime(slot.time)}
                           >
@@ -409,6 +437,10 @@ function BookAppointmentContent() {
                       <div className="space-y-1">
                         <p className="text-[10px] font-bold text-muted-foreground uppercase">Service</p>
                         <p className="font-bold text-secondary">{getServiceLabel(purpose)}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Attorney</p>
+                        <p className="font-bold text-secondary">{assignedLawyer ? `Atty. ${assignedLawyer.firstName} ${assignedLawyer.lastName}` : "Pending Assignment"}</p>
                       </div>
                     </div>
                   </div>

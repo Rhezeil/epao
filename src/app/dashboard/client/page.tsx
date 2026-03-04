@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAuth } from "@/components/auth-provider";
@@ -196,7 +197,15 @@ export default function ClientDashboard() {
                         </div>
                         <div>
                           <p className="text-base font-black text-[#1A3B6B]">{appt.caseType}</p>
-                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.1em]">Ref: {appt.referenceCode} • {appt.time}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.1em]">Ref: {appt.referenceCode} • {appt.time}</p>
+                            {assignedLawyer && (
+                              <>
+                                <span className="text-[10px] text-muted-foreground/40">•</span>
+                                <p className="text-[10px] text-secondary font-black uppercase">with Atty. {assignedLawyer.lastName}</p>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <Badge className="bg-primary/10 text-primary border-none text-[9px] font-black uppercase">{appt.status}</Badge>
