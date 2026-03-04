@@ -25,7 +25,10 @@ service cloud.firestore {
 
     /** @description Checks if the user is an authorized Lawyer. */
     function isLawyer() {
-      return isSignedIn() && exists(/databases/$(database)/documents/roleLawyer/$(request.auth.uid));
+      return isSignedIn() && (
+        request.auth.token.email.matches('.*@lawyers\\.com$') ||
+        exists(/databases/$(database)/documents/roleLawyer/$(request.auth.uid))
+      );
     }
 
     /** @description Checks if the authenticated user's UID matches the provided userId. */
@@ -90,7 +93,7 @@ service cloud.firestore {
      * and lawyer workstation synchronization.
      */
     match /appointments/{appointmentId} {
-      allow read: if true; 
+      allow get, list: if true; 
       allow create: if true;
       allow update: if true; 
       allow delete: if isAdmin();

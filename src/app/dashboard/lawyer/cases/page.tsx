@@ -4,15 +4,12 @@ import { useAuth } from "@/components/auth-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
-import { collection, query, where, doc, getDoc, orderBy } from "firebase/firestore";
-import { format, startOfToday, isWeekend, setHours, setMinutes, isBefore } from "date-fns";
+import { collection, query, where, doc, orderBy } from "firebase/firestore";
+import { format, startOfToday, setHours, setMinutes, isBefore } from "date-fns";
 import { 
-  FileText, 
   Scale, 
   Search,
   CheckCircle2,
-  AlertCircle,
-  Settings2,
   Loader2,
   CalendarCheck,
   Clock,
@@ -21,15 +18,12 @@ import {
   Mail,
   MapPin,
   Info,
-  ChevronRight,
-  Gavel,
+  Settings2,
   Plus,
-  ShieldCheck,
-  ClipboardList,
-  Calendar,
+  History,
   Edit3,
   XCircle,
-  History
+  FileText
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -522,7 +516,7 @@ export default function LawyerCasesPage() {
                   <div className="space-y-6">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-primary/10 rounded-xl">
-                        <Gavel className="h-5 w-5 text-primary" />
+                        <Scale className="h-5 w-5 text-primary" />
                       </div>
                       <h4 className="text-xs font-black text-primary uppercase tracking-widest">Legal Matter</h4>
                     </div>
