@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useAuth } from "@/components/auth-provider";
@@ -297,22 +296,6 @@ export default function ClientDashboard() {
                   </div>
                 )}
               </CardContent>
-            </Card>
-
-            {/* --- QUICK ACTIONS --- */}
-            <Card className="border-none shadow-xl bg-amber-50 rounded-[2.5rem] p-8 space-y-4 border border-amber-100">
-              <h4 className="text-sm font-black text-amber-900 flex items-center gap-2">
-                <CalendarCheck className="h-4 w-4" /> Schedule Visit
-              </h4>
-              <p className="text-xs text-amber-800/70 font-medium leading-relaxed">
-                Need to speak with your attorney? Book your next follow-up session directly through the portal.
-              </p>
-              <Button 
-                className="w-full h-12 bg-amber-500 hover:bg-amber-600 rounded-2xl font-black shadow-lg text-white" 
-                onClick={() => router.push('/dashboard/client/book-appointment')}
-              >
-                Schedule Visit
-              </Button>
             </Card>
           </div>
         </div>
