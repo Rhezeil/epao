@@ -57,9 +57,10 @@ service cloud.firestore {
 
     /**
      * @description Statutory Case Requirements & Procedures.
+     * Publicly accessible for the Case Navigator.
      */
     match /caseRequirements/{reqId} {
-      allow get, list: if true;
+      allow read: if true;
       allow write: if isAdmin();
     }
 
