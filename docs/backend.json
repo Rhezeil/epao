@@ -1,87 +1,307 @@
-
 {
   "entities": {
-    "UserProfile": {
+    "User": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "UserProfile",
+      "title": "User",
       "type": "object",
-      "description": "Stores general information for all users of the LexConnect application, including their role and basic profile details.",
+      "description": "Represents a user account in the system, linking to an external authentication service. Stores common user information and role.",
       "properties": {
-        "id": { "type": "string" },
-        "email": { "type": "string", "format": "email" },
-        "firstName": { "type": "string" },
-        "lastName": { "type": "string" },
-        "role": { "type": "string", "enum": ["admin", "lawyer", "client"] },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "updatedAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "email", "role"]
-    },
-    "CaseRequirement": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "CaseRequirement",
-      "type": "object",
-      "description": "Stores statutory requirements and procedural roadmap steps for specific types of legal cases.",
-      "properties": {
-        "caseName": { "type": "string" },
-        "description": { "type": "string" },
-        "requirements": { "type": "array", "items": { "type": "string" } },
-        "steps": { 
-          "type": "array", 
-          "items": { 
-            "type": "object",
-            "properties": {
-              "step": { "type": "number" },
-              "title": { "type": "string" },
-              "content": { "type": "string" }
-            }
-          } 
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity. This typically corresponds to the UID from an external authentication system (e.g., Firebase Authentication)."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address.",
+          "format": "email"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The first name of the user."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The last name of the user."
+        },
+        "role": {
+          "type": "string",
+          "description": "The role of the user within the application (e.g., 'admin', 'client', 'lawyer')."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the user account was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the user account was last updated.",
+          "format": "date-time"
         }
-      }
+      },
+      "required": [
+        "id",
+        "email",
+        "firstName",
+        "lastName",
+        "role",
+        "createdAt",
+        "updatedAt"
+      ]
     },
-    "CaseDocument": {
+    "ClientProfile": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "CaseDocument",
+      "title": "ClientProfile",
       "type": "object",
-      "description": "Metadata for documents associated with an active legal case, organized by folder.",
+      "description": "Stores specific profile information for users with the 'client' role.",
       "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "folder": { "type": "string", "enum": ["Pleadings", "Evidence", "Court Orders", "Correspondence"] },
-        "uploadDate": { "type": "string", "format": "date-time" },
-        "uploadedBy": { "type": "string" }
-      }
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ClientProfile entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the associated User entity. (Relationship: User 1:1 ClientProfile)"
+        },
+        "contactNumber": {
+          "type": "string",
+          "description": "The client's primary contact phone number."
+        },
+        "address": {
+          "type": "string",
+          "description": "The client's physical address."
+        }
+      },
+      "required": [
+        "id",
+        "userId"
+      ]
+    },
+    "LawyerProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "LawyerProfile",
+      "type": "object",
+      "description": "Stores specific profile information for users with the 'lawyer' role.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the LawyerProfile entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the associated User entity. (Relationship: User 1:1 LawyerProfile)"
+        },
+        "barNumber": {
+          "type": "string",
+          "description": "The lawyer's bar association number."
+        },
+        "specializations": {
+          "type": "array",
+          "description": "A list of legal specializations the lawyer practices.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "The lawyer's primary contact phone number."
+        },
+        "address": {
+          "type": "string",
+          "description": "The lawyer's office address."
+        },
+        "bio": {
+          "type": "string",
+          "description": "A brief biographical description of the lawyer, highlighting their experience and approach."
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Indicates whether the lawyer is currently active and available for appointments or cases."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "barNumber",
+        "specializations",
+        "phoneNumber",
+        "isActive"
+      ]
+    },
+    "Appointment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Appointment",
+      "type": "object",
+      "description": "Represents a scheduled meeting or consultation between a client and a lawyer.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Appointment entity."
+        },
+        "clientId": {
+          "type": "string",
+          "description": "Reference to the ClientProfile entity booking the appointment. (Relationship: ClientProfile 1:N Appointment)"
+        },
+        "lawyerId": {
+          "type": "string",
+          "description": "Reference to the LawyerProfile entity providing the service. (Relationship: LawyerProfile 1:N Appointment)"
+        },
+        "dateTime": {
+          "type": "string",
+          "description": "The scheduled date and time of the appointment.",
+          "format": "date-time"
+        },
+        "durationMinutes": {
+          "type": "number",
+          "description": "The planned duration of the appointment in minutes."
+        },
+        "purpose": {
+          "type": "string",
+          "description": "A brief description of the purpose of the appointment (e.g., 'Initial consultation', 'Case review')."
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the appointment (e.g., 'scheduled', 'completed', 'cancelled', 'rescheduled')."
+        },
+        "location": {
+          "type": "string",
+          "description": "The location where the appointment will take place (e.g., 'Online', 'Lawyer's Office', 'Client's Home')."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional notes related to the appointment for internal reference."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the appointment was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the appointment was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "clientId",
+        "lawyerId",
+        "dateTime",
+        "durationMinutes",
+        "purpose",
+        "status",
+        "location",
+        "createdAt",
+        "updatedAt"
+      ]
     }
   },
   "auth": {
-    "providers": ["password"]
+    "providers": [
+      "password",
+      "anonymous"
+    ]
   },
   "firestore": {
     "structure": [
       {
         "path": "/users/{userId}",
         "definition": {
-          "entityName": "UserProfile",
-          "schema": { "$ref": "#/backend/entities/UserProfile" },
-          "description": "Basic user account data."
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Collection for all user profiles. `userId` corresponds to `request.auth.uid`. Allows users to manage their own profile. Admin users may have broader access. Includes denormalized 'role' for authorization."
         }
       },
       {
-        "path": "/caseRequirements/{caseId}",
+        "path": "/users/{userId}/clientProfile",
         "definition": {
-          "entityName": "CaseRequirement",
-          "schema": { "$ref": "#/backend/entities/CaseRequirement" },
-          "description": "Statutory guidance for legal matters."
+          "entityName": "ClientProfile",
+          "schema": {
+            "$ref": "#/backend/entities/ClientProfile"
+          },
+          "description": "Subcollection storing a client's specific profile data. Only accessible by the client themselves (where `userId` matches `request.auth.uid`).",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the User, which must match the authenticated user's UID."
+            }
+          ]
         }
       },
       {
-        "path": "/cases/{caseId}/documents/{docId}",
+        "path": "/users/{userId}/lawyerProfile",
         "definition": {
-          "entityName": "CaseDocument",
-          "schema": { "$ref": "#/backend/entities/CaseDocument" },
-          "description": "Folder-based document records for an active case."
+          "entityName": "LawyerProfile",
+          "schema": {
+            "$ref": "#/backend/entities/LawyerProfile"
+          },
+          "description": "Subcollection storing a lawyer's specific profile data. Only accessible by the lawyer themselves (where `userId` matches `request.auth.uid`).",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the User, which must match the authenticated user's UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/admin_roles/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Dedicated collection for administrative role management (DBAC - Existence over Content). A document exists here for each user with an 'admin' role, where the document ID is the user's UID. Used for checking admin privileges via `exists()` in security rules.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the User who has an admin role."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{clientId}/bookedAppointments/{appointmentId}",
+        "definition": {
+          "entityName": "Appointment",
+          "schema": {
+            "$ref": "#/backend/entities/Appointment"
+          },
+          "description": "Subcollection representing appointments booked by a specific client. Documents here contain the full appointment details. This path allows clients to securely list and manage their own appointments (where `clientId` in path matches `request.auth.uid`). Includes denormalized 'clientId' and 'lawyerId' for authorization independence.",
+          "params": [
+            {
+              "name": "clientId",
+              "description": "The unique identifier of the Client who booked the appointment, matching `request.auth.uid` for access."
+            },
+            {
+              "name": "appointmentId",
+              "description": "The unique identifier of the Appointment."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{lawyerId}/myAppointments/{appointmentId}",
+        "definition": {
+          "entityName": "Appointment",
+          "schema": {
+            "$ref": "#/backend/entities/Appointment"
+          },
+          "description": "Subcollection representing appointments assigned to a specific lawyer. Documents here contain the full appointment details. This path allows lawyers to securely list and manage their own appointments (where `lawyerId` in path matches `request.auth.uid`). Includes denormalized 'clientId' and 'lawyerId' for authorization independence.",
+          "params": [
+            {
+              "name": "lawyerId",
+              "description": "The unique identifier of the Lawyer involved in the appointment, matching `request.auth.uid` for access."
+            },
+            {
+              "name": "appointmentId",
+              "description": "The unique identifier of the Appointment."
+            }
+          ]
         }
       }
-    ]
+    ],
+    "reasoning": "The recommended Firestore structure addresses the reported `Missing or insufficient permissions` error for the `/appointments` collection by implementing strong structural segregation and denormalization for authorization independence and secure `list` operations (QAPs). \n\n**Authorization Independence & QAPs Strategy:**\n1.  **Elimination of a global `/appointments` collection:** The core issue with the error `method: \"list\", path: \"/databases/(default)/documents/appointments\"` is that a top-level collection containing private data cannot be securely listed by individual users without exposing all documents or requiring complex, inefficient `get()` calls in rules (which violates Authorization Independence). Instead, appointments are now indexed under the specific users (clients and lawyers) who own or are involved in them.\n2.  **Denormalization for Joint Ownership:** Since an `Appointment` involves both a `ClientProfile` and a `LawyerProfile`, the appointment data is denormalized and stored in two distinct subcollections: `/users/{clientId}/bookedAppointments/{appointmentId}` and `/users/{lawyerId}/myAppointments/{appointmentId}`. This ensures that a user's `uid` is always part of the path when listing their appointments.\n3.  **Secure `list` operations:**\n    *   **For Clients:** A client can `list` `/users/$(request.auth.uid)/bookedAppointments`. The security rules can then simply check `allow list: if request.auth.uid == clientId;` (where `clientId` is the path wildcard), which intrinsically limits the `list` results to only appointments where the requesting user is the client. This satisfies the QAPs principle as rules are not used as filters on document contents, but rather enforce access based on path.\n    *   **For Lawyers:** Similarly, a lawyer can `list` `/users/$(request.auth.uid)/myAppointments`. Rules will check `allow list: if request.auth.uid == lawyerId;`.\n    *   Each appointment document in these subcollections contains a full copy of the `Appointment` entity data, including `clientId` and `lawyerId` as denormalized fields. This removes the need for `get()` operations in security rules to check parent documents for ownership, achieving **Authorization Independence**.\n4.  **Structural Segregation:** User profiles (ClientProfile, LawyerProfile) are nested directly under the `User` document (`/users/{userId}/clientProfile` and `/users/{userId}/lawyerProfile`). This ensures that a user can only access their own profile data, as `userId` in the path must match `request.auth.uid`. Global roles, like 'admin', are handled by an `admin_roles/{userId}` collection, leveraging 'existence over content' for robust DBAC.\n\nThis design significantly enhances security, simplifies rules, and ensures `list` operations are performant and secure by adhering to the stated core design principles and strategy mandates."
   }
 }
