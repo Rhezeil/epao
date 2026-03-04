@@ -4,29 +4,8 @@ service cloud.firestore {
 
     /**
      * CORE PHILOSOPHY
-     * This ruleset enforces a strict Ownership and Path-Based Authorization model. 
-     * Access to data is primarily determined by the user's identity (UID) matching 
-     * the hierarchical path where the data is stored.
-     *
-     * DATA STRUCTURE
-     * Data is organized hierarchically under the `/users/{userId}` path. Each user has 
-     * dedicated subcollections for their specific profiles (Client vs. Lawyer) and 
-     * their specific appointment views (booked vs. assigned).
-     *
-     * KEY SECURITY DECISIONS
-     * 1. Elimination of Global Collections: To resolve "Missing or insufficient permissions" 
-     *    errors during list operations, global collections like `/appointments` have been 
-     *    removed in favor of user-specific subcollections.
-     * 2. Authorization Independence: Appointment data is denormalized across both the client's 
-     *    and the lawyer's trees. This allows rules to perform fast, local checks without 
-     *    cross-document lookups (get() calls).
-     * 3. DBAC (Document-Based Access Control): Administrative privileges are determined by 
-     *    the existence of a document in the `/admin_roles` collection.
-     *
-     * DENORMALIZATION FOR AUTHORIZATION
-     * Appointment documents contain 'clientId' and 'lawyerId' fields. Rules enforce 
-     * that these fields match the path wildcards to ensure relational integrity 
-     * and prevent data injection into the wrong user's tree.
+     * This ruleset balances public access for the legal navigator and guest bookings
+     * with strict administrative and professional oversight for case management.
      */
 
     // --- Helper Functions ---
@@ -36,103 +15,98 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    /** @description Checks if the user is a registered Admin. */
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    /** @description Checks if the user is an authorized Lawyer. */
+    function isLawyer() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roleLawyer/$(request.auth.uid));
+    }
+
     /** @description Checks if the authenticated user's UID matches the provided userId. */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /** @description Checks if the user is an owner and the document exists (for updates/deletes). */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
-    }
-
-    /** @description Checks if the authenticated user has an entry in the admin_roles collection. */
-    function isAdmin() {
-      return isSignedIn() && exists(/databases/$(database)/documents/admin_roles/$(request.auth.uid));
-    }
-
     // --- Collection Rules ---
 
     /**
-     * @description Rules for the User collection. Users manage their own profiles; Admins have full access.
-     * @path /users/{userId}
-     * @allow (get) Signed-in user reading their own or another profile.
-     * @allow (create) User creating their own profile where document ID matches their UID.
-     * @deny (list) Non-admin users attempting to list all registered users.
-     * @principle Ownership for writes, open read for discovery, admin override.
+     * @description Administrative roles. Allows bootstrap admin creation.
+     */
+    match /admins/{userId} {
+      allow get: if isSignedIn();
+      allow list: if isAdmin();
+      allow create: if isSignedIn() && (request.auth.token.email == "admin@epao.com" || isAdmin()) && request.auth.uid == userId;
+      allow update, delete: if isAdmin();
+    }
+
+    /**
+     * @description Authorized Public Attorney profiles.
+     */
+    match /roleLawyer/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+      
+      match /availability/{dateId} {
+        allow read: if true;
+        allow write: if isOwner(userId) || isAdmin();
+      }
+    }
+
+    /**
+     * @description Citizen user profiles.
      */
     match /users/{userId} {
       allow get: if isSignedIn();
       allow list: if isAdmin();
-      allow create: if isOwner(userId);
+      allow create: if isSignedIn() && request.auth.uid == userId;
       allow update: if isOwner(userId) || isAdmin();
       allow delete: if isAdmin();
 
-      /**
-       * @description Private profile data for users with the 'client' role.
-       * @path /users/{userId}/clientProfile/{profileId}
-       * @allow (list) Client viewing their own profile subcollection.
-       * @deny (create) User attempting to create a profile under a different userId.
-       */
-      match /clientProfile/{profileId} {
-        allow get, list: if isOwner(userId) || isAdmin();
-        allow create: if isOwner(userId);
-        allow update: if isExistingOwner(userId) || isAdmin();
-        allow delete: if isAdmin();
-      }
-
-      /**
-       * @description Private profile data for users with the 'lawyer' role.
-       * @path /users/{userId}/lawyerProfile/{profileId}
-       * @allow (get) Lawyer accessing their own professional details.
-       * @deny (update) Any user attempting to modify another lawyer's profile.
-       */
-      match /lawyerProfile/{profileId} {
-        allow get, list: if isOwner(userId) || isAdmin();
-        allow create: if isOwner(userId);
-        allow update: if isExistingOwner(userId) || isAdmin();
-        allow delete: if isAdmin();
-      }
-
-      /**
-       * @description Appointments indexed by the Client for secure listing.
-       * @path /users/{userId}/bookedAppointments/{appointmentId}
-       * @allow (list) Client listing only the appointments they have booked.
-       * @deny (create) Creating an appointment where the 'clientId' field doesn't match the path.
-       * @principle Path-based relational integrity.
-       */
-      match /bookedAppointments/{appointmentId} {
-        allow get, list: if isOwner(userId) || isAdmin();
-        allow create: if isOwner(userId) && request.resource.data.clientId == userId;
-        allow update: if isExistingOwner(userId) && request.resource.data.clientId == resource.data.clientId;
-        allow delete: if isExistingOwner(userId) || isAdmin();
-      }
-
-      /**
-       * @description Appointments indexed by the Lawyer for secure listing.
-       * @path /users/{userId}/myAppointments/{appointmentId}
-       * @allow (get) Lawyer viewing details of an appointment assigned to them.
-       * @deny (update) Changing the 'lawyerId' on an existing appointment document.
-       */
-      match /myAppointments/{appointmentId} {
-        allow get, list: if isOwner(userId) || isAdmin();
-        allow create: if isOwner(userId) && request.resource.data.lawyerId == userId;
-        allow update: if isExistingOwner(userId) && request.resource.data.lawyerId == resource.data.lawyerId;
-        allow delete: if isExistingOwner(userId) || isAdmin();
+      match /profile/{profileId} {
+        allow read: if isOwner(userId) || isAdmin() || isLawyer();
+        allow write: if isOwner(userId) || isAdmin();
       }
     }
 
     /**
-     * @description Collection for managing administrative privileges.
-     * @path /admin_roles/{userId}
-     * @allow (get) Any signed-in user checking a status.
-     * @deny (write) Any non-admin attempting to grant themselves admin rights.
-     * @principle Existence-based authorization (DBAC).
+     * @description Statutory standards for the Case Navigator. Publicly readable.
      */
-    match /admin_roles/{userId} {
-      allow get: if isSignedIn();
-      allow list: if isAdmin();
-      allow create, update, delete: if isAdmin();
+    match /caseRequirements/{caseId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    /**
+     * @description Global appointments. Allows guest booking and verification.
+     */
+    match /appointments/{appointmentId} {
+      allow get, list, create: if true;
+      allow update: if true; // Guests can reschedule/cancel if they have the ID/Ref
+      allow delete: if isAdmin();
+    }
+
+    /**
+     * @description Official Legal Case records.
+     */
+    match /cases/{caseId} {
+      allow read: if isSignedIn();
+      allow create: if isAdmin() || isLawyer();
+      allow update: if isAdmin() || (isSignedIn() && resource.data.lawyerId == request.auth.uid);
+      allow delete: if isAdmin();
+
+      match /documents/{docId} {
+        allow read, write: if isSignedIn(); // Metadata folder for lawyer workstation
+      }
+    }
+
+    /**
+     * @description Lawyer authorization lookup.
+     */
+    match /lawyersEmail/{email} {
+      allow read: if true;
     }
   }
 }
