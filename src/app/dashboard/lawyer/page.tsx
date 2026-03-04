@@ -133,7 +133,7 @@ export default function LawyerDashboard() {
 
   const availabilityQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'lawyer') return null;
-    return collection(db, "users", user.uid, "availability");
+    return collection(db, "roleLawyer", user.uid, "availability");
   }, [db, user, role]);
 
   const { data: apptsData, isLoading: isApptsLoading } = useCollection(apptsQuery);
@@ -216,7 +216,7 @@ export default function LawyerDashboard() {
       
       dates.forEach(d => {
         const dateStr = format(d, "yyyy-MM-dd");
-        const availRef = doc(db, "users", user.uid, "availability", dateStr);
+        const availRef = doc(db, "roleLawyer", user.uid, "availability", dateStr);
 
         const data = {
           id: dateStr,
@@ -298,7 +298,7 @@ export default function LawyerDashboard() {
 
   const handleDeleteAvailability = () => {
     if (!db || !user || !selectedDayAvail) return;
-    const availRef = doc(db, "users", user.uid, "availability", selectedDayAvail.id);
+    const availRef = doc(db, "roleLawyer", user.uid, "availability", selectedDayAvail.id);
     deleteDocumentNonBlocking(availRef);
     toast({ title: "Entry Removed", description: "Date returned to standard office availability." });
   };
@@ -402,7 +402,7 @@ export default function LawyerDashboard() {
             <CardContent className="p-8 space-y-1">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Today's Consultations</p>
+                  <p className="text-10px font-black uppercase tracking-widest text-muted-foreground">Today's Consultations</p>
                   <p className="text-5xl font-black">
                     {apptsData?.filter(a => a.dateString === format(new Date(), "yyyy-MM-dd") && a.status !== 'cancelled').length || 0}
                   </p>
