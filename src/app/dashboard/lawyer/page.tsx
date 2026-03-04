@@ -1,4 +1,3 @@
-
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -414,7 +413,7 @@ export default function LawyerDashboard() {
                 <div className="p-2 bg-secondary text-white rounded-xl">
                   <CalendarIcon className="h-5 w-5" />
                 </div>
-                <CardTitle className="text-lg font-bold text-secondary">Office Schedule</CardTitle>
+                <CardTitle className="text-lg font-bold text-secondary">Schedule</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="p-0">
