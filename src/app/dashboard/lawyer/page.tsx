@@ -382,7 +382,7 @@ export default function LawyerDashboard() {
               <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Active Caseload</p>
               <p className="text-5xl font-black">{activeCases?.length || 0}</p>
               <p className="text-xs font-bold opacity-80 pt-2 flex items-center gap-1 cursor-pointer hover:opacity-100" onClick={() => router.push('/dashboard/lawyer/cases')}>
-                Manage Registry <ChevronRight className="h-3 w-3" />
+                My Cases <ChevronRight className="h-3 w-3" />
               </p>
             </CardContent>
           </Card>

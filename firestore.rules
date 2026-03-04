@@ -64,6 +64,7 @@ service cloud.firestore {
      */
     match /users/{userId} {
       allow get: if isSignedIn();
+      // Allow lawyers to list users so they can display client names in the 'My Cases' registry.
       allow list: if isAdmin() || isLawyer();
       allow create: if isSignedIn() && (isOwner(userId) || isAdmin());
       allow update: if isOwner(userId) || isAdmin();
@@ -85,10 +86,10 @@ service cloud.firestore {
 
     /**
      * @description Global appointments registry. 
-     * Allows guest booking, management via reference code, and professional registry oversight.
+     * Explicitly allow read (get and list) for all users to support public booking verification 
+     * and lawyer workstation synchronization.
      */
     match /appointments/{appointmentId} {
-      // Explicitly allow read (get and list) for both public lookup and lawyer oversight
       allow read: if true; 
       allow create: if true;
       allow update: if true; 
@@ -101,7 +102,7 @@ service cloud.firestore {
     match /cases/{caseId} {
       allow read: if isSignedIn();
       allow create: if isAdmin() || isLawyer();
-      allow update: if isAdmin() || (isSignedIn() && resource.data.lawyerId == request.auth.uid);
+      allow update: if isAdmin() || (isSignedIn() && (resource.data.lawyerId == request.auth.uid || isLawyer()));
       allow delete: if isAdmin();
 
       match /documents/{docId} {
