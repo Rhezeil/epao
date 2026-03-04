@@ -4,7 +4,7 @@
 import { useAuth } from "@/components/auth-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useFirestore, useCollection, useMemoFirebase, useDoc } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, useDoc, updateDocumentNonBlocking } from "@/firebase";
 import { collection, query, where, doc, onSnapshot } from "firebase/firestore";
 import { 
   Briefcase, 
@@ -21,21 +21,60 @@ import {
   CheckCircle2,
   XCircle,
   CalendarCheck,
-  Scale
+  Scale,
+  MoreVertical,
+  Edit3,
+  Trash2
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState, useMemo } from "react";
-import { format, isBefore, startOfToday } from "date-fns";
+import { format, isBefore, startOfToday, isWeekend, setHours, setMinutes } from "date-fns";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger, 
+  DropdownMenuSeparator 
+} from "@/components/ui/dropdown-menu";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription, 
+  DialogFooter 
+} from "@/components/ui/dialog";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { useToast } from "@/hooks/use-toast";
+
+const HOLIDAYS = [
+  "2024-01-01", "2024-04-09", "2024-05-01", "2024-06-12", "2024-08-26",
+  "2024-11-01", "2024-11-30", "2024-12-25", "2024-12-30", 
+  "2025-01-01", "2025-02-25", "2025-04-17", "2025-04-18", "2025-05-01"
+];
+
+const isHoliday = (date: Date) => {
+  const ds = format(date, "yyyy-MM-dd");
+  return HOLIDAYS.includes(ds);
+};
 
 export default function ClientDashboard() {
   const { user, role, loading } = useAuth();
   const db = useFirestore();
   const router = useRouter();
+  const { toast } = useToast();
+  
   const [assignedLawyer, setAssignedLawyer] = useState<any>(null);
+  
+  // Rescheduling States
+  const [selectedApptToReschedule, setSelectedApptToReschedule] = useState<any>(null);
+  const [rescheduleDate, setRescheduleDate] = useState<Date | undefined>(undefined);
+  const [rescheduleTime, setRescheduleTime] = useState("");
+  const [isRescheduling, setIsRescheduling] = useState(false);
 
   const today = startOfToday();
 
@@ -88,6 +127,84 @@ export default function ClientDashboard() {
       .sort((a, b) => b.date.localeCompare(a.date));
   }, [appts, today]);
 
+  // Rescheduling Slot Logic
+  const reschedDateStr = rescheduleDate ? format(rescheduleDate, "yyyy-MM-dd") : null;
+  const lawyerAvailRef = useMemoFirebase(() => {
+    if (!db || !activeCase?.lawyerId || !reschedDateStr) return null;
+    return doc(db, "roleLawyer", activeCase.lawyerId, "availability", reschedDateStr);
+  }, [db, activeCase?.lawyerId, reschedDateStr]);
+  const { data: lawyerAvail } = useDoc(lawyerAvailRef);
+
+  const globalApptsQuery = useMemoFirebase(() => {
+    if (!db || !reschedDateStr) return null;
+    return query(collection(db, "appointments"), where("dateString", "==", reschedDateStr));
+  }, [db, reschedDateStr]);
+  const { data: globalAppts } = useCollection(globalApptsQuery);
+
+  const timeSlots = useMemo(() => {
+    const slots = [];
+    const now = new Date();
+    for (let h = 8; h <= 16; h++) {
+      for (let m = 0; m < 60; m += 30) {
+        if (h === 12) continue;
+        if (h === 16 && m > 30) continue;
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const displayHour = h % 12 || 12;
+        const timeString = `${displayHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
+        const slotDate = rescheduleDate ? setMinutes(setHours(new Date(rescheduleDate), h), m) : null;
+        const isPast = slotDate ? isBefore(slotDate, now) : false;
+        
+        // Lawyer specific check
+        const isLawyerBusy = globalAppts?.some(a => 
+          a.lawyerId === activeCase?.lawyerId && 
+          a.time === timeString && 
+          a.status !== 'cancelled'
+        );
+
+        let isLawyerOnLeave = false;
+        if (lawyerAvail) {
+          if (lawyerAvail.availabilityType === 'FullDayLeave') isLawyerOnLeave = true;
+          else if (lawyerAvail.availabilityType.includes('Partial')) {
+            const slotVal = h + m / 60;
+            const start = parseInt((lawyerAvail.startTime || "08:00").split(':')[0]);
+            const end = parseInt((lawyerAvail.endTime || "17:00").split(':')[0]);
+            if (lawyerAvail.availabilityType === 'PartialLeave' && slotVal >= start && slotVal < end) isLawyerOnLeave = true;
+            if (lawyerAvail.availabilityType === 'PartialDayAvailable' && (slotVal < start || slotVal >= end)) isLawyerOnLeave = true;
+          }
+        }
+
+        slots.push({ time: timeString, isBooked: isLawyerBusy || isLawyerOnLeave, isPast });
+      }
+    }
+    return slots;
+  }, [rescheduleDate, globalAppts, lawyerAvail, activeCase?.lawyerId]);
+
+  const handleCancel = (apptId: string) => {
+    if (!db) return;
+    updateDocumentNonBlocking(doc(db, "appointments", apptId), { status: "cancelled" });
+    toast({ title: "Appointment Cancelled", description: "The time slot has been released." });
+  };
+
+  const handleRescheduleSubmit = () => {
+    if (!db || !selectedApptToReschedule || !rescheduleDate || !rescheduleTime) return;
+    setIsRescheduling(true);
+    
+    updateDocumentNonBlocking(doc(db, "appointments", selectedApptToReschedule.id), {
+      date: rescheduleDate.toISOString(),
+      dateString: format(rescheduleDate, "yyyy-MM-dd"),
+      time: rescheduleTime,
+      status: "rescheduled"
+    });
+
+    setTimeout(() => {
+      setIsRescheduling(false);
+      setSelectedApptToReschedule(null);
+      setRescheduleDate(undefined);
+      setRescheduleTime("");
+      toast({ title: "Schedule Updated", description: "Your appointment has been successfully rescheduled." });
+    }, 800);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -96,9 +213,7 @@ export default function ClientDashboard() {
     );
   }
 
-  if (!user || role !== 'client') {
-    return null;
-  }
+  if (!user || role !== 'client') return null;
 
   const displayName = profile?.firstName || user?.email?.split('@')[0] || "User";
 
@@ -198,7 +313,7 @@ export default function ClientDashboard() {
               <CardContent className="space-y-4 px-10 pb-10">
                 {upcomingAppts.length > 0 ? (
                   upcomingAppts.map((appt) => (
-                    <div key={appt.id} className="flex items-center justify-between p-5 bg-primary/5 rounded-3xl border border-primary/10 hover:bg-primary/10 transition-colors">
+                    <div key={appt.id} className="flex items-center justify-between p-5 bg-primary/5 rounded-3xl border border-primary/10 hover:bg-primary/10 transition-colors group">
                       <div className="flex items-center gap-5">
                         <div className="h-14 w-14 rounded-2xl bg-white flex flex-col items-center justify-center shadow-sm border border-primary/5">
                           <span className="text-[10px] font-black text-primary leading-none uppercase">{format(new Date(appt.date), "MMM")}</span>
@@ -217,7 +332,31 @@ export default function ClientDashboard() {
                           </div>
                         </div>
                       </div>
-                      <Badge className="bg-primary/10 text-primary border-none text-[9px] font-black uppercase">{appt.status}</Badge>
+                      <div className="flex items-center gap-4">
+                        <Badge className="bg-primary/10 text-primary border-none text-[9px] font-black uppercase">{appt.status}</Badge>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="rounded-xl w-48 p-2">
+                            <DropdownMenuItem 
+                              className="rounded-lg font-bold text-primary cursor-pointer"
+                              onClick={() => setSelectedApptToReschedule(appt)}
+                            >
+                              <Edit3 className="mr-2 h-4 w-4" /> Reschedule Visit
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              className="rounded-lg font-bold text-destructive cursor-pointer"
+                              onClick={() => handleCancel(appt.id)}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" /> Cancel Booking
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
                   ))
                 ) : (
@@ -312,6 +451,81 @@ export default function ClientDashboard() {
             </Card>
           </div>
         </div>
+
+        {/* --- RESCHEDULE DIALOG --- */}
+        <Dialog open={!!selectedApptToReschedule} onOpenChange={() => setSelectedApptToReschedule(null)}>
+          <DialogContent className="rounded-[3rem] max-w-4xl p-0 overflow-hidden border-none shadow-2xl">
+            <DialogHeader className="p-8 bg-primary text-white">
+              <DialogTitle className="text-3xl font-black">Reschedule Visit</DialogTitle>
+              <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">
+                Modifying Appointment Ref: {selectedApptToReschedule?.referenceCode}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="p-10 space-y-8 max-h-[70vh] overflow-y-auto">
+              <div className="grid lg:grid-cols-2 gap-12">
+                <div className="space-y-4">
+                  <p className="text-[10px] font-black uppercase text-primary/40 tracking-[0.2em] ml-2">1. Choose New Date</p>
+                  <div className="p-4 bg-primary/5 rounded-3xl border border-primary/10 shadow-inner">
+                    <CalendarComponent
+                      mode="single"
+                      selected={rescheduleDate}
+                      onSelect={(d) => {
+                        if (d && (isWeekend(d) || isHoliday(d) || isBefore(d, startOfToday()))) return;
+                        setRescheduleDate(d);
+                        setRescheduleTime("");
+                      }}
+                      disabled={[{ before: startOfToday() }, { dayOfWeek: [0, 6] }, (d) => isHoliday(d)]}
+                      className="rounded-md border-none mx-auto"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    <p className="text-[10px] font-black uppercase text-primary/40 tracking-[0.2em]">2. Select Available Slot</p>
+                    {!rescheduleDate ? (
+                      <div className="h-[300px] flex flex-col items-center justify-center bg-primary/5 rounded-3xl border-2 border-dashed border-primary/10 text-muted-foreground/40">
+                        <Clock className="h-12 w-12 mb-2" />
+                        <p className="text-xs font-black uppercase">Pick a Date First</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-2 max-h-[350px] overflow-y-auto p-1 scrollbar-hide">
+                        {timeSlots.map(slot => (
+                          <Button
+                            key={slot.time}
+                            disabled={slot.isBooked || slot.isPast}
+                            variant={rescheduleTime === slot.time ? "default" : "outline"}
+                            className={cn(
+                              "h-12 rounded-xl font-bold transition-all border-2",
+                              rescheduleTime === slot.time 
+                                ? "bg-primary text-white border-primary shadow-md scale-105" 
+                                : slot.isBooked || slot.isPast
+                                ? "bg-red-50 text-red-300 border-red-100 opacity-50 cursor-not-allowed" 
+                                : "bg-white text-primary border-primary/10 hover:bg-primary/5"
+                            )}
+                            onClick={() => setRescheduleTime(slot.time)}
+                          >
+                            {slot.time}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <DialogFooter className="p-8 bg-muted/30">
+              <Button variant="outline" onClick={() => setSelectedApptToReschedule(null)} className="rounded-xl h-14 px-8 font-bold">Cancel</Button>
+              <Button 
+                onClick={handleRescheduleSubmit} 
+                disabled={!rescheduleDate || !rescheduleTime || isRescheduling}
+                className="rounded-xl h-14 bg-primary text-white font-black px-12 shadow-xl"
+              >
+                {isRescheduling ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : <CheckCircle2 className="mr-2 h-5 w-5" />}
+                Confirm Reschedule
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
