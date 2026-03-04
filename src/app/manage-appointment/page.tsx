@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -73,6 +74,14 @@ export default function ManageAppointmentPage() {
 
   // Reschedule Availability Queries
   const rescheduleDateStr = rescheduleDate ? format(rescheduleDate, "yyyy-MM-dd") : null;
+  
+  // Assigned Lawyer Availability
+  const lawyerAvailRef = useMemoFirebase(() => {
+    if (!db || !appointment?.lawyerId || !rescheduleDateStr) return null;
+    return doc(db, "roleLawyer", appointment.lawyerId, "availability", rescheduleDateStr);
+  }, [db, appointment?.lawyerId, rescheduleDateStr]);
+  const { data: lawyerAvail } = useDoc(lawyerAvailRef);
+
   const existingApptsQuery = useMemoFirebase(() => {
     if (!db || !rescheduleDateStr) return null;
     return query(collection(db, "appointments"), where("dateString", "==", rescheduleDateStr));
@@ -91,12 +100,46 @@ export default function ManageAppointmentPage() {
         const timeString = `${displayHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
         const slotDate = rescheduleDate ? setMinutes(setHours(new Date(rescheduleDate), h), m) : null;
         const isPast = slotDate ? isBefore(slotDate, now) : false;
-        const isBooked = existingAppts?.some(a => a.time === timeString && a.status !== 'cancelled');
-        slots.push({ time: timeString, isBooked, isPast });
+        
+        // Global booking check
+        const isGloballyBooked = existingAppts?.some(a => a.time === timeString && a.status !== 'cancelled');
+        
+        // Lawyer-specific booking check
+        const isLawyerAssignedHere = appointment?.lawyerId && existingAppts?.some(a => 
+          a.time === timeString && 
+          a.status !== 'cancelled' && 
+          a.lawyerId === appointment.lawyerId
+        );
+
+        // Professional Availability (Leaves/Overrides)
+        let isLawyerUnavailable = false;
+        if (lawyerAvail) {
+          if (lawyerAvail.availabilityType === 'FullDayLeave') {
+            isLawyerUnavailable = true;
+          } else if (lawyerAvail.availabilityType.includes('Partial')) {
+            const slotTimeVal = h + m / 60;
+            const startArr = (lawyerAvail.startTime || "08:00").split(':');
+            const endArr = (lawyerAvail.endTime || "17:00").split(':');
+            const startVal = parseInt(startArr[0]) + parseInt(startArr[1]) / 60;
+            const endVal = parseInt(endArr[0]) + parseInt(endArr[1]) / 60;
+
+            if (lawyerAvail.availabilityType === 'PartialLeave') {
+              if (slotTimeVal >= startVal && slotTimeVal < endVal) isLawyerUnavailable = true;
+            } else if (lawyerAvail.availabilityType === 'PartialDayAvailable') {
+              if (slotTimeVal < startVal || slotTimeVal >= endVal) isLawyerUnavailable = true;
+            }
+          }
+        }
+
+        slots.push({ 
+          time: timeString, 
+          isBooked: isLawyerAssignedHere || isLawyerUnavailable, 
+          isPast 
+        });
       }
     }
     return slots;
-  }, [rescheduleDate, existingAppts]);
+  }, [rescheduleDate, existingAppts, appointment?.lawyerId, lawyerAvail]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

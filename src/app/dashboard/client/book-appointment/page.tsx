@@ -110,6 +110,15 @@ function BookAppointmentContent() {
     }
   }, [profile, user]);
 
+  const dateStr = selectedDate ? format(selectedDate, "yyyy-MM-dd") : null;
+  
+  // Lawyer Availability Check
+  const lawyerAvailRef = useMemoFirebase(() => {
+    if (!db || !activeCase?.lawyerId || !dateStr) return null;
+    return doc(db, "roleLawyer", activeCase.lawyerId, "availability", dateStr);
+  }, [db, activeCase?.lawyerId, dateStr]);
+  const { data: lawyerAvail } = useDoc(lawyerAvailRef);
+
   const getServiceLabel = (p: string) => {
     switch (p) {
       case 'consultation': return 'Legal Consultation';
@@ -120,7 +129,6 @@ function BookAppointmentContent() {
     }
   };
 
-  const dateStr = selectedDate ? format(selectedDate, "yyyy-MM-dd") : null;
   const existingApptsQuery = useMemoFirebase(() => {
     if (!db || !dateStr) return null;
     return query(collection(db, "appointments"), where("dateString", "==", dateStr));
@@ -144,17 +152,46 @@ function BookAppointmentContent() {
         const slotDate = selectedDate ? setMinutes(setHours(new Date(selectedDate), h), m) : null;
         
         const isPast = slotDate ? isBefore(slotDate, now) : false;
-        const isBooked = existingAppts?.some(a => a.time === timeString && a.status !== 'cancelled');
+        
+        // Slot is booked globally
+        const isBookedGlobally = existingAppts?.some(a => a.time === timeString && a.status !== 'cancelled');
+        
+        // Slot is specific to this lawyer
+        const isLawyerAssignedToThisSlot = existingAppts?.some(a => 
+          a.time === timeString && 
+          a.status !== 'cancelled' && 
+          a.lawyerId === activeCase?.lawyerId
+        );
+
+        // Check Lawyer Professional Availability (Leaves/Partial Hours)
+        let isLawyerUnavailable = false;
+        if (lawyerAvail) {
+          if (lawyerAvail.availabilityType === 'FullDayLeave') {
+            isLawyerUnavailable = true;
+          } else if (lawyerAvail.availabilityType.includes('Partial')) {
+            const slotTimeVal = h + m / 60;
+            const startArr = (lawyerAvail.startTime || "08:00").split(':');
+            const endArr = (lawyerAvail.endTime || "17:00").split(':');
+            const startVal = parseInt(startArr[0]) + parseInt(startArr[1]) / 60;
+            const endVal = parseInt(endArr[0]) + parseInt(endArr[1]) / 60;
+
+            if (lawyerAvail.availabilityType === 'PartialLeave') {
+              if (slotTimeVal >= startVal && slotTimeVal < endVal) isLawyerUnavailable = true;
+            } else if (lawyerAvail.availabilityType === 'PartialDayAvailable') {
+              if (slotTimeVal < startVal || slotTimeVal >= endVal) isLawyerUnavailable = true;
+            }
+          }
+        }
         
         slots.push({
           time: timeString,
-          isBooked,
+          isBooked: isLawyerAssignedToThisSlot || isLawyerUnavailable,
           isPast
         });
       }
     }
     return slots;
-  }, [selectedDate, existingAppts]);
+  }, [selectedDate, existingAppts, activeCase?.lawyerId, lawyerAvail]);
 
   const validateStep2 = () => {
     const { name, mobile, email, address } = clientInfo;
@@ -235,10 +272,15 @@ function BookAppointmentContent() {
         <div className="space-y-2">
           <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Schedule Follow-up</h1>
           {assignedLawyer && (
-            <p className="text-sm font-bold text-secondary flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4" /> 
-              Booking with Atty. {assignedLawyer.firstName} {assignedLawyer.lastName}
-            </p>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <p className="text-sm font-bold text-secondary flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4" /> 
+                Booking with Atty. {assignedLawyer.firstName} {assignedLawyer.lastName}
+              </p>
+              {lawyerAvail && lawyerAvail.availabilityType.includes('Leave') && (
+                <Badge className="bg-red-100 text-red-700 text-[10px] font-black uppercase w-fit">Lawyer On Leave</Badge>
+              )}
+            </div>
           )}
         </div>
 
@@ -287,17 +329,17 @@ function BookAppointmentContent() {
                 <div className="space-y-6">
                   <div className="space-y-4">
                     <div className="flex justify-between items-end">
-                      <Label className="text-xs font-black text-primary/60 uppercase tracking-widest">3. Available Time Slots</Label>
+                      <Label className="text-xs font-black text-primary/60 uppercase tracking-widest">3. Lawyer Availability Slots</Label>
                       <div className="flex gap-2 text-[8px] font-bold uppercase">
                         <span className="flex items-center gap-1"><div className="w-2 h-2 bg-green-500 rounded-full" /> Open</span>
-                        <span className="flex items-center gap-1"><div className="w-2 h-2 bg-red-500 rounded-full" /> Full</span>
+                        <span className="flex items-center gap-1"><div className="w-2 h-2 bg-red-500 rounded-full" /> Unavailable</span>
                       </div>
                     </div>
                     
                     {!selectedDate ? (
                       <div className="h-[300px] flex flex-col items-center justify-center text-muted-foreground bg-primary/5 rounded-3xl border border-dashed">
                         <Clock className="h-10 w-10 mb-2 opacity-20" />
-                        <p className="text-sm font-bold text-center">Select a date to view availability.</p>
+                        <p className="text-sm font-bold text-center">Select a date to view your lawyer's schedule.</p>
                       </div>
                     ) : (
                       <div className="grid grid-cols-2 gap-2 max-h-[350px] overflow-y-auto p-2 scrollbar-hide">
@@ -311,7 +353,7 @@ function BookAppointmentContent() {
                               selectedTime === slot.time 
                                 ? "bg-yellow-400 text-black border-yellow-500" 
                                 : slot.isBooked || slot.isPast
-                                ? "bg-red-50 text-red-300 border-red-100 opacity-50" 
+                                ? "bg-red-50 text-red-300 border-red-100 opacity-50 cursor-not-allowed" 
                                 : "bg-green-500 text-white border-green-600 hover:bg-green-600 shadow-sm"
                             )}
                             onClick={() => setSelectedTime(slot.time)}
@@ -362,14 +404,14 @@ function BookAppointmentContent() {
                     <Label className="text-xs font-black text-primary/60 uppercase tracking-widest">Email Address</Label>
                     <Input 
                       disabled
-                      className="h-14 rounded-2xl border-primary/20 bg-muted/50 font-bold"
+                      className="h-14 rounded-2xl border-primary/20 bg-muted/50 font-bold text-muted-foreground"
                       value={clientInfo.email}
                     />
                   </div>
                   <div className="space-y-2 md:col-span-2">
                     <Label className="text-xs font-black text-primary/60 uppercase tracking-widest">Home Address</Label>
                     <Textarea 
-                      className="min-h-[100px] rounded-2xl border-primary/20 bg-white font-bold"
+                      className="min-h-[100px] rounded-2xl border-primary/20 bg-white font-bold pt-4"
                       value={clientInfo.address}
                       onChange={(e) => setClientInfo({...clientInfo, address: e.target.value})}
                     />
@@ -469,7 +511,7 @@ function BookAppointmentContent() {
 
 export default function BookAppointmentPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Initializing Scheduler...</div>}>
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen text-primary font-black animate-pulse">Initializing Scheduler...</div>}>
       <BookAppointmentContent />
     </Suspense>
   );
