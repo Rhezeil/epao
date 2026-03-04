@@ -17,7 +17,10 @@ service cloud.firestore {
 
     /** @description Checks if the user is a registered Admin. */
     function isAdmin() {
-      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        request.auth.token.email == "admin@epao.com"
+      );
     }
 
     /** @description Checks if the user is an authorized Lawyer. */
@@ -84,6 +87,7 @@ service cloud.firestore {
      * @description Global appointments. Allows guest booking and verification.
      */
     match /appointments/{appointmentId} {
+      // Guests need list to search by reference code, Admins need list for registry.
       allow get, list, create: if true;
       allow update: if true; // Guests can reschedule/cancel if they have the ID/Ref
       allow delete: if isAdmin();
