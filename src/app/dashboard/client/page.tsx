@@ -103,7 +103,6 @@ export default function ClientDashboard() {
               <Heart className="h-8 w-8" />
             </div>
             <div>
-              <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Client Portal</h1>
               <p className="text-muted-foreground font-medium">Welcome back. Track your legal journey and upcoming visits.</p>
             </div>
           </div>
