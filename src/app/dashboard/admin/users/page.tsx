@@ -35,7 +35,10 @@ import {
   Scale,
   Save,
   X,
-  UserCheck
+  UserCheck,
+  CheckCircle2,
+  XCircle,
+  Clock
 } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -131,6 +134,18 @@ export default function AdminUsersPage() {
   }, [db, selectedClientId, currentUser]);
   
   const { data: selectedProfile } = useDoc(profileRef);
+
+  // Client History Query
+  const historyQuery = useMemoFirebase(() => {
+    if (!db || !selectedClientId || !currentUser) return null;
+    return query(
+      collection(db, "appointments"), 
+      where("clientId", "==", selectedClientId),
+      orderBy("createdAt", "desc")
+    );
+  }, [db, selectedClientId, currentUser]);
+
+  const { data: clientHistory, isLoading: isHistoryLoading } = useCollection(historyQuery);
 
   const selectedUser = useMemo(() => 
     users?.find(u => u.id === selectedClientId), 
@@ -698,11 +713,53 @@ export default function AdminUsersPage() {
                   )}
                 </TabsContent>
 
-                <TabsContent value="history" className="pt-6 animate-in slide-in-from-right-4">
-                  <div className="text-center py-12 bg-muted/20 rounded-3xl border border-dashed">
-                    <History className="h-10 w-10 mx-auto text-primary/10 mb-2" />
-                    <p className="text-sm font-bold text-muted-foreground">Audit logs and visit history are being processed...</p>
+                <TabsContent value="history" className="pt-6 animate-in slide-in-from-right-4 space-y-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Chronological Visit History</h4>
+                    <Badge variant="outline" className="font-bold text-[9px] uppercase">{clientHistory?.length || 0} Records</Badge>
                   </div>
+                  
+                  {isHistoryLoading ? (
+                    <div className="py-12 flex justify-center"><Loader2 className="animate-spin h-8 w-8 text-primary/20" /></div>
+                  ) : clientHistory && clientHistory.length > 0 ? (
+                    <div className="space-y-3">
+                      {clientHistory.map((appt) => (
+                        <div key={appt.id} className="p-4 bg-muted/20 rounded-2xl border border-primary/5 flex items-center justify-between group hover:bg-white transition-colors">
+                          <div className="flex items-center gap-4">
+                            <div className={cn(
+                              "h-10 w-10 rounded-xl flex items-center justify-center",
+                              appt.status === 'completed' ? "bg-green-50 text-green-600" :
+                              appt.status === 'cancelled' ? "bg-red-50 text-red-600" :
+                              "bg-primary/5 text-primary"
+                            )}>
+                              {appt.status === 'completed' ? <CheckCircle2 className="h-5 w-5" /> :
+                               appt.status === 'cancelled' ? <XCircle className="h-5 w-5" /> :
+                               <Clock className="h-5 w-5" />}
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-primary">{appt.caseType}</p>
+                              <p className="text-[9px] text-muted-foreground font-black uppercase tracking-tighter">
+                                {format(new Date(appt.date), "PPP")} • {appt.time} • REF: {appt.referenceCode}
+                              </p>
+                            </div>
+                          </div>
+                          <Badge className={cn(
+                            "font-black text-[8px] uppercase",
+                            appt.status === 'completed' ? "bg-green-500" :
+                            appt.status === 'cancelled' ? "bg-red-500" :
+                            "bg-primary"
+                          )}>
+                            {appt.status}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 bg-muted/20 rounded-3xl border border-dashed">
+                      <History className="h-10 w-10 mx-auto text-primary/10 mb-2" />
+                      <p className="text-sm font-bold text-muted-foreground italic">No past visit history found for this resident.</p>
+                    </div>
+                  )}
                 </TabsContent>
               </Tabs>
             </div>

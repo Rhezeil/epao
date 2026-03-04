@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -31,7 +32,8 @@ import {
   ShieldCheck,
   Clock,
   Heart,
-  Gavel
+  Gavel,
+  History
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
@@ -81,6 +83,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
         { icon: LayoutDashboard, label: "System Analytics", path: "/dashboard/admin" },
         { icon: ShieldCheck, label: "Client Triage", path: "/dashboard/admin/triage" },
         { icon: Users, label: "Client Directory", path: "/dashboard/admin/users" },
+        { icon: History, label: "Visit Registry", path: "/dashboard/admin/appointments" },
         { icon: Briefcase, label: "Lawyer Directory", path: "/dashboard/admin/lawyers" },
         { icon: Database, label: "Legal Standards", path: "/dashboard/admin/case-requirements" },
       ];
