@@ -26,7 +26,7 @@ service cloud.firestore {
     /** @description Checks if the user is an authorized Lawyer. */
     function isLawyer() {
       return isSignedIn() && (
-        request.auth.token.email.matches('.*@lawyers\\.com$') ||
+        request.auth.token.email.matches('(?i).*@lawyers\\.com$') ||
         exists(/databases/$(database)/documents/roleLawyer/$(request.auth.uid))
       );
     }
@@ -67,7 +67,8 @@ service cloud.firestore {
      */
     match /users/{userId} {
       allow get: if isSignedIn();
-      // Allow lawyers to list users so they can display client names in the 'My Cases' registry.
+      // Allow lawyers to list users so they can display client names in the workstation.
+      // Explicitly allow list for staff coordination.
       allow list: if isAdmin() || isLawyer();
       allow create: if isSignedIn() && (isOwner(userId) || isAdmin());
       allow update: if isOwner(userId) || isAdmin();
@@ -93,7 +94,7 @@ service cloud.firestore {
      * and lawyer workstation synchronization.
      */
     match /appointments/{appointmentId} {
-      allow get, list: if true; 
+      allow read: if true; 
       allow create: if true;
       allow update: if true; 
       allow delete: if isAdmin();
