@@ -5,7 +5,7 @@ import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { useAuth } from "@/components/auth-provider";
 import { useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking } from "@/firebase";
-import { collection, query, orderBy, where } from "firebase/firestore";
+import { collection, query, orderBy, where, doc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -23,7 +23,8 @@ import {
   Clock, 
   AlertCircle,
   FileText,
-  User
+  User,
+  Briefcase
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -42,7 +43,13 @@ export default function AdminAppointmentsRegistry() {
     return query(collection(db, "appointments"), orderBy("createdAt", "desc"));
   }, [db, user, role]);
 
+  const lawyersQuery = useMemoFirebase(() => {
+    if (!db || !user || role !== 'admin') return null;
+    return query(collection(db, "roleLawyer"));
+  }, [db, user, role]);
+
   const { data: appts, isLoading } = useCollection(apptsQuery);
+  const { data: lawyers } = useCollection(lawyersQuery);
 
   const filteredAppts = useMemo(() => {
     if (!appts) return [];
@@ -122,61 +129,77 @@ export default function AdminAppointmentsRegistry() {
                   <TableRow>
                     <TableHead className="px-8 font-black text-[10px] uppercase tracking-widest text-primary/40">Filing Ref</TableHead>
                     <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40">Citizen</TableHead>
-                    <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40">Matter</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40">Case</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40">Assigned Attorney</TableHead>
                     <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40">Schedule</TableHead>
                     <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40">Status</TableHead>
                     <TableHead className="text-right px-8 font-black text-[10px] uppercase tracking-widest text-primary/40">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredAppts.map((a) => (
-                    <TableRow key={a.id} className="hover:bg-primary/5 transition-colors group">
-                      <TableCell className="px-8 py-6">
-                        <p className="font-black text-primary leading-none">{a.referenceCode}</p>
-                        <p className="text-[9px] text-muted-foreground font-bold mt-1">LOGGED: {format(new Date(a.createdAt), "MMM dd, HH:mm")}</p>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <User className="h-3 w-3 text-primary/40" />
-                          <span className="text-sm font-bold text-primary">{a.guestName || a.clientName}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="bg-primary/5 border-primary/10 text-[9px] font-black uppercase">
-                          {a.caseType}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-0.5">
-                          <p className="text-xs font-bold text-primary">{format(new Date(a.date), "MMM dd, yyyy")}</p>
-                          <p className="text-[10px] text-muted-foreground font-medium">{a.time}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={cn(
-                          "font-black text-[9px] uppercase px-3",
-                          a.status === 'completed' ? 'bg-blue-500' : 
-                          a.status === 'cancelled' ? 'bg-red-500' : 
-                          a.status === 'pending' ? 'bg-amber-500' : 'bg-green-500'
-                        )}>
-                          {a.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right px-8">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-9 w-9 rounded-xl text-destructive hover:bg-destructive/10"
-                          onClick={() => handleDelete(a.id, a.referenceCode)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {filteredAppts.map((a) => {
+                    const lawyer = lawyers?.find(l => l.id === a.lawyerId);
+                    return (
+                      <TableRow key={a.id} className="hover:bg-primary/5 transition-colors group">
+                        <TableCell className="px-8 py-6">
+                          <p className="font-black text-primary leading-none">{a.referenceCode}</p>
+                          <p className="text-[9px] text-muted-foreground font-bold mt-1">LOGGED: {format(new Date(a.createdAt), "MMM dd, HH:mm")}</p>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <User className="h-3 w-3 text-primary/40" />
+                            <span className="text-sm font-bold text-primary">{a.guestName || a.clientName}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="bg-primary/5 border-primary/10 text-[9px] font-black uppercase">
+                            {a.caseType}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {lawyer ? (
+                            <div className="flex items-center gap-2">
+                              <Briefcase className="h-3 w-3 text-secondary/60" />
+                              <span className="text-xs font-bold text-secondary">
+                                {lawyer.firstName ? `Atty. ${lawyer.firstName} ${lawyer.lastName}` : lawyer.email.split('@')[0]}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-[10px] font-bold text-muted-foreground italic uppercase">Unassigned</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-0.5">
+                            <p className="text-xs font-bold text-primary">{format(new Date(a.date), "MMM dd, yyyy")}</p>
+                            <p className="text-[10px] text-muted-foreground font-medium">{a.time}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={cn(
+                            "font-black text-[9px] uppercase px-3",
+                            a.status === 'completed' ? 'bg-blue-500' : 
+                            a.status === 'cancelled' ? 'bg-red-500' : 
+                            a.status === 'pending' ? 'bg-amber-500' : 'bg-green-500'
+                          )}>
+                            {a.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right px-8">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-9 w-9 rounded-xl text-destructive hover:bg-destructive/10"
+                            onClick={() => handleDelete(a.id, a.referenceCode)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                   {filteredAppts.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-24 text-muted-foreground italic font-medium">
+                      <TableCell colSpan={7} className="text-center py-24 text-muted-foreground italic font-medium">
                         <History className="h-12 w-12 mx-auto mb-4 opacity-10" />
                         No archival records match your search criteria.
                       </TableCell>
