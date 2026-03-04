@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -181,7 +180,7 @@ export default function ManageAppointmentPage() {
           <div className="inline-flex p-3 bg-primary/10 rounded-2xl mb-2">
             <CalendarIcon className="h-10 w-10 text-primary" />
           </div>
-          <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Citizen Appointment Manager</h1>
+          <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Client Appointment Manager</h1>
           <p className="text-muted-foreground font-medium max-w-md mx-auto">Verify your status, reschedule, or cancel your visit using your unique reference code.</p>
         </div>
 
