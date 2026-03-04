@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -35,6 +36,7 @@ import {
   History
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { cn } from "@/lib/utils";
@@ -131,7 +133,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.path + item.label}>
                   <SidebarMenuButton 
-                    onClick={() => router.push(item.path)}
+                    asChild
                     isActive={pathname === item.path}
                     className={cn(
                       "flex items-center gap-3 px-4 py-6 rounded-2xl transition-all duration-300",
@@ -140,11 +142,13 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
                         : "text-primary hover:bg-primary/5"
                     )}
                   >
-                    <item.icon className={cn(
-                      "h-5 w-5",
-                      pathname === item.path ? "text-white" : "text-primary"
-                    )} />
-                    <span className="font-bold text-sm">{item.label}</span>
+                    <Link href={item.path}>
+                      <item.icon className={cn(
+                        "h-5 w-5",
+                        pathname === item.path ? "text-white" : "text-primary"
+                      )} />
+                      <span className="font-bold text-sm">{item.label}</span>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -172,9 +176,18 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
               <SidebarMenu>
                 {user && (
                   <SidebarMenuItem>
-                    <SidebarMenuButton onClick={() => router.push('/profile')} className="w-full text-primary hover:bg-primary/5 rounded-xl">
-                      <Settings className="h-4 w-4 mr-2" />
-                      <span className="text-xs font-bold">Profile Settings</span>
+                    <SidebarMenuButton 
+                      asChild 
+                      isActive={pathname === '/profile'}
+                      className={cn(
+                        "w-full rounded-xl transition-all",
+                        pathname === '/profile' ? "bg-primary/10 text-primary" : "text-primary hover:bg-primary/5"
+                      )}
+                    >
+                      <Link href="/profile">
+                        <Settings className="h-4 w-4 mr-2" />
+                        <span className="text-xs font-bold">Profile Settings</span>
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 )}
@@ -185,9 +198,11 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
                       <span className="text-xs font-black uppercase">Logout</span>
                     </SidebarMenuButton>
                   ) : (
-                    <SidebarMenuButton onClick={() => router.push('/login')} className="w-full text-primary hover:bg-primary/5 rounded-xl border-2 border-primary/20 bg-primary/5">
-                      <LogIn className="h-4 w-4 mr-2" />
-                      <span className="text-xs font-black uppercase tracking-widest">Sign In</span>
+                    <SidebarMenuButton asChild className="w-full text-primary hover:bg-primary/5 rounded-xl border-2 border-primary/20 bg-primary/5">
+                      <Link href="/login">
+                        <LogIn className="h-4 w-4 mr-2" />
+                        <span className="text-xs font-black uppercase tracking-widest">Sign In</span>
+                      </Link>
                     </SidebarMenuButton>
                   )}
                 </SidebarMenuItem>
