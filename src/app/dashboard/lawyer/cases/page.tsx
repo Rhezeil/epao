@@ -4,7 +4,7 @@ import { useAuth } from "@/components/auth-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
-import { collection, query, where, doc, getDoc } from "firebase/firestore";
+import { collection, query, where, doc, getDoc, orderBy } from "firebase/firestore";
 import { format, startOfToday, isWeekend, setHours, setMinutes, isBefore } from "date-fns";
 import { 
   FileText, 
@@ -28,7 +28,8 @@ import {
   ClipboardList,
   Calendar,
   Edit3,
-  XCircle
+  XCircle,
+  History
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -133,6 +134,18 @@ export default function LawyerCasesPage() {
 
   const { data: clientUser } = useDoc(clientDocRef);
   const { data: clientProfile } = useDoc(profileDocRef);
+
+  // Client Specific Appointment History
+  const clientApptsQuery = useMemoFirebase(() => {
+    if (!db || !activeClientId || !user) return null;
+    return query(
+      collection(db, "appointments"),
+      where("clientId", "==", activeClientId),
+      orderBy("date", "desc")
+    );
+  }, [db, activeClientId, user]);
+
+  const { data: clientAppts, isLoading: isClientApptsLoading } = useCollection(clientApptsQuery);
 
   // Slot Logic for Booking Dialog
   const bookingDateStr = bookingForm.date ? format(bookingForm.date, "yyyy-MM-dd") : null;
@@ -356,39 +369,100 @@ export default function LawyerCasesPage() {
                 </div>
               </div>
             </DialogHeader>
-            <div className="p-10 space-y-8 flex-1 overflow-y-auto">
-              <div className="grid md:grid-cols-2 gap-10">
-                <div className="space-y-6">
-                  <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Contact Details</Label>
-                    <p className="font-bold text-secondary flex items-center gap-3 text-base">
-                      <Phone className="h-4 w-4 text-secondary/40" /> {clientUser?.mobileNumber || clientProfile?.phoneNumber || "N/A"}
-                    </p>
-                    <p className="font-bold text-secondary flex items-center gap-3 text-base">
-                      <Mail className="h-4 w-4 text-secondary/40" /> {clientUser?.email || "N/A"}
-                    </p>
+            <div className="overflow-hidden flex-1 flex flex-col">
+              <Tabs defaultValue="details" className="w-full h-full flex flex-col">
+                <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1 rounded-none h-14 shrink-0">
+                  <TabsTrigger value="details" className="rounded-none font-bold">Personal Details</TabsTrigger>
+                  <TabsTrigger value="history" className="rounded-none font-bold">Visit History</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="details" className="p-10 space-y-8 flex-1 overflow-y-auto">
+                  <div className="grid md:grid-cols-2 gap-10">
+                    <div className="space-y-6">
+                      <div className="space-y-1">
+                        <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Contact Details</Label>
+                        <p className="font-bold text-secondary flex items-center gap-3 text-base">
+                          <Phone className="h-4 w-4 text-secondary/40" /> {clientUser?.mobileNumber || clientProfile?.phoneNumber || "N/A"}
+                        </p>
+                        <p className="font-bold text-secondary flex items-center gap-3 text-base">
+                          <Mail className="h-4 w-4 text-secondary/40" /> {clientUser?.email || "N/A"}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Home Address</Label>
+                        <p className="text-sm font-bold text-secondary flex items-start gap-3 leading-relaxed">
+                          <MapPin className="h-4 w-4 text-secondary/40 shrink-0 mt-0.5" /> 
+                          {clientProfile?.address || "Address not provided."}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="space-y-6">
+                      <div className="space-y-1">
+                        <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Eligibility Status</Label>
+                        <Badge className="bg-secondary text-white font-black px-4 py-1.5 rounded-full uppercase text-[10px] tracking-wider border-none shadow-sm">
+                          {clientUser?.incomeClassification || "Indigent"}
+                        </Badge>
+                      </div>
+                      <div className="p-6 bg-amber-50 rounded-[2rem] border border-amber-100 flex items-start gap-4">
+                        <Info className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                        <p className="text-[11px] text-amber-800/70 font-bold leading-relaxed">Privacy Protocol: Data for official legal correspondence only.</p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Home Address</Label>
-                    <p className="text-sm font-bold text-secondary flex items-start gap-3 leading-relaxed">
-                      <MapPin className="h-4 w-4 text-secondary/40 shrink-0 mt-0.5" /> 
-                      {clientProfile?.address || "Address not provided."}
-                    </p>
+                </TabsContent>
+
+                <TabsContent value="history" className="p-6 flex-1 overflow-y-auto">
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between px-2">
+                      <h4 className="text-[10px] font-black uppercase text-secondary/40 tracking-[0.2em] flex items-center gap-2">
+                        <History className="h-3 w-3" /> Chronological Visit Log
+                      </h4>
+                    </div>
+
+                    {isClientApptsLoading ? (
+                      <div className="py-12 flex justify-center"><Loader2 className="animate-spin h-8 w-8 text-secondary/20" /></div>
+                    ) : clientAppts && clientAppts.length > 0 ? (
+                      <div className="space-y-3">
+                        {clientAppts.map((appt) => (
+                          <div key={appt.id} className="flex items-center justify-between p-4 bg-muted/20 rounded-2xl border border-transparent hover:border-secondary/10 transition-colors">
+                            <div className="flex items-center gap-4">
+                              <div className={cn(
+                                "h-10 w-10 rounded-xl flex items-center justify-center",
+                                appt.status === 'completed' ? 'bg-green-50 text-green-600' : 
+                                appt.status === 'cancelled' ? 'bg-red-50 text-red-600' : 'bg-secondary/5 text-secondary'
+                              )}>
+                                {appt.status === 'completed' ? <CheckCircle2 className="h-5 w-5" /> : 
+                                 appt.status === 'cancelled' ? <XCircle className="h-5 w-5" /> : <Clock className="h-5 w-5" />}
+                              </div>
+                              <div>
+                                <p className="text-sm font-bold text-secondary leading-tight">{appt.caseType}</p>
+                                <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mt-1">
+                                  {format(new Date(appt.date), "MMM dd, yyyy")} • {appt.time}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <Badge variant="outline" className={cn(
+                                "text-[8px] font-black uppercase px-2",
+                                appt.status === 'completed' ? 'border-green-200 text-green-700 bg-green-50' : 
+                                appt.status === 'cancelled' ? 'border-red-200 text-red-700 bg-red-50' : 'border-secondary/20 text-secondary'
+                              )}>
+                                {appt.status}
+                              </Badge>
+                              <p className="text-[8px] font-bold text-muted-foreground mt-1">{appt.referenceCode}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="py-12 text-center bg-muted/5 rounded-3xl border-2 border-dashed">
+                        <History className="h-10 w-10 text-muted-foreground/20 mx-auto mb-2" />
+                        <p className="text-sm text-muted-foreground font-medium italic">No visit history recorded for this citizen.</p>
+                      </div>
+                    )}
                   </div>
-                </div>
-                <div className="space-y-6">
-                  <div className="space-y-1">
-                    <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">Eligibility Status</Label>
-                    <Badge className="bg-secondary text-white font-black px-4 py-1.5 rounded-full uppercase text-[10px] tracking-wider border-none shadow-sm">
-                      {clientUser?.incomeClassification || "Indigent"}
-                    </Badge>
-                  </div>
-                  <div className="p-6 bg-amber-50 rounded-[2rem] border border-amber-100 flex items-start gap-4">
-                    <Info className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-                    <p className="text-[11px] text-amber-800/70 font-bold leading-relaxed">Privacy Protocol: Data for official legal correspondence only.</p>
-                  </div>
-                </div>
-              </div>
+                </TabsContent>
+              </Tabs>
             </div>
             <DialogFooter className="p-8 bg-muted/30 shrink-0">
               <Button onClick={() => setIsProfileOpen(false)} className="w-full h-14 rounded-2xl font-black bg-secondary text-white shadow-xl">Close Citizen Record</Button>
