@@ -44,9 +44,10 @@ service cloud.firestore {
 
     /**
      * @description Authorized Public Attorney profiles.
+     * Publicly readable so guests can see assigned lawyer names in the portal.
      */
     match /roleLawyer/{userId} {
-      allow read: if isSignedIn();
+      allow read: if true;
       allow write: if isAdmin();
       
       match /availability/{dateId} {

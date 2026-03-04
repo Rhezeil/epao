@@ -303,23 +303,30 @@ export default function ManageAppointmentPage() {
                   {assignedLawyer ? (
                     <div className="space-y-6 text-center">
                       <div className="flex justify-center">
-                        <div className="h-24 w-24 rounded-full bg-white/20 border-4 border-white/30 flex items-center justify-center shadow-inner">
+                        <div className="h-24 w-24 rounded-full bg-white/20 border-4 border-white/30 flex items-center justify-center shadow-inner relative">
                           <User className="h-12 w-12 text-white" />
+                          <div className="absolute -bottom-1 -right-1 p-1.5 bg-green-500 rounded-full border-4 border-primary">
+                            <CheckCircle2 className="h-3 w-3 text-white" />
+                          </div>
                         </div>
                       </div>
                       <div>
-                        <p className="text-2xl font-black tracking-tight">{assignedLawyer.email.split('@')[0]}</p>
-                        <p className="text-[10px] font-black uppercase text-white/60 tracking-widest mt-1">Public Attorney</p>
+                        <p className="text-2xl font-black tracking-tight leading-tight">
+                          {assignedLawyer.firstName ? `Atty. ${assignedLawyer.firstName} ${assignedLawyer.lastName}` : assignedLawyer.email.split('@')[0]}
+                        </p>
+                        <p className="text-[10px] font-black uppercase text-white/60 tracking-widest mt-2">Authorized Public Attorney</p>
                       </div>
-                      <div className="pt-4 border-t border-white/10 text-xs font-bold text-white/80 space-y-2">
+                      <div className="pt-4 border-t border-white/10 text-xs font-bold text-white/80 space-y-3">
                         <p className="flex items-center justify-center gap-2"><Clock className="h-3 w-3" /> Office Hours: 8 AM - 5 PM</p>
-                        <p className="flex items-center justify-center gap-2"><ShieldCheck className="h-3 w-3" /> Fully Authorized</p>
+                        <Badge className="bg-green-500/20 text-green-300 border-none text-[9px] uppercase font-black px-3 py-1">Identity Verified</Badge>
                       </div>
                     </div>
                   ) : (
                     <div className="text-center py-8 space-y-4">
-                      <Loader2 className="h-12 w-12 text-white/20 mx-auto animate-spin" />
-                      <p className="text-xs font-bold text-white/60 leading-relaxed italic">
+                      <div className="h-16 w-16 bg-white/5 rounded-full flex items-center justify-center mx-auto">
+                        <Loader2 className="h-8 w-8 text-white/20 animate-spin" />
+                      </div>
+                      <p className="text-xs font-bold text-white/60 leading-relaxed italic px-4">
                         Your Case is currently in the Triage Queue. A lawyer will be assigned upon system approval.
                       </p>
                     </div>
