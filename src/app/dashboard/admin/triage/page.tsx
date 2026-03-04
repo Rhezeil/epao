@@ -24,7 +24,9 @@ import {
   Search,
   User,
   Clock,
-  ClipboardList
+  ClipboardList,
+  Lock,
+  ArrowRight
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -144,6 +146,7 @@ export default function AdminTriagePage() {
       let clientId = selectedAppt.clientId;
       const email = selectedAppt.guestEmail || selectedAppt.clientEmail || `${selectedAppt.guestMobile || selectedAppt.clientMobile}@epao.mobile`;
 
+      // 1. Account Registration (if guest)
       if (!clientId) {
         try {
           const secondaryApp = initializeApp(firebaseConfig, "client-reg-" + Date.now());
@@ -152,10 +155,12 @@ export default function AdminTriagePage() {
           clientId = userCredential.user.uid;
           await deleteApp(secondaryApp);
         } catch (authError: any) {
+          // If already exists, we try to find the UID or assume linkage is possible via email mapping later
           if (authError.code !== 'auth/email-already-in-use') throw authError;
         }
       }
 
+      // 2. Initialize Case Record
       const caseRef = doc(db, "cases", caseId);
       setDocumentNonBlocking(caseRef, {
         id: caseId,
@@ -168,6 +173,7 @@ export default function AdminTriagePage() {
         createdAt: new Date().toISOString()
       }, { merge: true });
 
+      // 3. Create/Update Citizen Record
       const userRef = doc(db, "users", clientId || "");
       setDocumentNonBlocking(userRef, {
         id: clientId,
@@ -175,11 +181,12 @@ export default function AdminTriagePage() {
         email: email,
         fullName: selectedAppt.guestName || selectedAppt.clientName || "",
         role: "client",
-        status: caseStatus,
+        status: "Active Case",
         profileId: "profile",
         createdAt: new Date().toISOString()
       }, { merge: true });
 
+      // 4. Detailed Profile Creation
       const profileRef = doc(db, "users", clientId || "", "profile", "profile");
       setDocumentNonBlocking(profileRef, {
         id: "profile",
@@ -191,7 +198,7 @@ export default function AdminTriagePage() {
       }, { merge: true });
 
       toast({ 
-        title: "Case Created", 
+        title: "Case Created Successfully", 
         description: `Official record ${caseId} initialized and citizen account activated.` 
       });
       setSelectedAppt(null);
@@ -242,7 +249,7 @@ export default function AdminTriagePage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Client Triage</h1>
-            <p className="text-muted-foreground font-medium">Screen new intakes and evaluate eligibility for free legal assistance.</p>
+            <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest mt-1">Screen new intakes and activate citizen legal records</p>
           </div>
         </div>
 
@@ -258,7 +265,7 @@ export default function AdminTriagePage() {
 
           <TabsContent value="pending" className="mt-8">
             <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden">
-              <CardHeader className="bg-amber-50/50 pb-6">
+              <CardHeader className="bg-amber-50/50 pb-6 border-b border-amber-100/50">
                 <CardTitle className="text-xl font-bold text-amber-900 flex items-center gap-2">
                   <Search className="h-6 w-6" /> Pending Eligibility Screening
                 </CardTitle>
@@ -279,7 +286,7 @@ export default function AdminTriagePage() {
                     <TableBody>
                       {pendingAppointments?.map((appt) => (
                         <TableRow key={appt.id} className="hover:bg-primary/5 transition-colors group">
-                          <TableCell className="px-8 font-black text-primary">{appt.referenceCode}</TableCell>
+                          <TableCell className="px-8 font-black text-primary py-6">{appt.referenceCode}</TableCell>
                           <TableCell className="font-bold">{appt.guestName || appt.clientName || "Registered Citizen"}</TableCell>
                           <TableCell>
                             <Badge variant="outline" className="bg-primary/5 font-bold text-[10px]">{appt.caseType}</Badge>
@@ -322,11 +329,11 @@ export default function AdminTriagePage() {
 
           <TabsContent value="intake" className="mt-8">
             <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden">
-              <CardHeader className="bg-primary/5 pb-6">
+              <CardHeader className="bg-primary/5 pb-6 border-b border-primary/10">
                 <CardTitle className="text-xl font-bold text-primary flex items-center gap-2">
                   <CheckCircle2 className="h-6 w-6" /> Consultation Completed
                 </CardTitle>
-                <CardDescription>Final review of visits to initialize official Case files.</CardDescription>
+                <CardDescription>Final review of visits to initialize official Case files and activate accounts.</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 {isIntakeLoading ? <div className="flex justify-center py-20"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div> : (
@@ -343,7 +350,7 @@ export default function AdminTriagePage() {
                     <TableBody>
                       {triagableIntakes.map((intake) => (
                         <TableRow key={intake.id} className="hover:bg-primary/5 transition-colors group">
-                          <TableCell className="px-8 font-black text-primary">{intake.referenceCode}</TableCell>
+                          <TableCell className="px-8 font-black text-primary py-6">{intake.referenceCode}</TableCell>
                           <TableCell className="font-bold">{intake.guestName || intake.clientName || "Registered Citizen"}</TableCell>
                           <TableCell>
                             <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-100 font-bold text-[10px]">{intake.caseType}</Badge>
@@ -388,7 +395,7 @@ export default function AdminTriagePage() {
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
                   <DialogTitle className="text-2xl md:text-3xl font-black tracking-tight">
-                    {reviewMode === 'intake' ? "Intake Review" : "Screening Process"}
+                    {reviewMode === 'intake' ? "Official Case Conversion" : "Screening Process"}
                   </DialogTitle>
                   <DialogDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest">
                     Reference: {selectedAppt?.referenceCode}
@@ -401,6 +408,18 @@ export default function AdminTriagePage() {
             </DialogHeader>
 
             <div className="p-6 md:p-10 space-y-8 flex-1 overflow-y-auto">
+              {reviewMode === 'intake' && !selectedAppt?.clientId && (
+                <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-4">
+                  <div className="p-2 bg-amber-100 rounded-xl text-amber-700">
+                    <Lock className="h-5 w-5" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black uppercase text-amber-900 tracking-widest">Guest Account Activation</p>
+                    <p className="text-xs font-bold text-amber-800 leading-relaxed">Confirming this case will register the citizen. Default password: <span className="font-black bg-white px-2 py-0.5 rounded border border-amber-200">password123</span></p>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-1">
                   <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Citizen</Label>
@@ -458,11 +477,11 @@ export default function AdminTriagePage() {
               <div className="space-y-6">
                 <div className="space-y-2">
                   <Label className="text-xs font-black uppercase tracking-widest text-primary/40 ml-1">
-                    {reviewMode === 'intake' ? "Assign Permanent Lawyer" : "Assign Lawyer for Consultation"}
+                    {reviewMode === 'intake' ? "Assign Permanent Public Attorney" : "Assign Lawyer for Consultation"}
                   </Label>
                   <Select value={assignedLawyer} onValueChange={setAssignedLawyer}>
                     <SelectTrigger className="h-14 rounded-2xl border-primary/20 bg-white font-bold shadow-sm">
-                      <SelectValue placeholder="Select an authorized public attorney" />
+                      <SelectValue placeholder="Select handling lawyer" />
                     </SelectTrigger>
                     <SelectContent>
                       {lawyers?.map((lawyer) => (
@@ -476,15 +495,15 @@ export default function AdminTriagePage() {
 
                 {reviewMode === 'intake' && (
                   <div className="space-y-2">
-                    <Label className="text-xs font-black uppercase tracking-widest text-primary/40 ml-1">Initial Case Status</Label>
+                    <Label className="text-xs font-black uppercase tracking-widest text-primary/40 ml-1">Case Status</Label>
                     <Select value={caseStatus} onValueChange={setCaseStatus}>
                       <SelectTrigger className="h-14 rounded-2xl border-primary/20 bg-white font-bold shadow-sm">
-                        <SelectValue placeholder="Select status" />
+                        <SelectValue placeholder="Select initial status" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Active Case" className="font-bold">Active Case</SelectItem>
-                        <SelectItem value="Under Screening" className="font-bold">Under Screening</SelectItem>
-                        <SelectItem value="New Intake" className="font-bold">New Intake</SelectItem>
+                        <SelectItem value="Pending Mediation" className="font-bold">Pending Mediation</SelectItem>
+                        <SelectItem value="For Filing" className="font-bold">For Filing</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -498,8 +517,8 @@ export default function AdminTriagePage() {
                 </div>
                 <div className="space-y-2">
                   <Textarea 
-                    placeholder="Reason for disqualification (e.g., Exceeds income limit)..."
-                    className="rounded-2xl border-primary/10 bg-white text-sm font-medium min-h-[100px]"
+                    placeholder="Provide reason if disqualifying (e.g., exceeds income cap)..."
+                    className="rounded-2xl border-primary/10 bg-white text-sm font-medium min-h-[80px]"
                     value={rejectionReason}
                     onChange={(e) => setRejectionReason(e.target.value)}
                   />
@@ -508,7 +527,7 @@ export default function AdminTriagePage() {
             </div>
 
             <DialogFooter className="p-6 md:p-8 bg-muted/30 flex gap-4 shrink-0">
-              <Button variant="outline" onClick={() => setSelectedAppt(null)} className="flex-1 h-14 rounded-2xl font-bold">Close</Button>
+              <Button variant="outline" onClick={() => setSelectedAppt(null)} className="flex-1 h-14 rounded-2xl font-bold">Cancel</Button>
               {rejectionReason ? (
                 <Button 
                   variant="outline" 
@@ -531,8 +550,8 @@ export default function AdminTriagePage() {
                     reviewMode === 'intake' ? "bg-secondary" : "bg-primary"
                   )}
                 >
-                  {isProcessing ? <Loader2 className="animate-spin h-6 w-6" /> : <ShieldCheck className="mr-2 h-6 w-6" />}
-                  {reviewMode === 'intake' ? "Confirm & Create Case" : "Qualify & Confirm"}
+                  {isProcessing ? <Loader2 className="animate-spin h-6 w-6" /> : <CheckCircle2 className="mr-2 h-6 w-6" />}
+                  {reviewMode === 'intake' ? "Register & Create Case" : "Qualify & Confirm"}
                 </Button>
               )}
             </DialogFooter>
