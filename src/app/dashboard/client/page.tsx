@@ -3,13 +3,28 @@
 
 import { useAuth } from "@/components/auth-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, where, doc, onSnapshot } from "firebase/firestore";
-import { Briefcase, Calendar, FileText, User, ChevronRight, Gavel, Clock, Heart, ShieldCheck, Loader2 } from "lucide-react";
+import { 
+  Briefcase, 
+  Calendar, 
+  FileText, 
+  User, 
+  ChevronRight, 
+  Gavel, 
+  Clock, 
+  Heart, 
+  ShieldCheck, 
+  Loader2,
+  History,
+  CheckCircle2,
+  XCircle,
+  CalendarCheck
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useEffect, useState } from "react";
-import { format } from "date-fns";
+import { useEffect, useState, useMemo } from "react";
+import { format, isAfter, isBefore, startOfToday } from "date-fns";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -21,7 +36,9 @@ export default function ClientDashboard() {
   const router = useRouter();
   const [assignedLawyer, setAssignedLawyer] = useState<any>(null);
 
-  // Hooks must be at top level
+  const today = startOfToday();
+
+  // Queries
   const casesQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'client') return null;
     return query(collection(db, "cases"), where("clientId", "==", user.uid));
@@ -37,6 +54,7 @@ export default function ClientDashboard() {
 
   const activeCase = cases?.[0];
 
+  // Fetch Lawyer details in real-time
   useEffect(() => {
     let unsub = () => {};
     if (activeCase?.lawyerId && db && role === 'client') {
@@ -48,7 +66,21 @@ export default function ClientDashboard() {
     return () => unsub();
   }, [activeCase, db, role]);
 
-  // SAFE GUARD: Early returns must be AFTER hooks
+  // Derived Appointment Views
+  const upcomingAppts = useMemo(() => {
+    if (!appts) return [];
+    return appts
+      .filter(a => a.status !== 'cancelled' && a.status !== 'completed' && !isBefore(new Date(a.date), today))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [appts, today]);
+
+  const apptHistory = useMemo(() => {
+    if (!appts) return [];
+    return appts
+      .filter(a => a.status === 'completed' || a.status === 'cancelled' || isBefore(new Date(a.date), today))
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [appts, today]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -81,6 +113,7 @@ export default function ClientDashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
+            {/* --- CASE STATUS CARD --- */}
             <Card className="border-none shadow-xl bg-white rounded-[2.5rem] overflow-hidden">
               <CardHeader className="bg-primary/5 pb-6 border-b border-primary/10">
                 <div className="flex justify-between items-center">
@@ -100,7 +133,7 @@ export default function ClientDashboard() {
                   )}
                 </div>
               </CardHeader>
-              <CardContent className="pt-8 space-y-6 px-10">
+              <CardContent className="pt-8 space-y-6 px-10 pb-10">
                 {isCasesLoading ? (
                   <div className="py-12 flex justify-center"><Clock className="animate-spin h-8 w-8 text-primary/20" /></div>
                 ) : activeCase ? (
@@ -140,41 +173,83 @@ export default function ClientDashboard() {
                   <div className="text-center py-12 space-y-4">
                     <FileText className="h-12 w-12 text-primary/10 mx-auto" />
                     <p className="text-muted-foreground font-medium">No official Case file has been initialized yet.</p>
+                    <Button variant="outline" className="rounded-xl" onClick={() => router.push('/case-navigator')}>
+                      Explore Case Navigator
+                    </Button>
                   </div>
                 )}
               </CardContent>
             </Card>
 
+            {/* --- UPCOMING APPOINTMENTS --- */}
             <Card className="border-none shadow-xl bg-white rounded-[2.5rem] overflow-hidden">
               <CardHeader className="pb-4 pt-8 px-10">
                 <CardTitle className="text-lg font-bold text-primary flex items-center gap-2">
-                  <Calendar className="h-5 w-5" /> My Scheduled Appointments
+                  <Calendar className="h-5 w-5" /> Upcoming Appointments
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4 px-10 pb-10">
-                {appts?.filter(a => a.status !== 'cancelled').map((appt) => (
-                  <div key={appt.id} className="flex items-center justify-between p-5 bg-primary/5 rounded-3xl border border-primary/10 hover:bg-primary/10 transition-colors">
-                    <div className="flex items-center gap-5">
-                      <div className="h-14 w-14 rounded-2xl bg-white flex flex-col items-center justify-center shadow-sm border border-primary/5">
-                        <span className="text-[10px] font-black text-primary leading-none uppercase">{format(new Date(appt.date), "MMM")}</span>
-                        <span className="text-xl font-black text-[#1A3B6B] leading-none mt-1">{format(new Date(appt.date), "dd")}</span>
+                {upcomingAppts.length > 0 ? (
+                  upcomingAppts.map((appt) => (
+                    <div key={appt.id} className="flex items-center justify-between p-5 bg-primary/5 rounded-3xl border border-primary/10 hover:bg-primary/10 transition-colors">
+                      <div className="flex items-center gap-5">
+                        <div className="h-14 w-14 rounded-2xl bg-white flex flex-col items-center justify-center shadow-sm border border-primary/5">
+                          <span className="text-[10px] font-black text-primary leading-none uppercase">{format(new Date(appt.date), "MMM")}</span>
+                          <span className="text-xl font-black text-[#1A3B6B] leading-none mt-1">{format(new Date(appt.date), "dd")}</span>
+                        </div>
+                        <div>
+                          <p className="text-base font-black text-[#1A3B6B]">{appt.caseType}</p>
+                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.1em]">Ref: {appt.referenceCode} • {appt.time}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-base font-black text-[#1A3B6B]">{appt.caseType}</p>
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.1em]">Ref: {appt.referenceCode} • {appt.time}</p>
-                      </div>
+                      <Badge className="bg-primary/10 text-primary border-none text-[9px] font-black uppercase">{appt.status}</Badge>
                     </div>
-                    <Badge className="bg-primary/10 text-primary border-none text-[9px] font-black uppercase">{appt.status}</Badge>
-                  </div>
-                ))}
-                {(!appts || appts.length === 0) && (
+                  ))
+                ) : (
                   <p className="text-center py-12 text-sm text-muted-foreground font-medium italic">You have no upcoming follow-ups scheduled.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* --- APPOINTMENT HISTORY --- */}
+            <Card className="border-none shadow-xl bg-white rounded-[2.5rem] overflow-hidden">
+              <CardHeader className="pb-4 pt-8 px-10 border-t border-primary/5">
+                <CardTitle className="text-lg font-bold text-muted-foreground flex items-center gap-2">
+                  <History className="h-5 w-5" /> Visit History
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 px-10 pb-10">
+                {apptHistory.length > 0 ? (
+                  apptHistory.map((appt) => (
+                    <div key={appt.id} className="flex items-center justify-between p-4 bg-muted/10 rounded-2xl border border-transparent hover:bg-muted/20 transition-colors">
+                      <div className="flex items-center gap-4">
+                        <div className={cn(
+                          "h-10 w-10 rounded-xl flex items-center justify-center",
+                          appt.status === 'completed' ? 'bg-green-50 text-green-600' : 
+                          appt.status === 'cancelled' ? 'bg-red-50 text-red-600' : 'bg-primary/5 text-primary'
+                        )}>
+                          {appt.status === 'completed' ? <CheckCircle2 className="h-5 w-5" /> : 
+                           appt.status === 'cancelled' ? <XCircle className="h-5 w-5" /> : <Clock className="h-5 w-5" />}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-primary">{appt.caseType}</p>
+                          <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">
+                            {format(new Date(appt.date), "MMM dd, yyyy")} • {appt.time}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-[8px] font-black uppercase">{appt.status}</Badge>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-center py-8 text-xs text-muted-foreground font-medium italic">No past visit records found.</p>
                 )}
               </CardContent>
             </Card>
           </div>
 
           <div className="space-y-8">
+            {/* --- LAWYER CARD --- */}
             <Card className="border-none shadow-xl bg-[#F0F4F8] rounded-[2.5rem] overflow-hidden">
               <CardHeader className="bg-primary p-6 text-white text-center">
                 <CardTitle className="text-xs font-black uppercase tracking-widest">Assigned Legal Counsel</CardTitle>
@@ -218,12 +293,13 @@ export default function ClientDashboard() {
               </CardContent>
             </Card>
 
+            {/* --- QUICK ACTIONS --- */}
             <Card className="border-none shadow-xl bg-amber-50 rounded-[2.5rem] p-8 space-y-4 border border-amber-100">
               <h4 className="text-sm font-black text-amber-900 flex items-center gap-2">
-                <Clock className="h-4 w-4" /> Next Steps
+                <CalendarCheck className="h-4 w-4" /> Schedule Visit
               </h4>
               <p className="text-xs text-amber-800/70 font-medium leading-relaxed">
-                As a registered client, you can skip initial triage and book follow-up consultations directly with our staff.
+                Need to speak with your attorney? Book your next follow-up session directly through the portal.
               </p>
               <Button 
                 className="w-full h-12 bg-amber-500 hover:bg-amber-600 rounded-2xl font-black shadow-lg text-white" 
