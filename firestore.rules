@@ -84,12 +84,12 @@ service cloud.firestore {
     }
 
     /**
-     * @description Global appointments. Allows guest booking and verification.
+     * @description Global appointments. Allows guest booking, verification, and availability checks.
      */
     match /appointments/{appointmentId} {
-      // Guests need get to search by reference code, Admins need list for registry.
-      allow get: if true;
-      allow list: if isAdmin(); 
+      // Guests search by date (availability) or reference code (management). 
+      // Admins manage registry. Clients see their own.
+      allow read: if true; 
       allow create: if true;
       allow update: if true; 
       allow delete: if isAdmin();
