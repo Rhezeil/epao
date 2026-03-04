@@ -364,6 +364,7 @@ export default function LawyerDashboard() {
                   <div className="flex gap-2">
                     <Button size="sm" onClick={() => updateStatus(n.id, 'scheduled')} className="h-8 rounded-lg bg-amber-600 text-white font-black text-[10px] uppercase">Confirm</Button>
                     <Button size="sm" variant="ghost" onClick={() => { setSelectedApptToReschedule(n); setIsRescheduleOpen(true); }} className="h-8 rounded-lg text-amber-700 font-black text-[10px] uppercase">Reschedule</Button>
+                    <Button size="sm" variant="ghost" onClick={() => updateStatus(n.id, 'cancelled')} className="h-8 rounded-lg text-red-600 font-black text-[10px] uppercase hover:bg-red-50">Cancel</Button>
                   </div>
                 </div>
               ))}
