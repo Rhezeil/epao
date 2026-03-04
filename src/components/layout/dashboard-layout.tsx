@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -74,7 +73,6 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
         { icon: LayoutDashboard, label: "My Dashboard", path: "/dashboard/client" },
         { icon: Gavel, label: "My Active Case", path: "/dashboard/client" },
         { icon: CalendarCheck, label: "Schedule Follow-up", path: "/dashboard/client/book-appointment" },
-        { icon: Compass, label: "Case Requirements Navigator", path: "/case-navigator" },
       ];
     }
 

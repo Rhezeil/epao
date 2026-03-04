@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useAuth } from "@/components/auth-provider";
@@ -78,7 +77,7 @@ export default function ClientDashboard() {
     if (!appts) return [];
     return appts
       .filter(a => a.status === 'completed' || a.status === 'cancelled' || isBefore(new Date(a.date), today))
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      .sort((a, b) => b.date.localeCompare(a.date));
   }, [appts, today]);
 
   if (loading) {
@@ -173,9 +172,7 @@ export default function ClientDashboard() {
                   <div className="text-center py-12 space-y-4">
                     <FileText className="h-12 w-12 text-primary/10 mx-auto" />
                     <p className="text-muted-foreground font-medium">No official Case file has been initialized yet.</p>
-                    <Button variant="outline" className="rounded-xl" onClick={() => router.push('/case-navigator')}>
-                      Explore Case Navigator
-                    </Button>
+                    <p className="text-xs text-muted-foreground/60 italic">Please wait for the office to process your initial intake.</p>
                   </div>
                 )}
               </CardContent>
