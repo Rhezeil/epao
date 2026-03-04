@@ -93,7 +93,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
       return [
         { icon: LayoutDashboard, label: "Home", path: "/dashboard/lawyer" },
         { icon: Clock, label: "My Schedule", path: "/dashboard/lawyer" },
-        { icon: FileText, label: "My Case Registry", path: "/dashboard/lawyer/cases" },
+        { icon: FileText, label: "My Cases", path: "/dashboard/lawyer/cases" },
       ];
     }
 

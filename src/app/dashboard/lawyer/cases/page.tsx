@@ -28,7 +28,8 @@ import {
   Plus,
   File,
   ShieldCheck,
-  ClipboardList
+  ClipboardList,
+  Calendar
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -46,7 +47,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -87,6 +88,7 @@ export default function LawyerCasesPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Queries
   const casesQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'lawyer') return null;
     return query(
@@ -95,15 +97,32 @@ export default function LawyerCasesPage() {
     );
   }, [db, user, role]);
 
-  const { data: cases, isLoading } = useCollection(casesQuery);
+  const usersQuery = useMemoFirebase(() => {
+    if (!db || !user || role !== 'lawyer') return null;
+    return query(collection(db, "users"));
+  }, [db, user, role]);
+
+  const apptsQuery = useMemoFirebase(() => {
+    if (!db || !user || role !== 'lawyer') return null;
+    return query(collection(db, "appointments"), where("lawyerId", "==", user.uid));
+  }, [db, user, role]);
+
+  const { data: cases, isLoading: isCasesLoading } = useCollection(casesQuery);
+  const { data: allUsers } = useCollection(usersQuery);
+  const { data: allAppts } = useCollection(apptsQuery);
 
   const filteredCases = useMemo(() => {
     if (!cases) return [];
-    return cases.filter(c => 
-      c.id.toLowerCase().includes(search.toLowerCase()) ||
-      c.caseType.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [cases, search]);
+    return cases.filter(c => {
+      const client = allUsers?.find(u => u.id === c.clientId);
+      const searchStr = search.toLowerCase();
+      return (
+        c.id.toLowerCase().includes(searchStr) ||
+        c.caseType.toLowerCase().includes(searchStr) ||
+        client?.fullName?.toLowerCase().includes(searchStr)
+      );
+    });
+  }, [cases, allUsers, search]);
 
   // Document Fetchers for current context
   const activeClientId = selectedCaseForBooking?.clientId || selectedClientIdForProfile;
@@ -234,13 +253,13 @@ export default function LawyerCasesPage() {
       <div className="space-y-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-black text-secondary font-headline tracking-tight">Case Registry</h1>
+            <h1 className="text-3xl font-black text-secondary font-headline tracking-tight">My Cases</h1>
             <p className="text-muted-foreground font-medium">Manage matters and case files assigned to your workstation.</p>
           </div>
           <div className="relative w-full md:w-72">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary/30" />
             <Input 
-              placeholder="Search Classification or ID..." 
+              placeholder="Search Classification, Client or ID..." 
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="pl-9 h-11 rounded-xl border-secondary/10 bg-white"
@@ -254,71 +273,95 @@ export default function LawyerCasesPage() {
               <div className="p-2 bg-secondary text-white rounded-xl">
                 <Scale className="h-5 w-5" />
               </div>
-              <CardTitle className="text-xl font-bold text-secondary">Workload Registry</CardTitle>
+              <CardTitle className="text-xl font-bold text-secondary">Registry Management</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            {isLoading ? (
+            {isCasesLoading ? (
               <div className="py-20 flex justify-center"><Loader2 className="animate-spin h-10 w-10 text-secondary" /></div>
             ) : (
               <Table>
                 <TableHeader className="bg-muted/30">
                   <TableRow>
                     <TableHead className="px-8 font-black text-[10px] uppercase tracking-widest text-secondary/40">Classification</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase tracking-widest text-secondary/40">Citizen Client</TableHead>
                     <TableHead className="font-black text-[10px] uppercase tracking-widest text-secondary/40">Status</TableHead>
                     <TableHead className="font-black text-[10px] uppercase tracking-widest text-secondary/40">Case ID</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase tracking-widest text-secondary/40">Next Visit</TableHead>
                     <TableHead className="text-right px-8 font-black text-[10px] uppercase tracking-widest text-secondary/40">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredCases.map((c) => (
-                    <TableRow key={c.id} className="hover:bg-secondary/5 transition-colors group">
-                      <TableCell className="px-8 py-6">
-                        <p className="font-black text-secondary leading-none text-base">{c.caseType}</p>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={cn(
-                          "font-black text-[9px] uppercase px-3",
-                          c.status === 'Active' ? 'bg-green-500' : 'bg-gray-500'
-                        )}>
-                          {c.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">
-                        {c.id}
-                      </TableCell>
-                      <TableCell className="text-right px-8">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => { setSelectedCaseForFolder(c); setIsFolderOpen(true); }} title="Case Folder" className="h-9 w-9 rounded-xl text-primary hover:bg-primary/5">
-                            <FolderOpen className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => { setSelectedClientIdForProfile(c.clientId); setIsProfileOpen(true); }} title="Client Profile" className="h-9 w-9 rounded-xl text-secondary hover:bg-secondary/5">
-                            <User className="h-4 w-4" />
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-secondary/5">
-                                <Settings2 className="h-4 w-4 text-secondary" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="rounded-2xl w-56">
-                              <DropdownMenuLabel className="text-[10px] font-black uppercase text-secondary/40 px-2 pb-2">Status Actions</DropdownMenuLabel>
-                              <DropdownMenuItem onClick={() => handleUpdateStatus(c.id, "Active")} className="rounded-xl font-bold">
-                                <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" /> Mark as Active
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleUpdateStatus(c.id, "Closed")} className="rounded-xl font-bold">
-                                <FileText className="mr-2 h-4 w-4 text-muted-foreground" /> Close Legal Case
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => setSelectedCaseForBooking(c)} className="rounded-xl font-bold text-primary">
-                                <CalendarCheck className="mr-2 h-4 w-4" /> Schedule Visit
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {filteredCases.map((c) => {
+                    const client = allUsers?.find(u => u.id === c.clientId);
+                    const nextAppt = allAppts?.filter(a => a.caseId === c.id && (a.status === 'scheduled' || a.status === 'rescheduled'))
+                      .sort((a, b) => a.date.localeCompare(b.date))[0];
+
+                    return (
+                      <TableRow key={c.id} className="hover:bg-secondary/5 transition-colors group">
+                        <TableCell className="px-8 py-6">
+                          <p className="font-black text-secondary leading-none text-base">{c.caseType}</p>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <User className="h-3 w-3 text-secondary/40" />
+                            <span className="text-sm font-bold text-secondary">{client?.fullName || "Registered Client"}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={cn(
+                            "font-black text-[9px] uppercase px-3",
+                            c.status === 'Active' ? 'bg-green-500' : 'bg-gray-500'
+                          )}>
+                            {c.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">
+                          {c.id}
+                        </TableCell>
+                        <TableCell>
+                          {nextAppt ? (
+                            <div className="space-y-0.5">
+                              <p className="text-[10px] font-black text-primary uppercase">{format(new Date(nextAppt.date), "MMM dd, yyyy")}</p>
+                              <p className="text-[9px] font-bold text-muted-foreground">{nextAppt.time}</p>
+                            </div>
+                          ) : (
+                            <span className="text-[10px] font-bold text-muted-foreground italic">No Visit Set</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right px-8">
+                          <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="icon" onClick={() => { setSelectedCaseForFolder(c); setIsFolderOpen(true); }} title="Case Folder" className="h-9 w-9 rounded-xl text-primary hover:bg-primary/5">
+                              <FolderOpen className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => { setSelectedClientIdForProfile(c.clientId); setIsProfileOpen(true); }} title="Client Profile" className="h-9 w-9 rounded-xl text-secondary hover:bg-secondary/5">
+                              <User className="h-4 w-4" />
+                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-secondary/5">
+                                  <Settings2 className="h-4 w-4 text-secondary" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="rounded-2xl w-56">
+                                <DropdownMenuLabel className="text-[10px] font-black uppercase text-secondary/40 px-2 pb-2">Status Actions</DropdownMenuLabel>
+                                <DropdownMenuItem onClick={() => handleUpdateStatus(c.id, "Active")} className="rounded-xl font-bold">
+                                  <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" /> Mark as Active
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleUpdateStatus(c.id, "Closed")} className="rounded-xl font-bold">
+                                  <FileText className="mr-2 h-4 w-4 text-muted-foreground" /> Close Legal Case
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => setSelectedCaseForBooking(c)} className="rounded-xl font-bold text-primary">
+                                  <CalendarCheck className="mr-2 h-4 w-4" /> Schedule Visit
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}
@@ -463,7 +506,7 @@ export default function LawyerCasesPage() {
           </DialogContent>
         </Dialog>
 
-        {/* --- BOOKING DIALOG (with Profile & Case Visibility) --- */}
+        {/* --- BOOKING DIALOG --- */}
         <Dialog open={!!selectedCaseForBooking} onOpenChange={() => setSelectedCaseForBooking(null)}>
           <DialogContent className="rounded-[3rem] max-w-5xl p-0 overflow-hidden border-none shadow-2xl max-h-[95vh] flex flex-col">
             <DialogHeader className="p-8 bg-primary text-white shrink-0">
@@ -480,7 +523,6 @@ export default function LawyerCasesPage() {
             
             <div className="flex-1 overflow-y-auto">
               <div className="grid lg:grid-cols-5 h-full">
-                {/* --- Left Column: Profile & Case Details --- */}
                 <div className="lg:col-span-2 bg-primary/[0.02] border-r border-primary/5 p-8 space-y-8">
                   <div className="space-y-6">
                     <div className="flex items-center gap-3">
@@ -537,7 +579,6 @@ export default function LawyerCasesPage() {
                   </div>
                 </div>
 
-                {/* --- Right Column: Scheduling Workspace --- */}
                 <div className="lg:col-span-3 p-8 space-y-8">
                   <div className="grid md:grid-cols-2 gap-8">
                     <div className="space-y-6">
@@ -558,7 +599,7 @@ export default function LawyerCasesPage() {
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Select Visit Date</Label>
                         <div className="p-2 bg-primary/5 rounded-3xl border border-primary/10 shadow-inner">
-                          <Calendar
+                          <CalendarComponent
                             mode="single"
                             selected={bookingForm.date}
                             onSelect={(d) => setBookingForm({...bookingForm, date: d, time: ""})}
