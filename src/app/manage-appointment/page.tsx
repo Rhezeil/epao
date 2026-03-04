@@ -226,7 +226,8 @@ export default function ManageAppointmentPage() {
                   <Badge className={cn(
                     "px-6 py-3 rounded-full font-black uppercase text-[10px] shadow-lg",
                     appointment.status === 'pending' ? 'bg-amber-400 text-amber-900' : 
-                    appointment.status === 'scheduled' || appointment.status === 'rescheduled' ? 'bg-green-400 text-green-900' : 'bg-red-400 text-red-900'
+                    appointment.status === 'scheduled' || appointment.status === 'rescheduled' ? 'bg-green-400 text-green-900' : 
+                    appointment.status === 'completed' ? 'bg-blue-400 text-blue-900' : 'bg-red-400 text-red-900'
                   )}>
                     {appointment.status}
                   </Badge>
@@ -255,6 +256,20 @@ export default function ManageAppointmentPage() {
                     </div>
                   </div>
 
+                  {appointment.status === 'completed' && (
+                    <div className="p-8 bg-blue-50 rounded-[2.5rem] border border-blue-100 flex items-start gap-4">
+                      <div className="p-3 bg-blue-100 rounded-2xl text-blue-700">
+                        <CheckCircle2 className="h-6 w-6" />
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="text-xs font-black text-blue-900 uppercase tracking-widest">Visit Concluded</h4>
+                        <p className="text-sm text-blue-800 font-medium leading-relaxed">
+                          This legal consultation has been marked as completed by the office and is now archived for your record. It can no longer be rescheduled or cancelled.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="p-8 bg-primary/5 rounded-[2.5rem] border border-primary/10 flex items-start gap-4">
                     <div className="p-3 bg-white rounded-2xl shadow-sm">
                       <ShieldCheck className="h-6 w-6 text-primary" />
@@ -267,7 +282,7 @@ export default function ManageAppointmentPage() {
                     </div>
                   </div>
 
-                  {appointment.status !== 'cancelled' && (
+                  {appointment.status !== 'cancelled' && appointment.status !== 'completed' && (
                     <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-primary/5">
                       <Button 
                         onClick={() => {
