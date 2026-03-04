@@ -106,7 +106,7 @@ export default function ClientDashboard() {
             </div>
           </div>
           <Badge className="bg-primary/10 text-primary border-none px-4 py-2 rounded-full font-bold">
-            Active or Registered
+            Registered
           </Badge>
         </div>
 
