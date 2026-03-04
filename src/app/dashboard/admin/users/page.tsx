@@ -38,7 +38,9 @@ import {
   UserCheck,
   CheckCircle2,
   XCircle,
-  Clock
+  Clock,
+  Info,
+  ShieldCheck
 } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -91,20 +93,21 @@ export default function AdminUsersPage() {
   const [editProfile, setEditProfile] = useState<any>({});
   const [editCase, setEditCase] = useState<any>({});
 
-  // Assignment State for New Case
+  // Assignment State for New Case (Existing Client)
   const [newCaseData, setNewCaseData] = useState({
     caseType: "Initial Legal Assistance",
     lawyerId: ""
   });
 
-  // New Client State
+  // New Client State (Complete registration)
   const [newClient, setNewClient] = useState({
     name: "",
     mobile: "",
     email: "",
     address: "",
     income: "Indigent",
-    category: "General"
+    caseType: "Initial Consultation",
+    lawyerId: ""
   });
 
   // Main Queries
@@ -127,7 +130,7 @@ export default function AdminUsersPage() {
   const { data: cases } = useCollection(casesQuery);
   const { data: lawyers } = useCollection(lawyersQuery);
 
-  // Guard profile listener with current user check to avoid Permission Denied on initial load
+  // Guard profile listener
   const profileRef = useMemoFirebase(() => {
     if (!db || !selectedClientId || !currentUser) return null;
     return doc(db, "users", selectedClientId, "profile", "profile");
@@ -209,18 +212,20 @@ export default function AdminUsersPage() {
       const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, "password123");
       const uid = userCredential.user.uid;
       
+      // 1. Create User Document
       const userRef = doc(db, "users", uid);
       setDocumentNonBlocking(userRef, {
         id: uid,
         mobileNumber: newClient.mobile,
         email: email,
         role: "client",
-        status: "New Intake",
+        status: newClient.lawyerId ? "Active Case" : "New Intake",
         fullName: newClient.name,
         incomeClassification: newClient.income,
         createdAt: new Date().toISOString()
       }, { merge: true });
 
+      // 2. Create Profile Document
       const profileRef = doc(db, "users", uid, "profile", "profile");
       setDocumentNonBlocking(profileRef, {
         id: "profile",
@@ -231,13 +236,32 @@ export default function AdminUsersPage() {
         createdAt: new Date().toISOString()
       }, { merge: true });
 
+      // 3. Optional Case Creation
+      if (newClient.lawyerId) {
+        const year = new Date().getFullYear();
+        const caseId = `CASE-${year}-${Math.floor(1000 + Math.random() * 9000)}`;
+        const caseRef = doc(db, "cases", caseId);
+        setDocumentNonBlocking(caseRef, {
+          id: caseId,
+          clientId: uid,
+          lawyerId: newClient.lawyerId,
+          caseType: newClient.caseType,
+          status: "Active",
+          description: "Record initialized during manual citizen registration.",
+          createdAt: new Date().toISOString()
+        }, { merge: true });
+      }
+
       await deleteApp(secondaryApp);
 
-      toast({ title: "Client Registered", description: `${newClient.name} added to directory.` });
+      toast({ 
+        title: "Registration Complete", 
+        description: `${newClient.name} added. Default password is password123.` 
+      });
       setIsAddDialogOpen(false);
-      setNewClient({ name: "", mobile: "", email: "", address: "", income: "Indigent", category: "General" });
+      setNewClient({ name: "", mobile: "", email: "", address: "", income: "Indigent", caseType: "Initial Consultation", lawyerId: "" });
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Failed", description: error.message });
+      toast({ variant: "destructive", title: "Registration Failed", description: error.message });
     } finally {
       setIsSubmitting(false);
     }
@@ -248,7 +272,6 @@ export default function AdminUsersPage() {
     const profileDocRef = doc(db, "users", selectedClientId, "profile", "profile");
     updateDocumentNonBlocking(profileDocRef, editProfile);
     
-    // Sync with top-level user document
     const userRef = doc(db, "users", selectedClientId);
     const fullName = `${editProfile.firstName} ${editProfile.lastName}`.trim();
     updateDocumentNonBlocking(userRef, { 
@@ -257,7 +280,7 @@ export default function AdminUsersPage() {
     });
 
     setIsEditingPersonal(false);
-    toast({ title: "Profile Saved", description: "Personal details updated and synced across system." });
+    toast({ title: "Profile Saved", description: "Details updated." });
   };
 
   const handleSaveCase = () => {
@@ -265,7 +288,7 @@ export default function AdminUsersPage() {
     const ref = doc(db, "cases", activeCase.id);
     updateDocumentNonBlocking(ref, editCase);
     setIsEditingCase(false);
-    toast({ title: "Case Saved", description: "Legal Case record updated." });
+    toast({ title: "Case Saved", description: "Case record updated." });
   };
 
   const handleCreateInitialCase = () => {
@@ -282,7 +305,7 @@ export default function AdminUsersPage() {
       lawyerId: newCaseData.lawyerId,
       caseType: newCaseData.caseType,
       status: "Active",
-      description: "Direct case assignment from Admin Directory.",
+      description: "Direct assignment from directory workstation.",
       createdAt: new Date().toISOString()
     }, { merge: true });
 
@@ -290,46 +313,27 @@ export default function AdminUsersPage() {
     
     setTimeout(() => {
       setIsSubmitting(false);
-      toast({ title: "Case Created", description: `Record ${caseId} assigned successfully.` });
+      toast({ title: "Case Initialized", description: `Reference ${caseId} assigned.` });
     }, 800);
   };
 
   const handleUpdateStatus = (userId: string, newStatus: string) => {
     if (!db) return;
     updateDocumentNonBlocking(doc(db, "users", userId), { status: newStatus });
-    
-    // Also update case if it exists and we're closing it
-    const clientCase = cases?.find(c => c.clientId === userId);
-    if (clientCase && newStatus === 'Closed Case') {
-      updateDocumentNonBlocking(doc(db, "cases", clientCase.id), { 
-        status: "Closed",
-        closedAt: new Date().toISOString()
-      });
-    } else if (clientCase && newStatus === 'Active Case') {
-      updateDocumentNonBlocking(doc(db, "cases", clientCase.id), { 
-        status: "Active",
-        closedAt: null
-      });
-    }
-
-    toast({ title: "Status Updated", description: `Client is now ${newStatus}.` });
+    toast({ title: "Status Synchronized", description: `Client moved to ${newStatus}.` });
   };
 
   const handleReassignLawyer = (caseId: string, newLawyerId: string) => {
     if (!db || !caseId) return;
     updateDocumentNonBlocking(doc(db, "cases", caseId), { lawyerId: newLawyerId });
-    toast({ title: "Attorney Reassigned", description: "The Case has been updated with the new lawyer." });
+    toast({ title: "Attorney Assigned", description: "Caseload redirected." });
   };
 
   const handleDeleteUser = (userId: string) => {
     if (!db) return;
     const userRef = doc(db, "users", userId);
     updateDocumentNonBlocking(userRef, { status: "Inactive" });
-    toast({
-      variant: "destructive",
-      title: "Client Deactivated",
-      description: "Record moved to archives."
-    });
+    toast({ variant: "destructive", title: "Account Deactivated", description: "Record archived." });
   };
 
   return (
@@ -338,31 +342,30 @@ export default function AdminUsersPage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Client Directory</h1>
+            <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest mt-1">Unified citizen and case management</p>
           </div>
-          <Button onClick={() => setIsAddDialogOpen(true)} className="rounded-2xl h-12 bg-primary font-black shadow-lg">
-            <UserPlus className="mr-2 h-5 w-5" /> Add New Client
+          <Button onClick={() => setIsAddDialogOpen(true)} className="rounded-2xl h-12 bg-primary font-black shadow-lg hover:scale-105 transition-transform">
+            <UserPlus className="mr-2 h-5 w-5" /> Register New Citizen
           </Button>
         </div>
 
         <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
-          <CardHeader className="bg-primary/5 pb-6">
-            <div className="flex flex-col md:flex-row justify-between gap-4">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/30" />
-                <Input 
-                  placeholder="Search by name, email or mobile..." 
-                  className="pl-9 h-11 rounded-xl border-primary/10 bg-white"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
+          <CardHeader className="bg-primary/5 pb-6 border-b border-primary/10">
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/30" />
+              <Input 
+                placeholder="Search citizens..." 
+                className="pl-9 h-11 rounded-xl border-primary/10 bg-white"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
           </CardHeader>
           <CardContent className="p-0">
             {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                <p className="text-sm font-bold text-muted-foreground">Synchronizing Registry...</p>
+              <div className="flex flex-col items-center justify-center py-24 space-y-4">
+                <Loader2 className="h-10 w-10 animate-spin text-primary/20" />
+                <p className="text-xs font-black uppercase text-muted-foreground tracking-widest">Synchronizing Registry...</p>
               </div>
             ) : (
               <Table>
@@ -392,7 +395,6 @@ export default function AdminUsersPage() {
                                 {client.fullName || client.email?.split('@')[0]}
                               </p>
                               <p className="text-[10px] text-muted-foreground font-bold">{client.mobileNumber}</p>
-                              <p className="text-[9px] text-muted-foreground/60">{client.email}</p>
                             </div>
                           </div>
                         </TableCell>
@@ -438,23 +440,16 @@ export default function AdminUsersPage() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="rounded-2xl w-56 p-2">
-                                <DropdownMenuLabel className="text-[10px] font-black uppercase text-primary/40 tracking-widest px-2 pb-2">Record Actions</DropdownMenuLabel>
+                                <DropdownMenuLabel className="text-[10px] font-black uppercase text-primary/40 tracking-widest px-2 pb-2 text-center border-b mb-2">Record Triage</DropdownMenuLabel>
                                 <DropdownMenuItem onClick={() => handleUpdateStatus(client.id, "Active Case")} className="rounded-xl font-bold">
-                                  <ShieldAlert className="mr-2 h-4 w-4 text-green-600" /> Mark as Active Case
+                                  <ShieldCheck className="mr-2 h-4 w-4 text-green-600" /> Mark Active Case
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleUpdateStatus(client.id, "Closed Case")} className="rounded-xl font-bold">
-                                  <Gavel className="mr-2 h-4 w-4 text-primary" /> Mark as Closed
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleUpdateStatus(client.id, "Under Screening")} className="rounded-xl font-bold">
-                                  <Search className="mr-2 h-4 w-4 text-amber-600" /> Mark as Under Screening
+                                  <Gavel className="mr-2 h-4 w-4 text-primary" /> Mark Closed
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem 
-                                  onClick={() => handleDeleteUser(client.id)}
-                                  className="text-destructive focus:text-destructive rounded-xl font-bold"
-                                >
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  Deactivate Account
+                                <DropdownMenuItem onClick={() => handleDeleteUser(client.id)} className="text-destructive font-bold rounded-xl">
+                                  <Trash2 className="mr-2 h-4 w-4" /> Deactivate Account
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -463,36 +458,123 @@ export default function AdminUsersPage() {
                       </TableRow>
                     );
                   })}
-                  {filteredUsers.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-20 text-muted-foreground italic font-medium">
-                        No clients found matching your criteria.
-                      </TableCell>
-                    </TableRow>
-                  )}
                 </TableBody>
               </Table>
             )}
           </CardContent>
         </Card>
 
-        {/* --- DETAILS & PROFILE OVERLAY --- */}
-        <Dialog open={isDetailsOpen} onOpenChange={(open) => { setIsDetailsOpen(open); if(!open) { setIsEditingPersonal(false); setIsEditingCase(false); } }}>
+        {/* --- ADD CLIENT DIALOG --- */}
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogContent className="rounded-[3rem] max-w-2xl p-0 overflow-hidden border-none shadow-2xl">
+            <DialogHeader className="p-8 bg-primary text-white">
+              <DialogTitle className="text-3xl font-black tracking-tight">Citizen Registration</DialogTitle>
+              <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">Enroll a new client and initialize legal records</DialogDescription>
+            </DialogHeader>
+            <div className="p-10 space-y-8 max-h-[70vh] overflow-y-auto">
+              <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-center gap-4">
+                <div className="p-2 bg-amber-100 rounded-xl text-amber-700">
+                  <Lock className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase text-amber-900 tracking-widest">Portal Access Credentials</p>
+                  <p className="text-xs font-bold text-amber-800">Initial login password: <span className="font-black bg-white px-2 py-0.5 rounded border border-amber-200">password123</span></p>
+                </div>
+              </div>
+
+              <div className="grid gap-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Full Citizen Name</Label>
+                    <Input value={newClient.name} onChange={e => setNewClient({...newClient, name: e.target.value})} className="h-12 rounded-xl" placeholder="Juan Dela Cruz" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Mobile Number</Label>
+                    <Input value={newClient.mobile} onChange={e => setNewClient({...newClient, mobile: e.target.value})} className="h-12 rounded-xl" placeholder="09XXXXXXXXX" />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Income Classification</Label>
+                    <Select value={newClient.income} onValueChange={v => setNewClient({...newClient, income: v})}>
+                      <SelectTrigger className="h-12 rounded-xl">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Indigent" className="font-bold">Indigent (Priority)</SelectItem>
+                        <SelectItem value="Low Income" className="font-bold">Low Income</SelectItem>
+                        <SelectItem value="Government Employee" className="font-bold">Govt Employee</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Email (Optional)</Label>
+                    <Input value={newClient.email} onChange={e => setNewClient({...newClient, email: e.target.value})} className="h-12 rounded-xl" placeholder="name@email.com" />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Home Address</Label>
+                  <Input value={newClient.address} onChange={e => setNewClient({...newClient, address: e.target.value})} className="h-12 rounded-xl" placeholder="Street, Barangay, City" />
+                </div>
+
+                <div className="pt-6 border-t border-primary/5 space-y-6">
+                  <div className="flex items-center gap-2">
+                    <Scale className="h-4 w-4 text-primary" />
+                    <span className="text-[10px] font-black uppercase text-primary tracking-[0.2em]">Initialize Legal Record (Optional)</span>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Case Classification</Label>
+                      <Input value={newClient.caseType} onChange={e => setNewClient({...newClient, caseType: e.target.value})} className="h-12 rounded-xl" placeholder="e.g. Theft, Labor Dispute" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Assign Handling Attorney</Label>
+                      <Select value={newClient.lawyerId} onValueChange={v => setNewClient({...newClient, lawyerId: v})}>
+                        <SelectTrigger className="h-12 rounded-xl">
+                          <SelectValue placeholder="Select Lawyer" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {lawyers?.map(l => (
+                            <SelectItem key={l.id} value={l.id} className="font-bold">
+                              {l.firstName ? `Atty. ${l.firstName} ${l.lastName}` : l.email.split('@')[0]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <DialogFooter className="p-8 bg-muted/30">
+              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="rounded-xl h-14 px-8 font-bold">Cancel</Button>
+              <Button onClick={handleAddClient} disabled={isSubmitting || !newClient.name || !newClient.mobile} className="rounded-xl h-14 bg-primary font-black px-12 shadow-xl">
+                {isSubmitting ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : <ShieldCheck className="mr-2 h-5 w-5" />}
+                Complete Registration
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* --- DETAILS OVERLAY --- */}
+        <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
           <DialogContent className="rounded-[3rem] max-w-2xl p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
-            <DialogHeader className="p-6 md:p-8 bg-secondary text-white shrink-0">
+            <DialogHeader className="p-8 bg-secondary text-white shrink-0">
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
                   <DialogTitle className="text-2xl font-black">
-                    {selectedProfile ? `${selectedProfile.firstName} ${selectedProfile.lastName}` : (selectedUser?.fullName || selectedUser?.email?.split('@')[0] || "Client Profile")}
+                    {selectedProfile ? `${selectedProfile.firstName} ${selectedProfile.lastName}` : (selectedUser?.fullName || "Citizen Profile")}
                   </DialogTitle>
                   <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">
-                    Citizen ID: {selectedUser?.id?.slice(0, 8)}...
+                    ID: {selectedUser?.id?.slice(0, 8)}...
                   </DialogDescription>
                 </div>
                 <Badge className="bg-white text-secondary font-black px-4 py-2 rounded-xl">{selectedUser?.status || "Active"}</Badge>
               </div>
             </DialogHeader>
-            <div className="p-6 md:p-10 overflow-y-auto flex-1">
+            <div className="p-10 overflow-y-auto flex-1">
               <Tabs defaultValue="profile" className="w-full">
                 <TabsList className="grid w-full grid-cols-3 bg-muted/50 p-1 rounded-2xl h-14">
                   <TabsTrigger value="profile" className="rounded-xl font-bold">Personal</TabsTrigger>
@@ -500,323 +582,109 @@ export default function AdminUsersPage() {
                   <TabsTrigger value="history" className="rounded-xl font-bold">History</TabsTrigger>
                 </TabsList>
                 
-                <TabsContent value="profile" className="space-y-8 pt-6 animate-in fade-in duration-500">
+                <TabsContent value="profile" className="space-y-8 pt-6">
                   <div className="flex justify-between items-center">
-                    <h4 className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Contact Information</h4>
+                    <h4 className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Identification & Contact</h4>
                     {!isEditingPersonal ? (
-                      <Button variant="ghost" size="sm" onClick={() => setIsEditingPersonal(true)} className="h-8 rounded-lg text-primary">
-                        <Edit3 className="h-3 w-3 mr-1" /> Edit
-                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => setIsEditingPersonal(true)} className="h-8 text-primary font-bold"><Edit3 className="h-3 w-3 mr-1" /> Edit</Button>
                     ) : (
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => setIsEditingPersonal(false)} className="h-8 rounded-lg text-muted-foreground">
-                          <X className="h-3 w-3 mr-1" /> Cancel
-                        </Button>
-                        <Button size="sm" onClick={handleSaveProfile} className="h-8 rounded-lg bg-primary text-white">
-                          <Save className="h-3 w-3 mr-1" /> Save
-                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => setIsEditingPersonal(false)} className="h-8 text-muted-foreground">Cancel</Button>
+                        <Button size="sm" onClick={handleSaveProfile} className="h-8 bg-primary text-white">Save</Button>
                       </div>
                     )}
                   </div>
-
                   <div className="grid md:grid-cols-2 gap-8">
                     {isEditingPersonal ? (
                       <>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase">First Name</Label>
-                          <Input value={editProfile.firstName} onChange={e => setEditProfile({...editProfile, firstName: e.target.value})} className="h-10 rounded-xl" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase">Last Name</Label>
-                          <Input value={editProfile.lastName} onChange={e => setEditProfile({...editProfile, lastName: e.target.value})} className="h-10 rounded-xl" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase">Mobile Number</Label>
-                          <Input value={editProfile.phoneNumber} onChange={e => setEditProfile({...editProfile, phoneNumber: e.target.value})} className="h-10 rounded-xl" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase">Home Address</Label>
-                          <Input value={editProfile.address} onChange={e => setEditProfile({...editProfile, address: e.target.value})} className="h-10 rounded-xl" />
-                        </div>
+                        <div className="space-y-2"><Label className="text-[10px] font-black uppercase">First Name</Label><Input value={editProfile.firstName} onChange={e => setEditProfile({...editProfile, firstName: e.target.value})} /></div>
+                        <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Last Name</Label><Input value={editProfile.lastName} onChange={e => setEditProfile({...editProfile, lastName: e.target.value})} /></div>
+                        <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Mobile</Label><Input value={editProfile.phoneNumber} onChange={e => setEditProfile({...editProfile, phoneNumber: e.target.value})} /></div>
+                        <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Address</Label><Input value={editProfile.address} onChange={e => setEditProfile({...editProfile, address: e.target.value})} /></div>
                       </>
                     ) : (
                       <>
                         <div className="space-y-4">
-                          <div className="space-y-1">
-                            <p className="font-bold text-primary flex items-center gap-2">
-                              <Phone className="h-4 w-4 text-secondary" /> {selectedUser?.mobileNumber || selectedProfile?.phoneNumber || "N/A"}
-                            </p>
-                            <p className="font-bold text-primary flex items-center gap-2">
-                              <Mail className="h-4 w-4 text-secondary" /> {selectedUser?.email || "N/A"}
-                            </p>
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Home Address</Label>
-                            <p className="text-sm font-bold text-primary flex items-start gap-2">
-                              <MapPin className="h-4 w-4 text-secondary shrink-0 mt-0.5" /> 
-                              {selectedProfile?.address || "Address not provided"}
-                            </p>
-                          </div>
+                          <p className="font-bold text-primary flex items-center gap-2"><Phone className="h-4 w-4 text-secondary" /> {selectedUser?.mobileNumber || "N/A"}</p>
+                          <p className="font-bold text-primary flex items-center gap-2"><Mail className="h-4 w-4 text-secondary" /> {selectedUser?.email || "N/A"}</p>
+                          <p className="text-xs font-bold text-primary flex items-start gap-2 leading-relaxed"><MapPin className="h-4 w-4 text-secondary shrink-0 mt-0.5" /> {selectedProfile?.address || "No address"}</p>
                         </div>
-                        <div className="space-y-4">
-                          <div className="space-y-1">
-                            <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Eligibility Status</Label>
-                            <p className="font-black text-secondary">{selectedUser?.incomeClassification || "Indigent"}</p>
-                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">Verified Priority Rank</p>
-                          </div>
+                        <div className="space-y-1">
+                          <Label className="text-[10px] font-black uppercase text-primary/40">Verified Classification</Label>
+                          <p className="font-black text-secondary">{selectedUser?.incomeClassification || "Indigent"}</p>
                         </div>
                       </>
                     )}
                   </div>
                 </TabsContent>
 
-                <TabsContent value="case" className="space-y-8 pt-6 animate-in slide-in-from-right-4">
+                <TabsContent value="case" className="space-y-8 pt-6">
                   {activeCase ? (
                     <div className="space-y-6">
-                      <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10">
+                      <div className="p-6 bg-primary/5 rounded-[2rem] border border-primary/10">
                         <div className="flex justify-between items-center mb-4">
-                          <div className="flex items-center gap-3">
-                            <Scale className="h-6 w-6 text-primary" />
-                            <h4 className="font-black text-primary uppercase tracking-widest text-sm">Active Legal Case</h4>
-                          </div>
-                          {!isEditingCase ? (
-                            <Button variant="ghost" size="sm" onClick={() => setIsEditingCase(true)} className="h-8 rounded-lg text-primary">
-                              <Edit3 className="h-3 w-3 mr-1" /> Edit Case
-                            </Button>
-                          ) : (
-                            <div className="flex gap-2">
-                              <Button variant="ghost" size="sm" onClick={() => setIsEditingCase(false)} className="h-8 rounded-lg text-muted-foreground">
-                                <X className="h-3 w-3 mr-1" /> Cancel
-                              </Button>
-                              <Button size="sm" onClick={handleSaveCase} className="h-8 rounded-lg bg-primary text-white">
-                                <Save className="h-3 w-3 mr-1" /> Save
-                              </Button>
-                            </div>
-                          )}
+                          <h4 className="font-black text-primary uppercase text-sm flex items-center gap-2"><Scale className="h-5 w-5" /> Official Case File</h4>
+                          <Button variant="ghost" size="sm" onClick={() => setIsEditingCase(!isEditingCase)} className="h-8 text-primary font-bold">{isEditingCase ? "Cancel" : "Edit Case"}</Button>
                         </div>
-
                         {isEditingCase ? (
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label className="text-[10px] font-black uppercase">Case Type</Label>
-                              <Input value={editCase.caseType} onChange={e => setEditCase({...editCase, caseType: e.target.value})} className="h-10 rounded-xl" />
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-[10px] font-black uppercase">Date Opened</Label>
-                              <Input type="date" value={editCase.createdAt?.split('T')[0]} onChange={e => setEditCase({...editCase, createdAt: new Date(e.target.value).toISOString()})} className="h-10 rounded-xl" />
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-[10px] font-black uppercase">Date Closed</Label>
-                              <Input type="date" value={editCase.closedAt?.split('T')[0]} onChange={e => setEditCase({...editCase, closedAt: e.target.value ? new Date(e.target.value).toISOString() : null})} className="h-10 rounded-xl" />
-                            </div>
-                            <div className="col-span-2 space-y-2">
-                              <Label className="text-[10px] font-black uppercase">Full Case Description</Label>
-                              <Textarea value={editCase.description} onChange={e => setEditCase({...editCase, description: e.target.value})} className="rounded-xl min-h-[100px]" />
-                            </div>
+                          <div className="grid gap-4">
+                            <Input value={editCase.caseType} onChange={e => setEditCase({...editCase, caseType: e.target.value})} placeholder="Case Type" />
+                            <Textarea value={editCase.description} onChange={e => setEditCase({...editCase, description: e.target.value})} placeholder="Description" />
+                            <Button size="sm" onClick={handleSaveCase} className="bg-primary text-white">Save Changes</Button>
                           </div>
                         ) : (
                           <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                              <p className="text-[10px] font-black text-muted-foreground uppercase">Case ID</p>
-                              <p className="font-black text-primary tracking-tight">{activeCase.id}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <p className="text-[10px] font-black text-muted-foreground uppercase">Classification</p>
-                              <p className="font-black text-primary tracking-tight">{activeCase.caseType}</p>
-                            </div>
-                            <div className="space-y-1 pt-2">
-                              <p className="text-[10px] font-black text-muted-foreground uppercase">Date Opened</p>
-                              <p className="text-xs font-bold text-primary">{format(new Date(activeCase.createdAt), "PPP")}</p>
-                            </div>
-                            <div className="space-y-1 pt-2">
-                              <p className="text-[10px] font-black text-muted-foreground uppercase">Date Closed</p>
-                              <p className="text-xs font-bold text-primary">{activeCase.closedAt ? format(new Date(activeCase.closedAt), "PPP") : "---"}</p>
-                            </div>
-                            <div className="col-span-2 space-y-1 pt-2">
-                              <p className="text-[10px] font-black text-muted-foreground uppercase">Description</p>
-                              <p className="text-xs font-medium text-primary/80 italic leading-relaxed">{activeCase.description}</p>
-                            </div>
+                            <div><p className="text-[10px] font-black text-muted-foreground uppercase">Ref ID</p><p className="font-black text-primary">{activeCase.id}</p></div>
+                            <div><p className="text-[10px] font-black text-muted-foreground uppercase">Category</p><p className="font-black text-primary">{activeCase.caseType}</p></div>
+                            <div className="col-span-2 pt-2"><p className="text-[10px] font-black text-muted-foreground uppercase">Summary</p><p className="text-xs italic text-primary/80">{activeCase.description || "---"}</p></div>
                           </div>
                         )}
                       </div>
-
-                      <div className="space-y-4">
-                        <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Attorney Assignment (Assign/Reassign)</Label>
-                        <Select 
-                          value={activeCase.lawyerId} 
-                          onValueChange={(v) => handleReassignLawyer(activeCase.id, v)}
-                        >
-                          <SelectTrigger className="h-14 rounded-2xl border-primary/20 bg-white font-bold shadow-sm">
-                            <div className="flex items-center gap-2">
-                              <Briefcase className="h-4 w-4 text-secondary" />
-                              <SelectValue placeholder="Select handling attorney" />
-                            </div>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {lawyers?.map((l) => (
-                              <SelectItem key={l.id} value={l.id} className="font-bold">
-                                {l.firstName ? `Atty. ${l.firstName} ${l.lastName}` : l.email.split('@')[0]}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Handling Public Attorney</Label>
+                        <Select value={activeCase.lawyerId} onValueChange={v => handleReassignLawyer(activeCase.id, v)}>
+                          <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="Assign Lawyer" /></SelectTrigger>
+                          <SelectContent>{lawyers?.map(l => <SelectItem key={l.id} value={l.id} className="font-bold">{l.firstName ? `Atty. ${l.firstName} ${l.lastName}` : l.email}</SelectItem>)}</SelectContent>
                         </Select>
-                        <p className="text-[10px] text-muted-foreground font-medium text-center italic">Assigning a new lawyer will instantly update their workstation.</p>
                       </div>
                     </div>
                   ) : (
-                    <div className="space-y-6">
-                      <div className="p-8 bg-primary/5 rounded-[2rem] border-2 border-dashed border-primary/10 text-center">
-                        <Scale className="h-12 w-12 text-primary/20 mx-auto mb-4" />
-                        <h4 className="text-lg font-black text-primary mb-2">Initialize Legal Record</h4>
-                        <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-                          Assign an attorney to start the official legal process for this citizen.
-                        </p>
-                        
-                        <div className="grid gap-4 text-left max-w-sm mx-auto">
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">Case Category</Label>
-                            <Input 
-                              value={newCaseData.caseType} 
-                              onChange={e => setNewCaseData({...newCaseData, caseType: e.target.value})}
-                              placeholder="e.g. Qualified Theft"
-                              className="h-12 rounded-xl border-primary/10 bg-white"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">Assign Attorney</Label>
-                            <Select 
-                              value={newCaseData.lawyerId} 
-                              onValueChange={v => setNewCaseData({...newCaseData, lawyerId: v})}
-                            >
-                              <SelectTrigger className="h-12 rounded-xl border-primary/10 bg-white">
-                                <SelectValue placeholder="Select Handling Lawyer" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {lawyers?.map(l => (
-                                  <SelectItem key={l.id} value={l.id} className="font-bold">
-                                    {l.firstName ? `Atty. ${l.firstName} ${l.lastName}` : l.email.split('@')[0]}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <Button 
-                            className="w-full h-12 bg-primary text-white font-black rounded-xl mt-4 shadow-lg"
-                            disabled={!newCaseData.lawyerId || isSubmitting}
-                            onClick={handleCreateInitialCase}
-                          >
-                            {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : "Create & Assign Case"}
-                          </Button>
+                    <div className="p-10 bg-primary/5 rounded-[2.5rem] border-2 border-dashed text-center space-y-6">
+                      <Scale className="h-12 w-12 text-primary/20 mx-auto" />
+                      <div>
+                        <h4 className="text-lg font-black text-primary">Initialize Legal Record</h4>
+                        <p className="text-xs text-muted-foreground">Citizen is currently registered but has no active case file.</p>
+                      </div>
+                      <div className="max-w-xs mx-auto space-y-4 text-left">
+                        <div className="space-y-1"><Label className="text-[10px] font-black uppercase text-primary/40">Classification</Label><Input value={newCaseData.caseType} onChange={e => setNewCaseData({...newCaseData, caseType: e.target.value})} className="h-10 rounded-lg" /></div>
+                        <div className="space-y-1"><Label className="text-[10px] font-black uppercase text-primary/40">Assign Attorney</Label>
+                          <Select value={newCaseData.lawyerId} onValueChange={v => setNewCaseData({...newCaseData, lawyerId: v})}>
+                            <SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Select Attorney" /></SelectTrigger>
+                            <SelectContent>{lawyers?.map(l => <SelectItem key={l.id} value={l.id} className="font-bold">{l.firstName ? `Atty. ${l.firstName} ${l.lastName}` : l.email}</SelectItem>)}</SelectContent>
+                          </Select>
                         </div>
+                        <Button className="w-full bg-primary text-white font-black rounded-xl" disabled={!newCaseData.lawyerId || isSubmitting} onClick={handleCreateInitialCase}>Initialize & Assign Case</Button>
                       </div>
                     </div>
                   )}
                 </TabsContent>
 
-                <TabsContent value="history" className="pt-6 animate-in slide-in-from-right-4 space-y-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <h4 className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Chronological Visit History</h4>
-                    <Badge variant="outline" className="font-bold text-[9px] uppercase">{clientHistory?.length || 0} Records</Badge>
-                  </div>
-                  
-                  {isHistoryLoading ? (
-                    <div className="py-12 flex justify-center"><Loader2 className="animate-spin h-8 w-8 text-primary/20" /></div>
-                  ) : clientHistory && clientHistory.length > 0 ? (
+                <TabsContent value="history" className="pt-6 space-y-4">
+                  <h4 className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Chronological History</h4>
+                  {isHistoryLoading ? <Loader2 className="animate-spin h-6 w-6 mx-auto opacity-20" /> : clientHistory?.length ? (
                     <div className="space-y-3">
-                      {clientHistory.map((appt) => (
-                        <div key={appt.id} className="p-4 bg-muted/20 rounded-2xl border border-primary/5 flex items-center justify-between group hover:bg-white transition-colors">
-                          <div className="flex items-center gap-4">
-                            <div className={cn(
-                              "h-10 w-10 rounded-xl flex items-center justify-center",
-                              appt.status === 'completed' ? "bg-green-50 text-green-600" :
-                              appt.status === 'cancelled' ? "bg-red-50 text-red-600" :
-                              "bg-primary/5 text-primary"
-                            )}>
-                              {appt.status === 'completed' ? <CheckCircle2 className="h-5 w-5" /> :
-                               appt.status === 'cancelled' ? <XCircle className="h-5 w-5" /> :
-                               <Clock className="h-5 w-5" />}
-                            </div>
-                            <div>
-                              <p className="text-sm font-bold text-primary">{appt.caseType}</p>
-                              <p className="text-[9px] text-muted-foreground font-black uppercase tracking-tighter">
-                                {format(new Date(appt.date), "PPP")} • {appt.time} • REF: {appt.referenceCode}
-                              </p>
-                            </div>
-                          </div>
-                          <Badge className={cn(
-                            "font-black text-[8px] uppercase",
-                            appt.status === 'completed' ? "bg-green-500" :
-                            appt.status === 'cancelled' ? "bg-red-500" :
-                            "bg-primary"
-                          )}>
-                            {appt.status}
-                          </Badge>
+                      {clientHistory.map(h => (
+                        <div key={h.id} className="p-4 bg-muted/20 rounded-2xl flex items-center justify-between border border-transparent hover:border-primary/10">
+                          <div><p className="text-sm font-bold text-primary">{h.caseType}</p><p className="text-[9px] text-muted-foreground uppercase font-black">{format(new Date(h.date), "PPP")} • {h.status}</p></div>
+                          <Badge variant="outline" className="text-[8px] font-black uppercase">{h.referenceCode}</Badge>
                         </div>
                       ))}
                     </div>
-                  ) : (
-                    <div className="text-center py-12 bg-muted/20 rounded-3xl border border-dashed">
-                      <History className="h-10 w-10 mx-auto text-primary/10 mb-2" />
-                      <p className="text-sm font-bold text-muted-foreground italic">No past visit history found for this resident.</p>
-                    </div>
-                  )}
+                  ) : <p className="text-center py-10 text-xs italic text-muted-foreground">No visit history found.</p>}
                 </TabsContent>
               </Tabs>
             </div>
-            <DialogFooter className="p-6 md:p-8 bg-muted/30 shrink-0">
-              <Button onClick={() => setIsDetailsOpen(false)} className="w-full h-14 rounded-2xl font-black bg-primary text-white shadow-xl">Close Resident Record</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* --- ADD CLIENT DIALOG --- */}
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogContent className="rounded-[3rem] max-w-lg p-0 overflow-hidden border-none shadow-2xl">
-            <DialogHeader className="p-8 bg-primary text-white">
-              <DialogTitle className="text-2xl font-black">Register New Citizen</DialogTitle>
-              <DialogDescription className="text-white/60 font-medium">Add a new client to the PAO registry system.</DialogDescription>
-            </DialogHeader>
-            <div className="p-8 space-y-6">
-              <div className="grid gap-4">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Full Name</Label>
-                  <Input value={newClient.name} onChange={e => setNewClient({...newClient, name: e.target.value})} className="h-12 rounded-xl" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Mobile</Label>
-                    <Input value={newClient.mobile} onChange={e => setNewClient({...newClient, mobile: e.target.value})} className="h-12 rounded-xl" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Classification</Label>
-                    <Select value={newClient.income} onValueChange={v => setNewClient({...newClient, income: v})}>
-                      <SelectTrigger className="h-12 rounded-xl">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Indigent">Indigent</SelectItem>
-                        <SelectItem value="Low Income">Low Income</SelectItem>
-                        <SelectItem value="Government Employee">Govt Employee</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Email (Optional)</Label>
-                  <Input value={newClient.email} onChange={e => setNewClient({...newClient, email: e.target.value})} className="h-12 rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Address</Label>
-                  <Input value={newClient.address} onChange={e => setNewClient({...newClient, address: e.target.value})} className="h-12 rounded-xl" />
-                </div>
-              </div>
-            </div>
-            <DialogFooter className="p-8 bg-muted/30">
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="rounded-xl h-12">Cancel</Button>
-              <Button onClick={handleAddClient} disabled={isSubmitting} className="rounded-xl h-12 bg-primary font-black px-10">
-                {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : "Register Citizen"}
-              </Button>
-            </DialogFooter>
+            <DialogFooter className="p-8 bg-muted/30"><Button onClick={() => setIsDetailsOpen(false)} className="w-full h-14 bg-primary text-white font-black rounded-2xl shadow-xl">Close Workstation</Button></DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
