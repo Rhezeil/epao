@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useAuth } from "@/components/auth-provider";
@@ -24,12 +23,12 @@ import {
   Info,
   ChevronRight,
   Gavel,
-  FolderOpen,
   Plus,
-  File,
   ShieldCheck,
   ClipboardList,
-  Calendar
+  Calendar,
+  Edit3,
+  XCircle
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -80,11 +79,6 @@ export default function LawyerCasesPage() {
   // Profile State
   const [selectedClientIdForProfile, setSelectedClientIdForProfile] = useState<string | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-
-  // Folder State
-  const [selectedCaseForFolder, setSelectedCaseForFolder] = useState<any>(null);
-  const [isFolderOpen, setIsFolderOpen] = useState(false);
-  const [newDoc, setNewDoc] = useState({ name: "", folder: "Evidence" });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -140,12 +134,6 @@ export default function LawyerCasesPage() {
   const { data: clientUser } = useDoc(clientDocRef);
   const { data: clientProfile } = useDoc(profileDocRef);
 
-  const docsQuery = useMemoFirebase(() => {
-    if (!db || !selectedCaseForFolder || !user) return null;
-    return collection(db, "cases", selectedCaseForFolder.id, "documents");
-  }, [db, selectedCaseForFolder, user]);
-  const { data: caseDocs } = useCollection(docsQuery);
-
   // Slot Logic for Booking Dialog
   const bookingDateStr = bookingForm.date ? format(bookingForm.date, "yyyy-MM-dd") : null;
   const globalApptsQuery = useMemoFirebase(() => {
@@ -159,7 +147,7 @@ export default function LawyerCasesPage() {
     const now = new Date();
     for (let h = 8; h <= 16; h++) {
       for (let m = 0; m < 60; m += 30) {
-        if (h === 12) continue;
+        if (h === 12) continue; // Lunch
         if (h === 16 && m > 30) continue;
         const ampm = h >= 12 ? 'PM' : 'AM';
         const displayHour = h % 12 || 12;
@@ -231,21 +219,6 @@ export default function LawyerCasesPage() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleSaveDoc = () => {
-    if (!db || !selectedCaseForFolder || !newDoc.name) return;
-    const docId = crypto.randomUUID();
-    const docRef = doc(db, "cases", selectedCaseForFolder.id, "documents", docId);
-    setDocumentNonBlocking(docRef, {
-      id: docId,
-      name: newDoc.name,
-      folder: newDoc.folder,
-      uploadDate: new Date().toISOString(),
-      uploadedBy: user.uid
-    }, { merge: true });
-    setNewDoc({ name: "", folder: "Evidence" });
-    toast({ title: "Document Saved", description: `Successfully added to ${newDoc.folder}.` });
   };
 
   return (
@@ -331,9 +304,6 @@ export default function LawyerCasesPage() {
                         </TableCell>
                         <TableCell className="text-right px-8">
                           <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="icon" onClick={() => { setSelectedCaseForFolder(c); setIsFolderOpen(true); }} title="Case Folder" className="h-9 w-9 rounded-xl text-primary hover:bg-primary/5">
-                              <FolderOpen className="h-4 w-4" />
-                            </Button>
                             <Button variant="ghost" size="icon" onClick={() => { setSelectedClientIdForProfile(c.clientId); setIsProfileOpen(true); }} title="Client Profile" className="h-9 w-9 rounded-xl text-secondary hover:bg-secondary/5">
                               <User className="h-4 w-4" />
                             </Button>
@@ -367,86 +337,6 @@ export default function LawyerCasesPage() {
             )}
           </CardContent>
         </Card>
-
-        {/* --- CASE FOLDER DIALOG --- */}
-        <Dialog open={isFolderOpen} onOpenChange={setIsFolderOpen}>
-          <DialogContent className="rounded-[3rem] max-w-4xl p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
-            <DialogHeader className="p-8 bg-primary text-white shrink-0">
-              <div className="flex justify-between items-center">
-                <div className="space-y-1">
-                  <DialogTitle className="text-3xl font-black">Case Digital Folder</DialogTitle>
-                  <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">
-                    Registry ID: {selectedCaseForFolder?.id}
-                  </DialogDescription>
-                </div>
-                <FolderOpen className="h-10 w-10 opacity-40" />
-              </div>
-            </DialogHeader>
-            <div className="p-8 flex-1 overflow-y-auto space-y-8">
-              <div className="bg-primary/5 p-6 rounded-[2rem] border-2 border-dashed border-primary/10 flex flex-col sm:flex-row gap-4 items-end">
-                <div className="flex-1 space-y-2 w-full">
-                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Document Name</Label>
-                  <Input placeholder="e.g. Sworn Statement" value={newDoc.name} onChange={e => setNewDoc({...newDoc, name: e.target.value})} className="h-12 rounded-xl bg-white border-primary/10" />
-                </div>
-                <div className="w-full sm:w-48 space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Select Folder</Label>
-                  <Select value={newDoc.folder} onValueChange={v => setNewDoc({...newDoc, folder: v})}>
-                    <SelectTrigger className="h-12 rounded-xl bg-white border-primary/10">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {["Evidence", "Pleadings", "Court Orders", "Correspondence"].map(f => (
-                        <SelectItem key={f} value={f} className="font-bold">{f}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button onClick={handleSaveDoc} className="h-12 px-8 rounded-xl bg-primary text-white font-black">
-                  <Plus className="mr-2 h-4 w-4" /> Add Record
-                </Button>
-              </div>
-
-              <Tabs defaultValue="Evidence" className="w-full">
-                <TabsList className="grid w-full grid-cols-4 bg-muted/50 p-1 rounded-2xl h-14">
-                  {["Evidence", "Pleadings", "Court Orders", "Correspondence"].map(f => (
-                    <TabsTrigger key={f} value={f} className="rounded-xl font-bold text-[10px] uppercase">{f}</TabsTrigger>
-                  ))}
-                </TabsList>
-                {["Evidence", "Pleadings", "Court Orders", "Correspondence"].map(f => (
-                  <TabsContent key={f} value={f} className="mt-6">
-                    <div className="grid gap-3">
-                      {caseDocs?.filter(d => d.folder === f).map(doc => (
-                        <div key={doc.id} className="p-4 bg-white rounded-2xl border border-primary/5 shadow-sm flex items-center justify-between hover:border-primary/20 transition-colors group">
-                          <div className="flex items-center gap-4">
-                            <div className="p-2 bg-primary/5 rounded-xl group-hover:bg-primary/10 transition-colors">
-                              <File className="h-5 w-5 text-primary" />
-                            </div>
-                            <div>
-                              <p className="font-bold text-primary">{doc.name}</p>
-                              <p className="text-[9px] text-muted-foreground font-black uppercase tracking-tighter">
-                                Uploaded: {format(new Date(doc.uploadDate), "PPP p")}
-                              </p>
-                            </div>
-                          </div>
-                          <Badge variant="outline" className="font-black text-[8px] uppercase border-primary/10">Ref: {doc.id.slice(0, 8)}</Badge>
-                        </div>
-                      ))}
-                      {caseDocs?.filter(d => d.folder === f).length === 0 && (
-                        <div className="py-12 text-center bg-muted/10 rounded-3xl border border-dashed border-primary/10">
-                          <FileText className="h-10 w-10 text-primary/10 mx-auto mb-2" />
-                          <p className="text-xs font-bold text-muted-foreground italic">No document records found in this folder.</p>
-                        </div>
-                      )}
-                    </div>
-                  </TabsContent>
-                ))}
-              </Tabs>
-            </div>
-            <DialogFooter className="p-8 bg-muted/30 shrink-0">
-              <Button onClick={() => setIsFolderOpen(false)} className="w-full h-14 rounded-2xl font-black bg-primary text-white shadow-xl">Close Workstation Folder</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
 
         {/* --- CLIENT PROFILE DIALOG --- */}
         <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
@@ -652,7 +542,7 @@ export default function LawyerCasesPage() {
                 disabled={!bookingForm.date || !bookingForm.time || isSubmitting} 
                 className="bg-primary text-white font-black rounded-xl px-12 h-14 shadow-xl hover:scale-[1.02] transition-transform"
               >
-                {isSubmitting ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : <CalendarCheck className="mr-2 h-5 w-5" />}
+                {isSubmitting ? <Loader2 className="animate-spin h-6 w-6 mr-2" /> : <CalendarCheck className="mr-2 h-5 w-5" />}
                 Confirm Follow-up Schedule
               </Button>
             </DialogFooter>
