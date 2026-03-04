@@ -1,4 +1,3 @@
-
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -320,12 +319,6 @@ export default function LawyerDashboard() {
           </div>
           
           <div className="flex gap-3">
-            <Button 
-              onClick={() => router.push('/dashboard/lawyer/cases')}
-              className="rounded-full font-black text-[10px] uppercase tracking-widest shadow-md bg-primary hover:bg-primary/90 px-6 h-11 text-white"
-            >
-              <FileText className="mr-2 h-4 w-4" /> Go to Workload Registry
-            </Button>
             <Button 
               onClick={() => {
                 setAvailForm({
