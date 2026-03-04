@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAuth } from "@/components/auth-provider";
@@ -19,11 +20,12 @@ import {
   History,
   CheckCircle2,
   XCircle,
-  CalendarCheck
+  CalendarCheck,
+  Scale
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState, useMemo } from "react";
-import { format, isAfter, isBefore, startOfToday } from "date-fns";
+import { format, isBefore, startOfToday } from "date-fns";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -118,14 +120,15 @@ export default function ClientDashboard() {
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-primary text-white rounded-xl">
-                      <Gavel className="h-5 w-5" />
+                      <Scale className="h-5 w-5" />
                     </div>
-                    <CardTitle className="text-xl font-bold text-primary">My Official Case Record</CardTitle>
+                    <CardTitle className="text-xl font-bold text-primary">Case Details</CardTitle>
                   </div>
                   {activeCase && (
                     <Badge className={cn(
-                      "border-none font-black px-4 py-1.5 rounded-full uppercase text-[9px] tracking-widest",
-                      activeCase.status === 'Closed' ? 'bg-gray-100 text-gray-800' : 'bg-green-100 text-green-800'
+                      "border-none font-black px-4 py-1.5 rounded-full uppercase text-[9px] tracking-widest shadow-sm",
+                      activeCase.status === 'Closed' ? 'bg-gray-100 text-gray-800' : 
+                      activeCase.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'
                     )}>
                       {activeCase.status}
                     </Badge>
@@ -139,8 +142,8 @@ export default function ClientDashboard() {
                   <div className="grid md:grid-cols-2 gap-8">
                     <div className="space-y-6">
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest">Case Reference ID</p>
-                        <p className="text-xl font-black text-[#1A3B6B]">{activeCase.id}</p>
+                        <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest">Case ID</p>
+                        <p className="text-2xl font-black text-[#1A3B6B] tracking-tight">{activeCase.id}</p>
                       </div>
                       <div className="space-y-1">
                         <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest">Legal Matter Type</p>
@@ -156,7 +159,7 @@ export default function ClientDashboard() {
                           </p>
                         </div>
                         <div className="space-y-1">
-                          <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest">Status Update</p>
+                          <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest">Current Status</p>
                           <p className="text-sm font-bold text-[#1A3B6B]">
                             {activeCase.status}
                           </p>
@@ -164,15 +167,15 @@ export default function ClientDashboard() {
                       </div>
                       <div className="space-y-1 bg-muted/20 p-4 rounded-2xl border-2 border-dashed">
                         <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest mb-1">Case Summary</p>
-                        <p className="text-xs text-muted-foreground font-medium leading-relaxed italic">{activeCase.description}</p>
+                        <p className="text-xs text-muted-foreground font-medium leading-relaxed italic">{activeCase.description || "No description provided."}</p>
                       </div>
                     </div>
                   </div>
                 ) : (
                   <div className="text-center py-12 space-y-4">
                     <FileText className="h-12 w-12 text-primary/10 mx-auto" />
-                    <p className="text-muted-foreground font-medium">No official Case file has been initialized yet.</p>
-                    <p className="text-xs text-muted-foreground/60 italic">Please wait for the office to process your initial intake.</p>
+                    <p className="text-muted-foreground font-medium">No official Case record found.</p>
+                    <p className="text-xs text-muted-foreground/60 italic">Your file will be initialized once the triage process is complete.</p>
                   </div>
                 )}
               </CardContent>
@@ -211,7 +214,10 @@ export default function ClientDashboard() {
                     </div>
                   ))
                 ) : (
-                  <p className="text-center py-12 text-sm text-muted-foreground font-medium italic">You have no upcoming follow-ups scheduled.</p>
+                  <div className="py-12 text-center bg-muted/5 rounded-3xl border-2 border-dashed">
+                    <CalendarCheck className="h-10 w-10 text-muted-foreground/20 mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground font-medium italic">No upcoming follow-ups scheduled.</p>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -254,7 +260,7 @@ export default function ClientDashboard() {
           </div>
 
           <div className="space-y-8">
-            {/* --- LAWYER CARD --- */}
+            {/* --- ASSIGNED LAWYER CARD --- */}
             <Card className="border-none shadow-xl bg-[#F0F4F8] rounded-[2.5rem] overflow-hidden">
               <CardHeader className="bg-primary p-6 text-white text-center">
                 <CardTitle className="text-xs font-black uppercase tracking-widest">Assigned Legal Counsel</CardTitle>
@@ -273,15 +279,15 @@ export default function ClientDashboard() {
                         <p className="text-xl font-black text-[#1A3B6B]">
                           Atty. {assignedLawyer.firstName} {assignedLawyer.lastName}
                         </p>
-                        <Badge className="bg-primary/10 text-primary border-none font-bold uppercase text-[9px] mt-1 px-3">Public Attorney II</Badge>
+                        <Badge className="bg-primary/10 text-primary border-none font-bold uppercase text-[9px] mt-1 px-3">Public Attorney</Badge>
                       </div>
                     </div>
                     <div className="space-y-3 pt-6 border-t border-primary/10">
                       <div className="flex items-center gap-3 text-xs font-bold text-[#2E5A99]">
-                        <ShieldCheck className="h-4 w-4 text-primary" /> District Office North
+                        <ShieldCheck className="h-4 w-4 text-primary" /> District Office
                       </div>
                       <div className="flex items-center gap-3 text-xs font-bold text-[#2E5A99]">
-                        <Briefcase className="h-4 w-4 text-primary" /> Specialist in {activeCase?.caseType || "Legal Matters"}
+                        <Briefcase className="h-4 w-4 text-primary" /> Specialist Counsel
                       </div>
                     </div>
                   </>
@@ -291,7 +297,7 @@ export default function ClientDashboard() {
                       <User className="h-8 w-8 text-primary/20" />
                     </div>
                     <p className="text-xs text-muted-foreground font-medium italic leading-relaxed px-4">
-                      An official lawyer will be assigned once your Case record is fully processed by the office.
+                      An official lawyer will be assigned once your case is processed by the triage team.
                     </p>
                   </div>
                 )}
