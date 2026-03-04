@@ -65,7 +65,8 @@ service cloud.firestore {
     match /users/{userId} {
       allow get: if isSignedIn();
       allow list: if isAdmin();
-      allow create: if isSignedIn() && request.auth.uid == userId;
+      // FIX: Allow admins to create records for other users during registration/triage
+      allow create: if isSignedIn() && (isOwner(userId) || isAdmin());
       allow update: if isOwner(userId) || isAdmin();
       allow delete: if isAdmin();
 
@@ -87,8 +88,10 @@ service cloud.firestore {
      * @description Global appointments. Allows guest booking and verification.
      */
     match /appointments/{appointmentId} {
-      // Guests need list to search by reference code, Admins need list for registry.
-      allow get, list, create: if true;
+      // Guests need get to search by reference code, Admins need list for registry.
+      allow get: if true;
+      allow list: if isAdmin(); 
+      allow create: if true;
       allow update: if true; // Guests can reschedule/cancel if they have the ID/Ref
       allow delete: if isAdmin();
     }
