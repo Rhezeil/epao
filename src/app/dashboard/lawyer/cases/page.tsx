@@ -105,9 +105,9 @@ export default function LawyerCasesPage() {
 
   // Folder Documents Query
   const docsQuery = useMemoFirebase(() => {
-    if (!db || !selectedCaseForFolder) return null;
+    if (!db || !selectedCaseForFolder || !user) return null;
     return collection(db, "cases", selectedCaseForFolder.id, "documents");
-  }, [db, selectedCaseForFolder]);
+  }, [db, selectedCaseForFolder, user]);
   const { data: caseDocs } = useCollection(docsQuery);
 
   // Client Fetchers
@@ -132,9 +132,9 @@ export default function LawyerCasesPage() {
   // Slot Logic for Booking Dialog
   const bookingDateStr = bookingForm.date ? format(bookingForm.date, "yyyy-MM-dd") : null;
   const globalApptsQuery = useMemoFirebase(() => {
-    if (!db || !bookingDateStr) return null;
+    if (!db || !bookingDateStr || !user) return null;
     return query(collection(db, "appointments"), where("dateString", "==", bookingDateStr));
-  }, [db, bookingDateStr]);
+  }, [db, bookingDateStr, user]);
   const { data: globalAppts } = useCollection(globalApptsQuery);
 
   const timeSlots = useMemo(() => {
