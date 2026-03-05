@@ -274,7 +274,7 @@ export default function LawyerCasesPage() {
                 <TableHeader className="bg-muted/30">
                   <TableRow>
                     <TableHead className="px-8 font-black text-[10px] uppercase tracking-widest text-secondary/40">Classification</TableHead>
-                    <TableHead className="font-black text-[10px] uppercase tracking-widest text-secondary/40">Citizen Client</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase tracking-widest text-secondary/40">Client</TableHead>
                     <TableHead className="font-black text-[10px] uppercase tracking-widest text-secondary/40">Status</TableHead>
                     <TableHead className="font-black text-[10px] uppercase tracking-widest text-secondary/40">Case ID</TableHead>
                     <TableHead className="font-black text-[10px] uppercase tracking-widest text-secondary/40">Next Visit</TableHead>

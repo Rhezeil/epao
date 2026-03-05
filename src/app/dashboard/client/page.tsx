@@ -454,14 +454,6 @@ export default function ClientDashboard() {
                         <Badge className="bg-primary/10 text-primary border-none font-bold uppercase text-[9px] mt-1 px-3">Public Attorney</Badge>
                       </div>
                     </div>
-                    <div className="space-y-3 pt-6 border-t border-primary/10">
-                      <div className="flex items-center gap-3 text-xs font-bold text-[#2E5A99]">
-                        <ShieldCheck className="h-4 w-4 text-primary" /> District Office Station
-                      </div>
-                      <div className="flex items-center gap-3 text-xs font-bold text-[#2E5A99]">
-                        <Briefcase className="h-4 w-4 text-primary" /> Specialist Counsel
-                      </div>
-                    </div>
                   </>
                 ) : (
                   <div className="text-center py-10 space-y-4">
