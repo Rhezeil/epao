@@ -491,50 +491,75 @@ export default function LawyerDashboard() {
                   ) : (
                     <div className="max-h-[500px] overflow-y-auto">
                       {filteredSchedule.map((appt) => (
-                        <div key={appt.id} className="p-6 flex items-center justify-between hover:bg-secondary/5 transition-colors group">
-                          <div className="flex items-center gap-4">
-                            <div className="h-14 w-14 rounded-2xl bg-secondary/5 flex flex-col items-center justify-center border border-secondary/10">
-                              <span className="text-[10px] font-black text-secondary uppercase leading-none">{format(new Date(appt.date), "MMM")}</span>
-                              <span className="text-xl font-black text-secondary leading-none mt-1">{format(new Date(appt.date), "dd")}</span>
-                            </div>
-                            <div>
-                              <h4 className="font-bold text-secondary">{appt.guestName || appt.clientName || "Citizen Client"}</h4>
-                              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                                <Badge variant="outline" className="text-[9px] font-black uppercase py-0 border-secondary/20 text-secondary">{appt.status}</Badge>
-                                <span>•</span>
-                                <span className="font-bold text-secondary">{appt.caseType}</span>
+                        <div key={appt.id} className="p-6 flex flex-col hover:bg-secondary/5 transition-colors group">
+                          <div className="flex items-center justify-between w-full">
+                            <div className="flex items-center gap-4">
+                              <div className="h-14 w-14 rounded-2xl bg-secondary/5 flex flex-col items-center justify-center border border-secondary/10">
+                                <span className="text-[10px] font-black text-secondary uppercase leading-none">{format(new Date(appt.date), "MMM")}</span>
+                                <span className="text-xl font-black text-secondary leading-none mt-1">{format(new Date(appt.date), "dd")}</span>
+                              </div>
+                              <div>
+                                <h4 className="font-bold text-secondary">{appt.guestName || appt.clientName || "Citizen Client"}</h4>
+                                <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                                  <Badge variant="outline" className={cn(
+                                    "text-[9px] font-black uppercase py-0 px-2",
+                                    appt.status === 'cancelled' ? "bg-red-50 text-red-600 border-red-200" : "border-secondary/20 text-secondary"
+                                  )}>{appt.status}</Badge>
+                                  <span>•</span>
+                                  <span className="font-bold text-secondary">{appt.caseType}</span>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <div className="text-right hidden sm:block">
-                              <p className="text-sm font-black text-secondary">{appt.time}</p>
-                              <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Slot</p>
+                            <div className="flex items-center gap-4">
+                              <div className="text-right hidden sm:block">
+                                <p className="text-sm font-black text-secondary">{appt.time}</p>
+                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Slot</p>
+                              </div>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-secondary/5">
+                                    <MoreVertical className="h-4 w-4 text-secondary" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="rounded-2xl w-56 p-2">
+                                  <DropdownMenuLabel className="text-[10px] font-black uppercase text-secondary/40 px-2 pb-2">Status Actions</DropdownMenuLabel>
+                                  <DropdownMenuItem onClick={() => updateStatus(appt.id, 'completed')} className="text-green-600 font-bold rounded-xl cursor-pointer">
+                                    <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" /> Mark as Completed
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => { setSelectedApptToReschedule(appt); setIsRescheduleOpen(true); }} className="font-bold rounded-xl cursor-pointer text-primary">
+                                    <Edit3 className="mr-2 h-4 w-4" /> Reschedule Visit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => { setSelectedApptToCancel(appt); setIsCancelOpen(true); }} className="text-red-600 font-bold rounded-xl cursor-pointer">
+                                    <XCircle className="mr-2 h-4 w-4 text-red-600" /> Mark as Cancelled
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem className="font-bold rounded-xl cursor-pointer" onClick={() => router.push(`/dashboard/lawyer/cases`)}>
+                                    <User className="mr-2 h-4 w-4" /> Client Case File
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-secondary/5">
-                                  <MoreVertical className="h-4 w-4 text-secondary" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="rounded-2xl w-56 p-2">
-                                <DropdownMenuLabel className="text-[10px] font-black uppercase text-secondary/40 px-2 pb-2">Status Actions</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => updateStatus(appt.id, 'completed')} className="text-green-600 font-bold rounded-xl cursor-pointer">
-                                  <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" /> Mark as Completed
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => { setSelectedApptToReschedule(appt); setIsRescheduleOpen(true); }} className="font-bold rounded-xl cursor-pointer text-primary">
-                                  <Edit3 className="mr-2 h-4 w-4" /> Reschedule Visit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => { setSelectedApptToCancel(appt); setIsCancelOpen(true); }} className="text-red-600 font-bold rounded-xl cursor-pointer">
-                                  <XCircle className="mr-2 h-4 w-4 text-red-600" /> Mark as Cancelled
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem className="font-bold rounded-xl cursor-pointer" onClick={() => router.push(`/dashboard/lawyer/cases`)}>
-                                  <User className="mr-2 h-4 w-4" /> Client Case File
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
                           </div>
+
+                          {/* Cancellation / Reschedule Reason Alert */}
+                          {appt.status === 'cancelled' && appt.cancellationReason && (
+                            <div className="mt-4 p-3 bg-red-50 rounded-2xl border border-red-100 flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
+                              <ShieldAlert className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
+                              <div>
+                                <p className="text-[10px] font-black uppercase text-red-900 tracking-widest">Official Cancellation Reason</p>
+                                <p className="text-xs font-bold text-red-800 italic leading-relaxed">{appt.cancellationReason}</p>
+                              </div>
+                            </div>
+                          )}
+                          {appt.status === 'rescheduled' && appt.rescheduleReason && (
+                            <div className="mt-4 p-3 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
+                              <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                              <div>
+                                <p className="text-[10px] font-black uppercase text-amber-900 tracking-widest">Reschedule Reason</p>
+                                <p className="text-xs font-bold text-amber-800 italic leading-relaxed">{appt.rescheduleReason}</p>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))}
                       {filteredSchedule.length === 0 && (
