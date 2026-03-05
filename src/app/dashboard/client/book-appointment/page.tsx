@@ -84,12 +84,11 @@ function BookAppointmentContent() {
   
   const caseTypeParam = searchParams.get("caseType") || "Follow-up Consultation";
   const categoryParam = searchParams.get("category") || "General";
-  const fromNavigator = searchParams.get("fromNavigator") === "true";
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string>("");
-  const [purpose, setPurpose] = useState("consultation");
+  const [purpose] = useState("follow-up");
   const [clientInfo, setClientInfo] = useState({ 
     name: "", 
     mobile: "", 
@@ -121,6 +120,7 @@ function BookAppointmentContent() {
 
   const getServiceLabel = (p: string) => {
     switch (p) {
+      case 'follow-up': return 'Follow-up Consultation';
       case 'consultation': return 'Legal Consultation';
       case 'notarization': return 'Document Notarization';
       case 'document-preparation': return 'Document Preparation';
@@ -152,9 +152,6 @@ function BookAppointmentContent() {
         const slotDate = selectedDate ? setMinutes(setHours(new Date(selectedDate), h), m) : null;
         
         const isPast = slotDate ? isBefore(slotDate, now) : false;
-        
-        // Slot is booked globally
-        const isBookedGlobally = existingAppts?.some(a => a.time === timeString && a.status !== 'cancelled');
         
         // Slot is specific to this lawyer
         const isLawyerAssignedToThisSlot = existingAppts?.some(a => 
@@ -310,26 +307,21 @@ function BookAppointmentContent() {
                     </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <Label className="text-xs font-black text-primary/60 uppercase tracking-widest">2. Service Type</Label>
-                    <Select value={purpose} onValueChange={setPurpose}>
-                      <SelectTrigger className="w-full bg-white border-primary/20 h-14 rounded-2xl font-bold">
-                        <SelectValue placeholder="Select purpose" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="consultation">Legal Consultation</SelectItem>
-                        <SelectItem value="notarization">Document Notarization</SelectItem>
-                        <SelectItem value="document-preparation">Document Preparation</SelectItem>
-                        <SelectItem value="legal-advice">Legal Advice</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div className="p-6 bg-primary/5 rounded-3xl border-2 border-dashed border-primary/10">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Info className="h-5 w-5 text-primary" />
+                      <p className="text-xs font-black text-primary uppercase tracking-widest">Automatic Intent</p>
+                    </div>
+                    <p className="text-sm text-[#2E5A99] font-bold">
+                      Classified as <span className="text-secondary">Follow-up Consultation</span> for active legal cases.
+                    </p>
                   </div>
                 </div>
 
                 <div className="space-y-6">
                   <div className="space-y-4">
                     <div className="flex justify-between items-end">
-                      <Label className="text-xs font-black text-primary/60 uppercase tracking-widest">3. Lawyer Availability Slots</Label>
+                      <Label className="text-xs font-black text-primary/60 uppercase tracking-widest">2. Lawyer Availability Slots</Label>
                       <div className="flex gap-2 text-[8px] font-bold uppercase">
                         <span className="flex items-center gap-1"><div className="w-2 h-2 bg-green-500 rounded-full" /> Open</span>
                         <span className="flex items-center gap-1"><div className="w-2 h-2 bg-red-500 rounded-full" /> Unavailable</span>
