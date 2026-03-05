@@ -18,7 +18,7 @@ service cloud.firestore {
     /** @description Checks if the user is a registered Admin. */
     function isAdmin() {
       return isSignedIn() && (
-        request.auth.token.email == "admin@epao.com" ||
+        request.auth.token.email.lower() == "admin@epao.com" ||
         exists(/databases/$(database)/documents/admins/$(request.auth.uid))
       );
     }
@@ -39,18 +39,17 @@ service cloud.firestore {
     // --- Collection Rules ---
 
     /**
-     * @description Administrative roles. Allows bootstrap admin creation.
+     * @description Administrative roles.
      */
     match /admins/{userId} {
       allow get: if isSignedIn();
       allow list: if isAdmin();
-      allow create: if isSignedIn() && (request.auth.token.email == "admin@epao.com" || isAdmin()) && request.auth.uid == userId;
+      allow create: if isSignedIn() && (request.auth.token.email.lower() == "admin@epao.com" || isAdmin()) && request.auth.uid == userId;
       allow update, delete: if isAdmin();
     }
 
     /**
      * @description Authorized Public Attorney profiles.
-     * Publicly readable so guests can see assigned lawyer names in the portal.
      */
     match /roleLawyer/{userId} {
       allow read: if true;
@@ -93,7 +92,7 @@ service cloud.firestore {
      * and lawyer workstation synchronization.
      */
     match /appointments/{appointmentId} {
-      allow read: if true; 
+      allow get, list: if true; 
       allow create: if true;
       allow update: if true; 
       allow delete: if isAdmin();

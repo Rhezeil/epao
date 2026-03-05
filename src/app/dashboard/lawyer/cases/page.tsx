@@ -5,7 +5,7 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
 import { collection, query, where, doc, orderBy } from "firebase/firestore";
-import { format, startOfToday, setHours, setMinutes, isBefore } from "date-fns";
+import { format, startOfToday, setHours, setMinutes, isBefore, isAfter } from "date-fns";
 import { 
   Scale, 
   Search,
@@ -19,11 +19,10 @@ import {
   MapPin,
   Info,
   Settings2,
-  Plus,
   History,
-  Edit3,
   XCircle,
-  FileText
+  FileText,
+  Calendar
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -134,12 +133,22 @@ export default function LawyerCasesPage() {
     if (!db || !activeClientId || !user) return null;
     return query(
       collection(db, "appointments"),
-      where("clientId", "==", activeClientId),
-      orderBy("date", "desc")
+      where("clientId", "==", activeClientId)
     );
   }, [db, activeClientId, user]);
 
   const { data: clientAppts, isLoading: isClientApptsLoading } = useCollection(clientApptsQuery);
+
+  // Sorted History Views
+  const sortedHistory = useMemo(() => {
+    if (!clientAppts) return { upcoming: [], past: [] };
+    const now = new Date();
+    const sorted = [...clientAppts].sort((a, b) => b.date.localeCompare(a.date));
+    return {
+      upcoming: sorted.filter(a => isAfter(new Date(a.date), now) && a.status !== 'cancelled' && a.status !== 'completed'),
+      past: sorted.filter(a => isBefore(new Date(a.date), now) || a.status === 'cancelled' || a.status === 'completed')
+    };
+  }, [clientAppts]);
 
   // Slot Logic for Booking Dialog
   const bookingDateStr = bookingForm.date ? format(bookingForm.date, "yyyy-MM-dd") : null;
@@ -406,48 +415,81 @@ export default function LawyerCasesPage() {
                 </TabsContent>
 
                 <TabsContent value="history" className="p-6 flex-1 overflow-y-auto">
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between px-2">
-                      <h4 className="text-[10px] font-black uppercase text-secondary/40 tracking-[0.2em] flex items-center gap-2">
-                        <History className="h-3 w-3" /> Chronological Visit Log
-                      </h4>
-                    </div>
-
+                  <div className="space-y-8">
                     {isClientApptsLoading ? (
                       <div className="py-12 flex justify-center"><Loader2 className="animate-spin h-8 w-8 text-secondary/20" /></div>
                     ) : clientAppts && clientAppts.length > 0 ? (
-                      <div className="space-y-3">
-                        {clientAppts.map((appt) => (
-                          <div key={appt.id} className="flex items-center justify-between p-4 bg-muted/20 rounded-2xl border border-transparent hover:border-secondary/10 transition-colors">
-                            <div className="flex items-center gap-4">
-                              <div className={cn(
-                                "h-10 w-10 rounded-xl flex items-center justify-center",
-                                appt.status === 'completed' ? 'bg-green-50 text-green-600' : 
-                                appt.status === 'cancelled' ? 'bg-red-50 text-red-600' : 'bg-secondary/5 text-secondary'
-                              )}>
-                                {appt.status === 'completed' ? <CheckCircle2 className="h-5 w-5" /> : 
-                                 appt.status === 'cancelled' ? <XCircle className="h-5 w-5" /> : <Clock className="h-5 w-5" />}
-                              </div>
-                              <div>
-                                <p className="text-sm font-bold text-secondary leading-tight">{appt.caseType}</p>
-                                <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mt-1">
-                                  {format(new Date(appt.date), "MMM dd, yyyy")} • {appt.time}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <Badge variant="outline" className={cn(
-                                "text-[8px] font-black uppercase px-2",
-                                appt.status === 'completed' ? 'border-green-200 text-green-700 bg-green-50' : 
-                                appt.status === 'cancelled' ? 'border-red-200 text-red-700 bg-red-50' : 'border-secondary/20 text-secondary'
-                              )}>
-                                {appt.status}
-                              </Badge>
-                              <p className="text-[8px] font-bold text-muted-foreground mt-1">{appt.referenceCode}</p>
+                      <>
+                        {/* Upcoming Section */}
+                        {sortedHistory.upcoming.length > 0 && (
+                          <div className="space-y-4">
+                            <h4 className="text-[10px] font-black uppercase text-secondary/40 tracking-[0.2em] flex items-center gap-2">
+                              <Calendar className="h-3 w-3" /> Upcoming Visits
+                            </h4>
+                            <div className="space-y-3">
+                              {sortedHistory.upcoming.map((appt) => (
+                                <div key={appt.id} className="p-4 bg-primary/5 rounded-2xl border border-primary/10 transition-colors">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                      <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center border shadow-sm text-primary">
+                                        <Clock className="h-5 w-5" />
+                                      </div>
+                                      <div>
+                                        <p className="text-sm font-bold text-primary leading-tight">{appt.caseType}</p>
+                                        <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mt-1">
+                                          {format(new Date(appt.date), "MMM dd, yyyy")} • {appt.time}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <Badge className="bg-primary text-white text-[8px] font-black uppercase">{appt.status}</Badge>
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           </div>
-                        ))}
-                      </div>
+                        )}
+
+                        {/* Past Section */}
+                        <div className="space-y-4">
+                          <h4 className="text-[10px] font-black uppercase text-secondary/40 tracking-[0.2em] flex items-center gap-2">
+                            <History className="h-3 w-3" /> Visit Log Archive
+                          </h4>
+                          <div className="space-y-3">
+                            {sortedHistory.past.map((appt) => (
+                              <div key={appt.id} className="p-4 bg-muted/20 rounded-2xl border border-transparent hover:border-secondary/10 transition-colors">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-4">
+                                    <div className={cn(
+                                      "h-10 w-10 rounded-xl flex items-center justify-center",
+                                      appt.status === 'completed' ? 'bg-green-50 text-green-600' : 
+                                      appt.status === 'cancelled' ? 'bg-red-50 text-red-600' : 'bg-secondary/5 text-secondary'
+                                    )}>
+                                      {appt.status === 'completed' ? <CheckCircle2 className="h-5 w-5" /> : 
+                                       appt.status === 'cancelled' ? <XCircle className="h-5 w-5" /> : <Clock className="h-5 w-5" />}
+                                    </div>
+                                    <div>
+                                      <p className="text-sm font-bold text-secondary leading-tight">{appt.caseType}</p>
+                                      <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mt-1">
+                                        {format(new Date(appt.date), "MMM dd, yyyy")} • {appt.time}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <Badge variant="outline" className={cn(
+                                      "text-[8px] font-black uppercase px-2",
+                                      appt.status === 'completed' ? 'border-green-200 text-green-700 bg-green-50' : 
+                                      appt.status === 'cancelled' ? 'border-red-200 text-red-700 bg-red-50' : 'border-secondary/20 text-secondary'
+                                    )}>
+                                      {appt.status}
+                                    </Badge>
+                                    <p className="text-[8px] font-bold text-muted-foreground mt-1">{appt.referenceCode}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </>
                     ) : (
                       <div className="py-12 text-center bg-muted/5 rounded-3xl border-2 border-dashed">
                         <History className="h-10 w-10 text-muted-foreground/20 mx-auto mb-2" />
