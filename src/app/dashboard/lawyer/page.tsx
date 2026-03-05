@@ -592,7 +592,7 @@ export default function LawyerDashboard() {
         {/* --- AVAILABILITY DIALOG --- */}
         <Dialog open={isAvailabilityOpen} onOpenChange={setIsAvailabilityOpen}>
           <DialogContent className="rounded-[3rem] max-w-4xl p-0 overflow-hidden border-none shadow-2xl max-h-[95vh] flex flex-col">
-            <DialogHeader className="p-8 bg-secondary text-white shrink-0">
+            <DialogHeader className="p-8 bg-secondary text-white shrink-0 pr-12">
               <DialogTitle className="text-2xl font-black">Manage Professional Availability</DialogTitle>
               <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">
                 Select dates and status for office coordination
@@ -684,33 +684,33 @@ export default function LawyerDashboard() {
                 </div>
               </div>
             </div>
-            <DialogFooter className="p-8 bg-muted/30 gap-3 shrink-0">
+            <DialogFooter className="p-8 bg-muted/30 flex-col sm:flex-row gap-3 shrink-0">
               {selectedDayAvail && (
-                <Button variant="ghost" onClick={handleDeleteAvailability} className="text-red-600 font-bold">Reset Date</Button>
+                <Button variant="ghost" onClick={handleDeleteAvailability} className="text-red-600 font-bold sm:mr-auto">Reset Date</Button>
               )}
-              <Button variant="outline" onClick={() => setIsAvailabilityOpen(false)} className="rounded-xl font-bold">Cancel</Button>
-              <Button onClick={handleSaveAvailability} disabled={!dateRange?.from} className="bg-secondary text-white font-black rounded-xl px-10 shadow-lg">Apply Schedule</Button>
+              <Button variant="outline" onClick={() => setIsAvailabilityOpen(false)} className="rounded-xl font-bold h-12">Cancel</Button>
+              <Button onClick={handleSaveAvailability} disabled={!dateRange?.from} className="bg-secondary text-white font-black rounded-xl px-10 h-12 shadow-lg">Apply Schedule</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
         {/* --- CANCELLATION DIALOG --- */}
         <Dialog open={isCancelOpen} onOpenChange={setIsCancelOpen}>
-          <DialogContent className="rounded-[3rem] max-w-md p-0 overflow-hidden border-none shadow-2xl">
-            <DialogHeader className="p-8 bg-red-600 text-white shrink-0">
+          <DialogContent className="rounded-[3rem] max-w-lg p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[90vh]">
+            <DialogHeader className="p-8 bg-red-600 text-white shrink-0 pr-12">
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-white/20 rounded-2xl">
                   <XCircle className="h-8 w-8" />
                 </div>
-                <div>
-                  <DialogTitle className="text-2xl font-black">Cancel Appointment</DialogTitle>
-                  <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">
+                <div className="min-w-0">
+                  <DialogTitle className="text-2xl font-black truncate">Cancel Appointment</DialogTitle>
+                  <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest truncate">
                     Citizen: {selectedApptToCancel?.guestName || selectedApptToCancel?.clientName}
                   </DialogDescription>
                 </div>
               </div>
             </DialogHeader>
-            <div className="p-8 space-y-6">
+            <div className="p-8 space-y-6 overflow-y-auto flex-1">
               <div className="p-4 bg-red-50 rounded-2xl border border-red-100 flex items-start gap-3">
                 <Info className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
                 <p className="text-xs font-medium text-red-800 leading-relaxed">
@@ -758,7 +758,7 @@ export default function LawyerDashboard() {
                 </div>
               </div>
             </div>
-            <DialogFooter className="p-8 bg-muted/30 gap-3">
+            <DialogFooter className="p-8 bg-muted/30 flex-col sm:flex-row gap-3 shrink-0">
               <Button variant="outline" onClick={() => { setIsCancelOpen(false); setSelectedApptToCancel(null); }} className="rounded-xl font-bold flex-1 h-12">Keep Booking</Button>
               <Button onClick={handleCancelSubmit} disabled={isSubmitting} className="bg-red-600 text-white font-black rounded-xl flex-1 h-12 shadow-lg">Confirm Cancel</Button>
             </DialogFooter>
@@ -768,7 +768,7 @@ export default function LawyerDashboard() {
         {/* --- RESCHEDULE DIALOG --- */}
         <Dialog open={isRescheduleOpen} onOpenChange={setIsRescheduleOpen}>
           <DialogContent className="rounded-[3rem] max-w-4xl p-0 overflow-hidden border-none shadow-2xl max-h-[95vh] flex flex-col">
-            <DialogHeader className="p-8 bg-secondary text-white shrink-0">
+            <DialogHeader className="p-8 bg-secondary text-white shrink-0 pr-12">
               <DialogTitle className="text-2xl font-black">Reschedule Appointment</DialogTitle>
               <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">
                 Modifying Visit for: {selectedApptToReschedule?.guestName || selectedApptToReschedule?.clientName}
@@ -861,7 +861,7 @@ export default function LawyerDashboard() {
                 </div>
               </div>
             </div>
-            <DialogFooter className="p-8 bg-muted/30 gap-3 shrink-0">
+            <DialogFooter className="p-8 bg-muted/30 flex-col sm:flex-row gap-3 shrink-0">
               <Button variant="outline" onClick={() => { setIsRescheduleOpen(false); setSelectedApptToReschedule(null); }} className="rounded-xl font-bold h-12 px-8">Cancel</Button>
               <Button onClick={handleRescheduleSubmit} disabled={!selectedApptToReschedule?.time || isSubmitting} className="bg-secondary text-white font-black rounded-xl px-10 h-12 shadow-lg">Confirm Reschedule</Button>
             </DialogFooter>

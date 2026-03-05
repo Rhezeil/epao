@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAuth } from "@/components/auth-provider";
@@ -357,17 +358,17 @@ export default function LawyerCasesPage() {
         {/* --- CLIENT PROFILE DIALOG --- */}
         <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
           <DialogContent className="rounded-[3rem] max-w-2xl p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
-            <DialogHeader className="p-8 bg-secondary text-white shrink-0">
+            <DialogHeader className="p-8 bg-secondary text-white shrink-0 pr-12">
               <div className="flex justify-between items-center">
-                <div className="space-y-1">
-                  <DialogTitle className="text-3xl font-black">
+                <div className="space-y-1 min-w-0">
+                  <DialogTitle className="text-3xl font-black truncate">
                     {clientProfile ? `${clientProfile.firstName} ${clientProfile.lastName}` : (clientUser?.fullName || "Citizen Profile")}
                   </DialogTitle>
-                  <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">
+                  <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest truncate">
                     Reference ID: {selectedClientIdForProfile?.slice(0, 8)}...
                   </DialogDescription>
                 </div>
-                <div className="p-4 bg-white/20 rounded-[2rem]">
+                <div className="p-4 bg-white/20 rounded-[2rem] hidden sm:block">
                   <User className="h-8 w-8" />
                 </div>
               </div>
@@ -467,14 +468,14 @@ export default function LawyerCasesPage() {
                                       {appt.status === 'completed' ? <CheckCircle2 className="h-5 w-5" /> : 
                                        appt.status === 'cancelled' ? <XCircle className="h-5 w-5" /> : <Clock className="h-5 w-5" />}
                                     </div>
-                                    <div>
-                                      <p className="text-sm font-bold text-secondary leading-tight">{appt.caseType}</p>
+                                    <div className="min-w-0">
+                                      <p className="text-sm font-bold text-secondary leading-tight truncate">{appt.caseType}</p>
                                       <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mt-1">
                                         {format(new Date(appt.date), "MMM dd, yyyy")} • {appt.time}
                                       </p>
                                     </div>
                                   </div>
-                                  <div className="text-right">
+                                  <div className="text-right shrink-0">
                                     <Badge variant="outline" className={cn(
                                       "text-[8px] font-black uppercase px-2",
                                       appt.status === 'completed' ? 'border-green-200 text-green-700 bg-green-50' : 
@@ -509,7 +510,7 @@ export default function LawyerCasesPage() {
         {/* --- BOOKING DIALOG --- */}
         <Dialog open={!!selectedCaseForBooking} onOpenChange={() => setSelectedCaseForBooking(null)}>
           <DialogContent className="rounded-[3rem] max-w-5xl p-0 overflow-hidden border-none shadow-2xl max-h-[95vh] flex flex-col">
-            <DialogHeader className="p-8 bg-primary text-white shrink-0">
+            <DialogHeader className="p-8 bg-primary text-white shrink-0 pr-12">
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
                   <DialogTitle className="text-2xl font-black">Schedule Follow-up Visit</DialogTitle>
@@ -517,7 +518,7 @@ export default function LawyerCasesPage() {
                     Registry ID: {selectedCaseForBooking?.id}
                   </DialogDescription>
                 </div>
-                <CalendarCheck className="h-8 w-8 opacity-40" />
+                <CalendarCheck className="h-8 w-8 opacity-40 hidden sm:block" />
               </div>
             </DialogHeader>
             
@@ -645,7 +646,7 @@ export default function LawyerCasesPage() {
               </div>
             </div>
 
-            <DialogFooter className="p-8 bg-muted/30 gap-3 shrink-0">
+            <DialogFooter className="p-8 bg-muted/30 flex-col sm:flex-row gap-3 shrink-0">
               <Button variant="outline" onClick={() => setSelectedCaseForBooking(null)} className="rounded-xl font-bold h-14 px-8 border-2">Cancel</Button>
               <Button 
                 onClick={handleCreateAppointment} 
