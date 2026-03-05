@@ -445,8 +445,8 @@ export default function LawyerDashboard() {
         </div>
 
         {/* --- SCHEDULE WORKSTATION --- */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <Card className="lg:col-span-2 border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
+        <div className="grid grid-cols-1 gap-8">
+          <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
             <CardHeader className="bg-secondary/5 pb-4 border-b border-secondary/10">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-secondary text-white rounded-xl">
@@ -457,7 +457,7 @@ export default function LawyerDashboard() {
             </CardHeader>
             <CardContent className="p-0">
               <div className="grid grid-cols-1 xl:grid-cols-12">
-                <div className="xl:col-span-5 p-6 border-r border-secondary/5 bg-secondary/[0.02]">
+                <div className="xl:col-span-4 p-6 border-r border-secondary/5 bg-secondary/[0.02]">
                   <div className="space-y-4">
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary/40 ml-2">Navigate Calendar</p>
                     <div className="bg-white rounded-3xl p-2 shadow-sm border border-secondary/5">
@@ -479,7 +479,7 @@ export default function LawyerDashboard() {
                   </div>
                 </div>
 
-                <div className="xl:col-span-7 divide-y divide-secondary/5">
+                <div className="xl:col-span-8 divide-y divide-secondary/5">
                   <div className="p-6 bg-secondary/5 border-b border-secondary/10 flex justify-between items-center">
                     <h3 className="text-sm font-black text-secondary flex items-center gap-2">
                       <Clock className="h-4 w-4" /> 
@@ -549,37 +549,6 @@ export default function LawyerDashboard() {
               </div>
             </CardContent>
           </Card>
-
-          <div className="space-y-8">
-            <Card className="border-none shadow-xl rounded-[2.5rem] bg-secondary text-white overflow-hidden">
-              <CardHeader className="bg-white/10 p-6 border-b border-white/5">
-                <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
-                  <User className="h-4 w-4" /> Active Clients ({activeCases?.length || 0})
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  {activeCases?.slice(0, 5).map((c) => (
-                    <div key={c.id} className="p-4 bg-white/10 rounded-2xl border border-white/5 flex items-center justify-between hover:bg-white/20 transition-all cursor-pointer" onClick={() => router.push('/dashboard/lawyer/cases')}>
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center font-black text-xs">
-                          <Gavel className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <p className="text-xs font-black leading-none mb-1 text-white">{c.caseType}</p>
-                          <p className="text-[9px] font-bold opacity-60 uppercase tracking-widest">ID: {c.id}</p>
-                        </div>
-                      </div>
-                      <ChevronRight className="h-4 w-4 opacity-40" />
-                    </div>
-                  ))}
-                  <Button variant="link" className="w-full text-white font-black text-[10px] uppercase tracking-[0.2em] mt-2" onClick={() => router.push('/dashboard/lawyer/cases')}>
-                    Full My Cases Registry
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
         </div>
 
         {/* --- AVAILABILITY DIALOG --- */}
