@@ -50,8 +50,7 @@ import { DateRange } from "react-day-picker";
 const OFFICIAL_LEAVE_CATEGORIES = {
   "Personal Leave": [
     "Wellness Leave",
-    "Special Leave Privileges (SLP)",
-    "Forced Leave"
+    "Special Leave Privileges (SLP)"
   ],
   "Work-Related Leave": [
     "Mandatory Continuing Professional Development (CPD)",
