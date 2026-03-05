@@ -1,3 +1,4 @@
+
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -25,7 +26,8 @@ import {
   Info,
   CalendarCheck,
   Gavel,
-  Edit3
+  Edit3,
+  ShieldAlert
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,20 +47,27 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { DateRange } from "react-day-picker";
 
-const REASONS = {
-  "Work-Related Reasons for Leave": [
-    "Mandatory Continuing Professional Development (CPD)",
-    "Official Business/Official Time",
-    "Legal/Official Matters",
-    "Court Attendance",
-    "Unexpected Office Suspension",
-    "Inquest/Jail Visitation Duty Recovery",
-    "Documenting/Filing Leave for Conflicts"
+const OFFICIAL_LEAVE_CATEGORIES = {
+  "Mandatory and Official Duty-Related Leave": [
+    "Mandatory CPD Leave",
+    "Official Business/Official Time"
   ],
-  "Personal Reasons for Leave": [
-    "Illness or Medical Attention",
-    "Family Emergencies",
-    "Vacation/Rest"
+  "Specialized Leave Privileges (SLP)": [
+    "Official Legal Matters",
+    "Court Witness Duty"
+  ],
+  "Health and Wellness (Work-Induced)": [
+    "Wellness Leave",
+    "Occupational Disease/Injury Recovery"
+  ],
+  "Administrative and Operational Reasons": [
+    "Office Suspension (Disaster/Emergency)",
+    "Inquest/Jail Duty Recovery",
+    "Conflict Documentation Leave"
+  ],
+  "Mandatory Reporting/Legal Requirements": [
+    "Annual Performance Reporting",
+    "Year-end Case Inventory"
   ]
 };
 
@@ -82,8 +91,22 @@ export default function LawyerDashboard() {
   // UI State
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [isAvailabilityOpen, setIsAvailabilityOpen] = useState(false);
+  
+  // Reschedule Logic
   const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
   const [selectedApptToReschedule, setSelectedApptToReschedule] = useState<any>(null);
+  const [rescheduleReason, setRescheduleReason] = useState({
+    category: Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0],
+    reason: OFFICIAL_LEAVE_CATEGORIES[Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0]][0]
+  });
+
+  // Cancellation Logic
+  const [isCancelOpen, setIsCancelOpen] = useState(false);
+  const [selectedApptToCancel, setSelectedApptToCancel] = useState<any>(null);
+  const [cancelReason, setCancelReason] = useState({
+    category: Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0],
+    reason: OFFICIAL_LEAVE_CATEGORIES[Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0]][0]
+  });
   
   // Availability Form State
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -94,11 +117,11 @@ export default function LawyerDashboard() {
     type: "FullDayAvailable",
     startTime: "08:00",
     endTime: "17:00",
-    reasonCategory: "Work-Related Reasons for Leave",
-    specificReason: REASONS["Work-Related Reasons for Leave"][0]
+    reasonCategory: Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0],
+    specificReason: OFFICIAL_LEAVE_CATEGORIES[Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0]][0]
   });
 
-  const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Queries
   const lawyerRef = useMemoFirebase(() => {
@@ -205,6 +228,49 @@ export default function LawyerDashboard() {
     toast({ title: `Status Updated`, description: `Appointment marked as ${status}.` });
   };
 
+  const handleCancelSubmit = () => {
+    if (!db || !selectedApptToCancel) return;
+    setIsSubmitting(true);
+    
+    const ref = doc(db, "appointments", selectedApptToCancel.id);
+    updateDocumentNonBlocking(ref, { 
+      status: "cancelled",
+      cancellationReason: cancelReason.reason,
+      cancellationCategory: cancelReason.category,
+      updatedAt: new Date().toISOString()
+    });
+
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setIsCancelOpen(false);
+      setSelectedApptToCancel(null);
+      toast({ title: "Appointment Cancelled", description: "The citizen has been notified of the schedule change." });
+    }, 800);
+  };
+
+  const handleRescheduleSubmit = () => {
+    if (!db || !selectedApptToReschedule || !selectedApptToReschedule.date || !selectedApptToReschedule.time) return;
+    
+    setIsSubmitting(true);
+    const ref = doc(db, "appointments", selectedApptToReschedule.id);
+    updateDocumentNonBlocking(ref, {
+      date: new Date(selectedApptToReschedule.date).toISOString(),
+      dateString: format(new Date(selectedApptToReschedule.date), "yyyy-MM-dd"),
+      time: selectedApptToReschedule.time,
+      status: "rescheduled",
+      rescheduleReason: rescheduleReason.reason,
+      rescheduleCategory: rescheduleReason.category,
+      updatedAt: new Date().toISOString()
+    });
+
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setIsRescheduleOpen(false);
+      setSelectedApptToReschedule(null);
+      toast({ title: "Appointment Rescheduled", description: "New visit schedule synchronized with client portal." });
+    }, 800);
+  };
+
   const handleSaveAvailability = () => {
     if (!db || !user || !dateRange?.from) {
       toast({ variant: "destructive", title: "Selection Required", description: "Please select at least one date on the calendar." });
@@ -247,26 +313,6 @@ export default function LawyerDashboard() {
     } catch (e: any) {
       toast({ variant: "destructive", title: "Sync Error", description: "Could not apply availability to selected range." });
     }
-  };
-
-  const handleRescheduleSubmit = () => {
-    if (!db || !selectedApptToReschedule || !selectedApptToReschedule.date || !selectedApptToReschedule.time) return;
-    
-    setIsSubmittingBooking(true);
-    const ref = doc(db, "appointments", selectedApptToReschedule.id);
-    updateDocumentNonBlocking(ref, {
-      date: new Date(selectedApptToReschedule.date).toISOString(),
-      dateString: format(new Date(selectedApptToReschedule.date), "yyyy-MM-dd"),
-      time: selectedApptToReschedule.time,
-      status: "rescheduled"
-    });
-
-    setTimeout(() => {
-      setIsSubmittingBooking(false);
-      setIsRescheduleOpen(false);
-      setSelectedApptToReschedule(null);
-      toast({ title: "Appointment Rescheduled", description: "The client visit has been updated." });
-    }, 800);
   };
 
   const handleDeleteAvailability = () => {
@@ -325,8 +371,8 @@ export default function LawyerDashboard() {
                   type: selectedDayAvail?.availabilityType || "FullDayAvailable",
                   startTime: selectedDayAvail?.startTime || "08:00",
                   endTime: selectedDayAvail?.endTime || "17:00",
-                  reasonCategory: selectedDayAvail?.reasonCategory || "Work-Related Reasons for Leave",
-                  specificReason: selectedDayAvail?.specificReason || REASONS["Work-Related Reasons for Leave"][0]
+                  reasonCategory: selectedDayAvail?.reasonCategory || Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0],
+                  specificReason: selectedDayAvail?.specificReason || OFFICIAL_LEAVE_CATEGORIES[Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0]][0]
                 });
                 setDateRange({ from: selectedDate, to: selectedDate });
                 setIsAvailabilityOpen(true);
@@ -364,7 +410,7 @@ export default function LawyerDashboard() {
                   <div className="flex gap-2">
                     <Button size="sm" onClick={() => updateStatus(n.id, 'scheduled')} className="h-8 rounded-lg bg-amber-600 text-white font-black text-[10px] uppercase shadow-sm">Confirm</Button>
                     <Button size="sm" variant="ghost" onClick={() => { setSelectedApptToReschedule(n); setIsRescheduleOpen(true); }} className="h-8 rounded-lg text-amber-700 font-black text-[10px] uppercase hover:bg-amber-100/50">Reschedule</Button>
-                    <Button size="sm" variant="ghost" onClick={() => updateStatus(n.id, 'cancelled')} className="h-8 rounded-lg text-red-600 font-black text-[10px] uppercase hover:bg-red-50">Cancel</Button>
+                    <Button size="sm" variant="ghost" onClick={() => { setSelectedApptToCancel(n); setIsCancelOpen(true); }} className="h-8 rounded-lg text-red-600 font-black text-[10px] uppercase hover:bg-red-50">Cancel</Button>
                   </div>
                 </div>
               ))}
@@ -486,7 +532,7 @@ export default function LawyerDashboard() {
                                 <DropdownMenuItem onClick={() => { setSelectedApptToReschedule(appt); setIsRescheduleOpen(true); }} className="font-bold rounded-xl cursor-pointer text-primary">
                                   <Edit3 className="mr-2 h-4 w-4" /> Reschedule Visit
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => updateStatus(appt.id, 'cancelled')} className="text-red-600 font-bold rounded-xl cursor-pointer">
+                                <DropdownMenuItem onClick={() => { setSelectedApptToCancel(appt); setIsCancelOpen(true); }} className="text-red-600 font-bold rounded-xl cursor-pointer">
                                   <XCircle className="mr-2 h-4 w-4 text-red-600" /> Mark as Cancelled
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
@@ -535,7 +581,7 @@ export default function LawyerDashboard() {
                     </div>
                   ))}
                   <Button variant="link" className="w-full text-white font-black text-[10px] uppercase tracking-[0.2em] mt-2" onClick={() => router.push('/dashboard/lawyer/cases')}>
-                    Full Caseload Registry
+                    Full My Cases Registry
                   </Button>
                 </div>
               </CardContent>
@@ -604,15 +650,33 @@ export default function LawyerDashboard() {
                         onValueChange={(v) => setAvailForm({
                           ...availForm, 
                           reasonCategory: v, 
-                          specificReason: REASONS[v as keyof typeof REASONS][0]
+                          specificReason: OFFICIAL_LEAVE_CATEGORIES[v as keyof typeof OFFICIAL_LEAVE_CATEGORIES][0]
                         })}
                       >
                         <SelectTrigger className="h-12 rounded-xl border-secondary/10 bg-secondary/5 font-bold">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Work-Related Reasons for Leave" className="font-bold">Work-Related Reasons for Leave</SelectItem>
-                          <SelectItem value="Personal Reasons for Leave" className="font-bold">Personal Reasons for Leave</SelectItem>
+                          {Object.keys(OFFICIAL_LEAVE_CATEGORIES).map(cat => (
+                            <SelectItem key={cat} value={cat} className="font-bold">{cat}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">4. Specific Reason</Label>
+                      <Select 
+                        value={availForm.specificReason} 
+                        onValueChange={(v) => setAvailForm({...availForm, specificReason: v})}
+                      >
+                        <SelectTrigger className="h-12 rounded-xl border-secondary/10 bg-secondary/5 font-bold">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {OFFICIAL_LEAVE_CATEGORIES[availForm.reasonCategory as keyof typeof OFFICIAL_LEAVE_CATEGORIES].map(reason => (
+                            <SelectItem key={reason} value={reason} className="font-bold">{reason}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -630,6 +694,77 @@ export default function LawyerDashboard() {
           </DialogContent>
         </Dialog>
 
+        {/* --- CANCELLATION DIALOG --- */}
+        <Dialog open={isCancelOpen} onOpenChange={setIsCancelOpen}>
+          <DialogContent className="rounded-[3rem] max-w-md p-0 overflow-hidden border-none shadow-2xl">
+            <DialogHeader className="p-8 bg-red-600 text-white shrink-0">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-white/20 rounded-2xl">
+                  <XCircle className="h-8 w-8" />
+                </div>
+                <div>
+                  <DialogTitle className="text-2xl font-black">Cancel Appointment</DialogTitle>
+                  <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">
+                    Citizen: {selectedApptToCancel?.guestName || selectedApptToCancel?.clientName}
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+            <div className="p-8 space-y-6">
+              <div className="p-4 bg-red-50 rounded-2xl border border-red-100 flex items-start gap-3">
+                <Info className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+                <p className="text-xs font-medium text-red-800 leading-relaxed">
+                  Cancelling an appointment requires an official reason for office documentation and citizen notification.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-red-900/40 tracking-widest ml-1">Duty Category</Label>
+                  <Select 
+                    value={cancelReason.category} 
+                    onValueChange={(v) => setCancelReason({
+                      ...cancelReason, 
+                      category: v, 
+                      reason: OFFICIAL_LEAVE_CATEGORIES[v as keyof typeof OFFICIAL_LEAVE_CATEGORIES][0]
+                    })}
+                  >
+                    <SelectTrigger className="h-12 rounded-xl border-red-100 bg-red-50/50 font-bold">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.keys(OFFICIAL_LEAVE_CATEGORIES).map(cat => (
+                        <SelectItem key={cat} value={cat} className="font-bold">{cat}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-red-900/40 tracking-widest ml-1">Specific Reason</Label>
+                  <Select 
+                    value={cancelReason.reason} 
+                    onValueChange={(v) => setCancelReason({...cancelReason, reason: v})}
+                  >
+                    <SelectTrigger className="h-12 rounded-xl border-red-100 bg-red-50/50 font-bold">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {OFFICIAL_LEAVE_CATEGORIES[cancelReason.category as keyof typeof OFFICIAL_LEAVE_CATEGORIES].map(reason => (
+                        <SelectItem key={reason} value={reason} className="font-bold">{reason}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+            <DialogFooter className="p-8 bg-muted/30 gap-3">
+              <Button variant="outline" onClick={() => { setIsCancelOpen(false); setSelectedApptToCancel(null); }} className="rounded-xl font-bold flex-1 h-12">Keep Booking</Button>
+              <Button onClick={handleCancelSubmit} disabled={isSubmitting} className="bg-red-600 text-white font-black rounded-xl flex-1 h-12 shadow-lg">Confirm Cancel</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {/* --- RESCHEDULE DIALOG --- */}
         <Dialog open={isRescheduleOpen} onOpenChange={setIsRescheduleOpen}>
           <DialogContent className="rounded-[3rem] max-w-4xl p-0 overflow-hidden border-none shadow-2xl max-h-[95vh] flex flex-col">
@@ -641,22 +776,23 @@ export default function LawyerDashboard() {
             </DialogHeader>
             <div className="p-10 space-y-8 flex-1 overflow-y-auto">
               <div className="grid lg:grid-cols-2 gap-12">
-                <div className="space-y-4">
-                  <Label className="text-[10px] font-black uppercase tracking-widest ml-2">Select New Date</Label>
-                  <div className="p-4 bg-secondary/5 rounded-3xl border border-secondary/10 shadow-inner">
-                    <Calendar
-                      mode="single"
-                      selected={selectedApptToReschedule?.date ? new Date(selectedApptToReschedule.date) : undefined}
-                      onSelect={(d) => d && setSelectedApptToReschedule({...selectedApptToReschedule, date: d.toISOString(), dateString: format(d, "yyyy-MM-dd"), time: ""})}
-                      className="rounded-md border-none mx-auto"
-                      disabled={[{ before: startOfToday() }, { dayOfWeek: [0, 6] }, (date) => isHoliday(date)]}
-                    />
-                  </div>
-                </div>
                 <div className="space-y-6">
                   <div className="space-y-4">
-                    <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Choose New Time</Label>
-                    <div className="grid grid-cols-2 gap-2 max-h-[400px] overflow-y-auto p-1 scrollbar-hide">
+                    <Label className="text-[10px] font-black uppercase tracking-widest ml-2">1. Select New Date</Label>
+                    <div className="p-4 bg-secondary/5 rounded-3xl border border-secondary/10 shadow-inner">
+                      <Calendar
+                        mode="single"
+                        selected={selectedApptToReschedule?.date ? new Date(selectedApptToReschedule.date) : undefined}
+                        onSelect={(d) => d && setSelectedApptToReschedule({...selectedApptToReschedule, date: d.toISOString(), dateString: format(d, "yyyy-MM-dd"), time: ""})}
+                        className="rounded-md border-none mx-auto"
+                        disabled={[{ before: startOfToday() }, { dayOfWeek: [0, 6] }, (date) => isHoliday(date)]}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <Label className="text-[10px] font-black uppercase tracking-widest ml-1">2. Choose New Time</Label>
+                    <div className="grid grid-cols-2 gap-2 max-h-[250px] overflow-y-auto p-1 scrollbar-hide">
                       {timeSlots.map(slot => (
                         <Button
                           key={slot.time}
@@ -674,11 +810,60 @@ export default function LawyerDashboard() {
                     </div>
                   </div>
                 </div>
+
+                <div className="space-y-6">
+                  <div className="p-6 bg-amber-50 rounded-[2.5rem] border border-amber-100 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <ShieldAlert className="h-5 w-5 text-amber-600" />
+                      <span className="text-[10px] font-black uppercase text-amber-900 tracking-widest">3. Reason for Reschedule</span>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-amber-900/40">Duty Category</Label>
+                        <Select 
+                          value={rescheduleReason.category} 
+                          onValueChange={(v) => setRescheduleReason({
+                            ...rescheduleReason, 
+                            category: v, 
+                            reason: OFFICIAL_LEAVE_CATEGORIES[v as keyof typeof OFFICIAL_LEAVE_CATEGORIES][0]
+                          })}
+                        >
+                          <SelectTrigger className="h-12 rounded-xl border-amber-200 bg-white font-bold">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.keys(OFFICIAL_LEAVE_CATEGORIES).map(cat => (
+                              <SelectItem key={cat} value={cat} className="font-bold">{cat}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-amber-900/40">Specific Reason</Label>
+                        <Select 
+                          value={rescheduleReason.reason} 
+                          onValueChange={(v) => setRescheduleReason({...rescheduleReason, reason: v})}
+                        >
+                          <SelectTrigger className="h-12 rounded-xl border-amber-200 bg-white font-bold">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {OFFICIAL_LEAVE_CATEGORIES[rescheduleReason.category as keyof typeof OFFICIAL_LEAVE_CATEGORIES].map(reason => (
+                              <SelectItem key={reason} value={reason} className="font-bold">{reason}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             <DialogFooter className="p-8 bg-muted/30 gap-3 shrink-0">
               <Button variant="outline" onClick={() => { setIsRescheduleOpen(false); setSelectedApptToReschedule(null); }} className="rounded-xl font-bold h-12 px-8">Cancel</Button>
-              <Button onClick={handleRescheduleSubmit} disabled={!selectedApptToReschedule?.time || isSubmittingBooking} className="bg-secondary text-white font-black rounded-xl px-10 h-12 shadow-lg">Confirm Reschedule</Button>
+              <Button onClick={handleRescheduleSubmit} disabled={!selectedApptToReschedule?.time || isSubmitting} className="bg-secondary text-white font-black rounded-xl px-10 h-12 shadow-lg">Confirm Reschedule</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

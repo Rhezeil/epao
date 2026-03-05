@@ -24,7 +24,9 @@ import {
   Scale,
   MoreVertical,
   Edit3,
-  Trash2
+  Trash2,
+  AlertCircle,
+  ShieldAlert
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState, useMemo } from "react";
@@ -181,7 +183,7 @@ export default function ClientDashboard() {
 
   const handleCancel = (apptId: string) => {
     if (!db) return;
-    updateDocumentNonBlocking(doc(db, "appointments", apptId), { status: "cancelled" });
+    updateDocumentNonBlocking(doc(db, "appointments", apptId), { status: "cancelled", cancellationReason: "Cancelled by Client" });
     toast({ title: "Appointment Cancelled", description: "The time slot has been released." });
   };
 
@@ -230,7 +232,7 @@ export default function ClientDashboard() {
             </div>
           </div>
           <Badge className="bg-primary/10 text-primary border-none px-4 py-2 rounded-full font-bold">
-            Registered
+            Registered Citizen
           </Badge>
         </div>
 
@@ -313,50 +315,62 @@ export default function ClientDashboard() {
               <CardContent className="space-y-4 px-10 pb-10">
                 {upcomingAppts.length > 0 ? (
                   upcomingAppts.map((appt) => (
-                    <div key={appt.id} className="flex items-center justify-between p-5 bg-primary/5 rounded-3xl border border-primary/10 hover:bg-primary/10 transition-colors group">
-                      <div className="flex items-center gap-5">
-                        <div className="h-14 w-14 rounded-2xl bg-white flex flex-col items-center justify-center shadow-sm border border-primary/5">
-                          <span className="text-[10px] font-black text-primary leading-none uppercase">{format(new Date(appt.date), "MMM")}</span>
-                          <span className="text-xl font-black text-[#1A3B6B] leading-none mt-1">{format(new Date(appt.date), "dd")}</span>
-                        </div>
-                        <div>
-                          <p className="text-base font-black text-[#1A3B6B]">{appt.caseType}</p>
-                          <div className="flex items-center gap-2">
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.1em]">Ref: {appt.referenceCode} • {appt.time}</p>
-                            {assignedLawyer && (
-                              <>
-                                <span className="text-[10px] text-muted-foreground/40">•</span>
-                                <p className="text-[10px] text-secondary font-black uppercase">with Atty. {assignedLawyer.lastName}</p>
-                              </>
-                            )}
+                    <div key={appt.id} className="flex flex-col p-5 bg-primary/5 rounded-3xl border border-primary/10 hover:bg-primary/10 transition-colors group">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-5">
+                          <div className="h-14 w-14 rounded-2xl bg-white flex flex-col items-center justify-center shadow-sm border border-primary/5">
+                            <span className="text-[10px] font-black text-primary leading-none uppercase">{format(new Date(appt.date), "MMM")}</span>
+                            <span className="text-xl font-black text-[#1A3B6B] leading-none mt-1">{format(new Date(appt.date), "dd")}</span>
+                          </div>
+                          <div>
+                            <p className="text-base font-black text-[#1A3B6B]">{appt.caseType}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.1em]">Ref: {appt.referenceCode} • {appt.time}</p>
+                              {assignedLawyer && (
+                                <>
+                                  <span className="text-[10px] text-muted-foreground/40">•</span>
+                                  <p className="text-[10px] text-secondary font-black uppercase">with Atty. {assignedLawyer.lastName}</p>
+                                </>
+                              )}
+                            </div>
                           </div>
                         </div>
+                        <div className="flex items-center gap-4">
+                          <Badge className="bg-primary/10 text-primary border-none text-[9px] font-black uppercase">{appt.status}</Badge>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="rounded-xl w-48 p-2">
+                              <DropdownMenuItem 
+                                className="rounded-lg font-bold text-primary cursor-pointer"
+                                onClick={() => setSelectedApptToReschedule(appt)}
+                              >
+                                <Edit3 className="mr-2 h-4 w-4" /> Reschedule Visit
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem 
+                                className="rounded-lg font-bold text-destructive cursor-pointer"
+                                onClick={() => handleCancel(appt.id)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" /> Cancel Booking
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <Badge className="bg-primary/10 text-primary border-none text-[9px] font-black uppercase">{appt.status}</Badge>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="rounded-xl w-48 p-2">
-                            <DropdownMenuItem 
-                              className="rounded-lg font-bold text-primary cursor-pointer"
-                              onClick={() => setSelectedApptToReschedule(appt)}
-                            >
-                              <Edit3 className="mr-2 h-4 w-4" /> Reschedule Visit
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                              className="rounded-lg font-bold text-destructive cursor-pointer"
-                              onClick={() => handleCancel(appt.id)}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" /> Cancel Booking
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
+                      
+                      {appt.rescheduleReason && (
+                        <div className="mt-4 p-3 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-3">
+                          <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-[10px] font-black uppercase text-amber-900 tracking-widest">Lawyer Note (Rescheduled)</p>
+                            <p className="text-xs font-bold text-amber-800 italic leading-relaxed">{appt.rescheduleReason}</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))
                 ) : (
@@ -378,24 +392,36 @@ export default function ClientDashboard() {
               <CardContent className="space-y-3 px-10 pb-10">
                 {apptHistory.length > 0 ? (
                   apptHistory.map((appt) => (
-                    <div key={appt.id} className="flex items-center justify-between p-4 bg-muted/10 rounded-2xl border border-transparent hover:bg-muted/20 transition-colors">
-                      <div className="flex items-center gap-4">
-                        <div className={cn(
-                          "h-10 w-10 rounded-xl flex items-center justify-center",
-                          appt.status === 'completed' ? 'bg-green-50 text-green-600' : 
-                          appt.status === 'cancelled' ? 'bg-red-50 text-red-600' : 'bg-primary/5 text-primary'
-                        )}>
-                          {appt.status === 'completed' ? <CheckCircle2 className="h-5 w-5" /> : 
-                           appt.status === 'cancelled' ? <XCircle className="h-5 w-5" /> : <Clock className="h-5 w-5" />}
+                    <div key={appt.id} className="flex flex-col p-4 bg-muted/10 rounded-2xl border border-transparent hover:bg-muted/20 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className={cn(
+                            "h-10 w-10 rounded-xl flex items-center justify-center",
+                            appt.status === 'completed' ? 'bg-green-50 text-green-600' : 
+                            appt.status === 'cancelled' ? 'bg-red-50 text-red-600' : 'bg-primary/5 text-primary'
+                          )}>
+                            {appt.status === 'completed' ? <CheckCircle2 className="h-5 w-5" /> : 
+                             appt.status === 'cancelled' ? <XCircle className="h-5 w-5" /> : <Clock className="h-5 w-5" />}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-primary">{appt.caseType}</p>
+                            <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">
+                              {format(new Date(appt.date), "MMM dd, yyyy")} • {appt.time}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-bold text-primary">{appt.caseType}</p>
-                          <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">
-                            {format(new Date(appt.date), "MMM dd, yyyy")} • {appt.time}
-                          </p>
-                        </div>
+                        <Badge variant="outline" className="text-[8px] font-black uppercase">{appt.status}</Badge>
                       </div>
-                      <Badge variant="outline" className="text-[8px] font-black uppercase">{appt.status}</Badge>
+
+                      {appt.status === 'cancelled' && appt.cancellationReason && (
+                        <div className="mt-3 p-3 bg-red-50/50 rounded-xl border border-red-100/50 flex items-start gap-3">
+                          <ShieldAlert className="h-3.5 w-3.5 text-red-600 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-[9px] font-black uppercase text-red-900 tracking-widest">Official Reason</p>
+                            <p className="text-xs font-bold text-red-800 leading-relaxed italic">{appt.cancellationReason}</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))
                 ) : (
@@ -430,7 +456,7 @@ export default function ClientDashboard() {
                     </div>
                     <div className="space-y-3 pt-6 border-t border-primary/10">
                       <div className="flex items-center gap-3 text-xs font-bold text-[#2E5A99]">
-                        <ShieldCheck className="h-4 w-4 text-primary" /> District Office
+                        <ShieldCheck className="h-4 w-4 text-primary" /> District Office Station
                       </div>
                       <div className="flex items-center gap-3 text-xs font-bold text-[#2E5A99]">
                         <Briefcase className="h-4 w-4 text-primary" /> Specialist Counsel
