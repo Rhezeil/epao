@@ -372,14 +372,14 @@ export default function LawyerCasesPage() {
                 </div>
               </div>
             </DialogHeader>
-            <div className="overflow-hidden flex-1 flex flex-col">
-              <Tabs defaultValue="details" className="w-full h-full flex flex-col">
+            <div className="overflow-hidden flex-1 flex flex-col min-h-0">
+              <Tabs defaultValue="details" className="w-full h-full flex flex-col min-h-0">
                 <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1 rounded-none h-14 shrink-0">
                   <TabsTrigger value="details" className="rounded-none font-bold">Personal Details</TabsTrigger>
                   <TabsTrigger value="history" className="rounded-none font-bold">Visit History</TabsTrigger>
                 </TabsList>
                 
-                <TabsContent value="details" className="p-10 space-y-8 flex-1 overflow-y-auto">
+                <TabsContent value="details" className="p-10 space-y-8 flex-1 overflow-y-auto min-h-0">
                   <div className="grid md:grid-cols-2 gap-10">
                     <div className="space-y-6">
                       <div className="space-y-1">
@@ -414,7 +414,7 @@ export default function LawyerCasesPage() {
                   </div>
                 </TabsContent>
 
-                <TabsContent value="history" className="p-6 flex-1 overflow-y-auto">
+                <TabsContent value="history" className="p-6 flex-1 overflow-y-auto min-h-0">
                   <div className="space-y-8">
                     {isClientApptsLoading ? (
                       <div className="py-12 flex justify-center"><Loader2 className="animate-spin h-8 w-8 text-secondary/20" /></div>
@@ -521,7 +521,7 @@ export default function LawyerCasesPage() {
               </div>
             </DialogHeader>
             
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto min-h-0">
               <div className="grid lg:grid-cols-5 h-full">
                 <div className="lg:col-span-2 bg-primary/[0.02] border-r border-primary/5 p-8 space-y-8">
                   <div className="space-y-6">
