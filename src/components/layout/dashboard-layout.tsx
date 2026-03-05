@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -92,7 +91,6 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     if (role === "lawyer") {
       return [
         { icon: LayoutDashboard, label: "Home", path: "/dashboard/lawyer" },
-        { icon: Clock, label: "My Schedule", path: "/dashboard/lawyer" },
         { icon: FileText, label: "My Cases", path: "/dashboard/lawyer/cases" },
       ];
     }

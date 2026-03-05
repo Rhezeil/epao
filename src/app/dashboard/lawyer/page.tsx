@@ -391,7 +391,7 @@ export default function LawyerDashboard() {
             <CardContent className="p-8 space-y-1">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-10px font-black uppercase tracking-widest text-muted-foreground">Today's Consultations</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Today's Consultations</p>
                   <p className="text-5xl font-black">
                     {apptsData?.filter(a => a.dateString === format(new Date(), "yyyy-MM-dd") && a.status !== 'cancelled').length || 0}
                   </p>

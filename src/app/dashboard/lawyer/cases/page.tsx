@@ -143,11 +143,11 @@ export default function LawyerCasesPage() {
 
   // Slot Logic for Booking Dialog
   const bookingDateStr = bookingForm.date ? format(bookingForm.date, "yyyy-MM-dd") : null;
-  const globalApptsQuery = useMemoFirebase(() => {
+  const globalApptsQueryForSlot = useMemoFirebase(() => {
     if (!db || !bookingDateStr || !user) return null;
     return query(collection(db, "appointments"), where("dateString", "==", bookingDateStr));
   }, [db, bookingDateStr, user]);
-  const { data: globalAppts } = useCollection(globalApptsQuery);
+  const { data: globalApptsForSlot } = useCollection(globalApptsQueryForSlot);
 
   const timeSlots = useMemo(() => {
     const slots = [];
@@ -161,12 +161,12 @@ export default function LawyerCasesPage() {
         const timeString = `${displayHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
         const slotDate = bookingForm.date ? setMinutes(setHours(new Date(bookingForm.date), h), m) : null;
         const isPast = slotDate ? isBefore(slotDate, now) : false;
-        const isBooked = globalAppts?.some(a => a.lawyerId === user?.uid && a.time === timeString && a.status !== 'cancelled');
+        const isBooked = globalApptsForSlot?.some(a => a.lawyerId === user?.uid && a.time === timeString && a.status !== 'cancelled');
         slots.push({ time: timeString, isBooked, isPast });
       }
     }
     return slots;
-  }, [bookingForm.date, globalAppts, user]);
+  }, [bookingForm.date, globalApptsForSlot, user]);
 
   if (loading) {
     return (
