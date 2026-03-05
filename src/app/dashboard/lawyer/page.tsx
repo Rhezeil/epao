@@ -48,26 +48,20 @@ import { Input } from "@/components/ui/input";
 import { DateRange } from "react-day-picker";
 
 const OFFICIAL_LEAVE_CATEGORIES = {
-  "Mandatory and Official Duty-Related Leave": [
-    "Mandatory CPD Leave",
-    "Official Business/Official Time"
-  ],
-  "Specialized Leave Privileges (SLP)": [
-    "Official Legal Matters",
-    "Court Witness Duty"
-  ],
-  "Health and Wellness (Work-Induced)": [
+  "Personal Leave": [
     "Wellness Leave",
-    "Occupational Disease/Injury Recovery"
+    "Special Leave Privileges (SLP)",
+    "Forced Leave"
   ],
-  "Administrative and Operational Reasons": [
-    "Office Suspension (Disaster/Emergency)",
-    "Inquest/Jail Duty Recovery",
-    "Conflict Documentation Leave"
-  ],
-  "Mandatory Reporting/Legal Requirements": [
-    "Annual Performance Reporting",
-    "Year-end Case Inventory"
+  "Work-Related Leave": [
+    "Mandatory Continuing Professional Development (CPD)",
+    "Official Business / Official Time",
+    "Court Attendance (Official Witness)",
+    "Occupational Disease / Work-Related Injury Leave",
+    "Office Suspension (Emergency Situations)",
+    "Inquest / Jail Visitation Duty Recovery Leave",
+    "Conflict of Interest Documentation Leave",
+    "Preparation of Mandatory Reports"
   ]
 };
 
@@ -97,7 +91,7 @@ export default function LawyerDashboard() {
   const [selectedApptToReschedule, setSelectedApptToReschedule] = useState<any>(null);
   const [rescheduleReason, setRescheduleReason] = useState({
     category: Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0],
-    reason: OFFICIAL_LEAVE_CATEGORIES[Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0]][0]
+    reason: OFFICIAL_LEAVE_CATEGORIES[Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0] as keyof typeof OFFICIAL_LEAVE_CATEGORIES][0]
   });
 
   // Cancellation Logic
@@ -105,7 +99,7 @@ export default function LawyerDashboard() {
   const [selectedApptToCancel, setSelectedApptToCancel] = useState<any>(null);
   const [cancelReason, setCancelReason] = useState({
     category: Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0],
-    reason: OFFICIAL_LEAVE_CATEGORIES[Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0]][0]
+    reason: OFFICIAL_LEAVE_CATEGORIES[Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0] as keyof typeof OFFICIAL_LEAVE_CATEGORIES][0]
   });
   
   // Availability Form State
@@ -118,7 +112,7 @@ export default function LawyerDashboard() {
     startTime: "08:00",
     endTime: "17:00",
     reasonCategory: Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0],
-    specificReason: OFFICIAL_LEAVE_CATEGORIES[Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0]][0]
+    specificReason: OFFICIAL_LEAVE_CATEGORIES[Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0] as keyof typeof OFFICIAL_LEAVE_CATEGORIES][0]
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -372,7 +366,7 @@ export default function LawyerDashboard() {
                   startTime: selectedDayAvail?.startTime || "08:00",
                   endTime: selectedDayAvail?.endTime || "17:00",
                   reasonCategory: selectedDayAvail?.reasonCategory || Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0],
-                  specificReason: selectedDayAvail?.specificReason || OFFICIAL_LEAVE_CATEGORIES[Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0]][0]
+                  specificReason: selectedDayAvail?.specificReason || OFFICIAL_LEAVE_CATEGORIES[Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0] as keyof typeof OFFICIAL_LEAVE_CATEGORIES][0]
                 });
                 setDateRange({ from: selectedDate, to: selectedDate });
                 setIsAvailabilityOpen(true);
