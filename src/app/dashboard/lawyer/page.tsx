@@ -1,3 +1,4 @@
+
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -26,7 +27,8 @@ import {
   CalendarCheck,
   Gavel,
   Edit3,
-  ShieldAlert
+  ShieldAlert,
+  Bell
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -160,7 +162,8 @@ export default function LawyerDashboard() {
 
   const notifications = useMemo(() => {
     if (!apptsData) return [];
-    return apptsData.filter(a => a.status === 'pending').sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    // Show notification if status is pending OR if assigned by admin but not yet acknowledged (notified === false)
+    return apptsData.filter(a => a.status === 'pending' || a.notified === false).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }, [apptsData]);
 
   const selectedDayAvail = useMemo(() => {
@@ -216,8 +219,18 @@ export default function LawyerDashboard() {
   const updateStatus = (apptId: string, status: string) => {
     if (!db) return;
     const ref = doc(db, "appointments", apptId);
-    updateDocumentNonBlocking(ref, { status });
+    updateDocumentNonBlocking(ref, { 
+      status, 
+      notified: true // Also mark as notified when confirming/completing
+    });
     toast({ title: `Status Updated`, description: `Appointment marked as ${status}.` });
+  };
+
+  const acknowledgeAssignment = (apptId: string) => {
+    if (!db) return;
+    const ref = doc(db, "appointments", apptId);
+    updateDocumentNonBlocking(ref, { notified: true });
+    toast({ title: "Schedule Acknowledged", description: "The new assignment has been confirmed in your registry." });
   };
 
   const handleCancelSubmit = () => {
@@ -382,25 +395,34 @@ export default function LawyerDashboard() {
           <Card className="border-none shadow-xl bg-amber-50 rounded-[2rem] overflow-hidden">
             <CardHeader className="bg-amber-100/50 pb-4">
               <CardTitle className="text-sm font-black text-amber-900 flex items-center gap-2 uppercase tracking-widest">
-                <AlertCircle className="h-4 w-4" /> Awaiting Action ({notifications.length})
+                <Bell className="h-4 w-4" /> Awaiting Action ({notifications.length})
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0 divide-y divide-amber-200/50">
               {notifications.map(n => (
-                <div key={n.id} className="p-4 flex items-center justify-between hover:bg-amber-100/30 transition-colors">
+                <div key={n.id} className="p-4 flex flex-col md:flex-row md:items-center justify-between hover:bg-amber-100/30 transition-colors gap-4">
                   <div className="flex items-center gap-4">
                     <div className="p-2 bg-white rounded-xl shadow-sm">
                       <User className="h-4 w-4 text-amber-600" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-amber-900">{n.guestName || n.clientName}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-bold text-amber-900">{n.guestName || n.clientName}</p>
+                        {n.notified === false && n.status === 'scheduled' && (
+                          <Badge className="bg-amber-600 text-white text-[8px] font-black uppercase px-2 py-0">Admin Assigned</Badge>
+                        )}
+                      </div>
                       <p className="text-[10px] font-medium text-amber-700 uppercase tracking-widest">
                         Requested: {format(new Date(n.date), "MMM dd")} @ {n.time} • {n.caseType}
                       </p>
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" onClick={() => updateStatus(n.id, 'scheduled')} className="h-8 rounded-lg bg-amber-600 text-white font-black text-[10px] uppercase shadow-sm">Confirm</Button>
+                    {n.status === 'pending' ? (
+                      <Button size="sm" onClick={() => updateStatus(n.id, 'scheduled')} className="h-8 rounded-lg bg-amber-600 text-white font-black text-[10px] uppercase shadow-sm">Confirm Request</Button>
+                    ) : (
+                      <Button size="sm" onClick={() => acknowledgeAssignment(n.id)} className="h-8 rounded-lg bg-amber-600 text-white font-black text-[10px] uppercase shadow-sm">Acknowledge assignment</Button>
+                    )}
                     <Button size="sm" variant="ghost" onClick={() => { setSelectedApptToReschedule(n); setIsRescheduleOpen(true); }} className="h-8 rounded-lg text-amber-700 font-black text-[10px] uppercase hover:bg-amber-100/50">Reschedule</Button>
                     <Button size="sm" variant="ghost" onClick={() => { setSelectedApptToCancel(n); setIsCancelOpen(true); }} className="h-8 rounded-lg text-red-600 font-black text-[10px] uppercase hover:bg-red-50">Cancel</Button>
                   </div>
@@ -451,7 +473,7 @@ export default function LawyerDashboard() {
                 <div className="p-2 bg-secondary text-white rounded-xl">
                   <CalendarIcon className="h-5 w-5" />
                 </div>
-                <CardTitle className="text-lg font-bold text-secondary">Schedule</CardTitle>
+                <CardTitle className="text-lg font-bold text-secondary">Daily Workstation Schedule</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="p-0">

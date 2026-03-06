@@ -119,7 +119,8 @@ export default function AdminTriagePage() {
         lawyerId: assignedLawyer,
         status: "scheduled",
         screenedAt: new Date().toISOString(),
-        screeningDetails: screening
+        screeningDetails: screening,
+        notified: false // Notify the assigned lawyer of their new schedule
       });
 
       toast({ 
@@ -278,7 +279,7 @@ export default function AdminTriagePage() {
                       <TableRow>
                         <TableHead className="px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Reference</TableHead>
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Citizen Name</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Category</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Category</TableHead>
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Citizen Type</TableHead>
                         <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Action</TableHead>
                       </TableRow>
@@ -288,10 +289,10 @@ export default function AdminTriagePage() {
                         <TableRow key={appt.id} className="hover:bg-primary/5 transition-colors group">
                           <TableCell className="px-8 font-black text-primary py-6">{appt.referenceCode}</TableCell>
                           <TableCell className="font-bold">{appt.guestName || appt.clientName || "Registered Citizen"}</TableCell>
-                          <TableCell>
+                          <TableCell className="text-center">
                             <Badge 
                               variant="outline" 
-                              className="bg-primary/5 font-black text-[9px] uppercase px-3 py-1 w-full justify-center border-primary/10 text-primary"
+                              className="bg-primary/5 font-black text-[9px] uppercase px-3 py-1 border-primary/10 text-primary min-w-[140px] justify-center"
                             >
                               {appt.caseType}
                             </Badge>
@@ -347,7 +348,7 @@ export default function AdminTriagePage() {
                       <TableRow>
                         <TableHead className="px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Reference</TableHead>
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Citizen Name</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Category</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Category</TableHead>
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Visit Date</TableHead>
                         <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Action</TableHead>
                       </TableRow>
@@ -357,10 +358,10 @@ export default function AdminTriagePage() {
                         <TableRow key={intake.id} className="hover:bg-primary/5 transition-colors group">
                           <TableCell className="px-8 font-black text-primary py-6">{intake.referenceCode}</TableCell>
                           <TableCell className="font-bold">{intake.guestName || intake.clientName || "Registered Citizen"}</TableCell>
-                          <TableCell>
+                          <TableCell className="text-center">
                             <Badge 
                               variant="outline" 
-                              className="bg-teal-50 text-teal-700 border-teal-100 font-black text-[9px] uppercase px-3 py-1 w-full justify-center"
+                              className="bg-teal-50 text-teal-700 border-teal-100 font-black text-[9px] uppercase px-3 py-1 border-teal-100 min-w-[140px] justify-center"
                             >
                               {intake.caseType}
                             </Badge>
