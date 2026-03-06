@@ -89,13 +89,12 @@ service cloud.firestore {
 
     /**
      * @description Global appointments registry. 
-     * Allow reading/listing for users to track history and staff for caseload management.
      */
     match /appointments/{appointmentId} {
       allow read: if true;
       allow list: if isSignedIn(); 
       allow create: if true;
-      allow update: if true; 
+      allow update: if true; // In MVP, allow updates for triage and lawyer status changes
       allow delete: if isAdmin();
     }
 
