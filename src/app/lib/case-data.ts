@@ -244,6 +244,26 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["Medical Certificate (Original)", "Hospital Records/Discharge Summary", "Photographs of injuries", "Police Blotter", "Barangay Certification to File Action (If applicable)"],
     steps: universalPaoFlow
   },
+  "Abortion (Arts. 256–259)": {
+    description: "Unlawful termination of pregnancy. Requires medical confirmation.",
+    requirements: ["Medical Certificate from attending physician", "Death Certificate of fetus (if applicable)", "Police Blotter", "Witness Sworn Statements"],
+    steps: universalPaoFlow
+  },
+  "Discharge of Firearms (Art. 254 / RA 11926)": {
+    description: "Unlawful firing of a weapon. Requires ballistics and investigation reports.",
+    requirements: ["Police Investigation Report", "Ballistics/Paraffin Test Result", "Pictures of the scene", "Witness Sworn Statements"],
+    steps: universalPaoFlow
+  },
+  "Robbery (Arts. 293–294)": {
+    description: "Taking personal property with violence or intimidation.",
+    requirements: ["Police Blotter/Investigation Report", "Inventory of stolen property with value", "Proof of ownership (Receipts/TCT)", "CCTV Footage (if any)", "Witness Statements"],
+    steps: universalPaoFlow
+  },
+  "Theft (Art. 308)": {
+    description: "Taking property without consent and with intent to gain.",
+    requirements: ["Police Blotter", "Proof of ownership/Receipts", "Inventory of missing items", "Witness Sworn Statements"],
+    steps: universalPaoFlow
+  },
   "Qualified Theft (Art. 310)": {
     description: "Theft with grave abuse of confidence, or involving motor vehicles, coconuts, or large cattle.",
     requirements: ["Contract of Employment/ID (For abuse of confidence)", "Inventory of missing items", "CCTV/Security Logs", "Proof of ownership (Receipts/TCT)", "Police Report"],
@@ -254,6 +274,76 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["Written Agreements/Contracts", "Dishonored Checks/Bank Return Slips", "Demand Letter with proof of receipt", "Proof of payment/transfer", "Screenshots of messages"],
     steps: universalPaoFlow
   },
+  "Arson (Arts. 320–326)": {
+    description: "Willful and malicious burning of property.",
+    requirements: ["Fire Marshall's Investigation Report (BFP)", "Photos of the burned premises", "Proof of ownership or tenancy", "Witness Sworn Statements"],
+    steps: universalPaoFlow
+  },
+  "Malicious Mischief (Art. 327)": {
+    description: "Deliberate damage to property of another.",
+    requirements: ["Photographs of the damage", "Estimate of repair/Cost of damage", "Police Blotter", "Witness Sworn Statements"],
+    steps: universalPaoFlow
+  },
+  "Bouncing Checks (BP 22)": {
+    description: "Issuance of a check without sufficient funds.",
+    requirements: ["Original Dishonored Check", "Bank Return Slip", "Notice of Dishonor", "Proof of receipt of Notice (Registry Return Card)", "Affidavit of Complaint"],
+    steps: universalPaoFlow
+  },
+  "Anti-Fencing (PD 1612)": {
+    description: "Possession or sale of stolen property.",
+    requirements: ["Proof of ownership of stolen item", "Police Report of the original theft", "Inventory of seized items", "Witness Sworn Statements"],
+    steps: universalPaoFlow
+  },
+  "Electricity Pilferage (RA 7832)": {
+    description: "Illegal electrical connection or meter tampering.",
+    requirements: ["Utility Inspection Report", "Violation Notice from Electric Co.", "Police Blotter", "Photographs of illegal connection"],
+    steps: universalPaoFlow
+  },
+  "Kidnapping / Serious Illegal Detention (Art. 267)": {
+    description: "Unlawful restraint of liberty of another.",
+    requirements: ["Police Investigation Report", "Witness Sworn Statements", "Proof of ransom demand (if applicable)", "Evidence of restraint"],
+    steps: universalPaoFlow
+  },
+  "Grave Threats (Art. 282)": {
+    description: "Threatening another with a crime against persons or property.",
+    requirements: ["Recording or screenshots of threats", "Police Blotter", "Witness Sworn Statements"],
+    steps: universalPaoFlow
+  },
+  "Grave Coercion (Art. 286)": {
+    description: "Compelling another by force or intimidation to do something against their will.",
+    requirements: ["Police Blotter", "Witness Sworn Statements", "Evidence of force or intimidation used"],
+    steps: universalPaoFlow
+  },
+  "Rape (Art. 266-A)": {
+    description: "Sexual assault. Requires specialized medico-legal evidence.",
+    requirements: ["Medico-Legal Report (PNP/NBI)", "Psychological Evaluation Report", "Sworn Statement of victim", "Police Investigation Report"],
+    steps: universalPaoFlow
+  },
+  "Acts of Lasciviousness (Art. 336)": {
+    description: "Indecent acts committed against another.",
+    requirements: ["Medico-Legal Report (if physical contact occurred)", "Sworn Statement of victim", "Police Blotter", "Witness Sworn Statements"],
+    steps: universalPaoFlow
+  },
+  "Rebellion (Art. 134)": {
+    description: "Rising publicly and taking up arms against the government.",
+    requirements: ["PNP/AFP Operational Reports", "Captured Evidence/Documents", "Witness Sworn Statements", "Intelligence Reports"],
+    steps: universalPaoFlow
+  },
+  "Coup d'état (Art. 134-A)": {
+    description: "Swift attack against government facilities to diminish state power.",
+    requirements: ["Incident Reports", "Official Damage Assessment", "Witness Sworn Statements", "Operational logs"],
+    steps: universalPaoFlow
+  },
+  "Sedition (Art. 139)": {
+    description: "Rising publicly to prevent execution of laws or administrative orders.",
+    requirements: ["Proof of public uprising", "Video or photographic evidence", "Official Reports", "Witness Sworn Statements"],
+    steps: universalPaoFlow
+  },
+  "Conspiracy to Commit Rebellion (Art. 136)": {
+    description: "Agreement and decision to commit rebellion.",
+    requirements: ["Surveillance evidence", "Captured communications", "Witness Sworn Statements"],
+    steps: universalPaoFlow
+  },
   "Drug Cases (RA 9165)": {
     description: "Possession, sale, or delivery of dangerous drugs.",
     requirements: ["Copy of Information (Charge Sheet)", "Inventory of Seized Items", "Chemistry Report (PDEA/PNP)", "Chain of Custody Form", "Arrest Report (Booking Form)"],
@@ -262,6 +352,31 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   "VAWC Criminal (RA 9262)": {
     description: "Violence (Physical, Sexual, Psychological, Economic) against women and their children.",
     requirements: ["Medical Certificate", "PSA Marriage Certificate/Birth Certificate of child", "Barangay Protection Order (If any)", "Psychological Evaluation Report", "Threatening messages/Evidence of abuse"],
+    steps: universalPaoFlow
+  },
+  "Child Abuse (RA 7610)": {
+    description: "Abuse, exploitation, or discrimination against children.",
+    requirements: ["Medico-Legal Report", "PSA Birth Certificate of child", "Psychological Evaluation Report", "Police Blotter", "Witness Sworn Statements"],
+    steps: universalPaoFlow
+  },
+  "Cybercrime (RA 10175)": {
+    description: "Illegal acts committed through computer systems (Libel, Fraud, etc.).",
+    requirements: ["Screenshots of posts/messages", "Electronic evidence certification", "Police/NBI Cybercrime Report", "Links to defamatory content"],
+    steps: universalPaoFlow
+  },
+  "Illegal Recruitment (RA 8042)": {
+    description: "Recruitment activities by unlicensed individuals or agencies.",
+    requirements: ["POEA Certification of license status", "Employment Contracts", "Receipts of fees paid", "Witness Sworn Statements", "Passport/Visa docs"],
+    steps: universalPaoFlow
+  },
+  "Bail (Rule 114)": {
+    description: "Petition for temporary release from custody.",
+    requirements: ["Copy of the Information", "Valid Identification", "Proof of assets/financial capacity", "NBI Clearance"],
+    steps: universalPaoFlow
+  },
+  "Habeas Corpus (Rule 102)": {
+    description: "Inquiry into the legality of detention.",
+    requirements: ["Proof of detention", "Sworn statement detailing the illegality of detention", "Witness statements"],
     steps: universalPaoFlow
   },
 
@@ -291,9 +406,64 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["Medical Certificate", "Police Blotter or Incident Report", "Barangay Protection Order (BPO) if available", "Proof of relationship (Marriage/Birth Cert)", "Photos of physical abuse"],
     steps: universalPaoFlow
   },
+  "Petition for Habeas Corpus (Minor)": {
+    description: "Petition to retrieve custody of a minor from illegal restraint.",
+    requirements: ["PSA Birth Certificate of child", "Proof of legal custody right", "Proof of illegal restraint/detention of child", "Witness statements"],
+    steps: universalPaoFlow
+  },
+  "Declaration of Presumptive Death (Art. 41)": {
+    description: "Petition to declare a missing spouse dead for remarriage purposes.",
+    requirements: ["PSA Marriage Certificate", "Proof of absence (at least 4 years)", "Evidence of diligent search", "Affidavit of the Petitioner"],
+    steps: universalPaoFlow
+  },
   "Unlawful Detainer / Forcible Entry": {
     description: "Ejection cases involving illegal possession of land or buildings.",
     requirements: ["Transfer Certificate of Title (TCT) / Tax Declaration", "Demand Letter to Vacate (With proof of receipt)", "Lease Contract (If any)", "Barangay Certification to File Action", "Proof of non-payment of rent"],
+    steps: universalPaoFlow
+  },
+  "Quieting of Title / Reconveyance": {
+    description: "Removing cloud or conflicting claims on property title.",
+    requirements: ["TCT/OCT of the property", "Current Tax Declaration", "Proof of continuous possession", "Evidence of conflicting claim/instrument"],
+    steps: universalPaoFlow
+  },
+  "Partition of Property (Art. 494)": {
+    description: "Dividing co-owned land or assets among heirs or partners.",
+    requirements: ["TCT/OCT of property", "Tax Declaration", "PSA Birth/Marriage certs showing relationship", "Survey Plan (if available)"],
+    steps: universalPaoFlow
+  },
+  "Easement / Right of Way": {
+    description: "Petition for access through another person's property.",
+    requirements: ["TCT/OCT of dominant and servient estates", "Survey Plan showing isolation", "Proof of necessity and indemnity"],
+    steps: universalPaoFlow
+  },
+  "Foreclosure of Mortgage Defense": {
+    description: "Defending vs bank foreclosure due to payment or procedural issues.",
+    requirements: ["Loan Agreement/Mortgage Contract", "Promissory Note", "Proof of payments (Receipts)", "Foreclosure Notice from bank"],
+    steps: universalPaoFlow
+  },
+  "Breach of Contract": {
+    description: "Claim for damages due to violation of an agreement.",
+    requirements: ["Copy of the Written Contract", "Proof of violation/breach", "Demand Letter with proof of receipt", "Evidence of resulting damages"],
+    steps: universalPaoFlow
+  },
+  "Collection of Sum of Money": {
+    description: "Recovery of unpaid debts or loans.",
+    requirements: ["Promissory Note/Acknowledgment Receipt", "Demand Letter with proof of receipt", "Invoices or receipts of partial payments", "Witness statements"],
+    steps: universalPaoFlow
+  },
+  "Damages (Tort / Quasi-Delict Art. 2176)": {
+    description: "Civil liability for injury or loss caused by negligence.",
+    requirements: ["Medical Certificates/Death Certificate", "Hospital Receipts/Repair Estimates", "Police Report", "Witness Sworn Statements"],
+    steps: universalPaoFlow
+  },
+  "Defamation Civil Damages": {
+    description: "Civil suit for libel or slander.",
+    requirements: ["Screenshots/Recordings of defamatory statement", "Proof of publication", "Witness statements", "Evidence of damage to reputation"],
+    steps: universalPaoFlow
+  },
+  "Guardianship (Rules 92–97)": {
+    description: "Legal petition for the care of an incompetent or a minor's property.",
+    requirements: ["PSA Birth Certificate of ward", "Medical Certificate of incompetency", "Inventory of ward's properties", "Affidavit of proposed guardian"],
     steps: universalPaoFlow
   },
   "Settlement of Estate (Rule 74)": {
@@ -306,11 +476,31 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["PSA Birth Certificate", "NBI, Police, and Prosecutor Clearances", "Affidavit of Merit", "Proof of residence for at least 3 years", "Certificates of employment or school records"],
     steps: universalPaoFlow
   },
+  "Correction of Entry (Rule 108 / RA 9048)": {
+    description: "Correcting clerical errors in PSA records.",
+    requirements: ["PSA Certificate to be corrected", "Baptismal Certificate", "School Records (Form 137)", "Voter's Registration/NBI Clearance", "Birth Certificate of children"],
+    steps: universalPaoFlow
+  },
+  "Interpleader (Rule 62)": {
+    description: "Resolution of conflicting claims against a neutral party.",
+    requirements: ["Contract or instrument involving conflicting claims", "Proof of neutral interest", "Evidence of conflicting demands"],
+    steps: universalPaoFlow
+  },
+  "Declaratory Relief (Rule 63)": {
+    description: "Judicial interpretation of an instrument, contract, or law.",
+    requirements: ["Copy of the Law/Contract/Ordinance", "Proof of legal interest in the matter", "Evidence of controversy"],
+    steps: universalPaoFlow
+  },
 
   // --- LABOR ---
   "Illegal Dismissal (Art. 294)": {
     description: "Termination of employment without just or authorized cause.",
     requirements: ["Notice of Dismissal (Termination Letter)", "Company ID / Payslips", "Employment Contract", "SENA Referral Form (Failed mediation)", "Evidence of whistleblowing or illegal acts"],
+    steps: universalPaoFlow
+  },
+  "Just Causes for Termination (Art. 297)": {
+    description: "Defense against dismissal due to serious misconduct or gross neglect.",
+    requirements: ["Notice of Violations/Show Cause Memo", "Written incident reports", "Minutes of Administrative Hearing", "Company Policy/Employee Handbook"],
     steps: universalPaoFlow
   },
   "Authorized Causes for Termination (Art. 298-299)": {
@@ -323,9 +513,34 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["Payslips / Bank Statement", "Time Cards / Attendance Records", "Daily Time Record (DTR)", "Company ID", "Notice of separation"],
     steps: universalPaoFlow
   },
+  "Non-Payment of 13th Month Pay (PD 851)": {
+    description: "Claim for mandatory annual bonus.",
+    requirements: ["Payslips", "Company ID", "Employment Certificate", "SENA Referral"],
+    steps: universalPaoFlow
+  },
+  "Service Incentive Leave (SIL)": {
+    description: "Unpaid leave credits for employees with 1 year service.",
+    requirements: ["Payslips", "Daily Time Records (DTR)", "Company ID", "Attendance records"],
+    steps: universalPaoFlow
+  },
+  "Holiday / Premium Pay": {
+    description: "Unpaid additional pay for work during holidays or rest days.",
+    requirements: ["Daily Time Records showing work on holidays", "Payslips", "Company ID", "Employment Contract"],
+    steps: universalPaoFlow
+  },
+  "Night Shift Differential": {
+    description: "Unpaid 10% premium for work between 10 PM and 6 AM.",
+    requirements: ["Daily Time Records (DTR)", "Payslips", "Company ID", "Shift schedules"],
+    steps: universalPaoFlow
+  },
   "Separation Pay (Art. 298-299)": {
     description: "Claim for payment given to an employee whose service is terminated due to authorized causes.",
     requirements: ["Proof of length of service (Payslips/ID)", "Notice of Termination citing authorized cause", "Latest Payslip", "Company ID"],
+    steps: universalPaoFlow
+  },
+  "Claims for Damages (Labor)": {
+    description: "Damages for bad faith dismissal or workplace injuries.",
+    requirements: ["Medical Certificates", "Incident Reports", "Proof of bad faith (emails/messages)", "Witness statements"],
     steps: universalPaoFlow
   },
   "OFW Money Claims (RA 8042/10022)": {
@@ -333,8 +548,28 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["POEA-verified Employment Contract", "Overseas Employment Certificate (OEC)", "Passport with arrival/departure stamps", "Remittance receipts or payslips"],
     steps: universalPaoFlow
   },
+  "Unfair Labor Practice (ULP)": {
+    description: "Employer interference with union rights or discrimination.",
+    requirements: ["Union Membership proof", "CBA (if any)", "Evidence of discriminatory acts", "Witness statements"],
+    steps: universalPaoFlow
+  },
+  "Sexual Harassment (Workplace)": {
+    description: "Harassment occurring in the employment environment.",
+    requirements: ["Sworn Statement of victim", "Emails/Messages/Screenshots", "Incident reports filed with HR", "Witness statements"],
+    steps: universalPaoFlow
+  },
 
   // --- ADMINISTRATIVE ---
+  "Grave Misconduct (RRACCS)": {
+    description: "Serious violation of rules by public officials.",
+    requirements: ["Sworn Complaint", "Official records/Transaction documents", "Witness Affidavits", "Service Record of respondent"],
+    steps: universalPaoFlow
+  },
+  "Conduct Prejudicial to Service": {
+    description: "Acts damaging the reputation of public office.",
+    requirements: ["Sworn Complaint", "Proof of specific act (Photos/Video)", "Witness Affidavits"],
+    steps: universalPaoFlow
+  },
   "Violation of Ethical Standards (RA 6713)": {
     description: "Complaints against government employees for corruption or unethical conduct.",
     requirements: ["Sworn Complaint-Affidavit", "Official Records of the transaction", "Witness statements", "Proof of public office employment", "Evidence of misconduct (Photos/Audio)"],
@@ -350,9 +585,29 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["Sworn Complaint-Affidavit", "Police Blotter or incident report", "PNP ID or name of respondent", "Photos or videos of the incident", "Witness testimonies"],
     steps: universalPaoFlow
   },
+  "Police Grave Misconduct": {
+    description: "Serious disciplinary violation by police personnel.",
+    requirements: ["Sworn Complaint", "IAS/PNP Investigation Report", "Witness Sworn Statements", "Evidence of specific violation"],
+    steps: universalPaoFlow
+  },
+  "IAS Disciplinary Proceeding": {
+    description: "Disciplinary cases handled by the Internal Affairs Service.",
+    requirements: ["IAS Resolution/Order", "Complaint and Answer", "Service Record", "Official Reports"],
+    steps: universalPaoFlow
+  },
   "Agrarian Dispute (DARAB/RA 6657)": {
     description: "Disputes involving land reform, tenancy, or agricultural land distribution.",
     requirements: ["TCT / CLOA / Emancipation Patent (EP)", "Tax Declaration", "MARO/PARO Certifications", "Proof of tenancy relationship", "Notice of Coverage (if any)"],
+    steps: universalPaoFlow
+  },
+  "Immigration / Deportation Case": {
+    description: "Contesting visa violations or deportation orders.",
+    requirements: ["Passport", "Visa/Stay documents", "BI Notice or Order", "Proof of legal status or contestation"],
+    steps: universalPaoFlow
+  },
+  "Anti-Torture Complaint (RA 9745)": {
+    description: "Complaints vs state actors for torture or cruel treatment.",
+    requirements: ["Medico-Legal Report (Government/CHR doctor)", "Sworn Statement of victim", "Photographs of injuries", "Witness statements"],
     steps: universalPaoFlow
   }
 };
