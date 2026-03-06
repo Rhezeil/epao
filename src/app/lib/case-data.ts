@@ -403,7 +403,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   },
   "VAWC Civil Protection Order (RA 9262)": {
     description: "Civil protection for victims of domestic violence to keep the perpetrator away.",
-    requirements: ["Medical Certificate", "Police Blotter or Incident Report", "Barangay Protection Order (BPO) if available", "Proof of relationship (Marriage/Birth Cert)", "Photos of physical abuse"],
+    requirements: ["Medical Certificate", "Police Blotter or incident report", "Barangay Protection Order (BPO) if available", "Proof of relationship (Marriage/Birth Cert)", "Photos of physical abuse"],
     steps: universalPaoFlow
   },
   "Petition for Habeas Corpus (Minor)": {
