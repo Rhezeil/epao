@@ -28,7 +28,8 @@ import {
   Gavel,
   Edit3,
   ShieldAlert,
-  Bell
+  Bell,
+  Inbox
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -162,8 +163,11 @@ export default function LawyerDashboard() {
 
   const notifications = useMemo(() => {
     if (!apptsData) return [];
-    // Show notification if status is pending OR if assigned by admin but not yet acknowledged (notified === false)
-    return apptsData.filter(a => a.status === 'pending' || a.notified === false).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    // Show notification if status is pending OR if assigned by admin but not yet acknowledged (notified flag)
+    return apptsData.filter(a => 
+      a.status === 'pending' || 
+      (a.notified === false && (a.status === 'scheduled' || a.status === 'rescheduled'))
+    ).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }, [apptsData]);
 
   const selectedDayAvail = useMemo(() => {
@@ -221,7 +225,7 @@ export default function LawyerDashboard() {
     const ref = doc(db, "appointments", apptId);
     updateDocumentNonBlocking(ref, { 
       status, 
-      notified: true // Also mark as notified when confirming/completing
+      notified: true 
     });
     toast({ title: `Status Updated`, description: `Appointment marked as ${status}.` });
   };
@@ -230,7 +234,7 @@ export default function LawyerDashboard() {
     if (!db) return;
     const ref = doc(db, "appointments", apptId);
     updateDocumentNonBlocking(ref, { notified: true });
-    toast({ title: "Schedule Acknowledged", description: "The new assignment has been confirmed in your registry." });
+    toast({ title: "Schedule Acknowledged", description: "The assignment has been confirmed." });
   };
 
   const handleCancelSubmit = () => {
@@ -242,6 +246,7 @@ export default function LawyerDashboard() {
       status: "cancelled",
       cancellationReason: cancelReason.reason,
       cancellationCategory: cancelReason.category,
+      notified: true,
       updatedAt: new Date().toISOString()
     });
 
@@ -249,7 +254,7 @@ export default function LawyerDashboard() {
       setIsSubmitting(false);
       setIsCancelOpen(false);
       setSelectedApptToCancel(null);
-      toast({ title: "Appointment Cancelled", description: "The citizen has been notified of the schedule change." });
+      toast({ title: "Appointment Cancelled", description: "Record updated." });
     }, 800);
   };
 
@@ -265,6 +270,7 @@ export default function LawyerDashboard() {
       status: "rescheduled",
       rescheduleReason: rescheduleReason.reason,
       rescheduleCategory: rescheduleReason.category,
+      notified: true,
       updatedAt: new Date().toISOString()
     });
 
@@ -272,13 +278,13 @@ export default function LawyerDashboard() {
       setIsSubmitting(false);
       setIsRescheduleOpen(false);
       setSelectedApptToReschedule(null);
-      toast({ title: "Appointment Rescheduled", description: "New visit schedule synchronized with client portal." });
+      toast({ title: "Appointment Rescheduled", description: "Schedule synchronized." });
     }, 800);
   };
 
   const handleSaveAvailability = () => {
     if (!db || !user || !dateRange?.from) {
-      toast({ variant: "destructive", title: "Selection Required", description: "Please select at least one date on the calendar." });
+      toast({ variant: "destructive", title: "Selection Required", description: "Please select a date." });
       return;
     };
 
@@ -309,14 +315,9 @@ export default function LawyerDashboard() {
       });
 
       setIsAvailabilityOpen(false);
-      toast({ 
-        title: "Schedule Synchronized", 
-        description: dates.length > 1 
-          ? `Status updated for ${dates.length} days.` 
-          : `Availability saved for ${format(start, "MMM dd")}.` 
-      });
+      toast({ title: "Schedule Updated", description: "Professional availability synchronized." });
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Sync Error", description: "Could not apply availability to selected range." });
+      toast({ variant: "destructive", title: "Error", description: "Could not save availability." });
     }
   };
 
@@ -324,7 +325,7 @@ export default function LawyerDashboard() {
     if (!db || !user || !selectedDayAvail) return;
     const availRef = doc(db, "roleLawyer", user.uid, "availability", selectedDayAvail.id);
     deleteDocumentNonBlocking(availRef);
-    toast({ title: "Entry Removed", description: "Date returned to standard office availability." });
+    toast({ title: "Entry Removed", description: "Availability reset." });
   };
 
   if (loading) {
@@ -335,9 +336,7 @@ export default function LawyerDashboard() {
     );
   }
 
-  if (!user || role !== 'lawyer') {
-    return null;
-  }
+  if (!user || role !== 'lawyer') return null;
 
   const isLeave = lawyerData?.status === 'On Leave' || selectedDayAvail?.availabilityType?.includes('Leave');
 
@@ -369,62 +368,69 @@ export default function LawyerDashboard() {
             </div>
           </div>
           
-          <div className="flex gap-3">
-            <Button 
-              onClick={() => {
-                setAvailForm({
-                  type: selectedDayAvail?.availabilityType || "FullDayAvailable",
-                  startTime: selectedDayAvail?.startTime || "08:00",
-                  endTime: selectedDayAvail?.endTime || "17:00",
-                  reasonCategory: selectedDayAvail?.reasonCategory || Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0],
-                  specificReason: selectedDayAvail?.specificReason || OFFICIAL_LEAVE_CATEGORIES[Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0] as keyof typeof OFFICIAL_LEAVE_CATEGORIES][0]
-                });
-                setDateRange({ from: selectedDate, to: selectedDate });
-                setIsAvailabilityOpen(true);
-              }}
-              variant="outline"
-              className="rounded-full font-black text-[10px] uppercase tracking-widest shadow-sm border-2 border-secondary/20 text-secondary px-6 h-11"
-            >
-              <Plus className="mr-2 h-4 w-4" /> Manage Availability
-            </Button>
-          </div>
+          <Button 
+            onClick={() => {
+              setAvailForm({
+                type: selectedDayAvail?.availabilityType || "FullDayAvailable",
+                startTime: selectedDayAvail?.startTime || "08:00",
+                endTime: selectedDayAvail?.endTime || "17:00",
+                reasonCategory: selectedDayAvail?.reasonCategory || Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0],
+                specificReason: selectedDayAvail?.specificReason || OFFICIAL_LEAVE_CATEGORIES[Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0] as keyof typeof OFFICIAL_LEAVE_CATEGORIES][0]
+              });
+              setDateRange({ from: selectedDate, to: selectedDate });
+              setIsAvailabilityOpen(true);
+            }}
+            variant="outline"
+            className="rounded-full font-black text-[10px] uppercase tracking-widest shadow-sm border-2 border-secondary/20 text-secondary px-6 h-11"
+          >
+            <Plus className="mr-2 h-4 w-4" /> Manage Availability
+          </Button>
         </div>
 
-        {/* --- NOTIFICATIONS SECTION --- */}
+        {/* --- NOTIFICATIONS (AWAITING ACTION) --- */}
         {notifications.length > 0 && (
-          <Card className="border-none shadow-xl bg-amber-50 rounded-[2rem] overflow-hidden">
-            <CardHeader className="bg-amber-100/50 pb-4">
+          <Card className="border-none shadow-xl bg-amber-50 rounded-[2.5rem] overflow-hidden animate-in fade-in slide-in-from-top-4">
+            <CardHeader className="bg-amber-100/50 pb-4 border-b border-amber-200/50">
               <CardTitle className="text-sm font-black text-amber-900 flex items-center gap-2 uppercase tracking-widest">
                 <Bell className="h-4 w-4" /> Awaiting Action ({notifications.length})
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0 divide-y divide-amber-200/50">
               {notifications.map(n => (
-                <div key={n.id} className="p-4 flex flex-col md:flex-row md:items-center justify-between hover:bg-amber-100/30 transition-colors gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="p-2 bg-white rounded-xl shadow-sm">
-                      <User className="h-4 w-4 text-amber-600" />
+                <div key={n.id} className="p-6 flex flex-col md:flex-row md:items-center justify-between hover:bg-amber-100/30 transition-colors gap-6">
+                  <div className="flex items-center gap-5">
+                    <div className="p-3 bg-white rounded-2xl shadow-sm border border-amber-200/50">
+                      <Inbox className="h-6 w-6 text-amber-600" />
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-bold text-amber-900">{n.guestName || n.clientName}</p>
-                        {n.notified === false && n.status === 'scheduled' && (
-                          <Badge className="bg-amber-600 text-white text-[8px] font-black uppercase px-2 py-0">Admin Assigned</Badge>
+                      <div className="flex items-center gap-3">
+                        <p className="text-base font-black text-amber-950">{n.guestName || n.clientName || "Citizen Client"}</p>
+                        {n.notified === false && (
+                          <Badge className="bg-amber-600 text-white text-[8px] font-black uppercase px-2 py-0.5 border-none shadow-sm">New Assignment</Badge>
                         )}
                       </div>
-                      <p className="text-[10px] font-medium text-amber-700 uppercase tracking-widest">
-                        Requested: {format(new Date(n.date), "MMM dd")} @ {n.time} • {n.caseType}
+                      <p className="text-[10px] font-bold text-amber-700 uppercase tracking-[0.1em] mt-1">
+                        {format(new Date(n.date), "PPP")} @ {n.time} • {n.caseType}
                       </p>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
                     {n.status === 'pending' ? (
-                      <Button size="sm" onClick={() => updateStatus(n.id, 'scheduled')} className="h-8 rounded-lg bg-amber-600 text-white font-black text-[10px] uppercase shadow-sm">Confirm Request</Button>
+                      <Button onClick={() => updateStatus(n.id, 'scheduled')} className="h-10 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs px-6 shadow-md">Confirm Intake</Button>
                     ) : (
-                      <Button size="sm" onClick={() => acknowledgeAssignment(n.id)} className="h-8 rounded-lg bg-amber-600 text-white font-black text-[10px] uppercase shadow-sm">Acknowledge assignment</Button>
+                      <Button onClick={() => acknowledgeAssignment(n.id)} className="h-10 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs px-6 shadow-md">Acknowledge</Button>
                     )}
-                    <Button size="sm" variant="ghost" onClick={() => { setSelectedApptToReschedule(n); setIsRescheduleOpen(true); }} className="h-8 rounded-lg text-amber-700 font-black text-[10px] uppercase hover:bg-amber-100/50">Reschedule</Button>
-                    <Button size="sm" variant="ghost" onClick={() => { setSelectedApptToCancel(n); setIsCancelOpen(true); }} className="h-8 rounded-lg text-red-600 font-black text-[10px] uppercase hover:bg-red-50">Cancel</Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-amber-200/50">
+                          <MoreVertical className="h-4 w-4 text-amber-700" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="rounded-2xl w-56 p-2">
+                        <DropdownMenuItem onClick={() => { setSelectedApptToReschedule(n); setIsRescheduleOpen(true); }} className="rounded-xl font-bold">Reschedule</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => { setSelectedApptToCancel(n); setIsCancelOpen(true); }} className="rounded-xl font-bold text-red-600">Cancel</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               ))}
@@ -434,7 +440,7 @@ export default function LawyerDashboard() {
 
         {/* --- METRICS --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="border-none shadow-xl rounded-[2rem] bg-secondary text-white overflow-hidden relative group">
+          <Card className="border-none shadow-xl rounded-[2.5rem] bg-secondary text-white overflow-hidden relative group">
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
               <Briefcase className="h-24 w-24" />
             </div>
@@ -442,12 +448,12 @@ export default function LawyerDashboard() {
               <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Active Caseload</p>
               <p className="text-5xl font-black">{activeCases?.length || 0}</p>
               <p className="text-xs font-bold opacity-80 pt-2 flex items-center gap-1 cursor-pointer hover:opacity-100" onClick={() => router.push('/dashboard/lawyer/cases')}>
-                My Cases <ChevronRight className="h-3 w-3" />
+                Manage Cases <ChevronRight className="h-3 w-3" />
               </p>
             </CardContent>
           </Card>
           
-          <Card className="border-none shadow-xl rounded-[2rem] bg-white text-secondary overflow-hidden border-2 border-secondary/5">
+          <Card className="border-none shadow-xl rounded-[2.5rem] bg-white text-secondary overflow-hidden border-2 border-secondary/5">
             <CardContent className="p-8 space-y-1">
               <div className="flex justify-between items-start">
                 <div>
@@ -460,167 +466,153 @@ export default function LawyerDashboard() {
                   <Clock className="h-6 w-6 text-secondary" />
                 </div>
               </div>
-              <p className="text-xs font-bold text-muted-foreground pt-2">Scheduled Sessions</p>
+              <p className="text-xs font-bold text-muted-foreground pt-2">Confirmed sessions for {format(new Date(), "MMM dd")}</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* --- SCHEDULE WORKSTATION --- */}
-        <div className="grid grid-cols-1 gap-8">
-          <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
-            <CardHeader className="bg-secondary/5 pb-4 border-b border-secondary/10">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-secondary text-white rounded-xl">
-                  <CalendarIcon className="h-5 w-5" />
-                </div>
-                <CardTitle className="text-lg font-bold text-secondary">Daily Workstation Schedule</CardTitle>
+        {/* --- WORKSTATION --- */}
+        <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
+          <CardHeader className="bg-secondary/5 pb-4 border-b border-secondary/10">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-secondary text-white rounded-xl">
+                <CalendarIcon className="h-5 w-5" />
               </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="grid grid-cols-1 xl:grid-cols-12">
-                <div className="xl:col-span-4 p-6 border-r border-secondary/5 bg-secondary/[0.02]">
-                  <div className="space-y-4">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary/40 ml-2">Navigate Calendar</p>
-                    <div className="bg-white rounded-3xl p-2 shadow-sm border border-secondary/5">
-                      <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={setSelectedDate}
-                        className="rounded-md border-none mx-auto"
-                        modifiers={{ 
-                          hasAppt: apptDates,
-                          isLeave: leaveDates 
-                        }}
-                        modifiersStyles={{ 
-                          hasAppt: { fontWeight: 'black', textDecoration: 'underline', color: 'hsl(var(--primary))' },
-                          isLeave: { border: '2px solid #EF4444', borderRadius: '12px', color: '#EF4444' }
-                        }}
-                      />
-                    </div>
-                  </div>
+              <CardTitle className="text-lg font-bold text-secondary">Registry Schedule</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="grid grid-cols-1 xl:grid-cols-12">
+              <div className="xl:col-span-4 p-8 border-r border-secondary/5 bg-secondary/[0.02]">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary/40 ml-2 mb-4">Focus Date</p>
+                <div className="bg-white rounded-[2rem] p-4 shadow-sm border border-secondary/5">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={setSelectedDate}
+                    className="rounded-md border-none mx-auto"
+                    modifiers={{ 
+                      hasAppt: apptDates,
+                      isLeave: leaveDates 
+                    }}
+                    modifiersStyles={{ 
+                      hasAppt: { fontWeight: 'black', textDecoration: 'underline', color: 'hsl(var(--primary))' },
+                      isLeave: { border: '2px solid #EF4444', borderRadius: '12px', color: '#EF4444' }
+                    }}
+                  />
                 </div>
+              </div>
 
-                <div className="xl:col-span-8 divide-y divide-secondary/5">
-                  <div className="p-6 bg-secondary/5 border-b border-secondary/10 flex justify-between items-center">
-                    <h3 className="text-sm font-black text-secondary flex items-center gap-2">
-                      <Clock className="h-4 w-4" /> 
-                      {selectedDate ? format(selectedDate, "PPPP") : "Daily Consultations"}
-                    </h3>
-                  </div>
-                  {isApptsLoading ? (
-                    <div className="p-20 flex justify-center"><Loader2 className="animate-spin h-10 w-10 text-secondary/20" /></div>
-                  ) : (
-                    <div className="max-h-[500px] overflow-y-auto">
-                      {filteredSchedule.map((appt) => (
-                        <div key={appt.id} className="p-6 flex flex-col hover:bg-secondary/5 transition-colors group">
-                          <div className="flex items-center justify-between w-full">
-                            <div className="flex items-center gap-4">
-                              <div className="h-14 w-14 rounded-2xl bg-secondary/5 flex flex-col items-center justify-center border border-secondary/10">
-                                <span className="text-[10px] font-black text-secondary uppercase leading-none">{format(new Date(appt.date), "MMM")}</span>
-                                <span className="text-xl font-black text-secondary leading-none mt-1">{format(new Date(appt.date), "dd")}</span>
-                              </div>
-                              <div>
-                                <h4 className="font-bold text-secondary">{appt.guestName || appt.clientName || "Citizen Client"}</h4>
-                                <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                                  <Badge variant="outline" className={cn(
-                                    "text-[9px] font-black uppercase py-0 px-2",
-                                    appt.status === 'cancelled' ? "bg-red-50 text-red-600 border-red-200" : "border-secondary/20 text-secondary"
-                                  )}>{appt.status}</Badge>
-                                  <span>•</span>
-                                  <span className="font-bold text-secondary">{appt.caseType}</span>
-                                </div>
-                              </div>
+              <div className="xl:col-span-8 divide-y divide-secondary/5">
+                <div className="p-6 bg-secondary/5 border-b border-secondary/10 flex justify-between items-center px-8">
+                  <h3 className="text-sm font-black text-secondary flex items-center gap-2">
+                    <Clock className="h-4 w-4" /> 
+                    {selectedDate ? format(selectedDate, "PPPP") : "Registry View"}
+                  </h3>
+                </div>
+                {isApptsLoading ? (
+                  <div className="p-20 flex justify-center"><Loader2 className="animate-spin h-10 w-10 text-secondary/20" /></div>
+                ) : (
+                  <div className="max-h-[600px] overflow-y-auto">
+                    {filteredSchedule.map((appt) => (
+                      <div key={appt.id} className="p-8 flex flex-col hover:bg-secondary/5 transition-colors group">
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center gap-6">
+                            <div className="h-16 w-16 rounded-2xl bg-secondary/5 flex flex-col items-center justify-center border border-secondary/10 group-hover:bg-white transition-colors">
+                              <span className="text-[10px] font-black text-secondary uppercase leading-none">{format(new Date(appt.date), "MMM")}</span>
+                              <span className="text-2xl font-black text-secondary leading-none mt-1">{format(new Date(appt.date), "dd")}</span>
                             </div>
-                            <div className="flex items-center gap-4">
-                              <div className="text-right hidden sm:block">
-                                <p className="text-sm font-black text-secondary">{appt.time}</p>
-                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Slot</p>
+                            <div>
+                              <h4 className="text-lg font-black text-secondary">{appt.guestName || appt.clientName || "Citizen Client"}</h4>
+                              <div className="flex items-center gap-3 text-xs font-medium text-muted-foreground mt-1">
+                                <Badge variant="outline" className={cn(
+                                  "text-[9px] font-black uppercase py-0 px-2",
+                                  appt.status === 'cancelled' ? "bg-red-50 text-red-600 border-red-200" : "border-secondary/20 text-secondary"
+                                )}>{appt.status}</Badge>
+                                <span>•</span>
+                                <span className="font-bold text-secondary/60">{appt.caseType}</span>
                               </div>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-secondary/5">
-                                    <MoreVertical className="h-4 w-4 text-secondary" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="rounded-2xl w-56 p-2">
-                                  <DropdownMenuLabel className="text-[10px] font-black uppercase text-secondary/40 px-2 pb-2">Status Actions</DropdownMenuLabel>
-                                  <DropdownMenuItem onClick={() => updateStatus(appt.id, 'completed')} className="text-green-600 font-bold rounded-xl cursor-pointer">
-                                    <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" /> Mark as Completed
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => { setSelectedApptToReschedule(appt); setIsRescheduleOpen(true); }} className="font-bold rounded-xl cursor-pointer text-primary">
-                                    <Edit3 className="mr-2 h-4 w-4" /> Reschedule Visit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => { setSelectedApptToCancel(appt); setIsCancelOpen(true); }} className="text-red-600 font-bold rounded-xl cursor-pointer">
-                                    <XCircle className="mr-2 h-4 w-4 text-red-600" /> Mark as Cancelled
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem className="font-bold rounded-xl cursor-pointer" onClick={() => router.push(`/dashboard/lawyer/cases`)}>
-                                    <User className="mr-2 h-4 w-4" /> Client Case File
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
                             </div>
                           </div>
+                          <div className="flex items-center gap-6">
+                            <div className="text-right hidden sm:block">
+                              <p className="text-lg font-black text-secondary">{appt.time}</p>
+                              <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">Reserved Slot</p>
+                            </div>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-secondary/10">
+                                  <MoreVertical className="h-5 w-5 text-secondary" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="rounded-2xl w-56 p-2">
+                                <DropdownMenuLabel className="text-[10px] font-black uppercase text-secondary/40 px-2 pb-2">Status Actions</DropdownMenuLabel>
+                                <DropdownMenuItem onClick={() => updateStatus(appt.id, 'completed')} className="text-green-600 font-bold rounded-xl">
+                                  <CheckCircle2 className="mr-2 h-4 w-4" /> Mark as Completed
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => { setSelectedApptToReschedule(appt); setIsRescheduleOpen(true); }} className="font-bold rounded-xl text-primary">
+                                  <Edit3 className="mr-2 h-4 w-4" /> Reschedule Visit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => { setSelectedApptToCancel(appt); setIsCancelOpen(true); }} className="text-red-600 font-bold rounded-xl">
+                                  <XCircle className="mr-2 h-4 w-4" /> Mark as Cancelled
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem className="font-bold rounded-xl" onClick={() => router.push(`/dashboard/lawyer/cases`)}>
+                                  <User className="mr-2 h-4 w-4" /> Go to Case File
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
 
-                          {/* Cancellation / Reschedule Reason Alert */}
-                          {appt.status === 'cancelled' && appt.cancellationReason && (
-                            <div className="mt-4 p-3 bg-red-50 rounded-2xl border border-red-100 flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
-                              <ShieldAlert className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
-                              <div>
-                                <p className="text-[10px] font-black uppercase text-red-900 tracking-widest">Official Cancellation Reason</p>
-                                <p className="text-xs font-bold text-red-800 italic leading-relaxed">{appt.cancellationReason}</p>
-                              </div>
+                        {appt.status === 'cancelled' && appt.cancellationReason && (
+                          <div className="mt-4 p-4 bg-red-50 rounded-[1.5rem] border border-red-100 flex items-start gap-4 mx-2">
+                            <ShieldAlert className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-[10px] font-black uppercase text-red-900 tracking-widest">Office Documentation</p>
+                              <p className="text-sm font-bold text-red-800 italic leading-relaxed">{appt.cancellationReason}</p>
                             </div>
-                          )}
-                          {appt.status === 'rescheduled' && appt.rescheduleReason && (
-                            <div className="mt-4 p-3 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
-                              <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-                              <div>
-                                <p className="text-[10px] font-black uppercase text-amber-900 tracking-widest">Reschedule Reason</p>
-                                <p className="text-xs font-bold text-amber-800 italic leading-relaxed">{appt.rescheduleReason}</p>
-                              </div>
+                          </div>
+                        )}
+                        {appt.status === 'rescheduled' && appt.rescheduleReason && (
+                          <div className="mt-4 p-4 bg-amber-50 rounded-[1.5rem] border border-amber-100 flex items-start gap-4 mx-2">
+                            <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-[10px] font-black uppercase text-amber-900 tracking-widest">Reschedule Justification</p>
+                              <p className="text-sm font-bold text-amber-800 italic leading-relaxed">{appt.rescheduleReason}</p>
                             </div>
-                          )}
-                        </div>
-                      ))}
-                      {filteredSchedule.length === 0 && (
-                        <div className="p-20 text-center space-y-4">
-                          <CalendarDays className="h-16 w-16 text-secondary/10 mx-auto" />
-                          <p className="text-sm font-bold text-muted-foreground">No consultations scheduled.</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {filteredSchedule.length === 0 && (
+                      <div className="p-32 text-center space-y-4">
+                        <Inbox className="h-20 w-20 text-secondary/10 mx-auto" />
+                        <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Registry Clear</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* --- AVAILABILITY DIALOG --- */}
+        {/* --- DIALOGS (Availability, Cancel, Reschedule) --- */}
         <Dialog open={isAvailabilityOpen} onOpenChange={setIsAvailabilityOpen}>
           <DialogContent className="rounded-[3rem] max-w-4xl p-0 overflow-hidden border-none shadow-2xl max-h-[95vh] flex flex-col">
             <DialogHeader className="p-8 bg-secondary text-white shrink-0 pr-12">
               <DialogTitle className="text-2xl font-black">Manage Professional Availability</DialogTitle>
-              <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">
-                Select dates and status for office coordination
-              </DialogDescription>
+              <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">Select dates and status for office coordination</DialogDescription>
             </DialogHeader>
             <div className="p-10 space-y-8 flex-1 overflow-y-auto">
               <div className="grid lg:grid-cols-2 gap-12">
                 <div className="space-y-4">
                   <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest ml-2">1. Affected Dates</Label>
-                  <div className="p-4 bg-secondary/5 rounded-3xl border border-secondary/10 shadow-inner">
-                    <Calendar
-                      mode="range"
-                      selected={dateRange}
-                      onSelect={setDateRange}
-                      className="rounded-md border-none mx-auto"
-                      disabled={{ before: startOfToday() }}
-                    />
+                  <div className="p-4 bg-secondary/5 rounded-[2rem] border border-secondary/10 shadow-inner">
+                    <Calendar mode="range" selected={dateRange} onSelect={setDateRange} className="rounded-md border-none mx-auto" disabled={{ before: startOfToday() }} />
                   </div>
                 </div>
-
                 <div className="space-y-6">
                   <div className="space-y-4">
                     <div className="space-y-2">
@@ -637,7 +629,6 @@ export default function LawyerDashboard() {
                         </SelectContent>
                       </Select>
                     </div>
-
                     {availForm.type.includes('Partial') && (
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
@@ -650,42 +641,18 @@ export default function LawyerDashboard() {
                         </div>
                       </div>
                     )}
-
                     <div className="space-y-2 pt-2 border-t border-secondary/5">
                       <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">3. Reason Category</Label>
-                      <Select 
-                        value={availForm.reasonCategory} 
-                        onValueChange={(v) => setAvailForm({
-                          ...availForm, 
-                          reasonCategory: v, 
-                          specificReason: OFFICIAL_LEAVE_CATEGORIES[v as keyof typeof OFFICIAL_LEAVE_CATEGORIES][0]
-                        })}
-                      >
-                        <SelectTrigger className="h-12 rounded-xl border-secondary/10 bg-secondary/5 font-bold">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.keys(OFFICIAL_LEAVE_CATEGORIES).map(cat => (
-                            <SelectItem key={cat} value={cat} className="font-bold">{cat}</SelectItem>
-                          ))}
-                        </SelectContent>
+                      <Select value={availForm.reasonCategory} onValueChange={(v) => setAvailForm({ ...availForm, reasonCategory: v, specificReason: OFFICIAL_LEAVE_CATEGORIES[v as keyof typeof OFFICIAL_LEAVE_CATEGORIES][0] })}>
+                        <SelectTrigger className="h-12 rounded-xl border-secondary/10 bg-secondary/5 font-bold"><SelectValue /></SelectTrigger>
+                        <SelectContent>{Object.keys(OFFICIAL_LEAVE_CATEGORIES).map(cat => (<SelectItem key={cat} value={cat} className="font-bold">{cat}</SelectItem>))}</SelectContent>
                       </Select>
                     </div>
-
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase text-secondary/40 tracking-widest">4. Specific Reason</Label>
-                      <Select 
-                        value={availForm.specificReason} 
-                        onValueChange={(v) => setAvailForm({...availForm, specificReason: v})}
-                      >
-                        <SelectTrigger className="h-12 rounded-xl border-secondary/10 bg-secondary/5 font-bold">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {OFFICIAL_LEAVE_CATEGORIES[availForm.reasonCategory as keyof typeof OFFICIAL_LEAVE_CATEGORIES].map(reason => (
-                            <SelectItem key={reason} value={reason} className="font-bold">{reason}</SelectItem>
-                          ))}
-                        </SelectContent>
+                      <Select value={availForm.specificReason} onValueChange={(v) => setAvailForm({...availForm, specificReason: v})}>
+                        <SelectTrigger className="h-12 rounded-xl border-secondary/10 bg-secondary/5 font-bold"><SelectValue /></SelectTrigger>
+                        <SelectContent>{OFFICIAL_LEAVE_CATEGORIES[availForm.reasonCategory as keyof typeof OFFICIAL_LEAVE_CATEGORIES].map(reason => (<SelectItem key={reason} value={reason} className="font-bold">{reason}</SelectItem>))}</SelectContent>
                       </Select>
                     </div>
                   </div>
@@ -693,9 +660,7 @@ export default function LawyerDashboard() {
               </div>
             </div>
             <DialogFooter className="p-8 bg-muted/30 flex-col sm:flex-row gap-3 shrink-0">
-              {selectedDayAvail && (
-                <Button variant="ghost" onClick={handleDeleteAvailability} className="text-red-600 font-bold sm:mr-auto">Reset Date</Button>
-              )}
+              {selectedDayAvail && <Button variant="ghost" onClick={handleDeleteAvailability} className="text-red-600 font-bold sm:mr-auto">Reset Date</Button>}
               <Button variant="outline" onClick={() => setIsAvailabilityOpen(false)} className="rounded-xl font-bold h-12">Cancel</Button>
               <Button onClick={handleSaveAvailability} disabled={!dateRange?.from} className="bg-secondary text-white font-black rounded-xl px-10 h-12 shadow-lg">Apply Schedule</Button>
             </DialogFooter>
@@ -707,61 +672,27 @@ export default function LawyerDashboard() {
           <DialogContent className="rounded-[3rem] max-w-lg p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[90vh]">
             <DialogHeader className="p-8 bg-red-600 text-white shrink-0 pr-12">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-white/20 rounded-2xl">
-                  <XCircle className="h-8 w-8" />
-                </div>
+                <div className="p-3 bg-white/20 rounded-2xl"><XCircle className="h-8 w-8" /></div>
                 <div className="min-w-0">
                   <DialogTitle className="text-2xl font-black truncate">Cancel Appointment</DialogTitle>
-                  <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest truncate">
-                    Citizen: {selectedApptToCancel?.guestName || selectedApptToCancel?.clientName}
-                  </DialogDescription>
+                  <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest truncate">Citizen: {selectedApptToCancel?.guestName || selectedApptToCancel?.clientName}</DialogDescription>
                 </div>
               </div>
             </DialogHeader>
             <div className="p-8 space-y-6 overflow-y-auto flex-1">
-              <div className="p-4 bg-red-50 rounded-2xl border border-red-100 flex items-start gap-3">
-                <Info className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
-                <p className="text-xs font-medium text-red-800 leading-relaxed">
-                  Cancelling an appointment requires an official reason for office documentation and citizen notification.
-                </p>
-              </div>
-
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-red-900/40 tracking-widest ml-1">Duty Category</Label>
-                  <Select 
-                    value={cancelReason.category} 
-                    onValueChange={(v) => setCancelReason({
-                      ...cancelReason, 
-                      category: v, 
-                      reason: OFFICIAL_LEAVE_CATEGORIES[v as keyof typeof OFFICIAL_LEAVE_CATEGORIES][0]
-                    })}
-                  >
-                    <SelectTrigger className="h-12 rounded-xl border-red-100 bg-red-50/50 font-bold">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.keys(OFFICIAL_LEAVE_CATEGORIES).map(cat => (
-                        <SelectItem key={cat} value={cat} className="font-bold">{cat}</SelectItem>
-                      ))}
-                    </SelectContent>
+                  <Select value={cancelReason.category} onValueChange={(v) => setCancelReason({ ...cancelReason, category: v, reason: OFFICIAL_LEAVE_CATEGORIES[v as keyof typeof OFFICIAL_LEAVE_CATEGORIES][0] })}>
+                    <SelectTrigger className="h-12 rounded-xl border-red-100 bg-red-50/50 font-bold"><SelectValue /></SelectTrigger>
+                    <SelectContent>{Object.keys(OFFICIAL_LEAVE_CATEGORIES).map(cat => (<SelectItem key={cat} value={cat} className="font-bold">{cat}</SelectItem>))}</SelectContent>
                   </Select>
                 </div>
-
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-red-900/40 tracking-widest ml-1">Specific Reason</Label>
-                  <Select 
-                    value={cancelReason.reason} 
-                    onValueChange={(v) => setCancelReason({...cancelReason, reason: v})}
-                  >
-                    <SelectTrigger className="h-12 rounded-xl border-red-100 bg-red-50/50 font-bold">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {OFFICIAL_LEAVE_CATEGORIES[cancelReason.category as keyof typeof OFFICIAL_LEAVE_CATEGORIES].map(reason => (
-                        <SelectItem key={reason} value={reason} className="font-bold">{reason}</SelectItem>
-                      ))}
-                    </SelectContent>
+                  <Select value={cancelReason.reason} onValueChange={(v) => setCancelReason({...cancelReason, reason: v})}>
+                    <SelectTrigger className="h-12 rounded-xl border-red-100 bg-red-50/50 font-bold"><SelectValue /></SelectTrigger>
+                    <SelectContent>{OFFICIAL_LEAVE_CATEGORIES[cancelReason.category as keyof typeof OFFICIAL_LEAVE_CATEGORIES].map(reason => (<SelectItem key={reason} value={reason} className="font-bold">{reason}</SelectItem>))}</SelectContent>
                   </Select>
                 </div>
               </div>
@@ -778,90 +709,47 @@ export default function LawyerDashboard() {
           <DialogContent className="rounded-[3rem] max-w-4xl p-0 overflow-hidden border-none shadow-2xl max-h-[95vh] flex flex-col">
             <DialogHeader className="p-8 bg-secondary text-white shrink-0 pr-12">
               <DialogTitle className="text-2xl font-black">Reschedule Appointment</DialogTitle>
-              <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">
-                Modifying Visit for: {selectedApptToReschedule?.guestName || selectedApptToReschedule?.clientName}
-              </DialogDescription>
+              <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">Modifying Visit for: {selectedApptToReschedule?.guestName || selectedApptToReschedule?.clientName}</DialogDescription>
             </DialogHeader>
             <div className="p-10 space-y-8 flex-1 overflow-y-auto">
               <div className="grid lg:grid-cols-2 gap-12">
                 <div className="space-y-6">
                   <div className="space-y-4">
                     <Label className="text-[10px] font-black uppercase tracking-widest ml-2">1. Select New Date</Label>
-                    <div className="p-4 bg-secondary/5 rounded-3xl border border-secondary/10 shadow-inner">
-                      <Calendar
-                        mode="single"
-                        selected={selectedApptToReschedule?.date ? new Date(selectedApptToReschedule.date) : undefined}
-                        onSelect={(d) => d && setSelectedApptToReschedule({...selectedApptToReschedule, date: d.toISOString(), dateString: format(d, "yyyy-MM-dd"), time: ""})}
-                        className="rounded-md border-none mx-auto"
-                        disabled={[{ before: startOfToday() }, { dayOfWeek: [0, 6] }, (date) => isHoliday(date)]}
-                      />
+                    <div className="p-4 bg-secondary/5 rounded-[2rem] border border-secondary/10 shadow-inner">
+                      <Calendar mode="single" selected={selectedApptToReschedule?.date ? new Date(selectedApptToReschedule.date) : undefined} onSelect={(d) => d && setSelectedApptToReschedule({...selectedApptToReschedule, date: d.toISOString(), dateString: format(d, "yyyy-MM-dd"), time: ""})} className="rounded-md border-none mx-auto" disabled={[{ before: startOfToday() }, { dayOfWeek: [0, 6] }, (date) => isHoliday(date)]} />
                     </div>
                   </div>
-
                   <div className="space-y-4">
                     <Label className="text-[10px] font-black uppercase tracking-widest ml-1">2. Choose New Time</Label>
                     <div className="grid grid-cols-2 gap-2 max-h-[250px] overflow-y-auto p-1 scrollbar-hide">
                       {timeSlots.map(slot => (
-                        <Button
-                          key={slot.time}
-                          disabled={slot.isBooked || slot.isPast}
-                          variant={selectedApptToReschedule?.time === slot.time ? "default" : "outline"}
-                          className={cn(
-                            "h-12 rounded-xl font-bold transition-all border-2",
-                            selectedApptToReschedule?.time === slot.time ? "bg-secondary text-white border-secondary shadow-md" : "bg-white text-secondary border-secondary/10"
-                          )}
-                          onClick={() => setSelectedApptToReschedule({...selectedApptToReschedule, time: slot.time})}
-                        >
+                        <Button key={slot.time} disabled={slot.isBooked || slot.isPast} variant={selectedApptToReschedule?.time === slot.time ? "default" : "outline"} className={cn("h-12 rounded-xl font-bold transition-all border-2", selectedApptToReschedule?.time === slot.time ? "bg-secondary text-white border-secondary shadow-md" : "bg-white text-secondary border-secondary/10")} onClick={() => setSelectedApptToReschedule({...selectedApptToReschedule, time: slot.time})}>
                           {slot.time}
                         </Button>
                       ))}
                     </div>
                   </div>
                 </div>
-
                 <div className="space-y-6">
-                  <div className="p-6 bg-amber-50 rounded-[2.5rem] border border-amber-100 space-y-4">
+                  <div className="p-8 bg-amber-50 rounded-[2.5rem] border border-amber-100 space-y-6">
                     <div className="flex items-center gap-2">
                       <ShieldAlert className="h-5 w-5 text-amber-600" />
                       <span className="text-[10px] font-black uppercase text-amber-900 tracking-widest">3. Reason for Reschedule</span>
                     </div>
-                    
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-amber-900/40">Duty Category</Label>
-                        <Select 
-                          value={rescheduleReason.category} 
-                          onValueChange={(v) => setRescheduleReason({
-                            ...rescheduleReason, 
-                            category: v, 
-                            reason: OFFICIAL_LEAVE_CATEGORIES[v as keyof typeof OFFICIAL_LEAVE_CATEGORIES][0]
-                          })}
-                        >
-                          <SelectTrigger className="h-12 rounded-xl border-amber-200 bg-white font-bold">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Object.keys(OFFICIAL_LEAVE_CATEGORIES).map(cat => (
-                              <SelectItem key={cat} value={cat} className="font-bold">{cat}</SelectItem>
-                            ))}
-                          </SelectContent>
+                        <Select value={rescheduleReason.category} onValueChange={(v) => setRescheduleReason({ ...rescheduleReason, category: v, reason: OFFICIAL_LEAVE_CATEGORIES[v as keyof typeof OFFICIAL_LEAVE_CATEGORIES][0] })}>
+                          <SelectTrigger className="h-12 rounded-xl border-amber-200 bg-white font-bold"><SelectValue /></SelectTrigger>
+                          <SelectContent>{Object.keys(OFFICIAL_LEAVE_CATEGORIES).map(cat => (<SelectItem key={cat} value={cat} className="font-bold">{cat}</SelectItem>))}</SelectContent>
                         </Select>
                       </div>
-
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-amber-900/40">Specific Reason</Label>
-                        <Select 
-                          value={rescheduleReason.reason} 
-                          onValueChange={(v) => setRescheduleReason({...rescheduleReason, reason: v})}
-                        >
-                          <SelectTrigger className="h-12 rounded-xl border-amber-200 bg-white font-bold">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {OFFICIAL_LEAVE_CATEGORIES[rescheduleReason.category as keyof typeof OFFICIAL_LEAVE_CATEGORIES].map(reason => (
-                              <SelectItem key={reason} value={reason} className="font-bold">{reason}</SelectItem>
-                            ))}
-                          </SelectContent>
+                        <Select value={rescheduleReason.reason} onValueChange={(v) => setRescheduleReason({...rescheduleReason, reason: v})}>
+                          <SelectTrigger className="h-12 rounded-xl border-amber-200 bg-white font-bold"><SelectValue /></SelectTrigger>
+                          <SelectContent>{OFFICIAL_LEAVE_CATEGORIES[rescheduleReason.category as keyof typeof OFFICIAL_LEAVE_CATEGORIES].map(reason => (<SelectItem key={reason} value={reason} className="font-bold">{reason}</SelectItem>))}</SelectContent>
                         </Select>
                       </div>
                     </div>
