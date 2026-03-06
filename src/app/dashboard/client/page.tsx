@@ -227,7 +227,9 @@ export default function ClientDashboard() {
               <Heart className="h-8 w-8" />
             </div>
             <div>
-              <p className="text-muted-foreground font-medium">Welcome back, {displayName}.</p>
+              <h1 className="text-2xl font-black text-primary font-headline tracking-tight">
+                Welcome back, {displayName}.
+              </h1>
             </div>
           </div>
           <Badge className="bg-primary/10 text-primary border-none px-4 py-2 rounded-full font-bold">
@@ -361,12 +363,14 @@ export default function ClientDashboard() {
                         </div>
                       </div>
                       
-                      {appt.rescheduleReason && (
+                      {(appt.rescheduleReason || appt.cancellationReason) && (
                         <div className="mt-4 p-3 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-3">
                           <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
                           <div>
-                            <p className="text-[10px] font-black uppercase text-amber-900 tracking-widest">Lawyer Note (Rescheduled)</p>
-                            <p className="text-xs font-bold text-amber-800 italic leading-relaxed">{appt.rescheduleReason}</p>
+                            <p className="text-[10px] font-black uppercase text-amber-900 tracking-widest">Office Note</p>
+                            <p className="text-xs font-bold text-amber-800 italic leading-relaxed">
+                              {appt.rescheduleReason || appt.cancellationReason}
+                            </p>
                           </div>
                         </div>
                       )}
@@ -412,12 +416,14 @@ export default function ClientDashboard() {
                         <Badge variant="outline" className="text-[8px] font-black uppercase">{appt.status}</Badge>
                       </div>
 
-                      {appt.status === 'cancelled' && appt.cancellationReason && (
+                      {(appt.cancellationReason || appt.rescheduleReason) && (
                         <div className="mt-3 p-3 bg-red-50/50 rounded-xl border border-red-100/50 flex items-start gap-3">
                           <ShieldAlert className="h-3.5 w-3.5 text-red-600 shrink-0 mt-0.5" />
                           <div>
-                            <p className="text-[9px] font-black uppercase text-red-900 tracking-widest">Official Reason</p>
-                            <p className="text-xs font-bold text-red-800 leading-relaxed italic">{appt.cancellationReason}</p>
+                            <p className="text-[9px] font-black uppercase text-red-900 tracking-widest">Reason for Change</p>
+                            <p className="text-xs font-bold text-red-800 leading-relaxed italic">
+                              {appt.cancellationReason || appt.rescheduleReason}
+                            </p>
                           </div>
                         </div>
                       )}

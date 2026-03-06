@@ -91,7 +91,7 @@ service cloud.firestore {
      * Allow reading and listing for all to ensure public verification and staff workstation consistency.
      */
     match /appointments/{appointmentId} {
-      allow get, list: if true; 
+      allow read: if true; 
       allow create: if true;
       allow update: if true; 
       allow delete: if isAdmin();
