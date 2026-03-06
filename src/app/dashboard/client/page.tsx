@@ -227,7 +227,7 @@ export default function ClientDashboard() {
               <Heart className="h-8 w-8" />
             </div>
             <div>
-              <p className="text-muted-foreground font-medium">Welcome back, {displayName}. Track your legal journey and upcoming visits.</p>
+              <p className="text-muted-foreground font-medium">Welcome back, {displayName}.</p>
             </div>
           </div>
           <Badge className="bg-primary/10 text-primary border-none px-4 py-2 rounded-full font-bold">
