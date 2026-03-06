@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -66,7 +67,7 @@ service cloud.firestore {
      */
     match /users/{userId} {
       allow get: if isSignedIn();
-      // Explicitly allow lawyers to list users so they can display client names in the workstation.
+      // Explicitly allow lawyers to list users for the workstation caseload views.
       allow list: if isAdmin() || isLawyer();
       allow create: if isSignedIn() && (isOwner(userId) || isAdmin());
       allow update: if isOwner(userId) || isAdmin();
@@ -88,10 +89,11 @@ service cloud.firestore {
 
     /**
      * @description Global appointments registry. 
-     * Allow reading and listing for all to ensure public verification and staff workstation consistency.
+     * Allow reading/listing for users to track history and staff for caseload management.
      */
     match /appointments/{appointmentId} {
-      allow read: if true; 
+      allow read: if true;
+      allow list: if isSignedIn(); 
       allow create: if true;
       allow update: if true; 
       allow delete: if isAdmin();
@@ -102,6 +104,7 @@ service cloud.firestore {
      */
     match /cases/{caseId} {
       allow read: if isSignedIn();
+      allow list: if isSignedIn();
       allow create: if isAdmin() || isLawyer();
       allow update: if isAdmin() || (isSignedIn() && (resource.data.lawyerId == request.auth.uid || isLawyer()));
       allow delete: if isAdmin();
