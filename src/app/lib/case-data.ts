@@ -271,14 +271,39 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["PSA Marriage Certificate", "PSA Birth Certificates of children", "Psychological Evaluation Report (Clinical)", "Witness Testimonies (Friends/Family)", "Certificate of No Marriage (CENOMAR)"],
     steps: universalPaoFlow
   },
+  "Annulment of Marriage (Arts. 45–47)": {
+    description: "Marriage cancelled due to lack of parental consent, insanity, fraud, force, or physical incapacity.",
+    requirements: ["PSA Marriage Certificate", "PSA Birth Certificates of children", "Clinical Psychologist Report", "Witness Sworn Statements", "CENOMAR"],
+    steps: universalPaoFlow
+  },
   "Support (Child or Spouse)": {
     description: "Legal petition for financial support for children or a spouse.",
-    requirements: ["PSA Birth Certificate of child", "Proof of father's income (If known)", "List of monthly expenses (Education, Food, Health)", "Demand Letter for support", "Marriage Certificate (For spouse)"],
+    requirements: ["PSA Birth Certificate of child", "Proof of parent's income (If known)", "List of monthly expenses (Education, Food, Health)", "Demand Letter for support", "PSA Marriage Certificate (For spouse)"],
+    steps: universalPaoFlow
+  },
+  "Child Custody (Art. 213)": {
+    description: "Legal petition for the care, control, and maintenance of a child.",
+    requirements: ["PSA Birth Certificate of child", "Barangay Certification of Residency", "Proof of Financial Stability", "Witness Testimonies regarding moral fitness", "Social Worker Report (If any)"],
+    steps: universalPaoFlow
+  },
+  "VAWC Civil Protection Order (RA 9262)": {
+    description: "Civil protection for victims of domestic violence to keep the perpetrator away.",
+    requirements: ["Medical Certificate", "Police Blotter or Incident Report", "Barangay Protection Order (BPO) if available", "Proof of relationship (Marriage/Birth Cert)", "Photos of physical abuse"],
     steps: universalPaoFlow
   },
   "Unlawful Detainer / Forcible Entry": {
     description: "Ejection cases involving illegal possession of land or buildings.",
     requirements: ["Transfer Certificate of Title (TCT) / Tax Declaration", "Demand Letter to Vacate (With proof of receipt)", "Lease Contract (If any)", "Barangay Certification to File Action", "Proof of non-payment of rent"],
+    steps: universalPaoFlow
+  },
+  "Settlement of Estate (Rule 74)": {
+    description: "Distribution of the property of a deceased person among heirs.",
+    requirements: ["Death Certificate of decedent", "PSA Birth/Marriage Certificates of heirs", "Title (TCT) or Tax Declaration of properties", "Affidavit of Self-Adjudication or Deed of Partition", "Proof of published notice"],
+    steps: universalPaoFlow
+  },
+  "Change of Name (Rule 103)": {
+    description: "Judicial petition to change a person's name for valid legal reasons.",
+    requirements: ["PSA Birth Certificate", "NBI, Police, and Prosecutor Clearances", "Affidavit of Merit", "Proof of residence for at least 3 years", "Certificates of employment or school records"],
     steps: universalPaoFlow
   },
 
@@ -288,9 +313,24 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     requirements: ["Notice of Dismissal (Termination Letter)", "Company ID / Payslips", "Employment Contract", "SENA Referral Form (Failed mediation)", "Evidence of whistleblowing or illegal acts"],
     steps: universalPaoFlow
   },
+  "Authorized Causes for Termination (Art. 298-299)": {
+    description: "Termination due to redundancy, retrenchment, or closure of business.",
+    requirements: ["Notice of Retrenchment / Redundancy", "Proof of business losses (Financial Statements)", "Payslips", "Evidence of selection criteria for retrenchment"],
+    steps: universalPaoFlow
+  },
   "Unlawful Withholding of Wages (Art. 111-113)": {
     description: "Claims for unpaid salaries, 13th month pay, or separation pay.",
     requirements: ["Payslips / Bank Statement", "Time Cards / Attendance Records", "Daily Time Record (DTR)", "Company ID", "Notice of separation"],
+    steps: universalPaoFlow
+  },
+  "Separation Pay (Art. 298-299)": {
+    description: "Claim for payment given to an employee whose service is terminated due to authorized causes.",
+    requirements: ["Proof of length of service (Payslips/ID)", "Notice of Termination citing authorized cause", "Latest Payslip", "Company ID"],
+    steps: universalPaoFlow
+  },
+  "OFW Money Claims (RA 8042/10022)": {
+    description: "Money claims by Overseas Filipino Workers against recruitment agencies or employers.",
+    requirements: ["POEA-verified Employment Contract", "Overseas Employment Certificate (OEC)", "Passport with arrival/departure stamps", "Remittance receipts or payslips"],
     steps: universalPaoFlow
   },
 
@@ -298,6 +338,21 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   "Violation of Ethical Standards (RA 6713)": {
     description: "Complaints against government employees for corruption or unethical conduct.",
     requirements: ["Sworn Complaint-Affidavit", "Official Records of the transaction", "Witness statements", "Proof of public office employment", "Evidence of misconduct (Photos/Audio)"],
+    steps: universalPaoFlow
+  },
+  "Administrative Neglect of Duty": {
+    description: "Failure of a public official to perform a required task or duty.",
+    requirements: ["Sworn Complaint", "Official records showing inaction", "Witness Affidavits", "Service Record of the respondent", "Copy of the request or application filed"],
+    steps: universalPaoFlow
+  },
+  "PNP Administrative Complaint (RA 6975)": {
+    description: "Disciplinary complaint against members of the Philippine National Police.",
+    requirements: ["Sworn Complaint-Affidavit", "Police Blotter or incident report", "PNP ID or name of respondent", "Photos or videos of the incident", "Witness testimonies"],
+    steps: universalPaoFlow
+  },
+  "Agrarian Dispute (DARAB/RA 6657)": {
+    description: "Disputes involving land reform, tenancy, or agricultural land distribution.",
+    requirements: ["TCT / CLOA / Emancipation Patent (EP)", "Tax Declaration", "MARO/PARO Certifications", "Proof of tenancy relationship", "Notice of Coverage (if any)"],
     steps: universalPaoFlow
   }
 };
