@@ -289,7 +289,12 @@ export default function AdminTriagePage() {
                           <TableCell className="px-8 font-black text-primary py-6">{appt.referenceCode}</TableCell>
                           <TableCell className="font-bold">{appt.guestName || appt.clientName || "Registered Citizen"}</TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="bg-primary/5 font-bold text-[10px]">{appt.caseType}</Badge>
+                            <Badge 
+                              variant="outline" 
+                              className="bg-primary/5 font-black text-[9px] uppercase px-3 py-1 w-full justify-center border-primary/10 text-primary"
+                            >
+                              {appt.caseType}
+                            </Badge>
                           </TableCell>
                           <TableCell>
                             {!appt.clientId ? (
@@ -353,7 +358,12 @@ export default function AdminTriagePage() {
                           <TableCell className="px-8 font-black text-primary py-6">{intake.referenceCode}</TableCell>
                           <TableCell className="font-bold">{intake.guestName || intake.clientName || "Registered Citizen"}</TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-100 font-bold text-[10px]">{intake.caseType}</Badge>
+                            <Badge 
+                              variant="outline" 
+                              className="bg-teal-50 text-teal-700 border-teal-100 font-black text-[9px] uppercase px-3 py-1 w-full justify-center"
+                            >
+                              {intake.caseType}
+                            </Badge>
                           </TableCell>
                           <TableCell className="text-xs font-medium text-muted-foreground">{format(new Date(intake.date), "PPP")}</TableCell>
                           <TableCell className="text-right px-8 flex justify-end gap-2">
