@@ -105,10 +105,11 @@ export default function LawyerCasesPage() {
     return cases.filter(c => {
       const client = allUsers?.find(u => u.id === c.clientId);
       const searchStr = search.toLowerCase();
+      const clientName = client?.fullName || client?.email || "";
       return (
         c.id.toLowerCase().includes(searchStr) ||
         c.caseType.toLowerCase().includes(searchStr) ||
-        client?.fullName?.toLowerCase().includes(searchStr)
+        clientName.toLowerCase().includes(searchStr)
       );
     });
   }, [cases, allUsers, search]);
@@ -284,6 +285,7 @@ export default function LawyerCasesPage() {
                 <TableBody>
                   {filteredCases.map((c) => {
                     const client = allUsers?.find(u => u.id === c.clientId);
+                    const clientDisplayName = client?.fullName || client?.email?.split('@')[0] || "Registered Citizen";
                     const nextAppt = allAppts?.filter(a => a.caseId === c.id && (a.status === 'scheduled' || a.status === 'rescheduled'))
                       .sort((a, b) => a.date.localeCompare(b.date))[0];
 
@@ -295,7 +297,7 @@ export default function LawyerCasesPage() {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <User className="h-3 w-3 text-secondary/40" />
-                            <span className="text-sm font-bold text-secondary">{client?.fullName || "Registered Client"}</span>
+                            <span className="text-sm font-bold text-secondary">{clientDisplayName}</span>
                           </div>
                         </TableCell>
                         <TableCell>
