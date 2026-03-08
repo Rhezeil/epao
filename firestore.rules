@@ -88,10 +88,10 @@ service cloud.firestore {
 
     /**
      * @description Global appointments registry. 
-     * Permissive read/write for the public booking portal; strict delete for admins.
+     * Permissive read for analytics and navigation; strict write/delete controls.
      */
     match /appointments/{appointmentId} {
-      allow get, list, create, update: if true;
+      allow read, create, update: if true;
       allow delete: if isAdmin();
     }
 

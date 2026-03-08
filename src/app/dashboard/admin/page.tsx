@@ -18,7 +18,7 @@ import {
   Activity, PieChart as PieIcon, Sparkles, AlertCircle,
   TrendingDown, BrainCircuit, BarChart3, CheckCircle2,
   ListChecks, Lightbulb, Info, FileText, CalendarCheck,
-  Zap, Target, Layers, ArrowRight
+  Zap, Target, Layers, ArrowRight, ChevronDown
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { format, subMonths, addMonths, isSameMonth, parseISO, startOfToday, subDays, isAfter } from "date-fns";
+import { format, subMonths, addMonths, parseISO, startOfToday, subDays, isAfter } from "date-fns";
 import { caseCategories } from "@/app/lib/case-data";
 
 /**
@@ -160,9 +160,13 @@ export default function AdminDashboard() {
    */
   const getTrendSummary = (data: any[], key: string = 'count') => {
     if (data.length < 2) return { label: "Stable", color: "text-muted-foreground", icon: Activity };
-    const first = data[0][key];
-    const last = data[data.length - 1][key];
+    const historicalPoints = data.filter(d => !d.isForecast);
+    if (historicalPoints.length < 2) return { label: "Stable", color: "text-muted-foreground", icon: Activity };
+    
+    const first = historicalPoints[0][key];
+    const last = historicalPoints[historicalPoints.length - 1][key];
     const diff = last - first;
+    
     if (diff > 0) return { label: "Increasing Demand", color: "text-red-600", icon: TrendingUp, desc: `Volume increased by ${Math.abs(diff)} units over the period.` };
     if (diff < 0) return { label: "Decreasing Trend", color: "text-green-600", icon: TrendingDown, desc: `Volume decreased by ${Math.abs(diff)} units over the period.` };
     return { label: "Stable Distribution", color: "text-blue-600", icon: Activity, desc: "Resource consumption remains consistent." };
@@ -172,8 +176,8 @@ export default function AdminDashboard() {
     if (type === 'forecast') {
       const historicalPoints = forecastData.filter(d => !d.isForecast);
       const futurePoints = forecastData.filter(d => d.isForecast);
-      const historicalAvg = historicalPoints.reduce((acc, curr) => acc + curr.count, 0) / historicalPoints.length;
-      const futureAvg = futurePoints.reduce((acc, curr) => acc + curr.count, 0) / futurePoints.length;
+      const historicalAvg = historicalPoints.reduce((acc, curr) => acc + curr.count, 0) / Math.max(1, historicalPoints.length);
+      const futureAvg = futurePoints.reduce((acc, curr) => acc + curr.count, 0) / Math.max(1, futurePoints.length);
       const percentChange = historicalAvg > 0 ? ((futureAvg - historicalAvg) / historicalAvg) * 100 : 0;
       
       return {
@@ -187,7 +191,7 @@ export default function AdminDashboard() {
     if (type === 'categories') {
       const top = categoryBreakdown[0];
       return {
-        analysis: `The "${top?.name}" jurisdiction constitutes ${(top ? (top.value / (cases?.length || 1) * 100).toFixed(1) : 0)}% of the total filing volume.`,
+        analysis: `The "${top?.name}" jurisdiction constitutes ${(top ? (top.value / Math.max(1, cases?.length || 1) * 100).toFixed(1) : 0)}% of the total filing volume.`,
         implication: "Resource focal point: Standard evidence checklists for this category should be pre-distributed.",
         predicted: "Steady growth observed in quasi-judicial matters."
       };
@@ -373,9 +377,9 @@ export default function AdminDashboard() {
                             strokeWidth={4} 
                             strokeDasharray="8 8"
                             dot={{ r: 6, fill: '#008080', strokeWidth: 2, stroke: '#fff' }}
-                            data={forecastData.filter((d, i) => i >= 5)}
+                            data={forecastData.filter((d, i) => i >= forecastData.filter(x => !x.isForecast).length - 1)}
                           />
-                          <ReferenceLine x={forecastData[5]?.month} stroke="#EF4444" strokeDasharray="3 3" />
+                          <ReferenceLine x={forecastData.find(d => d.isForecast)?.month} stroke="#EF4444" strokeDasharray="3 3" />
                         </AreaChart>
                       </ResponsiveContainer>
                     </div>
@@ -664,7 +668,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="space-y-2">
                   <p className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Statistical Window</p>
-                  <p className="text-lg font-bold text-primary">Current Quarter Analysis</p>
+                  <p className="text-lg font-bold text-primary">Current Analysis</p>
                   <Badge className="bg-secondary/10 text-secondary border-none font-black text-[9px] uppercase">Validated Record</Badge>
                 </div>
               </div>
@@ -696,7 +700,7 @@ export default function AdminDashboard() {
                   <p className="text-[10px] font-black text-primary uppercase tracking-widest">Intelligence Summary</p>
                 </div>
                 <p className="text-xs font-medium text-primary/70 leading-relaxed italic">
-                  "Based on the historical comparison of this segment, we observe a steady 4% monthly increase. It is statistically relevant to prepare for a volume peak within the next 45 days. Resources should be redirected from lower-volume administrative categories."
+                  "Based on the historical comparison of this segment, we observe a steady trend. It is statistically relevant to monitor volume peaks within the next 45 days. Resources should be optimized across categories."
                 </p>
               </div>
             </div>
