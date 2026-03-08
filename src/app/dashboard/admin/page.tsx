@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -17,7 +16,7 @@ import {
   Scale, Gavel, Loader2, Search, Clock, 
   Activity, PieChart as PieIcon, Sparkles, AlertCircle,
   TrendingDown, BrainCircuit, BarChart3, CheckCircle2,
-  ListChecks, Lightbulb, Info
+  ListChecks, Lightbulb, Info, FileText
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -340,7 +339,7 @@ export default function AdminDashboard() {
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={forecastData}>
                           <defs>
-                            <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                            <linearGradient id="colorCount" x1="0" x2="0" y2="1">
                               <stop offset="5%" stopColor="#1A237E" stopOpacity={0.1}/>
                               <stop offset="95%" stopColor="#1A237E" stopOpacity={0}/>
                             </linearGradient>
