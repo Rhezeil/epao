@@ -105,7 +105,8 @@ export default function AdminDashboard() {
       }) : lawyerCases;
 
       const closedInInterval = lawyerCases.filter(c => {
-        if (c.status !== 'Closed' || !c.closedAt) return false;
+        const isClosedStatus = c.status === 'Closed' || c.status === 'Closed Case';
+        if (!isClosedStatus || !c.closedAt) return false;
         if (!interval) return true;
         return isWithinInterval(new Date(c.closedAt), interval);
       });
@@ -202,7 +203,9 @@ export default function AdminDashboard() {
     const filtered = interval ? cases.filter(c => isWithinInterval(new Date(c.createdAt), interval)) : cases;
     const counts: Record<string, number> = {};
     filtered.forEach(c => {
-      counts[c.caseType] = (counts[c.caseType] || 0) + 1;
+      if (c.caseType) {
+        counts[c.caseType] = (counts[c.caseType] || 0) + 1;
+      }
     });
     return Object.entries(counts)
       .map(([name, count]) => ({ name, count }))
