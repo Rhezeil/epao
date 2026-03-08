@@ -16,7 +16,8 @@ import {
   AlertCircle, FileText, TrendingUp, Filter,
   ArrowUpRight, ArrowDownRight, MoreHorizontal,
   Scale, Gavel, ClipboardList, ShieldCheck,
-  Loader2, Search, CalendarDays, ArrowUpDown, Clock
+  Loader2, Search, CalendarDays, ArrowUpDown, Clock,
+  FileSearch, Activity, ListChecks, PieChart as PieIcon
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,12 +26,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { format, isWithinInterval, startOfDay, endOfDay, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
+import { format, isWithinInterval, startOfDay, endOfDay, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { DateRange } from "react-day-picker";
 
-const COLORS = ['#1A237E', '#008080', '#F59E0B', '#EF4444', '#6366F1'];
+const COLORS = ['#1A237E', '#008080', '#F59E0B', '#EF4444', '#6366F1', '#8B5CF6', '#EC4899'];
 
 export default function AdminDashboard() {
   const db = useFirestore();
@@ -69,20 +70,22 @@ export default function AdminDashboard() {
   const { data: appointments, isLoading: isApptsLoading } = useCollection(apptsQuery);
   const { data: lawyers, isLoading: isLawyersLoading } = useCollection(lawyersQuery);
 
+  const interval = useMemo(() => {
+    if (!dateRange?.from || !dateRange?.to) return null;
+    return {
+      start: startOfDay(dateRange.from),
+      end: endOfDay(dateRange.to)
+    };
+  }, [dateRange]);
+
   // --- ANALYTICS LOGIC ---
   const lawyerAnalytics = useMemo(() => {
     if (!lawyers || !cases || !appointments) return [];
-
-    const interval = dateRange?.from && dateRange?.to ? {
-      start: startOfDay(dateRange.from),
-      end: endOfDay(dateRange.to)
-    } : null;
 
     return lawyers.map(lawyer => {
       const lawyerAppts = appointments.filter(a => a.lawyerId === lawyer.id);
       const lawyerCases = cases.filter(c => c.lawyerId === lawyer.id);
 
-      // Filter by date range if applicable
       const filteredAppts = interval ? lawyerAppts.filter(a => {
         const d = new Date(a.date);
         return isWithinInterval(d, interval);
@@ -111,7 +114,7 @@ export default function AdminDashboard() {
         workloadScore: (lawyerCases.filter(c => c.status === 'Active').length * 2) + filteredAppts.length
       };
     });
-  }, [lawyers, cases, appointments, dateRange]);
+  }, [lawyers, cases, appointments, interval]);
 
   const filteredLawyers = useMemo(() => {
     return lawyerAnalytics
@@ -136,6 +139,8 @@ export default function AdminDashboard() {
       setDateRange({ from: startOfWeek(now), to: endOfWeek(now) });
     } else if (value === 'monthly') {
       setDateRange({ from: startOfMonth(now), to: endOfMonth(now) });
+    } else if (value === 'quarterly') {
+      setDateRange({ from: startOfQuarter(now), to: endOfQuarter(now) });
     }
   };
 
@@ -148,23 +153,66 @@ export default function AdminDashboard() {
     }
   };
 
-  // Overview Stats
-  const activeCasesCount = cases?.filter(c => c.status === 'Active').length || 0;
-  const pendingApptsCount = appointments?.filter(a => a.status === 'pending').length || 0;
+  // --- OVERVIEW DATA AGGREGATIONS ---
+  const caseStats = useMemo(() => {
+    if (!cases) return [];
+    const filtered = interval ? cases.filter(c => isWithinInterval(new Date(c.createdAt), interval)) : cases;
+    return [
+      { name: 'Active', value: filtered.filter(c => c.status === 'Active').length },
+      { name: 'Pending', value: filtered.filter(c => c.status === 'Pending').length },
+      { name: 'Closed', value: filtered.filter(c => c.status === 'Closed' || c.status === 'Closed Case').length },
+    ];
+  }, [cases, interval]);
 
-  const caseStats = useMemo(() => [
-    { name: 'Active', value: cases?.filter(c => c.status === 'Active').length || 0 },
-    { name: 'Pending', value: cases?.filter(c => c.status === 'Pending').length || 0 },
-    { name: 'Closed', value: cases?.filter(c => c.status === 'Closed').length || 0 },
-    { name: 'Compliance', value: cases?.filter(c => c.status === 'For Compliance').length || 0 },
-  ], [cases]);
+  const apptStats = useMemo(() => {
+    if (!appointments) return [];
+    const filtered = interval ? appointments.filter(a => isWithinInterval(new Date(a.date), interval)) : appointments;
+    return [
+      { name: 'Scheduled', value: filtered.filter(a => a.status === 'scheduled').length },
+      { name: 'Completed', value: filtered.filter(a => a.status === 'completed').length },
+      { name: 'Cancelled', value: filtered.filter(a => a.status === 'cancelled').length },
+      { name: 'Rescheduled', value: filtered.filter(a => a.status === 'rescheduled').length },
+    ].filter(s => s.value > 0);
+  }, [appointments, interval]);
 
-  const apptStats = useMemo(() => [
-    { name: 'Scheduled', value: appointments?.filter(a => a.status === 'scheduled').length || 0 },
-    { name: 'Completed', value: appointments?.filter(a => a.status === 'completed').length || 0 },
-    { name: 'Cancelled', value: appointments?.filter(a => a.status === 'cancelled').length || 0 },
-    { name: 'Rescheduled', value: appointments?.filter(a => a.status === 'rescheduled').length || 0 },
-  ].filter(stat => stat.value > 0), [appointments]);
+  const serviceStats = useMemo(() => {
+    if (!appointments) return [];
+    const filtered = interval ? appointments.filter(a => isWithinInterval(new Date(a.date), interval)) : appointments;
+    const completed = filtered.filter(a => a.status === 'completed');
+    
+    return [
+      { label: "Legal Consultations", value: completed.filter(a => a.purpose === 'consultation' || a.purpose === 'follow-up').length, icon: Users },
+      { label: "Document Notarizations", value: completed.filter(a => a.purpose === 'notarization').length, icon: FileSearch },
+      { label: "Document Preparations", value: completed.filter(a => a.purpose === 'document-preparation').length, icon: ListChecks },
+      { label: "Legal Advice", value: completed.filter(a => a.purpose === 'legal-advice').length, icon: Gavel },
+    ];
+  }, [appointments, interval]);
+
+  const topCases = useMemo(() => {
+    if (!cases) return [];
+    const filtered = interval ? cases.filter(c => isWithinInterval(new Date(c.createdAt), interval)) : cases;
+    const counts: Record<string, number> = {};
+    filtered.forEach(c => {
+      counts[c.caseType] = (counts[c.caseType] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+  }, [cases, interval]);
+
+  const topBookings = useMemo(() => {
+    if (!appointments) return [];
+    const filtered = interval ? appointments.filter(a => isWithinInterval(new Date(a.date), interval)) : appointments;
+    const counts: Record<string, number> = {};
+    filtered.forEach(a => {
+      counts[a.caseType] = (counts[a.caseType] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+  }, [appointments, interval]);
 
   if (loading) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!user || role !== 'admin') return null;
@@ -182,31 +230,79 @@ export default function AdminDashboard() {
               <p className="text-muted-foreground font-medium">Strategic oversight of system-wide legal operations.</p>
             </div>
           </div>
+          
+          <div className="flex flex-wrap gap-2">
+            <Select value={analysisPeriod} onValueChange={handlePeriodChange}>
+              <SelectTrigger className="h-11 w-[160px] rounded-xl border-primary/10 bg-white font-black text-primary px-4 text-xs uppercase tracking-widest">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  <SelectValue placeholder="Period" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="daily" className="font-bold">Daily View</SelectItem>
+                <SelectItem value="weekly" className="font-bold">Weekly View</SelectItem>
+                <SelectItem value="monthly" className="font-bold">Monthly View</SelectItem>
+                <SelectItem value="quarterly" className="font-bold">Quarterly View</SelectItem>
+                <SelectItem value="custom" className="font-bold">Custom Range</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className={cn(
+                    "h-11 rounded-xl border-primary/10 bg-white font-bold text-primary px-4 gap-2 text-xs",
+                    analysisPeriod !== 'custom' && "opacity-50"
+                  )}
+                  disabled={analysisPeriod !== 'custom'}
+                >
+                  <CalendarDays className="h-4 w-4" />
+                  {dateRange?.from ? (
+                    dateRange.to ? (
+                      <>{format(dateRange.from, "LLL dd")} - {format(dateRange.to, "LLL dd")}</>
+                    ) : (
+                      format(dateRange.from, "LLL dd, y")
+                    )
+                  ) : (
+                    <span>Pick Range</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 rounded-[2rem] border-none shadow-2xl" align="end">
+                <CalendarComponent
+                  initialFocus
+                  mode="range"
+                  defaultMonth={dateRange?.from}
+                  selected={dateRange}
+                  onSelect={setDateRange}
+                  numberOfMonths={2}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 max-w-md bg-white/50 p-1 rounded-2xl border-2 border-primary/5 h-14 mb-8">
             <TabsTrigger value="overview" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
-              <TrendingUp className="h-4 w-4 mr-2" /> System Overview
+              <PieIcon className="h-4 w-4 mr-2" /> Analytics Overview
             </TabsTrigger>
             <TabsTrigger value="workload" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
-              <Briefcase className="h-4 w-4 mr-2" /> Workload & Analytics
+              <Activity className="h-4 w-4 mr-2" /> Lawyer Workload
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-8 animate-in fade-in duration-500">
+            {/* --- TOP ROW: STATS --- */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                { label: "Active Registry", value: activeCasesCount, icon: Scale, color: "text-blue-600", bg: "bg-blue-50" },
-                { label: "Total Intakes", value: appointments?.length || 0, icon: Calendar, color: "text-teal-600", bg: "bg-teal-50" },
-                { label: "Auth Staff", value: lawyers?.length || 0, icon: Briefcase, color: "text-amber-600", bg: "bg-amber-50" },
-                { label: "Triage Queue", value: pendingApptsCount, icon: AlertCircle, color: "text-red-600", bg: "bg-red-50" }
-              ].map((stat, i) => (
-                <Card key={i} className="border-none shadow-sm rounded-3xl overflow-hidden hover:shadow-md transition-shadow">
+              {serviceStats.map((stat, i) => (
+                <Card key={i} className="border-none shadow-sm rounded-3xl overflow-hidden hover:shadow-md transition-all">
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start mb-4">
-                      <div className={cn("p-4 rounded-2xl", stat.bg)}>
-                        <stat.icon className={cn("h-6 w-6", stat.color)} />
+                      <div className="p-3 bg-primary/5 rounded-xl">
+                        <stat.icon className="h-5 w-5 text-primary" />
                       </div>
                     </div>
                     <div>
@@ -218,20 +314,21 @@ export default function AdminDashboard() {
               ))}
             </div>
 
+            {/* --- SECOND ROW: MAIN CHARTS --- */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <Card className="lg:col-span-2 border-none shadow-xl rounded-[2.5rem] bg-white">
-                <CardHeader className="pb-2 border-b border-primary/5">
-                  <CardTitle className="text-lg font-bold text-primary flex items-center gap-2">
-                    <ClipboardList className="h-5 w-5" /> Caseload Distribution
+              <Card className="lg:col-span-2 border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
+                <CardHeader className="pb-2 border-b border-primary/5 bg-primary/[0.02]">
+                  <CardTitle className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                    <Scale className="h-4 w-4" /> Case Status Breakdown
                   </CardTitle>
-                  <CardDescription>Current legal workload status across the district.</CardDescription>
+                  <CardDescription>Visualizing active, pending, and closed legal records.</CardDescription>
                 </CardHeader>
                 <CardContent className="h-[350px] pt-8">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={caseStats}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fontWeight: 700, fill: '#64748B' }} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748B' }} />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: '#64748B' }} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748B' }} />
                       <Tooltip cursor={{ fill: '#F8FAFC' }} contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', fontWeight: 700 }} />
                       <Bar dataKey="value" fill="#1A237E" radius={[12, 12, 0, 0]} barSize={60}>
                         {caseStats.map((entry, index) => <RechartsCell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
@@ -241,30 +338,95 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
 
-              <Card className="border-none shadow-xl rounded-[2.5rem] bg-white flex flex-col">
-                <CardHeader className="pb-2 border-b border-primary/5">
-                  <CardTitle className="text-lg font-bold text-primary">Visit Outcomes</CardTitle>
-                  <CardDescription>Daily conversion and attendance.</CardDescription>
+              <Card className="border-none shadow-xl rounded-[2.5rem] bg-white flex flex-col overflow-hidden">
+                <CardHeader className="pb-2 border-b border-primary/5 bg-primary/[0.02]">
+                  <CardTitle className="text-sm font-black uppercase tracking-widest text-primary">Appointment Distribution</CardTitle>
+                  <CardDescription>Daily intake status outcomes.</CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1 flex flex-col items-center justify-center pt-4">
                   <div className="h-[250px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                        <Pie data={apptStats} cx="50%" cy="50%" innerRadius={70} outerRadius={100} paddingAngle={8} dataKey="value">
+                        <Pie data={apptStats} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={8} dataKey="value">
                           {apptStats.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                         </Pie>
                         <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
-                  <div className="grid grid-cols-2 gap-x-8 gap-y-2 mt-4 pb-4">
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-2 mt-4 pb-6 px-6">
                     {apptStats.map((stat, i) => (
                       <div key={i} className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{stat.name}: {stat.value}</span>
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                        <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">{stat.name}: {stat.value}</span>
                       </div>
                     ))}
                   </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* --- THIRD ROW: TRENDS & TOP CASES --- */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
+                <CardHeader className="bg-primary/5 pb-4 border-b border-primary/10">
+                  <CardTitle className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4" /> Top Filed Case Types
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader className="bg-muted/30">
+                      <TableRow>
+                        <TableHead className="px-8 text-[9px] font-black uppercase tracking-widest">Legal Matter</TableHead>
+                        <TableHead className="text-right px-8 text-[9px] font-black uppercase tracking-widest">Total Filed</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {topCases.map((c, i) => (
+                        <TableRow key={i} className="hover:bg-primary/5 border-none">
+                          <TableCell className="px-8 font-bold text-primary">{c.name}</TableCell>
+                          <TableCell className="text-right px-8">
+                            <Badge variant="outline" className="font-black border-primary/10 text-primary">{c.count}</Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {topCases.length === 0 && (
+                        <TableRow><TableCell colSpan={2} className="text-center py-12 text-muted-foreground italic text-xs">No records for this period.</TableCell></TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+
+              <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
+                <CardHeader className="bg-primary/5 pb-4 border-b border-primary/10">
+                  <CardTitle className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                    <CalendarCheck className="h-4 w-4" /> Most Booked Categories
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader className="bg-muted/30">
+                      <TableRow>
+                        <TableHead className="px-8 text-[9px] font-black uppercase tracking-widest">Consultation Type</TableHead>
+                        <TableHead className="text-right px-8 text-[9px] font-black uppercase tracking-widest">Bookings</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {topBookings.map((b, i) => (
+                        <TableRow key={i} className="hover:bg-primary/5 border-none">
+                          <TableCell className="px-8 font-bold text-primary">{b.name}</TableCell>
+                          <TableCell className="text-right px-8">
+                            <Badge variant="outline" className="font-black border-primary/10 text-primary">{b.count}</Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {topBookings.length === 0 && (
+                        <TableRow><TableCell colSpan={2} className="text-center py-12 text-muted-foreground italic text-xs">No bookings for this period.</TableCell></TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
                 </CardContent>
               </Card>
             </div>
@@ -276,71 +438,16 @@ export default function AdminDashboard() {
                 <div className="flex flex-col md:flex-row justify-between items-start gap-6">
                   <div className="flex-1 w-full space-y-4">
                     <CardTitle className="text-xl font-bold text-primary flex items-center gap-2">
-                      <Briefcase className="h-6 w-6" /> Lawyer Activity Table
+                      <Briefcase className="h-6 w-6" /> Lawyer Activity Registry
                     </CardTitle>
-                    <div className="flex flex-col sm:flex-row gap-4">
-                      <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/30" />
-                        <Input 
-                          placeholder="Filter by Attorney Name..." 
-                          className="pl-9 h-11 rounded-xl border-primary/10 bg-white"
-                          value={lawyerSearch}
-                          onChange={(e) => setLawyerSearch(e.target.value)}
-                        />
-                      </div>
-                      
-                      <div className="flex flex-wrap gap-2">
-                        <Select value={analysisPeriod} onValueChange={handlePeriodChange}>
-                          <SelectTrigger className="h-11 w-[160px] rounded-xl border-primary/10 bg-white font-bold text-primary px-4">
-                            <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4" />
-                              <SelectValue placeholder="Period Analysis" />
-                            </div>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="daily" className="font-bold">Daily View</SelectItem>
-                            <SelectItem value="weekly" className="font-bold">Weekly View</SelectItem>
-                            <SelectItem value="monthly" className="font-bold">Monthly View</SelectItem>
-                            <SelectItem value="custom" className="font-bold">Custom Range</SelectItem>
-                          </SelectContent>
-                        </Select>
-
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              className={cn(
-                                "h-11 rounded-xl border-primary/10 bg-white font-bold text-primary px-4 gap-2",
-                                analysisPeriod !== 'custom' && "opacity-50"
-                              )}
-                              disabled={analysisPeriod !== 'custom'}
-                            >
-                              <CalendarDays className="h-4 w-4" />
-                              {dateRange?.from ? (
-                                dateRange.to ? (
-                                  <>
-                                    {format(dateRange.from, "LLL dd")} - {format(dateRange.to, "LLL dd")}
-                                  </>
-                                ) : (
-                                  format(dateRange.from, "LLL dd, y")
-                                )
-                              ) : (
-                                <span>Pick Range</span>
-                              )}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0 rounded-[2rem] border-none shadow-2xl" align="end">
-                            <CalendarComponent
-                              initialFocus
-                              mode="range"
-                              defaultMonth={dateRange?.from}
-                              selected={dateRange}
-                              onSelect={setDateRange}
-                              numberOfMonths={2}
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
+                    <div className="relative max-w-md">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/30" />
+                      <Input 
+                        placeholder="Search Attorney Profile..." 
+                        className="pl-9 h-11 rounded-xl border-primary/10 bg-white"
+                        value={lawyerSearch}
+                        onChange={(e) => setLawyerSearch(e.target.value)}
+                      />
                     </div>
                   </div>
                 </div>
