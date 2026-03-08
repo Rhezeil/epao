@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -15,7 +16,8 @@ import {
   TrendingUp, Filter, ArrowUpRight, ArrowDownRight, 
   Scale, Gavel, Loader2, Search, Clock, 
   Activity, PieChart as PieIcon, Sparkles, AlertCircle,
-  TrendingDown, BrainCircuit, BarChart3, CheckCircle2
+  TrendingDown, BrainCircuit, BarChart3, CheckCircle2,
+  ListChecks, Lightbulb, Info
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -138,6 +140,32 @@ export default function AdminDashboard() {
     return categoryTrends.sort((a, b) => b.slope - a.slope);
   }, [cases]);
 
+  const executiveInsights = useMemo(() => {
+    if (!forecastData || forecastData.length === 0 || !emergingCategories || emergingCategories.length === 0) return null;
+
+    const historicalPoints = forecastData.filter(d => !d.isForecast);
+    const futurePoints = forecastData.filter(d => d.isForecast);
+    
+    const historicalAvg = historicalPoints.reduce((acc, curr) => acc + curr.count, 0) / historicalPoints.length;
+    const futureAvg = futurePoints.reduce((acc, curr) => acc + curr.count, 0) / futurePoints.length;
+    
+    const percentChange = historicalAvg > 0 ? ((futureAvg - historicalAvg) / historicalAvg) * 100 : 0;
+    const topGrowing = emergingCategories[0];
+    
+    const isMajorSurge = percentChange > 15;
+    const isDecreasing = percentChange < -5;
+
+    return {
+      historicalAvg: historicalAvg.toFixed(1),
+      futureAvg: futureAvg.toFixed(1),
+      percentChange: Math.abs(percentChange).toFixed(1),
+      topCategory: topGrowing?.category,
+      trendLabel: percentChange > 0 ? 'increase' : 'decrease',
+      status: isMajorSurge ? 'Surge Warning' : isDecreasing ? 'Declining Demand' : 'Stable Demand',
+      isWarning: isMajorSurge
+    };
+  }, [forecastData, emergingCategories]);
+
   const lawyerAnalytics = useMemo(() => {
     if (!lawyers || !cases || !appointments) return [];
 
@@ -211,124 +239,218 @@ export default function AdminDashboard() {
 
           <TabsContent value="forecast" className="space-y-8 animate-in fade-in duration-500">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-              <Card className="lg:col-span-1 border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
-                <CardHeader className="bg-primary/5 pb-6">
-                  <CardTitle className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                    <Filter className="h-4 w-4" /> Model Filters
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-8 space-y-6">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Legal Jurisdiction</Label>
-                    <Select value={forecastCategory} onValueChange={setForecastCategory}>
-                      <SelectTrigger className="rounded-xl border-primary/10">
-                        <SelectValue placeholder="All Categories" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all" className="font-bold">All Jurisdictions</SelectItem>
-                        {Object.keys(caseCategories).map(cat => (
-                          <SelectItem key={cat} value={cat} className="font-bold">{cat}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+              <div className="lg:col-span-1 space-y-6">
+                <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
+                  <CardHeader className="bg-primary/5 pb-6">
+                    <CardTitle className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                      <Filter className="h-4 w-4" /> Model Filters
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-8 space-y-6">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Legal Jurisdiction</Label>
+                      <Select value={forecastCategory} onValueChange={setForecastCategory}>
+                        <SelectTrigger className="rounded-xl border-primary/10">
+                          <SelectValue placeholder="All Categories" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all" className="font-bold">All Jurisdictions</SelectItem>
+                          {Object.keys(caseCategories).map(cat => (
+                            <SelectItem key={cat} value={cat} className="font-bold">{cat}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Specific Case Type</Label>
-                    <Select value={forecastType} onValueChange={setForecastType}>
-                      <SelectTrigger className="rounded-xl border-primary/10">
-                        <SelectValue placeholder="All Types" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all" className="font-bold">All Case Types</SelectItem>
-                        {forecastCategory !== 'all' && (caseCategories as any)[forecastCategory].flatMap((g: any) => g.items).map((item: string) => (
-                          <SelectItem key={item} value={item} className="font-bold">{item}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Specific Case Type</Label>
+                      <Select value={forecastType} onValueChange={setForecastType}>
+                        <SelectTrigger className="rounded-xl border-primary/10">
+                          <SelectValue placeholder="All Types" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all" className="font-bold">All Case Types</SelectItem>
+                          {forecastCategory !== 'all' && (caseCategories as any)[forecastCategory].flatMap((g: any) => g.items).map((item: string) => (
+                            <SelectItem key={item} value={item} className="font-bold">{item}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                  <div className="pt-6 border-t border-primary/5">
-                    <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="h-4 w-4 text-amber-600" />
-                        <span className="text-[10px] font-black uppercase text-amber-900">Insight</span>
+                    <div className="pt-6 border-t border-primary/5">
+                      <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="h-4 w-4 text-amber-600" />
+                          <span className="text-[10px] font-black uppercase text-amber-900">Model Info</span>
+                        </div>
+                        <p className="text-[11px] text-amber-800 leading-relaxed font-medium">
+                          Predictions utilize Linear Regression over a 6-month historical sliding window.
+                        </p>
                       </div>
-                      <p className="text-[11px] text-amber-800 leading-relaxed font-medium">
-                        The prediction model uses linear regression based on the last 6 months of historical filings.
-                      </p>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
 
-              <Card className="lg:col-span-3 border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
-                <CardHeader className="bg-primary/5 border-b border-primary/5 px-10 pt-8 pb-6">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <CardTitle className="text-xl font-black text-primary flex items-center gap-2">
-                        <LineChart className="h-6 w-6" /> Legal Demand Projection
+                {executiveInsights && (
+                  <Card className={cn(
+                    "border-none shadow-xl rounded-[2.5rem] overflow-hidden transition-all",
+                    executiveInsights.isWarning ? "bg-red-600 text-white" : "bg-teal-700 text-white"
+                  )}>
+                    <CardHeader className="pb-2 border-b border-white/10">
+                      <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                        <Lightbulb className="h-4 w-4" /> Executive Insight
                       </CardTitle>
-                      <CardDescription className="font-medium">Historical trends vs. 3-month predictive volume.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-6 space-y-4">
+                      <div className="space-y-1">
+                        <p className="text-2xl font-black">{executiveInsights.status}</p>
+                        <p className="text-[10px] font-bold uppercase opacity-70 tracking-widest">Quarterly Planning Outlook</p>
+                      </div>
+                      <p className="text-xs font-medium leading-relaxed opacity-90">
+                        Based on historical data of <strong>{executiveInsights.historicalAvg}</strong> monthly cases, we anticipate a <strong>{executiveInsights.percentChange}% {executiveInsights.trendLabel}</strong> in volume for the next 90 days.
+                      </p>
+                      <div className="pt-4 border-t border-white/10">
+                        <p className="text-[9px] font-black uppercase tracking-wider mb-2">Resource Focal Point</p>
+                        <Badge className="bg-white/20 text-white border-none font-bold">
+                          {executiveInsights.topCategory} Surge Expected
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+
+              <div className="lg:col-span-3 space-y-8">
+                <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
+                  <CardHeader className="bg-primary/5 border-b border-primary/5 px-10 pt-8 pb-6">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <CardTitle className="text-xl font-black text-primary flex items-center gap-2">
+                          <LineChart className="h-6 w-6" /> Legal Demand Projection
+                        </CardTitle>
+                        <CardDescription className="font-medium">Comparing historical filing volumes with 3-month predicted demand.</CardDescription>
+                      </div>
+                      <Badge className="bg-primary text-white font-black text-[10px] px-4 py-1.5 uppercase rounded-full">
+                        Rolling 9-Month View
+                      </Badge>
                     </div>
-                    <Badge className="bg-primary text-white font-black text-[10px] px-4 py-1.5 uppercase rounded-full">
-                      Next 90 Days
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-10">
-                  <div className="h-[400px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={forecastData}>
-                        <defs>
-                          <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#1A237E" stopOpacity={0.1}/>
-                            <stop offset="95%" stopColor="#1A237E" stopOpacity={0}/>
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
-                        <XAxis 
-                          dataKey="month" 
-                          axisLine={false} 
-                          tickLine={false} 
-                          tick={{ fontSize: 10, fontWeight: 900, fill: '#64748B' }}
-                          formatter={(val: string) => val.split('-')[1] + '/' + val.split('-')[0].slice(2)}
-                        />
-                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748B' }} />
-                        <Tooltip 
-                          contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', fontWeight: 700 }}
-                          labelFormatter={(val) => `Period: ${val}`}
-                        />
-                        <Legend verticalAlign="top" align="right" iconType="circle" />
-                        
-                        <Area 
-                          type="monotone" 
-                          dataKey="count" 
-                          name="Historical Intake"
-                          stroke="#1A237E" 
-                          strokeWidth={4}
-                          fillOpacity={1} 
-                          fill="url(#colorCount)" 
-                          data={forecastData.filter(d => !d.isForecast)}
-                        />
-                        
-                        <Line 
-                          type="monotone" 
-                          dataKey="count" 
-                          name="Predicted Demand"
-                          stroke="#008080" 
-                          strokeWidth={4}
-                          strokeDasharray="8 8"
-                          dot={{ r: 6, fill: '#008080', strokeWidth: 2, stroke: '#fff' }}
-                          data={forecastData.filter((d, i) => i >= 5)}
-                        />
-                        
-                        <ReferenceLine x={forecastData[5]?.month} stroke="#EF4444" strokeDasharray="3 3" label={{ position: 'top', value: 'Today', fill: '#EF4444', fontSize: 10, fontWeight: 900 }} />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardHeader>
+                  <CardContent className="p-10">
+                    <div className="h-[400px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={forecastData}>
+                          <defs>
+                            <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#1A237E" stopOpacity={0.1}/>
+                              <stop offset="95%" stopColor="#1A237E" stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                          <XAxis 
+                            dataKey="month" 
+                            axisLine={false} 
+                            tickLine={false} 
+                            tick={{ fontSize: 10, fontWeight: 900, fill: '#64748B' }}
+                            formatter={(val: string) => val.split('-')[1] + '/' + val.split('-')[0].slice(2)}
+                          />
+                          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748B' }} />
+                          <Tooltip 
+                            contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', fontWeight: 700 }}
+                            labelFormatter={(val) => `Period: ${val}`}
+                          />
+                          <Legend verticalAlign="top" align="right" iconType="circle" />
+                          
+                          <Area 
+                            type="monotone" 
+                            dataKey="count" 
+                            name="Historical Intake"
+                            stroke="#1A237E" 
+                            strokeWidth={4}
+                            fillOpacity={1} 
+                            fill="url(#colorCount)" 
+                            data={forecastData.filter(d => !d.isForecast)}
+                          />
+                          
+                          <Line 
+                            type="monotone" 
+                            dataKey="count" 
+                            name="Predicted Demand"
+                            stroke="#008080" 
+                            strokeWidth={4}
+                            strokeDasharray="8 8"
+                            dot={{ r: 6, fill: '#008080', strokeWidth: 2, stroke: '#fff' }}
+                            data={forecastData.filter((d, i) => i >= 5)}
+                          />
+                          
+                          <ReferenceLine x={forecastData[5]?.month} stroke="#EF4444" strokeDasharray="3 3" label={{ position: 'top', value: 'Prediction Line', fill: '#EF4444', fontSize: 10, fontWeight: 900 }} />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {executiveInsights && (
+                  <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden border-l-8 border-l-primary">
+                    <CardHeader className="bg-primary/5 pb-4">
+                      <CardTitle className="text-sm font-black uppercase text-primary flex items-center gap-2 tracking-widest">
+                        <ListChecks className="h-4 w-4" /> Strategic Recommendations
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-8">
+                      <div className="grid md:grid-cols-2 gap-8">
+                        <div className="space-y-4">
+                          <h4 className="text-xs font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
+                            <Clock className="h-3 w-3" /> Scheduling & Intake
+                          </h4>
+                          <ul className="space-y-3">
+                            <li className="flex items-start gap-3">
+                              <div className="h-5 w-5 rounded-full bg-green-100 flex items-center justify-center shrink-0 mt-0.5">
+                                <CheckCircle2 className="h-3 w-3 text-green-600" />
+                              </div>
+                              <p className="text-xs font-bold text-primary/80">
+                                {executiveInsights.isWarning 
+                                  ? `Expand available daily consultation slots by 15% to accommodate projected surge.` 
+                                  : "Maintain current appointment slot density for next 30 days."}
+                              </p>
+                            </li>
+                            <li className="flex items-start gap-3">
+                              <div className="h-5 w-5 rounded-full bg-green-100 flex items-center justify-center shrink-0 mt-0.5">
+                                <CheckCircle2 className="h-3 w-3 text-green-600" />
+                              </div>
+                              <p className="text-xs font-bold text-primary/80">
+                                Implement priority triage for first-time intakes in the {executiveInsights.topCategory} sector.
+                              </p>
+                            </li>
+                          </ul>
+                        </div>
+                        <div className="space-y-4">
+                          <h4 className="text-xs font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
+                            <FileText className="h-3 w-3" /> Resource Preparation
+                          </h4>
+                          <ul className="space-y-3">
+                            <li className="flex items-start gap-3">
+                              <div className="h-5 w-5 rounded-full bg-blue-100 flex items-center justify-center shrink-0 mt-0.5">
+                                <Info className="h-3 w-3 text-blue-600" />
+                              </div>
+                              <p className="text-xs font-bold text-primary/80">
+                                Pre-print and distribute "Standard Evidence Checklists" for <strong>{executiveInsights.topCategory}</strong> matters.
+                              </p>
+                            </li>
+                            <li className="flex items-start gap-3">
+                              <div className="h-5 w-5 rounded-full bg-blue-100 flex items-center justify-center shrink-0 mt-0.5">
+                                <Info className="h-3 w-3 text-blue-600" />
+                              </div>
+                              <p className="text-xs font-bold text-primary/80">
+                                Review lawyer workload distribution in the "Workload" tab to prevent bottlenecking in high-demand categories.
+                              </p>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -353,7 +475,7 @@ export default function AdminDashboard() {
                       <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1">{cat.category}</p>
                       <div className="flex items-end gap-2">
                         <p className="text-3xl font-black text-primary">{cat.currentVolume}</p>
-                        <p className="text-[10px] font-bold text-muted-foreground mb-1.5">monthly cases</p>
+                        <p className="text-[10px] font-bold text-muted-foreground mb-1.5">current avg</p>
                       </div>
                       <div className="mt-4 pt-4 border-t border-primary/5 flex items-center justify-between">
                         <span className="text-[9px] font-black uppercase text-primary/40 tracking-widest">Growth Factor</span>
