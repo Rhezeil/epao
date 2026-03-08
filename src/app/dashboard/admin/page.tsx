@@ -17,7 +17,7 @@ import {
   Scale, Gavel, ClipboardList, ShieldCheck,
   Loader2, Search, CalendarDays, ArrowUpDown, Clock,
   FileSearch, Activity, ListChecks, PieChart as PieIcon,
-  CalendarCheck
+  CalendarCheck, History
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,14 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { DateRange } from "react-day-picker";
 
 const COLORS = ['#1A237E', '#008080', '#F59E0B', '#EF4444', '#6366F1', '#8B5CF6', '#EC4899'];
+
+const PURPOSE_LABELS: Record<string, string> = {
+  'follow-up': 'Follow-up Consultation',
+  'consultation': 'Legal Consultation',
+  'notarization': 'Document Notarization',
+  'document-preparation': 'Document Preparation',
+  'legal-advice': 'Legal Advice'
+};
 
 export default function AdminDashboard() {
   const db = useFirestore();
@@ -181,9 +189,10 @@ export default function AdminDashboard() {
     const completed = filtered.filter(a => a.status === 'completed');
     
     return [
-      { label: "Legal Consultations", value: completed.filter(a => a.purpose === 'consultation' || a.purpose === 'follow-up').length, icon: Users },
-      { label: "Document Notarizations", value: completed.filter(a => a.purpose === 'notarization').length, icon: FileSearch },
-      { label: "Document Preparations", value: completed.filter(a => a.purpose === 'document-preparation').length, icon: ListChecks },
+      { label: "Follow-up Consultation", value: completed.filter(a => a.purpose === 'follow-up').length, icon: History },
+      { label: "Legal Consultation", value: completed.filter(a => a.purpose === 'consultation').length, icon: Users },
+      { label: "Document Notarization", value: completed.filter(a => a.purpose === 'notarization').length, icon: FileSearch },
+      { label: "Document Preparation", value: completed.filter(a => a.purpose === 'document-preparation').length, icon: ListChecks },
       { label: "Legal Advice", value: completed.filter(a => a.purpose === 'legal-advice').length, icon: Gavel },
     ];
   }, [appointments, interval]);
@@ -206,7 +215,8 @@ export default function AdminDashboard() {
     const filtered = interval ? appointments.filter(a => isWithinInterval(new Date(a.date), interval)) : appointments;
     const counts: Record<string, number> = {};
     filtered.forEach(a => {
-      counts[a.caseType] = (counts[a.caseType] || 0) + 1;
+      const label = PURPOSE_LABELS[a.purpose] || a.purpose || 'Other';
+      counts[label] = (counts[label] || 0) + 1;
     });
     return Object.entries(counts)
       .map(([name, count]) => ({ name, count }))
@@ -296,7 +306,7 @@ export default function AdminDashboard() {
 
           <TabsContent value="overview" className="space-y-8 animate-in fade-in duration-500">
             {/* --- TOP ROW: STATS --- */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
               {serviceStats.map((stat, i) => (
                 <Card key={i} className="border-none shadow-sm rounded-3xl overflow-hidden hover:shadow-md transition-all">
                   <CardContent className="p-6">
@@ -306,7 +316,7 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                     <div>
-                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1">{stat.label}</p>
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1 leading-tight">{stat.label}</p>
                       <p className="text-3xl font-black text-primary">{stat.value}</p>
                     </div>
                   </CardContent>
@@ -402,14 +412,14 @@ export default function AdminDashboard() {
               <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
                 <CardHeader className="bg-primary/5 pb-4 border-b border-primary/10">
                   <CardTitle className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                    <CalendarCheck className="h-4 w-4" /> Most Booked Categories
+                    <CalendarCheck className="h-4 w-4" /> Most Booked Services
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
                   <Table>
                     <TableHeader className="bg-muted/30">
                       <TableRow>
-                        <TableHead className="px-8 text-[9px] font-black uppercase tracking-widest">Consultation Type</TableHead>
+                        <TableHead className="px-8 text-[9px] font-black uppercase tracking-widest">Service Type</TableHead>
                         <TableHead className="text-right px-8 text-[9px] font-black uppercase tracking-widest">Bookings</TableHead>
                       </TableRow>
                     </TableHeader>
