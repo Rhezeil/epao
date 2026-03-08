@@ -202,6 +202,7 @@ export default function AdminDashboard() {
    * HANDLERS: Deep Analysis Trigger
    */
   const handleChartClick = (data: any, type: 'demand' | 'category' | 'appointment') => {
+    if (!data) return;
     setDeepAnalysis({
       isOpen: true,
       title: `Deep Analysis: ${data.label || data.name || 'Selected Segment'}`,
@@ -280,7 +281,6 @@ export default function AdminDashboard() {
               <div className="lg:col-span-3">
                 <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden relative">
                   <CardHeader className="bg-primary/5 border-b border-primary/5 px-10 pt-8 pb-6">
-                    {/* Layer 2: Summary Header */}
                     {(() => {
                       const trend = getTrendSummary(forecastData);
                       return (
@@ -303,7 +303,7 @@ export default function AdminDashboard() {
                   <CardContent className="p-10">
                     <div className="h-[350px] w-full">
                       <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={forecastData} onClick={(e) => e && handleChartClick(e.activePayload?.[0]?.payload, 'demand')}>
+                        <AreaChart data={forecastData} onClick={(e) => e && e.activePayload && handleChartClick(e.activePayload[0].payload, 'demand')}>
                           <defs>
                             <linearGradient id="colorCount" x1="0" x2="0" y2="1">
                               <stop offset="5%" stopColor="#1A237E" stopOpacity={0.1}/>
@@ -319,7 +319,6 @@ export default function AdminDashboard() {
                             formatter={(val: string) => val.split('-')[1] + '/' + val.split('-')[0].slice(2)}
                           />
                           <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748B' }} />
-                          {/* Layer 1: Enhanced Tooltip */}
                           <Tooltip 
                             content={({ active, payload }) => {
                               if (active && payload && payload.length) {
@@ -354,7 +353,7 @@ export default function AdminDashboard() {
                             type="monotone" 
                             dataKey="count" 
                             stroke="#008080" 
-                            strokeWidth={4}
+                            strokeWidth={4} 
                             strokeDasharray="8 8"
                             dot={{ r: 6, fill: '#008080', strokeWidth: 2, stroke: '#fff' }}
                             data={forecastData.filter((d, i) => i >= 5)}
@@ -364,7 +363,6 @@ export default function AdminDashboard() {
                       </ResponsiveContainer>
                     </div>
 
-                    {/* Layer 3: Insight Panel */}
                     <div className="mt-10 pt-10 border-t border-primary/5 grid md:grid-cols-3 gap-8">
                       {(() => {
                         const insights = getInsightPanel('forecast');
@@ -400,7 +398,6 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* --- SECOND ROW: CATEGORY & LIFECYCLE --- */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Category Breakdown */}
               <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
@@ -416,7 +413,7 @@ export default function AdminDashboard() {
                 <CardContent className="p-10">
                   <div className="h-[300px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={categoryBreakdown} layout="vertical" onClick={(e) => e && handleChartClick(e.activePayload?.[0]?.payload, 'category')}>
+                      <BarChart data={categoryBreakdown} layout="vertical" onClick={(e) => e && e.activePayload && handleChartClick(e.activePayload[0].payload, 'category')}>
                         <XAxis type="number" hide />
                         <YAxis 
                           dataKey="name" 
@@ -452,7 +449,6 @@ export default function AdminDashboard() {
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
-                  {/* Insight Panel: Categories */}
                   <div className="mt-8 pt-8 border-t border-primary/5">
                     {(() => {
                       const insights = getInsightPanel('categories');
@@ -486,7 +482,7 @@ export default function AdminDashboard() {
                 <CardContent className="p-10">
                   <div className="h-[300px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                      <PieChart onClick={(e) => e && handleChartClick(e.activePayload?.[0]?.payload, 'appointment')}>
+                      <PieChart onClick={(e) => e && e.activePayload && handleChartClick(e.activePayload[0].payload, 'appointment')}>
                         <Pie
                           data={apptLifecycle}
                           innerRadius={60}
@@ -520,7 +516,6 @@ export default function AdminDashboard() {
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
-                  {/* Insight Panel: Lifecycle */}
                   <div className="mt-8 pt-8 border-t border-primary/5">
                     <div className="bg-primary/5 p-5 rounded-[2rem] flex items-center gap-4">
                       <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-primary shadow-sm">
@@ -568,7 +563,7 @@ export default function AdminDashboard() {
                     <TableHeader className="bg-muted/30">
                       <TableRow>
                         <TableHead className="px-10 text-[10px] font-black uppercase tracking-widest text-primary/40">Attorney Profile</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Appointments Handled</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">APPOINTMENTS HANDLED</TableHead>
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Cases Opened</TableHead>
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Cases Closed</TableHead>
                         <TableHead className="text-right px-10 text-[10px] font-black uppercase tracking-widest text-primary/40">Active Caseload</TableHead>
@@ -611,8 +606,8 @@ export default function AdminDashboard() {
 
         {/* --- LAYER 4: DEEP ANALYSIS MODAL --- */}
         <Dialog open={deepAnalysis.isOpen} onOpenChange={(open) => setDeepAnalysis({ ...deepAnalysis, isOpen: open })}>
-          <DialogContent className="rounded-[3rem] max-w-2xl p-0 overflow-hidden border-none shadow-2xl">
-            <DialogHeader className="p-8 bg-primary text-white">
+          <DialogContent className="rounded-[3rem] max-w-2xl p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
+            <DialogHeader className="p-8 bg-primary text-white shrink-0">
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-white/20 rounded-2xl">
                   <BrainCircuit className="h-8 w-8" />
@@ -623,7 +618,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
             </DialogHeader>
-            <div className="p-10 space-y-10">
+            <div className="p-10 space-y-10 overflow-y-auto flex-1 scrollbar-hide">
               <div className="grid grid-cols-2 gap-8">
                 <div className="space-y-2">
                   <p className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Filing Intensity</p>
@@ -670,7 +665,7 @@ export default function AdminDashboard() {
                 </p>
               </div>
             </div>
-            <DialogFooter className="p-8 bg-muted/30">
+            <DialogFooter className="p-8 bg-muted/30 shrink-0">
               <Button onClick={() => setDeepAnalysis({ ...deepAnalysis, isOpen: false })} className="w-full h-14 bg-primary text-white font-black rounded-2xl shadow-xl">Acknowledge & Close</Button>
             </DialogFooter>
           </DialogContent>
