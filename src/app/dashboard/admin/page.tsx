@@ -16,7 +16,7 @@ import {
   AlertCircle, FileText, TrendingUp, Filter,
   ArrowUpRight, ArrowDownRight, MoreHorizontal,
   Scale, Gavel, ClipboardList, ShieldCheck,
-  Loader2, Search, CalendarDays, ArrowUpDown
+  Loader2, Search, CalendarDays, ArrowUpDown, Clock
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { format, isWithinInterval, startOfDay, endOfDay, subDays } from "date-fns";
+import { format, isWithinInterval, startOfDay, endOfDay, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { DateRange } from "react-day-picker";
@@ -41,11 +41,12 @@ export default function AdminDashboard() {
   const [lawyerSearch, setLawyerSearch] = useState("");
   const [sortField, setSortField] = useState<string>("activeCases");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [analysisPeriod, setAnalysisPeriod] = useState("monthly");
   
   // Date Range Filter
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: subDays(new Date(), 30),
-    to: new Date(),
+    from: startOfMonth(new Date()),
+    to: endOfMonth(new Date()),
   });
 
   // Queries
@@ -125,6 +126,18 @@ export default function AdminDashboard() {
         return 0;
       });
   }, [lawyerAnalytics, lawyerSearch, sortField, sortOrder]);
+
+  const handlePeriodChange = (value: string) => {
+    setAnalysisPeriod(value);
+    const now = new Date();
+    if (value === 'daily') {
+      setDateRange({ from: startOfDay(now), to: endOfDay(now) });
+    } else if (value === 'weekly') {
+      setDateRange({ from: startOfWeek(now), to: endOfWeek(now) });
+    } else if (value === 'monthly') {
+      setDateRange({ from: startOfMonth(now), to: endOfMonth(now) });
+    }
+  };
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -260,7 +273,7 @@ export default function AdminDashboard() {
           <TabsContent value="workload" className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
             <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
               <CardHeader className="bg-primary/5 pb-6 border-b border-primary/10">
-                <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+                <div className="flex flex-col md:flex-row justify-between items-start gap-6">
                   <div className="flex-1 w-full space-y-4">
                     <CardTitle className="text-xl font-bold text-primary flex items-center gap-2">
                       <Briefcase className="h-6 w-6" /> Lawyer Activity Table
@@ -276,34 +289,58 @@ export default function AdminDashboard() {
                         />
                       </div>
                       
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" className="h-11 rounded-xl border-primary/10 bg-white font-bold text-primary px-4 gap-2">
-                            <CalendarDays className="h-4 w-4" />
-                            {dateRange?.from ? (
-                              dateRange.to ? (
-                                <>
-                                  {format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}
-                                </>
+                      <div className="flex flex-wrap gap-2">
+                        <Select value={analysisPeriod} onValueChange={handlePeriodChange}>
+                          <SelectTrigger className="h-11 w-[160px] rounded-xl border-primary/10 bg-white font-bold text-primary px-4">
+                            <div className="flex items-center gap-2">
+                              <Clock className="h-4 w-4" />
+                              <SelectValue placeholder="Period Analysis" />
+                            </div>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="daily" className="font-bold">Daily View</SelectItem>
+                            <SelectItem value="weekly" className="font-bold">Weekly View</SelectItem>
+                            <SelectItem value="monthly" className="font-bold">Monthly View</SelectItem>
+                            <SelectItem value="custom" className="font-bold">Custom Range</SelectItem>
+                          </SelectContent>
+                        </Select>
+
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              className={cn(
+                                "h-11 rounded-xl border-primary/10 bg-white font-bold text-primary px-4 gap-2",
+                                analysisPeriod !== 'custom' && "opacity-50"
+                              )}
+                              disabled={analysisPeriod !== 'custom'}
+                            >
+                              <CalendarDays className="h-4 w-4" />
+                              {dateRange?.from ? (
+                                dateRange.to ? (
+                                  <>
+                                    {format(dateRange.from, "LLL dd")} - {format(dateRange.to, "LLL dd")}
+                                  </>
+                                ) : (
+                                  format(dateRange.from, "LLL dd, y")
+                                )
                               ) : (
-                                format(dateRange.from, "LLL dd, y")
-                              )
-                            ) : (
-                              <span>Pick an Analysis Range</span>
-                            )}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 rounded-[2rem] border-none shadow-2xl" align="end">
-                          <CalendarComponent
-                            initialFocus
-                            mode="range"
-                            defaultMonth={dateRange?.from}
-                            selected={dateRange}
-                            onSelect={setDateRange}
-                            numberOfMonths={2}
-                          />
-                        </PopoverContent>
-                      </Popover>
+                                <span>Pick Range</span>
+                              )}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0 rounded-[2rem] border-none shadow-2xl" align="end">
+                            <CalendarComponent
+                              initialFocus
+                              mode="range"
+                              defaultMonth={dateRange?.from}
+                              selected={dateRange}
+                              onSelect={setDateRange}
+                              numberOfMonths={2}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
                     </div>
                   </div>
                 </div>
