@@ -583,7 +583,7 @@ export default function AdminDashboard() {
                             </TableCell>
                             <TableCell><Badge variant="outline" className="font-bold">{lAppts.length}</Badge></TableCell>
                             <TableCell><span className="text-sm font-bold text-primary">{lCases.length}</span></TableCell>
-                            <TableCell><span className="text-sm font-bold text-green-600">{lCases.filter(c => c.status === 'Closed').length}</span></TableCell>
+                            <TableCell><span className="text-sm font-bold text-green-600">{lCases.filter(c => c.status === 'Closed' || c.status === 'Closed Case').length}</span></TableCell>
                             <TableCell className="text-right px-10">
                               <div className="flex flex-col items-end">
                                 <p className="text-lg font-black text-primary">{lCases.filter(c => c.status === 'Active').length}</p>

@@ -16,7 +16,7 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    /** @description Checks if the user is a registered Admin. */
+    /** @description Checks if the user is a registered Admin or the bootstrap account. */
     function isAdmin() {
       return isSignedIn() && (
         (request.auth.token.email != null && request.auth.token.email.lower() == "admin@epao.com") ||
@@ -91,7 +91,7 @@ service cloud.firestore {
      * Permissive read/write for the public booking portal; strict delete for admins.
      */
     match /appointments/{appointmentId} {
-      allow read, create, update: if true;
+      allow get, list, create, update: if true;
       allow delete: if isAdmin();
     }
 
