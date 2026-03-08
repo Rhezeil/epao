@@ -29,7 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { format, subMonths, addMonths, isSameMonth, parseISO } from "date-fns";
+import { format, subMonths, addMonths, isSameMonth, parseISO, startOfToday, subDays, isAfter } from "date-fns";
 import { caseCategories } from "@/app/lib/case-data";
 
 /**
@@ -58,6 +58,7 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("forecast");
   const [lawyerSearch, setLawyerSearch] = useState("");
   const [forecastCategory, setForecastCategory] = useState("all");
+  const [performanceRange, setPerformanceRange] = useState("month");
   
   // Deep Analysis Modal State
   const [deepAnalysis, setDeepAnalysis] = useState<{
@@ -209,6 +210,22 @@ export default function AdminDashboard() {
       data: data,
       type: type
     });
+  };
+
+  const performanceRangeStart = useMemo(() => {
+    const now = new Date();
+    if (performanceRange === "day") return startOfToday();
+    if (performanceRange === "week") return subDays(now, 7);
+    return subDays(now, 30);
+  }, [performanceRange]);
+
+  const isInPerformanceRange = (dateStr: string | undefined) => {
+    if (!dateStr) return false;
+    try {
+      return isAfter(new Date(dateStr), performanceRangeStart);
+    } catch {
+      return false;
+    }
   };
 
   if (loading) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -540,14 +557,29 @@ export default function AdminDashboard() {
                     <CardTitle className="text-xl font-bold text-primary flex items-center gap-2">
                       <Briefcase className="h-6 w-6" /> Lawyer Activity Registry
                     </CardTitle>
-                    <div className="relative max-w-md">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/30" />
-                      <Input 
-                        placeholder="Search Attorney Profile..." 
-                        className="pl-9 h-11 rounded-xl border-primary/10 bg-white"
-                        value={lawyerSearch}
-                        onChange={(e) => setLawyerSearch(e.target.value)}
-                      />
+                    <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+                      <div className="relative flex-1 max-w-md">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/30" />
+                        <Input 
+                          placeholder="Search Attorney Profile..." 
+                          className="pl-9 h-11 rounded-xl border-primary/10 bg-white"
+                          value={lawyerSearch}
+                          onChange={(e) => setLawyerSearch(e.target.value)}
+                        />
+                      </div>
+                      <Select value={performanceRange} onValueChange={setPerformanceRange}>
+                        <SelectTrigger className="h-11 w-full sm:w-[180px] rounded-xl border-primary/10 bg-white font-bold">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-primary/40" />
+                            <SelectValue placeholder="Range" />
+                          </div>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="day" className="font-bold">Today</SelectItem>
+                          <SelectItem value="week" className="font-bold">Last 7 Days</SelectItem>
+                          <SelectItem value="month" className="font-bold">Last 30 Days</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 </div>
@@ -571,8 +603,11 @@ export default function AdminDashboard() {
                     </TableHeader>
                     <TableBody>
                       {lawyers?.filter(l => l.email.includes(lawyerSearch) || (l.firstName + l.lastName).toLowerCase().includes(lawyerSearch.toLowerCase())).map((lawyer) => {
-                        const lAppts = appointments?.filter(a => a.lawyerId === lawyer.id) || [];
-                        const lCases = cases?.filter(c => c.lawyerId === lawyer.id) || [];
+                        const lApptsInRange = (appointments?.filter(a => a.lawyerId === lawyer.id) || []).filter(a => isInPerformanceRange(a.createdAt));
+                        const lCasesInRange = (cases?.filter(c => c.lawyerId === lawyer.id) || []).filter(c => isInPerformanceRange(c.createdAt));
+                        const lCasesClosedInRange = (cases?.filter(c => c.lawyerId === lawyer.id) || []).filter(c => (c.status === 'Closed' || c.status === 'Closed Case') && isInPerformanceRange(c.closedAt || c.updatedAt));
+                        const lActiveCases = cases?.filter(c => c.lawyerId === lawyer.id && c.status === 'Active') || [];
+                        
                         return (
                           <TableRow key={lawyer.id} className="hover:bg-primary/5 transition-colors group">
                             <TableCell className="px-10 py-6">
@@ -581,15 +616,15 @@ export default function AdminDashboard() {
                                 <p className="text-[10px] text-muted-foreground font-medium">{lawyer.email}</p>
                               </div>
                             </TableCell>
-                            <TableCell><Badge variant="outline" className="font-bold">{lAppts.length}</Badge></TableCell>
-                            <TableCell><span className="text-sm font-bold text-primary">{lCases.length}</span></TableCell>
-                            <TableCell><span className="text-sm font-bold text-green-600">{lCases.filter(c => c.status === 'Closed' || c.status === 'Closed Case').length}</span></TableCell>
+                            <TableCell><Badge variant="outline" className="font-bold">{lApptsInRange.length}</Badge></TableCell>
+                            <TableCell><span className="text-sm font-bold text-primary">{lCasesInRange.length}</span></TableCell>
+                            <TableCell><span className="text-sm font-bold text-green-600">{lCasesClosedInRange.length}</span></TableCell>
                             <TableCell className="text-right px-10">
                               <div className="flex flex-col items-end">
-                                <p className="text-lg font-black text-primary">{lCases.filter(c => c.status === 'Active').length}</p>
+                                <p className="text-lg font-black text-primary">{lActiveCases.length}</p>
                                 <div className={cn(
                                   "h-1 w-16 rounded-full mt-1",
-                                  lCases.filter(c => c.status === 'Active').length > 8 ? "bg-red-500" : "bg-green-500"
+                                  lActiveCases.length > 8 ? "bg-red-500" : "bg-green-500"
                                 )} />
                               </div>
                             </TableCell>
