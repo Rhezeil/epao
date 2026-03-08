@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -16,7 +15,7 @@ import {
   TrendingUp, Filter, ArrowUpRight, ArrowDownRight, 
   Scale, Gavel, Loader2, Search, Clock, 
   Activity, PieChart as PieIcon, Sparkles, AlertCircle,
-  TrendingDown, BrainCircuit, BarChart3
+  TrendingDown, BrainCircuit, BarChart3, CheckCircle2
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,12 +25,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval, addMonths, parseISO, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfQuarter, endOfQuarter } from "date-fns";
+import { format, subMonths, addMonths } from "date-fns";
 import { caseCategories } from "@/app/lib/case-data";
 
-const COLORS = ['#1A237E', '#008080', '#F59E0B', '#EF4444', '#6366F1', '#8B5CF6', '#EC4899'];
-
-// Linear Regression Helper for Time-Series Forecasting
 const calculateTrend = (data: { x: number, y: number }[]) => {
   if (data.length < 2) return { slope: 0, intercept: data[0]?.y || 0 };
   
@@ -55,18 +51,14 @@ export default function AdminDashboard() {
   const db = useFirestore();
   const { user, role, loading } = useAuth();
   
-  // Controls
   const [activeTab, setActiveTab] = useState("forecast");
   const [lawyerSearch, setLawyerSearch] = useState("");
   const [sortField, setSortField] = useState<string>("activeCases");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [analysisPeriod, setAnalysisPeriod] = useState("monthly");
   
-  // Forecast Filters
   const [forecastCategory, setForecastCategory] = useState("all");
   const [forecastType, setForecastType] = useState("all");
 
-  // Queries
   const casesQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'admin') return null;
     return query(collection(db, "cases"));
@@ -86,11 +78,9 @@ export default function AdminDashboard() {
   const { data: appointments, isLoading: isApptsLoading } = useCollection(apptsQuery);
   const { data: lawyers, isLoading: isLawyersLoading } = useCollection(lawyersQuery);
 
-  // --- PREDICTIVE ANALYTICS LOGIC ---
   const forecastData = useMemo(() => {
     if (!cases) return [];
 
-    // 1. Filter based on UI selections
     const filteredCases = cases.filter(c => {
       const matchCat = forecastCategory === "all" || Object.keys(caseCategories).find(cat => 
         (caseCategories as any)[cat].some((group: any) => group.items.includes(c.caseType))
@@ -99,7 +89,6 @@ export default function AdminDashboard() {
       return matchCat && matchType;
     });
 
-    // 2. Aggregate by Month (Last 6 months)
     const months = [];
     for (let i = 5; i >= 0; i--) {
       months.push(format(subMonths(new Date(), i), "yyyy-MM"));
@@ -110,10 +99,8 @@ export default function AdminDashboard() {
       return { month: m, count, x: index, isForecast: false };
     });
 
-    // 3. Calculate Trend
     const trend = calculateTrend(historical.map(d => ({ x: d.x, y: d.count })));
 
-    // 4. Generate Predictions (Next 3 months)
     const predictions = [];
     for (let i = 1; i <= 3; i++) {
       const futureMonth = format(addMonths(new Date(), i), "yyyy-MM");
@@ -151,7 +138,6 @@ export default function AdminDashboard() {
     return categoryTrends.sort((a, b) => b.slope - a.slope);
   }, [cases]);
 
-  // --- LAWYER ACTIVITY AGGREGATION ---
   const lawyerAnalytics = useMemo(() => {
     if (!lawyers || !cases || !appointments) return [];
 
@@ -225,7 +211,6 @@ export default function AdminDashboard() {
 
           <TabsContent value="forecast" className="space-y-8 animate-in fade-in duration-500">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-              {/* --- FORECAST FILTERS --- */}
               <Card className="lg:col-span-1 border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
                 <CardHeader className="bg-primary/5 pb-6">
                   <CardTitle className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
@@ -277,7 +262,6 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
 
-              {/* --- MAIN FORECAST CHART --- */}
               <Card className="lg:col-span-3 border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
                 <CardHeader className="bg-primary/5 border-b border-primary/5 px-10 pt-8 pb-6">
                   <div className="flex justify-between items-center">
@@ -317,7 +301,6 @@ export default function AdminDashboard() {
                         />
                         <Legend verticalAlign="top" align="right" iconType="circle" />
                         
-                        {/* Historical Line */}
                         <Area 
                           type="monotone" 
                           dataKey="count" 
@@ -329,7 +312,6 @@ export default function AdminDashboard() {
                           data={forecastData.filter(d => !d.isForecast)}
                         />
                         
-                        {/* Forecast Line */}
                         <Line 
                           type="monotone" 
                           dataKey="count" 
@@ -349,7 +331,6 @@ export default function AdminDashboard() {
               </Card>
             </div>
 
-            {/* --- EMERGING CATEGORIES --- */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {emergingCategories.slice(0, 4).map((cat, i) => (
                 <Card key={i} className="border-none shadow-md rounded-3xl bg-white overflow-hidden hover:shadow-lg transition-all group">
