@@ -16,7 +16,7 @@ import {
   Scale, Gavel, Loader2, Search, Clock, 
   Activity, PieChart as PieIcon, Sparkles, AlertCircle,
   TrendingDown, BrainCircuit, BarChart3, CheckCircle2,
-  ListChecks, Lightbulb, Info, FileText
+  ListChecks, Lightbulb, Info, FileText, CalendarCheck
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -527,7 +527,7 @@ export default function AdminDashboard() {
                           className="text-[10px] font-black uppercase tracking-widest text-primary/40 cursor-pointer hover:text-primary transition-colors"
                           onClick={() => handleSort('totalAppts')}
                         >
-                          Appts Handled <Clock className="inline h-3 w-3 ml-1" />
+                          APPOINTMENTS HANDLED <Clock className="inline h-3 w-3 ml-1" />
                         </TableHead>
                         <TableHead 
                           className="text-[10px] font-black uppercase tracking-widest text-primary/40 cursor-pointer hover:text-primary transition-colors"
