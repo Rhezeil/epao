@@ -71,11 +71,13 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    /** @description Global registry for all appointments. */
+    /** @description Global registry for all appointments. 
+     * Explicit list allowed for Admin Dashboard analytics.
+     */
     match /appointments/{appointmentId} {
-      allow read: if true; // Publicly readable for reference code verification
+      allow get, list: if true; // Publicly readable for reference code verification and triage
       allow create: if true; // Public booking allowed
-      allow update: if true; // Allow guest reschedules via ref code
+      allow update: if true; // Allow guest reschedules and status updates
       allow delete: if isAdmin();
     }
 
