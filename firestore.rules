@@ -19,7 +19,7 @@ service cloud.firestore {
     /** @description Checks if the user is a registered Admin. */
     function isAdmin() {
       return isSignedIn() && (
-        request.auth.token.email.lower() == "admin@epao.com" ||
+        (request.auth.token.email != null && request.auth.token.email.lower() == "admin@epao.com") ||
         exists(/databases/$(database)/documents/admins/$(request.auth.uid))
       );
     }
@@ -27,7 +27,7 @@ service cloud.firestore {
     /** @description Checks if the user is an authorized Lawyer. */
     function isLawyer() {
       return isSignedIn() && (
-        request.auth.token.email.lower().endsWith('@lawyers.com') ||
+        (request.auth.token.email != null && request.auth.token.email.lower().endsWith('@lawyers.com')) ||
         exists(/databases/$(database)/documents/roleLawyer/$(request.auth.uid))
       );
     }
@@ -67,7 +67,6 @@ service cloud.firestore {
      */
     match /users/{userId} {
       allow get: if isSignedIn();
-      // Explicitly allow lawyers to list users for the workstation caseload views.
       allow list: if isAdmin() || isLawyer();
       allow create: if isSignedIn() && (isOwner(userId) || isAdmin());
       allow update: if isOwner(userId) || isAdmin();
@@ -89,12 +88,10 @@ service cloud.firestore {
 
     /**
      * @description Global appointments registry. 
+     * Permissive read/write for the public booking portal; strict delete for admins.
      */
     match /appointments/{appointmentId} {
-      allow read: if true;
-      allow list: if isSignedIn(); 
-      allow create: if true;
-      allow update: if true; // In MVP, allow updates for triage and lawyer status changes
+      allow read, create, update: if true;
       allow delete: if isAdmin();
     }
 
@@ -103,7 +100,6 @@ service cloud.firestore {
      */
     match /cases/{caseId} {
       allow read: if isSignedIn();
-      allow list: if isSignedIn();
       allow create: if isAdmin() || isLawyer();
       allow update: if isAdmin() || (isSignedIn() && (resource.data.lawyerId == request.auth.uid || isLawyer()));
       allow delete: if isAdmin();
