@@ -5,18 +5,16 @@ service cloud.firestore {
 
     /**
      * CORE PHILOSOPHY
-     * This ruleset balances public access for the legal navigator and guest bookings
-     * with strict administrative and professional oversight for case management.
+     * Centralized synchronization for a multi-portal legal system.
+     * Roles: Admin (Full), Lawyer (Assigned), Client (Self), Guest (Public).
      */
 
     // --- Helper Functions ---
 
-    /** @description Checks if the request is from an authenticated user. */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /** @description Checks if the user is a registered Admin or the bootstrap account. */
     function isAdmin() {
       return isSignedIn() && (
         (request.auth.token.email != null && request.auth.token.email.lower() == "admin@epao.com") ||
@@ -24,7 +22,6 @@ service cloud.firestore {
       );
     }
 
-    /** @description Checks if the user is an authorized Lawyer. */
     function isLawyer() {
       return isSignedIn() && (
         (request.auth.token.email != null && request.auth.token.email.lower().endsWith('@lawyers.com')) ||
@@ -32,28 +29,22 @@ service cloud.firestore {
       );
     }
 
-    /** @description Checks if the authenticated user's UID matches the provided userId. */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
     // --- Collection Rules ---
 
-    /**
-     * @description Administrative roles.
-     */
+    /** @description System-wide admins. */
     match /admins/{userId} {
-      allow get: if isSignedIn();
+      allow get: if isSignedIn() && (isOwner(userId) || isAdmin());
       allow list: if isAdmin();
-      allow create: if isSignedIn() && (request.auth.token.email.lower() == "admin@epao.com" || isAdmin()) && request.auth.uid == userId;
-      allow update, delete: if isAdmin();
+      allow write: if isAdmin() || (isSignedIn() && request.auth.token.email.lower() == "admin@epao.com");
     }
 
-    /**
-     * @description Authorized Public Attorney profiles.
-     */
+    /** @description Professional Lawyer profiles. */
     match /roleLawyer/{userId} {
-      allow read: if true;
+      allow read: if isSignedIn();
       allow write: if isAdmin();
       
       match /availability/{dateId} {
@@ -62,15 +53,11 @@ service cloud.firestore {
       }
     }
 
-    /**
-     * @description Citizen user profiles.
-     */
+    /** @description Citizen profiles. */
     match /users/{userId} {
-      allow get: if isSignedIn();
+      allow get: if isSignedIn() && (isOwner(userId) || isAdmin() || isLawyer());
       allow list: if isAdmin() || isLawyer();
-      allow create: if isSignedIn() && (isOwner(userId) || isAdmin());
-      allow update: if isOwner(userId) || isAdmin();
-      allow delete: if isAdmin();
+      allow write: if isOwner(userId) || isAdmin();
 
       match /profile/{profileId} {
         allow read: if isOwner(userId) || isAdmin() || isLawyer();
@@ -78,40 +65,33 @@ service cloud.firestore {
       }
     }
 
-    /**
-     * @description Statutory standards for the Case Navigator. Publicly readable.
-     */
+    /** @description Legal requirements database for the navigator. */
     match /caseRequirements/{caseId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    /**
-     * @description Global appointments registry. 
-     * Permissive read for analytics and navigation; strict write/delete controls.
-     */
+    /** @description Global registry for all appointments. */
     match /appointments/{appointmentId} {
-      allow read, create, update: if true;
+      allow read: if true; // Publicly readable for reference code verification
+      allow create: if true; // Public booking allowed
+      allow update: if true; // Allow guest reschedules via ref code
       allow delete: if isAdmin();
     }
 
-    /**
-     * @description Official Legal Case records.
-     */
+    /** @description Official legal case records. */
     match /cases/{caseId} {
-      allow read: if isSignedIn();
+      allow read: if isAdmin() || (isSignedIn() && (resource.data.lawyerId == request.auth.uid || resource.data.clientId == request.auth.uid));
       allow create: if isAdmin() || isLawyer();
-      allow update: if isAdmin() || (isSignedIn() && (resource.data.lawyerId == request.auth.uid || isLawyer()));
+      allow update: if isAdmin() || (isSignedIn() && resource.data.lawyerId == request.auth.uid);
       allow delete: if isAdmin();
 
       match /documents/{docId} {
-        allow read, write: if isSignedIn(); 
+        allow read, write: if isAdmin() || (isSignedIn() && (get(/databases/$(database)/documents/cases/$(caseId)).data.lawyerId == request.auth.uid || get(/databases/$(database)/documents/cases/$(caseId)).data.clientId == request.auth.uid));
       }
     }
 
-    /**
-     * @description Lawyer authorization lookup.
-     */
+    /** @description Static list of authorized lawyer emails. */
     match /lawyersEmail/{email} {
       allow read: if true;
     }

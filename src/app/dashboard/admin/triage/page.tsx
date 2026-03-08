@@ -4,7 +4,7 @@
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { useAuth } from "@/components/auth-provider";
 import { useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
-import { collection, query, where, doc, or } from "firebase/firestore";
+import { collection, query, where, doc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -51,7 +51,7 @@ export default function AdminTriagePage() {
   const [selectedAppt, setSelectedAppt] = useState<any>(null);
   const [reviewMode, setReviewMode] = useState<"assign" | "intake">("assign");
   const [assignedLawyer, setAssignedLawyer] = useState("");
-  const [caseStatus, setCaseStatus] = useState("Active Case");
+  const [caseStatus, setCaseStatus] = useState("Active");
   const [rejectionReason, setRejectionReason] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -62,7 +62,7 @@ export default function AdminTriagePage() {
     idVerified: false
   });
 
-  // Queries
+  // Queries - Shared Registry
   const pendingQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'admin') return null;
     return query(collection(db, "appointments"), where("status", "==", "pending"));
@@ -93,26 +93,17 @@ export default function AdminTriagePage() {
     return completedIntakes.filter(intake => !allCases.some(c => c.initialAppointmentId === intake.id));
   }, [completedIntakes, allCases]);
 
-  // SAFE GUARD
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
+  if (loading) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!user || role !== 'admin') return null;
 
   const handleAssignLawyer = async () => {
     if (!db || !selectedAppt || !assignedLawyer) return;
     if (!screening.indigency || !screening.merit || !screening.idVerified) {
-      toast({ variant: "destructive", title: "Incomplete Screening", description: "All eligibility tests must be passed before confirmation." });
+      toast({ variant: "destructive", title: "Incomplete Screening", description: "All eligibility tests must be passed." });
       return;
     }
 
     setIsProcessing(true);
-
     try {
       const apptRef = doc(db, "appointments", selectedAppt.id);
       updateDocumentNonBlocking(apptRef, {
@@ -120,17 +111,12 @@ export default function AdminTriagePage() {
         status: "scheduled",
         screenedAt: new Date().toISOString(),
         screeningDetails: screening,
-        notified: false // Notify the assigned lawyer of their new schedule
+        notified: false 
       });
 
-      toast({ 
-        title: "Client Qualified", 
-        description: `Reference ${selectedAppt.referenceCode} confirmed and lawyer assigned.` 
-      });
+      toast({ title: "Client Qualified", description: "Reference confirmed and lawyer assigned." });
       setSelectedAppt(null);
       setScreening({ indigency: false, merit: false, idVerified: false });
-    } catch (e: any) {
-      toast({ variant: "destructive", title: "Error", description: e.message });
     } finally {
       setIsProcessing(false);
     }
@@ -147,7 +133,7 @@ export default function AdminTriagePage() {
       let clientId = selectedAppt.clientId;
       const email = selectedAppt.guestEmail || selectedAppt.clientEmail || `${selectedAppt.guestMobile || selectedAppt.clientMobile}@epao.mobile`;
 
-      // 1. Account Registration (if guest)
+      // 1. Account Activation (Unified Client Registration)
       if (!clientId) {
         try {
           const secondaryApp = initializeApp(firebaseConfig, "client-reg-" + Date.now());
@@ -156,25 +142,24 @@ export default function AdminTriagePage() {
           clientId = userCredential.user.uid;
           await deleteApp(secondaryApp);
         } catch (authError: any) {
-          // If already exists, we try to find the UID or assume linkage is possible via email mapping later
           if (authError.code !== 'auth/email-already-in-use') throw authError;
         }
       }
 
-      // 2. Initialize Case Record
+      // 2. Initialize Case Record (Synchronized with Admin/Lawyer/Client)
       const caseRef = doc(db, "cases", caseId);
       setDocumentNonBlocking(caseRef, {
         id: caseId,
         clientId: clientId || crypto.randomUUID(),
         lawyerId: assignedLawyer,
         caseType: selectedAppt.caseType,
-        status: "Active",
+        status: caseStatus,
         initialAppointmentId: selectedAppt.id,
-        description: `Official Case initialized from triage review. Source: ${selectedAppt.referenceCode}`,
+        description: `Official Case converted from triage ${selectedAppt.referenceCode}.`,
         createdAt: new Date().toISOString()
       }, { merge: true });
 
-      // 3. Create/Update Citizen Record
+      // 3. Update Citizen Record (Shared User Database)
       const userRef = doc(db, "users", clientId || "");
       setDocumentNonBlocking(userRef, {
         id: clientId,
@@ -183,388 +168,149 @@ export default function AdminTriagePage() {
         fullName: selectedAppt.guestName || selectedAppt.clientName || "",
         role: "client",
         status: "Active Case",
-        profileId: "profile",
         createdAt: new Date().toISOString()
       }, { merge: true });
 
-      // 4. Detailed Profile Creation
-      const profileRef = doc(db, "users", clientId || "", "profile", "profile");
-      setDocumentNonBlocking(profileRef, {
-        id: "profile",
-        firstName: selectedAppt.guestName?.split(' ')[0] || selectedAppt.clientName?.split(' ')[0] || "",
-        lastName: selectedAppt.guestName?.split(' ').slice(1).join(' ') || selectedAppt.clientName?.split(' ').slice(1).join(' ') || "",
-        phoneNumber: selectedAppt.guestMobile || selectedAppt.clientMobile || "",
-        address: selectedAppt.guestAddress || selectedAppt.clientAddress || "",
-        createdAt: new Date().toISOString()
-      }, { merge: true });
-
-      toast({ 
-        title: "Case Created Successfully", 
-        description: `Official record ${caseId} initialized and citizen account activated.` 
-      });
+      toast({ title: "Case Created", description: `Record ${caseId} initialized and citizen account activated.` });
       setSelectedAppt(null);
-    } catch (e: any) {
-      toast({ variant: "destructive", title: "Conversion Failed", description: e.message });
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const handleRejectRequest = () => {
-    if (!db || !selectedAppt || !rejectionReason) return;
-    setIsProcessing(true);
-
-    const apptRef = doc(db, "appointments", selectedAppt.id);
-    updateDocumentNonBlocking(apptRef, { 
-      status: "cancelled", 
-      rejectionReason, 
-      rejectedAt: new Date().toISOString() 
-    });
-
-    toast({ 
-      variant: "destructive",
-      title: "Qualification Failed", 
-      description: `Appointment ${selectedAppt.referenceCode} has been marked as Not Qualified.` 
-    });
-    
-    setTimeout(() => {
-      setIsProcessing(false);
-      setSelectedAppt(null);
-      setRejectionReason("");
-    }, 800);
-  };
-
-  const handleDeleteRequest = (id: string, refCode: string) => {
-    if (!db) return;
-    deleteDocumentNonBlocking(doc(db, "appointments", id));
-    toast({
-      variant: "destructive",
-      title: "Request Deleted",
-      description: `Reference ${refCode} permanently removed.`
-    });
-  };
-
   return (
     <DashboardLayout role="admin">
       <div className="space-y-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Client Triage</h1>
-            <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest mt-1">Screen new intakes and activate citizen legal records</p>
-          </div>
+        <div>
+          <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Intake Triage Workstation</h1>
+          <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest mt-1">Shared Decision Support for Unified Case Management</p>
         </div>
 
         <Tabs defaultValue="pending" className="w-full">
           <TabsList className="grid w-full grid-cols-2 max-w-xl bg-white/50 p-1 rounded-2xl border-2 border-primary/5 h-14">
-            <TabsTrigger value="pending" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
-              <ClipboardList className="h-4 w-4 mr-2" /> Triage Queue
-            </TabsTrigger>
-            <TabsTrigger value="intake" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
-              <ClipboardCheck className="h-4 w-4 mr-2" /> Intake Review
-            </TabsTrigger>
+            <TabsTrigger value="pending" className="rounded-xl font-bold">Triage Queue</TabsTrigger>
+            <TabsTrigger value="intake" className="rounded-xl font-bold">Intake Review</TabsTrigger>
           </TabsList>
 
           <TabsContent value="pending" className="mt-8">
             <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden">
-              <CardHeader className="bg-amber-50/50 pb-6 border-b border-amber-100/50">
+              <CardHeader className="bg-amber-50/50 border-b border-amber-100/50">
                 <CardTitle className="text-xl font-bold text-amber-900 flex items-center gap-2">
                   <Search className="h-6 w-6" /> Pending Eligibility Screening
                 </CardTitle>
-                <CardDescription>Evaluate indigent status and case merit for new requests.</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
-                {isPendingLoading ? <div className="flex justify-center py-20"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div> : (
-                  <Table>
-                    <TableHeader className="bg-muted/30">
-                      <TableRow>
-                        <TableHead className="px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Reference</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Citizen Name</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Category</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Citizen Type</TableHead>
-                        <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Action</TableHead>
+                <Table>
+                  <TableHeader className="bg-muted/30">
+                    <TableRow>
+                      <TableHead className="px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Reference</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Citizen</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Matter</TableHead>
+                      <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {pendingAppointments?.map((appt) => (
+                      <TableRow key={appt.id} className="hover:bg-primary/5 transition-colors">
+                        <TableCell className="px-8 font-black text-primary py-6">{appt.referenceCode}</TableCell>
+                        <TableCell className="font-bold">{appt.guestName || appt.clientName}</TableCell>
+                        <TableCell className="text-center"><Badge variant="outline" className="text-[9px] uppercase px-3">{appt.caseType}</Badge></TableCell>
+                        <TableCell className="text-right px-8 flex justify-end gap-2">
+                          <Button size="sm" onClick={() => { setSelectedAppt(appt); setReviewMode("assign"); }} className="rounded-xl font-black bg-primary text-white">Start Screening</Button>
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {pendingAppointments?.map((appt) => (
-                        <TableRow key={appt.id} className="hover:bg-primary/5 transition-colors group">
-                          <TableCell className="px-8 font-black text-primary py-6">{appt.referenceCode}</TableCell>
-                          <TableCell className="font-bold">{appt.guestName || appt.clientName || "Registered Citizen"}</TableCell>
-                          <TableCell className="text-center">
-                            <Badge 
-                              variant="outline" 
-                              className="bg-primary/5 font-black text-[9px] uppercase px-3 py-1 border-primary/10 text-primary min-w-[140px] justify-center"
-                            >
-                              {appt.caseType}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {!appt.clientId ? (
-                              <Badge className="bg-secondary text-white border-none font-black text-[9px] uppercase">First-time client</Badge>
-                            ) : (
-                              <Badge variant="outline" className="text-primary font-black text-[9px] uppercase border-primary/20">Registered Client</Badge>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right px-8 flex justify-end gap-2">
-                            <Button size="sm" onClick={() => { setSelectedAppt(appt); setReviewMode("assign"); }} className="rounded-xl font-black bg-primary hover:bg-primary/90 shadow-md">
-                              <ShieldCheck className="mr-2 h-4 w-4" /> Start Screening
-                            </Button>
-                            <Button 
-                              size="icon" 
-                              variant="ghost" 
-                              onClick={() => handleDeleteRequest(appt.id, appt.referenceCode)} 
-                              className="h-9 w-9 rounded-xl text-destructive hover:bg-destructive/10"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      {(!pendingAppointments || pendingAppointments.length === 0) && (
-                        <TableRow>
-                          <TableCell colSpan={5} className="text-center py-20 text-muted-foreground italic font-medium">
-                            No pending requests requiring screening.
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                )}
+                    ))}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="intake" className="mt-8">
             <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden">
-              <CardHeader className="bg-primary/5 pb-6 border-b border-primary/10">
+              <CardHeader className="bg-primary/5 border-b border-primary/10">
                 <CardTitle className="text-xl font-bold text-primary flex items-center gap-2">
-                  <CheckCircle2 className="h-6 w-6" /> Consultation Completed
+                  <CheckCircle2 className="h-6 w-6" /> Conversion Queue
                 </CardTitle>
-                <CardDescription>Final review of visits to initialize official Case files and activate accounts.</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
-                {isIntakeLoading ? <div className="flex justify-center py-20"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div> : (
-                  <Table>
-                    <TableHeader className="bg-muted/30">
-                      <TableRow>
-                        <TableHead className="px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Reference</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Citizen Name</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Category</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Visit Date</TableHead>
-                        <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Action</TableHead>
+                <Table>
+                  <TableHeader className="bg-muted/30">
+                    <TableRow>
+                      <TableHead className="px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Reference</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Citizen</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Visit Date</TableHead>
+                      <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {triagableIntakes.map((intake) => (
+                      <TableRow key={intake.id} className="hover:bg-primary/5 transition-colors">
+                        <TableCell className="px-8 font-black text-primary py-6">{intake.referenceCode}</TableCell>
+                        <TableCell className="font-bold">{intake.guestName || intake.clientName}</TableCell>
+                        <TableCell className="text-xs font-medium">{format(new Date(intake.date), "PPP")}</TableCell>
+                        <TableCell className="text-right px-8">
+                          <Button size="sm" onClick={() => { setSelectedAppt(intake); setReviewMode("intake"); }} className="rounded-xl font-black bg-secondary text-white">Convert to Case</Button>
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {triagableIntakes.map((intake) => (
-                        <TableRow key={intake.id} className="hover:bg-primary/5 transition-colors group">
-                          <TableCell className="px-8 font-black text-primary py-6">{intake.referenceCode}</TableCell>
-                          <TableCell className="font-bold">{intake.guestName || intake.clientName || "Registered Citizen"}</TableCell>
-                          <TableCell className="text-center">
-                            <Badge 
-                              variant="outline" 
-                              className="bg-teal-50 text-teal-700 border-teal-100 font-black text-[9px] uppercase px-3 py-1 border-teal-100 min-w-[140px] justify-center"
-                            >
-                              {intake.caseType}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-xs font-medium text-muted-foreground">{format(new Date(intake.date), "PPP")}</TableCell>
-                          <TableCell className="text-right px-8 flex justify-end gap-2">
-                            <Button size="sm" onClick={() => { setSelectedAppt(intake); setReviewMode("intake"); }} className="rounded-xl font-black bg-secondary hover:bg-secondary/90 shadow-md">
-                              <Eye className="mr-2 h-4 w-4" /> Review & Convert
-                            </Button>
-                            <Button 
-                              size="icon" 
-                              variant="ghost" 
-                              onClick={() => handleDeleteRequest(intake.id, intake.referenceCode)} 
-                              className="h-9 w-9 rounded-xl text-destructive hover:bg-destructive/10"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      {triagableIntakes.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={5} className="text-center py-20 text-muted-foreground italic font-medium">
-                            No completed intakes awaiting Case conversion.
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                )}
+                    ))}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
 
-        <Dialog open={!!selectedAppt} onOpenChange={() => { setSelectedAppt(null); setRejectionReason(""); setScreening({ indigency: false, merit: false, idVerified: false }); }}>
-          <DialogContent className="rounded-[3rem] max-w-lg p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
-            <DialogHeader className={cn(
-              "p-6 md:p-8 text-white shrink-0",
-              reviewMode === 'intake' ? "bg-secondary" : "bg-primary"
-            )}>
-              <div className="flex justify-between items-center">
-                <div className="space-y-1">
-                  <DialogTitle className="text-2xl md:text-3xl font-black tracking-tight">
-                    {reviewMode === 'intake' ? "Official Case Conversion" : "Screening Process"}
-                  </DialogTitle>
-                  <DialogDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest">
-                    Reference: {selectedAppt?.referenceCode}
-                  </DialogDescription>
-                </div>
-                <div className="p-3 bg-white/20 rounded-2xl hidden sm:block">
-                  {reviewMode === 'intake' ? <ClipboardCheck className="h-8 w-8" /> : <ShieldCheck className="h-8 w-8" />}
-                </div>
-              </div>
+        <Dialog open={!!selectedAppt} onOpenChange={() => setSelectedAppt(null)}>
+          <DialogContent className="rounded-[3rem] max-w-lg p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[90vh]">
+            <DialogHeader className={cn("p-8 text-white", reviewMode === 'intake' ? "bg-secondary" : "bg-primary")}>
+              <DialogTitle className="text-2xl font-black">{reviewMode === 'intake' ? "Case Conversion" : "Screening Profile"}</DialogTitle>
+              <DialogDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest">Ref: {selectedAppt?.referenceCode}</DialogDescription>
             </DialogHeader>
-
-            <div className="p-6 md:p-10 space-y-8 flex-1 overflow-y-auto">
-              {reviewMode === 'intake' && !selectedAppt?.clientId && (
-                <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-4">
-                  <div className="p-2 bg-amber-100 rounded-xl text-amber-700">
-                    <Lock className="h-5 w-5" />
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase text-amber-900 tracking-widest">Guest Account Activation</p>
-                    <p className="text-xs font-bold text-amber-800 leading-relaxed">Confirming this case will register the citizen. Default password: <span className="font-black bg-white px-2 py-0.5 rounded border border-amber-200">password123</span></p>
-                  </div>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-1">
-                  <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Citizen</Label>
-                  <p className="font-black text-primary leading-tight">{selectedAppt?.guestName || selectedAppt?.clientName || "Registered Account"}</p>
-                  <p className="text-xs font-bold text-muted-foreground">{selectedAppt?.guestMobile || selectedAppt?.clientMobile}</p>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Service</Label>
-                  <p className="text-sm font-bold text-primary">{selectedAppt?.caseType}</p>
-                </div>
-              </div>
-
+            <div className="p-10 space-y-8 flex-1 overflow-y-auto">
               {reviewMode === 'assign' && (
                 <div className="p-6 bg-primary/5 rounded-[2rem] border-2 border-dashed border-primary/10 space-y-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <ClipboardCheck className="h-4 w-4 text-primary" />
-                    <span className="text-[10px] font-black uppercase text-primary tracking-widest">Screening Checklist</span>
-                  </div>
-                  
+                  <div className="flex items-center gap-2 mb-2"><ClipboardCheck className="h-4 w-4 text-primary" /><span className="text-[10px] font-black uppercase tracking-widest">Checklist</span></div>
                   <div className="space-y-3">
-                    <div className="flex items-center space-x-3 bg-white/50 p-3 rounded-xl border">
-                      <Checkbox 
-                        id="indigency" 
-                        checked={screening.indigency}
-                        onCheckedChange={(checked) => setScreening({ ...screening, indigency: !!checked })}
-                      />
-                      <label htmlFor="indigency" className="text-xs font-bold text-primary leading-none cursor-pointer">
-                        Indigency Test (Income within PAO limits)
-                      </label>
+                    <div className="flex items-center space-x-3 bg-white p-3 rounded-xl border">
+                      <Checkbox id="ind" checked={screening.indigency} onCheckedChange={c => setScreening({...screening, indigency: !!c})} />
+                      <label htmlFor="ind" className="text-xs font-bold text-primary">Indigency Test Passed</label>
                     </div>
-                    <div className="flex items-center space-x-3 bg-white/50 p-3 rounded-xl border">
-                      <Checkbox 
-                        id="merit" 
-                        checked={screening.merit}
-                        onCheckedChange={(checked) => setScreening({ ...screening, merit: !!checked })}
-                      />
-                      <label htmlFor="merit" className="text-xs font-bold text-primary leading-none cursor-pointer">
-                        Merit Test (Legal basis for assistance)
-                      </label>
+                    <div className="flex items-center space-x-3 bg-white p-3 rounded-xl border">
+                      <Checkbox id="mer" checked={screening.merit} onCheckedChange={c => setScreening({...screening, merit: !!c})} />
+                      <label htmlFor="mer" className="text-xs font-bold text-primary">Legal Merit Validated</label>
                     </div>
-                    <div className="flex items-center space-x-3 bg-white/50 p-3 rounded-xl border">
-                      <Checkbox 
-                        id="idVerified" 
-                        checked={screening.idVerified}
-                        onCheckedChange={(checked) => setScreening({ ...screening, idVerified: !!checked })}
-                      />
-                      <label htmlFor="idVerified" className="text-xs font-bold text-primary leading-none cursor-pointer">
-                        Identity Verification (Valid ID presented)
-                      </label>
+                    <div className="flex items-center space-x-3 bg-white p-3 rounded-xl border">
+                      <Checkbox id="idv" checked={screening.idVerified} onCheckedChange={c => setScreening({...screening, idVerified: !!c})} />
+                      <label htmlFor="idv" className="text-xs font-bold text-primary">Identity Verified</label>
                     </div>
                   </div>
                 </div>
               )}
-
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <Label className="text-xs font-black uppercase tracking-widest text-primary/40 ml-1">
-                    {reviewMode === 'intake' ? "Assign Permanent Public Attorney" : "Assign Lawyer for Consultation"}
-                  </Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">Assigned Lawyer</Label>
                   <Select value={assignedLawyer} onValueChange={setAssignedLawyer}>
-                    <SelectTrigger className="h-14 rounded-2xl border-primary/20 bg-white font-bold shadow-sm">
-                      <SelectValue placeholder="Select handling lawyer" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {lawyers?.map((lawyer) => (
-                        <SelectItem key={lawyer.id} value={lawyer.id} className="font-bold">
-                          {lawyer.firstName ? `Atty. ${lawyer.firstName} ${lawyer.lastName}` : lawyer.email.split('@')[0]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
+                    <SelectTrigger className="h-12 rounded-xl border-primary/10 font-bold"><SelectValue placeholder="Select Attorney" /></SelectTrigger>
+                    <SelectContent>{lawyers?.map(l => <SelectItem key={l.id} value={l.id} className="font-bold">{l.firstName ? `Atty. ${l.firstName} ${l.lastName}` : l.email}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-
                 {reviewMode === 'intake' && (
                   <div className="space-y-2">
-                    <Label className="text-xs font-black uppercase tracking-widest text-primary/40 ml-1">Case Status</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">Record Status</Label>
                     <Select value={caseStatus} onValueChange={setCaseStatus}>
-                      <SelectTrigger className="h-14 rounded-2xl border-primary/20 bg-white font-bold shadow-sm">
-                        <SelectValue placeholder="Select initial status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Active Case" className="font-bold">Active Case</SelectItem>
-                        <SelectItem value="Pending Mediation" className="font-bold">Pending Mediation</SelectItem>
-                        <SelectItem value="For Filing" className="font-bold">For Filing</SelectItem>
-                      </SelectContent>
+                      <SelectTrigger className="h-12 rounded-xl border-primary/10 font-bold"><SelectValue /></SelectTrigger>
+                      <SelectContent><SelectItem value="Active" className="font-bold">Active Case</SelectItem><SelectItem value="Pending Mediation" className="font-bold">Pending Mediation</SelectItem></SelectContent>
                     </Select>
                   </div>
                 )}
               </div>
-
-              <div className="pt-6 border-t border-primary/5 space-y-4">
-                <div className="flex items-center gap-2">
-                  <XCircle className="h-4 w-4 text-red-500" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-red-500">Not Qualified / Reject?</span>
-                </div>
-                <div className="space-y-2">
-                  <Textarea 
-                    placeholder="Provide reason if disqualifying (e.g., exceeds income cap)..."
-                    className="rounded-2xl border-primary/10 bg-white text-sm font-medium min-h-[80px]"
-                    value={rejectionReason}
-                    onChange={(e) => setRejectionReason(e.target.value)}
-                  />
-                </div>
-              </div>
             </div>
-
-            <DialogFooter className="p-6 md:p-8 bg-muted/30 flex gap-4 shrink-0">
-              <Button variant="outline" onClick={() => setSelectedAppt(null)} className="flex-1 h-14 rounded-2xl font-bold">Cancel</Button>
-              {rejectionReason ? (
-                <Button 
-                  variant="outline" 
-                  disabled={isProcessing}
-                  onClick={handleRejectRequest}
-                  className="flex-1 h-14 rounded-2xl font-black border-red-200 text-red-600 hover:bg-red-50"
-                >
-                  Mark Not Qualified
-                </Button>
-              ) : (
-                <Button 
-                  onClick={reviewMode === 'intake' ? handleCreateCase : handleAssignLawyer} 
-                  disabled={
-                    !assignedLawyer || 
-                    isProcessing || 
-                    (reviewMode === 'assign' && (!screening.indigency || !screening.merit || !screening.idVerified))
-                  } 
-                  className={cn(
-                    "flex-1 h-14 rounded-2xl font-black text-lg shadow-xl",
-                    reviewMode === 'intake' ? "bg-secondary" : "bg-primary"
-                  )}
-                >
-                  {isProcessing ? <Loader2 className="animate-spin h-6 w-6" /> : <CheckCircle2 className="mr-2 h-6 w-6" />}
-                  {reviewMode === 'intake' ? "Register & Create Case" : "Qualify & Confirm"}
-                </Button>
-              )}
+            <DialogFooter className="p-8 bg-muted/30 flex gap-4">
+              <Button variant="outline" onClick={() => setSelectedAppt(null)} className="flex-1 h-12 rounded-xl font-bold">Cancel</Button>
+              <Button onClick={reviewMode === 'intake' ? handleCreateCase : handleAssignLawyer} disabled={!assignedLawyer || isProcessing || (reviewMode === 'assign' && (!screening.indigency || !screening.merit || !screening.idVerified))} className={cn("flex-1 h-12 rounded-xl font-black text-white shadow-lg", reviewMode === 'intake' ? "bg-secondary" : "bg-primary")}>
+                {isProcessing ? <Loader2 className="animate-spin h-5 w-5" /> : (reviewMode === 'intake' ? "Activate Case" : "Qualify & Schedule")}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
