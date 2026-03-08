@@ -225,7 +225,9 @@ export default function LawyerDashboard() {
     const ref = doc(db, "appointments", apptId);
     updateDocumentNonBlocking(ref, { 
       status, 
-      notified: true 
+      notified: true,
+      clientNotified: false, // Ensure client is updated on completion/status change
+      updatedAt: new Date().toISOString()
     });
     toast({ title: `Status Updated`, description: `Appointment marked as ${status}.` });
   };
@@ -247,6 +249,7 @@ export default function LawyerDashboard() {
       cancellationReason: cancelReason.reason,
       cancellationCategory: cancelReason.category,
       notified: true,
+      clientNotified: false, // Reset so client sees the cancellation alert
       updatedAt: new Date().toISOString()
     });
 
@@ -271,6 +274,7 @@ export default function LawyerDashboard() {
       rescheduleReason: rescheduleReason.reason,
       rescheduleCategory: rescheduleReason.category,
       notified: true,
+      clientNotified: false, // Reset so client sees the reschedule alert
       updatedAt: new Date().toISOString()
     });
 

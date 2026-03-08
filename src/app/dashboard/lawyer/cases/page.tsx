@@ -224,7 +224,9 @@ export default function LawyerCasesPage() {
         status: "scheduled",
         type: "follow-up",
         bookedBy: "lawyer",
-        createdAt: new Date().toISOString()
+        clientNotified: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
 
       setDocumentNonBlocking(doc(db, "appointments", apptId), data, { merge: true });

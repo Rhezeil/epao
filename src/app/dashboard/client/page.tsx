@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAuth } from "@/components/auth-provider";
@@ -25,7 +26,9 @@ import {
   Edit3,
   Trash2,
   AlertCircle,
-  ShieldAlert
+  ShieldAlert,
+  Bell,
+  Inbox
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState, useMemo } from "react";
@@ -128,6 +131,15 @@ export default function ClientDashboard() {
       .sort((a, b) => b.date.localeCompare(a.date));
   }, [appts, today]);
 
+  // Office Notifications (Schedules created or modified by the lawyer)
+  const officeNotifications = useMemo(() => {
+    if (!appts) return [];
+    return appts.filter(a => 
+      (a.bookedBy === 'lawyer' || a.status === 'rescheduled' || a.status === 'cancelled') && 
+      a.clientNotified === false
+    ).sort((a, b) => (b.updatedAt || b.createdAt).localeCompare(a.updatedAt || a.createdAt));
+  }, [appts]);
+
   // Rescheduling Slot Logic
   const reschedDateStr = rescheduleDate ? format(rescheduleDate, "yyyy-MM-dd") : null;
   const lawyerAvailRef = useMemoFirebase(() => {
@@ -182,7 +194,11 @@ export default function ClientDashboard() {
 
   const handleCancel = (apptId: string) => {
     if (!db) return;
-    updateDocumentNonBlocking(doc(db, "appointments", apptId), { status: "cancelled", cancellationReason: "Cancelled by Client" });
+    updateDocumentNonBlocking(doc(db, "appointments", apptId), { 
+      status: "cancelled", 
+      cancellationReason: "Cancelled by Client",
+      updatedAt: new Date().toISOString()
+    });
     toast({ title: "Appointment Cancelled", description: "The time slot has been released." });
   };
 
@@ -194,7 +210,8 @@ export default function ClientDashboard() {
       date: rescheduleDate.toISOString(),
       dateString: format(rescheduleDate, "yyyy-MM-dd"),
       time: rescheduleTime,
-      status: "rescheduled"
+      status: "rescheduled",
+      updatedAt: new Date().toISOString()
     });
 
     setTimeout(() => {
@@ -204,6 +221,15 @@ export default function ClientDashboard() {
       setRescheduleTime("");
       toast({ title: "Schedule Updated", description: "Your appointment has been successfully rescheduled." });
     }, 800);
+  };
+
+  const acknowledgeNotification = (apptId: string) => {
+    if (!db) return;
+    updateDocumentNonBlocking(doc(db, "appointments", apptId), { 
+      clientNotified: true,
+      updatedAt: new Date().toISOString()
+    });
+    toast({ title: "Update Acknowledged", description: "The notification has been cleared." });
   };
 
   if (loading) {
@@ -236,6 +262,62 @@ export default function ClientDashboard() {
             REGISTERED
           </Badge>
         </div>
+
+        {/* --- OFFICE NOTIFICATIONS --- */}
+        {officeNotifications.length > 0 && (
+          <div className="space-y-4 animate-in slide-in-from-top-4 duration-500">
+            {officeNotifications.map(n => (
+              <Card key={n.id} className={cn(
+                "border-none shadow-xl rounded-[2.5rem] overflow-hidden",
+                n.status === 'cancelled' ? "bg-red-50 border-l-8 border-red-500" : "bg-amber-50 border-l-8 border-amber-500"
+              )}>
+                <CardContent className="p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                  <div className="flex items-start gap-5">
+                    <div className={cn(
+                      "p-3 rounded-2xl bg-white shadow-sm shrink-0",
+                      n.status === 'cancelled' ? "text-red-600" : "text-amber-600"
+                    )}>
+                      {n.status === 'cancelled' ? <ShieldAlert className="h-6 w-6" /> : <Bell className="h-6 w-6" />}
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-black text-primary flex items-center gap-2">
+                        Office Update: {n.status === 'cancelled' ? 'Appointment Cancelled' : 'New/Updated Schedule'}
+                      </h3>
+                      <p className="text-sm font-bold text-muted-foreground mt-1">
+                        Your assigned lawyer has {n.status === 'cancelled' ? 'cancelled' : 'scheduled/updated'} a session:
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-3">
+                        <Badge variant="outline" className="bg-white/50 border-primary/10 text-[10px] font-black uppercase px-3 py-1">
+                          <Calendar className="h-3 w-3 mr-1.5" /> {format(new Date(n.date), "PPP")}
+                        </Badge>
+                        <Badge variant="outline" className="bg-white/50 border-primary/10 text-[10px] font-black uppercase px-3 py-1">
+                          <Clock className="h-3 w-3 mr-1.5" /> {n.time}
+                        </Badge>
+                        <Badge variant="outline" className="bg-white/50 border-primary/10 text-[10px] font-black uppercase px-3 py-1">
+                          {n.caseType}
+                        </Badge>
+                      </div>
+                      {(n.rescheduleReason || n.cancellationReason) && (
+                        <p className="text-xs font-bold text-primary/60 italic mt-3 bg-white/30 p-2 rounded-xl border border-primary/5">
+                          Note: {n.rescheduleReason || n.cancellationReason}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={() => acknowledgeNotification(n.id)}
+                    className={cn(
+                      "h-12 rounded-2xl font-black text-xs px-8 shadow-lg transition-all hover:scale-105",
+                      n.status === 'cancelled' ? "bg-red-600 hover:bg-red-700 text-white" : "bg-amber-600 hover:bg-amber-700 text-white"
+                    )}
+                  >
+                    Acknowledge
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
