@@ -27,7 +27,7 @@ service cloud.firestore {
 
     function isLawyer() {
       return isSignedIn() && (
-        (request.auth.token.email != null && request.auth.token.email.lower().endsWith('@lawyers.com')) ||
+        (request.auth.token.email != null && (request.auth.token.email.lower().endsWith('@lawyers.com') || request.auth.token.email.lower().endsWith('@lawyers.mobile'))) ||
         exists(/databases/$(database)/documents/roleLawyer/$(request.auth.uid))
       );
     }

@@ -508,7 +508,7 @@ export default function AdminDashboard() {
                   </TableHeader>
                   <TableBody>
                     {lawyers?.filter(l => l.email.includes(lawyerSearch) || (l.firstName + l.lastName).toLowerCase().includes(lawyerSearch.toLowerCase())).map((lawyer) => {
-                      const lApptsInRange = (appointments?.filter(a => a.lawyerId === lawyer.id) || []).filter(a => isInPerformanceRange(a.createdAt));
+                      const lApptsInRange = (appointments?.filter(a => a.lawyerId === lawyer.id) || []).filter(a => isInPerformanceRange(a.date));
                       const lCasesInRange = (cases?.filter(c => c.lawyerId === lawyer.id) || []).filter(c => isInPerformanceRange(c.createdAt));
                       const lActiveCases = cases?.filter(c => c.lawyerId === lawyer.id && c.status === 'Active') || [];
                       
