@@ -4,7 +4,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * CORE PHILOSOPHY
+     * LexConnect Security Architecture
      * Centralized synchronization for a multi-portal legal system.
      * Roles: Admin (Full), Lawyer (Assigned), Client (Self), Guest (Public).
      */
@@ -15,6 +15,9 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    /** 
+     * @description Hardened Admin check for both bootstrap email and database records.
+     */
     function isAdmin() {
       return isSignedIn() && (
         (request.auth.token.email != null && request.auth.token.email.lower() == "admin@epao.com") ||
@@ -35,24 +38,24 @@ service cloud.firestore {
 
     // --- Collection Rules ---
 
-    /** @description System-wide admins. */
+    /** @description System-wide administrative records. */
     match /admins/{userId} {
       allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
       allow write: if isAdmin() || (isSignedIn() && request.auth.token.email.lower() == "admin@epao.com");
     }
 
-    /** @description Professional Lawyer profiles. */
+    /** @description Professional Lawyer profiles and their professional availability. */
     match /roleLawyer/{userId} {
       allow read: if isSignedIn();
       allow write: if isAdmin();
       
       match /availability/{dateId} {
-        allow read: if true;
+        allow read: if true; // Publicly readable for scheduling
         allow write: if isOwner(userId) || isAdmin();
       }
     }
 
-    /** @description Citizen profiles and synchronization records. */
+    /** @description Citizen profiles and identity metadata. */
     match /users/{userId} {
       allow read: if isSignedIn() && (isOwner(userId) || isAdmin() || isLawyer());
       allow write: if isOwner(userId) || isAdmin();
@@ -63,23 +66,24 @@ service cloud.firestore {
       }
     }
 
-    /** @description Legal requirements database for the navigator. */
+    /** @description Statutory database for legal requirements and roadmaps. */
     match /caseRequirements/{caseId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    /** @description Global registry for all appointments. 
-     * Explicit read allowed for both Guest Navigator and Admin Analytics.
+    /** @description Global appointment registry.
+     * Open read/create/update for guest booking and client scheduling.
+     * Explicit delete restricted to Admin only.
      */
     match /appointments/{appointmentId} {
-      allow read: if true; 
+      allow read, get, list: if true; 
       allow create: if true; 
       allow update: if true; 
       allow delete: if isAdmin();
     }
 
-    /** @description Official legal case records. */
+    /** @description Official legal case records handles by public attorneys. */
     match /cases/{caseId} {
       allow read: if isAdmin() || (isSignedIn() && (resource.data.lawyerId == request.auth.uid || resource.data.clientId == request.auth.uid));
       allow create: if isAdmin() || isLawyer();
@@ -91,7 +95,7 @@ service cloud.firestore {
       }
     }
 
-    /** @description Static list of authorized lawyer emails. */
+    /** @description Authorized lawyer email whitelist. */
     match /lawyersEmail/{email} {
       allow read: if true;
     }
