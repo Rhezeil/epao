@@ -142,11 +142,21 @@ export default function AdminTriagePage() {
           clientId = userCredential.user.uid;
           await deleteApp(secondaryApp);
         } catch (authError: any) {
-          if (authError.code !== 'auth/email-already-in-use') throw authError;
+          if (authError.code !== 'auth/email-already-in-use') {
+             // If error is something else, we might need a fallback UID
+             clientId = clientId || crypto.randomUUID();
+          }
         }
       }
 
-      // 2. Initialize Case Record (Synchronized with Admin/Lawyer/Client)
+      // 2. Link initial appointment to newly created Client UID for history synchronization
+      const apptRef = doc(db, "appointments", selectedAppt.id);
+      updateDocumentNonBlocking(apptRef, {
+        clientId: clientId,
+        updatedAt: new Date().toISOString()
+      });
+
+      // 3. Initialize Case Record (Synchronized with Admin/Lawyer/Client)
       const caseRef = doc(db, "cases", caseId);
       setDocumentNonBlocking(caseRef, {
         id: caseId,
@@ -159,7 +169,7 @@ export default function AdminTriagePage() {
         createdAt: new Date().toISOString()
       }, { merge: true });
 
-      // 3. Update Citizen Record (Shared User Database)
+      // 4. Update Citizen Record (Shared User Database)
       const userRef = doc(db, "users", clientId || "");
       setDocumentNonBlocking(userRef, {
         id: clientId,

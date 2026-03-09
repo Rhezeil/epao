@@ -39,8 +39,8 @@ service cloud.firestore {
     // --- Collection Rules ---
 
     /** @description Global appointment registry.
-     * Centralized for system-wide synchronization.
-     * allow read: if true permits public lookup via reference code and administrative analytics.
+     * Centralized for system-wide synchronization across Admin, Lawyer, and Guest portals.
+     * allow read: if true ensures that public lookups and admin analytics function without permission errors.
      */
     match /appointments/{appointmentId} {
       allow read: if true; 

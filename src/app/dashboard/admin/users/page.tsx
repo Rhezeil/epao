@@ -144,17 +144,16 @@ export default function AdminUsersPage() {
   
   const { data: selectedProfile } = useDoc(profileRef);
 
-  // Client History Query
-  const historyQuery = useMemoFirebase(() => {
-    if (!db || !selectedClientId || !currentUser) return null;
-    return query(
-      collection(db, "appointments"), 
-      where("clientId", "==", selectedClientId),
-      orderBy("createdAt", "desc")
-    );
-  }, [db, selectedClientId, currentUser]);
-
-  const { data: clientHistory, isLoading: isHistoryLoading } = useCollection(historyQuery);
+  // Client History Query - Merging Client ID and potential Guest markers
+  const clientHistory = useMemo(() => {
+    if (!allAppointments || !selectedClientId) return [];
+    const client = users?.find(u => u.id === selectedClientId);
+    return allAppointments.filter(a => 
+      a.clientId === selectedClientId || 
+      (client && a.guestEmail === client.email) || 
+      (client && a.guestMobile === client.mobileNumber)
+    ).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }, [allAppointments, selectedClientId, users]);
 
   const selectedUser = useMemo(() => 
     users?.find(u => u.id === selectedClientId), 
@@ -388,7 +387,13 @@ export default function AdminUsersPage() {
                   {filteredUsers.map((client) => {
                     const clientCase = cases?.find(c => c.clientId === client.id);
                     const lawyer = lawyers?.find(l => l.id === clientCase?.lawyerId);
-                    const visitCount = allAppointments?.filter(a => a.clientId === client.id || a.guestEmail === client.email || a.guestMobile === client.mobileNumber).length || 0;
+                    
+                    // Unified Visit Count Synchronization
+                    const visitCount = allAppointments?.filter(a => 
+                      a.clientId === client.id || 
+                      a.guestEmail === client.email || 
+                      a.guestMobile === client.mobileNumber
+                    ).length || 0;
                     
                     return (
                       <TableRow key={client.id} className="hover:bg-primary/5 transition-colors group">
@@ -683,7 +688,7 @@ export default function AdminUsersPage() {
 
                 <TabsContent value="history" className="pt-6 space-y-4">
                   <h4 className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Chronological History</h4>
-                  {isHistoryLoading ? <Loader2 className="animate-spin h-6 w-6 mx-auto opacity-20" /> : clientHistory?.length ? (
+                  {clientHistory?.length ? (
                     <div className="space-y-3">
                       {clientHistory.map(h => (
                         <div key={h.id} className="p-4 bg-muted/20 rounded-2xl flex items-center justify-between border border-transparent hover:border-primary/10">
@@ -692,7 +697,7 @@ export default function AdminUsersPage() {
                         </div>
                       ))}
                     </div>
-                  ) : <p className="text-center py-10 text-xs italic text-muted-foreground">No visit history found.</p>}
+                  ) : <p className="text-center py-10 text-xs italic text-muted-foreground">No synchronized visit history found.</p>}
                 </TabsContent>
               </Tabs>
             </div>
