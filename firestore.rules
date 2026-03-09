@@ -38,6 +38,17 @@ service cloud.firestore {
 
     // --- Collection Rules ---
 
+    /** @description Global appointment registry.
+     * Centralized for system-wide synchronization.
+     * allow read: if true permits public lookup via reference code and administrative analytics.
+     */
+    match /appointments/{appointmentId} {
+      allow read: if true; 
+      allow create: if true; 
+      allow update: if true; 
+      allow delete: if isAdmin();
+    }
+
     /** @description System-wide administrative records. */
     match /admins/{userId} {
       allow read: if isSignedIn();
@@ -70,17 +81,6 @@ service cloud.firestore {
     match /caseRequirements/{caseId} {
       allow read: if true;
       allow write: if isAdmin();
-    }
-
-    /** @description Global appointment registry.
-     * Explicitly allows read (list/get) for synchronization across all portals.
-     * Creation and updates are allowed for system-wide booking flows.
-     */
-    match /appointments/{appointmentId} {
-      allow read: if true; 
-      allow create: if true; 
-      allow update: if true; 
-      allow delete: if isAdmin();
     }
 
     /** @description Official legal case records handled by public attorneys. */
