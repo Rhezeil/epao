@@ -77,13 +77,13 @@ service cloud.firestore {
      * Explicit delete restricted to Admin only.
      */
     match /appointments/{appointmentId} {
-      allow read, get, list: if true; 
+      allow read: if true; 
       allow create: if true; 
       allow update: if true; 
       allow delete: if isAdmin();
     }
 
-    /** @description Official legal case records handles by public attorneys. */
+    /** @description Official legal case records handled by public attorneys. */
     match /cases/{caseId} {
       allow read: if isAdmin() || (isSignedIn() && (resource.data.lawyerId == request.auth.uid || resource.data.clientId == request.auth.uid));
       allow create: if isAdmin() || isLawyer();
