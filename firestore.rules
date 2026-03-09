@@ -73,8 +73,8 @@ service cloud.firestore {
     }
 
     /** @description Global appointment registry.
-     * Open read/create/update for guest booking and client scheduling.
-     * Explicit delete restricted to Admin only.
+     * Explicitly allows list and get for all portal synchronization.
+     * Delete restricted to Admin only.
      */
     match /appointments/{appointmentId} {
       allow read: if true; 
