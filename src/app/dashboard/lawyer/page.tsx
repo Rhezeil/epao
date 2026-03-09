@@ -163,7 +163,6 @@ export default function LawyerDashboard() {
 
   const notifications = useMemo(() => {
     if (!apptsData) return [];
-    // Show notification if status is pending OR if assigned by admin but not yet acknowledged (notified flag)
     return apptsData.filter(a => 
       a.status === 'pending' || 
       (a.notified === false && (a.status === 'scheduled' || a.status === 'rescheduled'))
@@ -226,7 +225,7 @@ export default function LawyerDashboard() {
     updateDocumentNonBlocking(ref, { 
       status, 
       notified: true,
-      clientNotified: false, // Ensure client is updated on completion/status change
+      clientNotified: false,
       updatedAt: new Date().toISOString()
     });
     toast({ title: `Status Updated`, description: `Appointment marked as ${status}.` });
@@ -249,7 +248,7 @@ export default function LawyerDashboard() {
       cancellationReason: cancelReason.reason,
       cancellationCategory: cancelReason.category,
       notified: true,
-      clientNotified: false, // Reset so client sees the cancellation alert
+      clientNotified: false,
       updatedAt: new Date().toISOString()
     });
 
@@ -274,7 +273,7 @@ export default function LawyerDashboard() {
       rescheduleReason: rescheduleReason.reason,
       rescheduleCategory: rescheduleReason.category,
       notified: true,
-      clientNotified: false, // Reset so client sees the reschedule alert
+      clientNotified: false,
       updatedAt: new Date().toISOString()
     });
 

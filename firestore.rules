@@ -40,7 +40,7 @@ service cloud.firestore {
 
     /** @description System-wide administrative records. */
     match /admins/{userId} {
-      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow read: if isSignedIn();
       allow write: if isAdmin() || (isSignedIn() && request.auth.token.email.lower() == "admin@epao.com");
     }
 
@@ -73,14 +73,11 @@ service cloud.firestore {
     }
 
     /** @description Global appointment registry.
-     * Explicitly allows list and get for all portal synchronization.
-     * Delete restricted to Admin only.
+     * Explicitly allows read (list/get) for synchronization across all portals.
+     * Creation and updates are allowed for system-wide booking flows.
      */
     match /appointments/{appointmentId} {
-      // Explicitly allow list and get to resolve permission errors in analytics
       allow read: if true; 
-      allow list: if true;
-      allow get: if true;
       allow create: if true; 
       allow update: if true; 
       allow delete: if isAdmin();
