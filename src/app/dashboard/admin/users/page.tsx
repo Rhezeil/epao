@@ -126,9 +126,15 @@ export default function AdminUsersPage() {
     return query(collection(db, "roleLawyer"));
   }, [db, currentUser, currentRole]);
 
+  const apptsRegistryQuery = useMemoFirebase(() => {
+    if (!db || !currentUser || currentRole !== 'admin') return null;
+    return query(collection(db, "appointments"));
+  }, [db, currentUser, currentRole]);
+
   const { data: users, isLoading } = useCollection(usersQuery);
   const { data: cases } = useCollection(casesQuery);
   const { data: lawyers } = useCollection(lawyersQuery);
+  const { data: allAppointments } = useCollection(apptsRegistryQuery);
 
   // Guard profile listener
   const profileRef = useMemoFirebase(() => {
@@ -382,6 +388,7 @@ export default function AdminUsersPage() {
                   {filteredUsers.map((client) => {
                     const clientCase = cases?.find(c => c.clientId === client.id);
                     const lawyer = lawyers?.find(l => l.id === clientCase?.lawyerId);
+                    const visitCount = allAppointments?.filter(a => a.clientId === client.id).length || 0;
                     
                     return (
                       <TableRow key={client.id} className="hover:bg-primary/5 transition-colors group">
@@ -424,7 +431,12 @@ export default function AdminUsersPage() {
                           {client.createdAt ? format(new Date(client.createdAt), "MMM dd, yyyy") : 'N/A'}
                         </TableCell>
                         <TableCell className="text-right px-8">
-                          <div className="flex justify-end gap-2">
+                          <div className="flex justify-end items-center gap-2">
+                            {visitCount > 0 && (
+                              <Badge variant="secondary" className="text-[9px] font-black h-6 rounded-lg px-2 shadow-sm border-none bg-secondary/10 text-secondary">
+                                {visitCount} VISITS
+                              </Badge>
+                            )}
                             <Button 
                               variant="ghost" 
                               size="icon" 

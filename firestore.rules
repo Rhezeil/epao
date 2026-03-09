@@ -77,7 +77,7 @@ service cloud.firestore {
      * Creation and updates are allowed for system-wide booking flows.
      */
     match /appointments/{appointmentId} {
-      allow read: if true; 
+      allow list, get: if true; 
       allow create: if true; 
       allow update: if true; 
       allow delete: if isAdmin();
