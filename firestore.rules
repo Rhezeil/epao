@@ -77,7 +77,10 @@ service cloud.firestore {
      * Delete restricted to Admin only.
      */
     match /appointments/{appointmentId} {
+      // Explicitly allow list and get to resolve permission errors in analytics
       allow read: if true; 
+      allow list: if true;
+      allow get: if true;
       allow create: if true; 
       allow update: if true; 
       allow delete: if isAdmin();
@@ -86,6 +89,7 @@ service cloud.firestore {
     /** @description Official legal case records handled by public attorneys. */
     match /cases/{caseId} {
       allow read: if isAdmin() || (isSignedIn() && (resource.data.lawyerId == request.auth.uid || resource.data.clientId == request.auth.uid));
+      allow list: if isAdmin() || isSignedIn();
       allow create: if isAdmin() || isLawyer();
       allow update: if isAdmin() || (isSignedIn() && resource.data.lawyerId == request.auth.uid);
       allow delete: if isAdmin();
