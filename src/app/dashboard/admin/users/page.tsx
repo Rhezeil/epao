@@ -388,7 +388,7 @@ export default function AdminUsersPage() {
                   {filteredUsers.map((client) => {
                     const clientCase = cases?.find(c => c.clientId === client.id);
                     const lawyer = lawyers?.find(l => l.id === clientCase?.lawyerId);
-                    const visitCount = allAppointments?.filter(a => a.clientId === client.id).length || 0;
+                    const visitCount = allAppointments?.filter(a => a.clientId === client.id || a.guestEmail === client.email || a.guestMobile === client.mobileNumber).length || 0;
                     
                     return (
                       <TableRow key={client.id} className="hover:bg-primary/5 transition-colors group">

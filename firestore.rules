@@ -16,7 +16,7 @@ service cloud.firestore {
     }
 
     /** 
-     * @description Hardened Admin check for both bootstrap email and database records.
+     * @description Hardened Admin check. Prioritizes bootstrap email for immediate access.
      */
     function isAdmin() {
       return isSignedIn() && (
