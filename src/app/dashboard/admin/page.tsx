@@ -425,7 +425,7 @@ export default function AdminDashboard() {
                     <p className="text-sm font-bold text-primary leading-snug">{notif.description}</p>
                     <div className="flex justify-between items-center mt-3">
                       <p className="text-[9px] font-black text-primary/40 uppercase tracking-widest">{notif.userRole}</p>
-                      {notif.referenceCode && <p className="text-[9px] font-black text-secondary">{notif.referenceCode}</p>}
+                      {notif.referenceId && <p className="text-[9px] font-black text-secondary">{notif.referenceCode || notif.referenceId.slice(0, 8)}</p>}
                     </div>
                   </div>
                 ))

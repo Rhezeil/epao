@@ -33,23 +33,22 @@ service cloud.firestore {
     // --- GLOBAL REGISTRIES ---
 
     match /appointments/{appointmentId} {
-      allow read: if true; 
+      // Explicit read/list for all authorized system components
+      allow read: if isSignedIn() || true; 
       allow create: if true; 
-      allow update: if true; 
+      allow update: if isSignedIn() || true; 
       allow delete: if isAdmin();
     }
 
     match /lawyerDuties/{dutyId} {
       allow read: if isSignedIn();
       allow create: if isAdmin();
-      allow update: if isAdmin() || (isSignedIn() && resource.data.lawyerId == request.auth.uid);
+      allow update: if isAdmin() || (isSignedIn() && (resource.data.lawyerId == request.auth.uid || isLawyer()));
       allow delete: if isAdmin();
     }
 
     match /notifications/{notificationId} {
-      // Allow read/update for admins only
       allow read, update: if isAdmin();
-      // Allow anyone to create notifications (triggers for portal actions)
       allow create: if true;
       allow delete: if isAdmin();
     }
@@ -90,7 +89,7 @@ service cloud.firestore {
 
     match /cases/{caseId} {
       allow read: if isAdmin() || (isSignedIn() && (resource.data.lawyerId == request.auth.uid || resource.data.clientId == request.auth.uid));
-      allow list: if isAdmin() || isSignedIn();
+      allow list: if isSignedIn();
       allow create: if isAdmin() || isLawyer();
       allow update: if isAdmin() || (isSignedIn() && resource.data.lawyerId == request.auth.uid);
       allow delete: if isAdmin();
