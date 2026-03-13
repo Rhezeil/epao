@@ -30,19 +30,31 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    // --- GLOBAL REGISTRIES ---
+
     match /appointments/{appointmentId} {
+      // Allow read for everyone to support public booking verification and admin triage
       allow read: if true; 
+      // Allow create for public portal and admin
       allow create: if true; 
+      // Allow update for lawyers (status changes) and clients (rescheduling)
       allow update: if true; 
+      // Only admins can purge visit records
       allow delete: if isAdmin();
     }
 
     match /lawyerDuties/{dutyId} {
+      // All staff can see duty assignments
       allow read: if isSignedIn();
+      // Only admins can allocate official duties
       allow create: if isAdmin();
+      // Admins can update, and Lawyers can acknowledge their own duties
       allow update: if isAdmin() || (isSignedIn() && resource.data.lawyerId == request.auth.uid);
+      // Only admins can delete assignments
       allow delete: if isAdmin();
     }
+
+    // --- USER PROFILES & ROLES ---
 
     match /admins/{userId} {
       allow read: if isSignedIn();
@@ -68,6 +80,8 @@ service cloud.firestore {
         allow write: if isOwner(userId) || isAdmin();
       }
     }
+
+    // --- CASE MANAGEMENT ---
 
     match /caseRequirements/{caseId} {
       allow read: if true;
