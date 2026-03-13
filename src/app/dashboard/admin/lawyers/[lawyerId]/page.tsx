@@ -30,7 +30,7 @@ import {
   History
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { format, startOfToday, isBefore, isWeekend } from "date-fns";
+import { format, startOfToday, isBefore, isWeekend, setHours, setMinutes } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -120,10 +120,45 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
 
   const handleAssignDuty = async () => {
     if (!db || !user || !selectedDate) return;
+    
+    const startParts = dutyForm.startTime.split(':');
+    const endParts = dutyForm.endTime.split(':');
+    const startH = parseInt(startParts[0]);
+    const startM = parseInt(startParts[1]);
+    const endH = parseInt(endParts[0]);
+    const endM = parseInt(endParts[1]);
+
+    // 1. Office Hours Check (8 AM - 5 PM)
+    if (startH < 8 || (endH > 17 || (endH === 17 && endM > 0))) {
+      toast({ 
+        variant: "destructive", 
+        title: "Outside Office Hours", 
+        description: "Statutory office hours are restricted to 8:00 AM - 5:00 PM." 
+      });
+      return;
+    }
+
+    // 2. Past Date/Time Check
+    const now = new Date();
+    const assignmentStart = setMinutes(setHours(new Date(selectedDate), startH), startM);
+    if (isBefore(assignmentStart, now)) {
+      toast({ 
+        variant: "destructive", 
+        title: "Invalid Timing", 
+        description: "Official assignments cannot be logged for past dates or times." 
+      });
+      return;
+    }
+
     const dateStr = format(selectedDate, "yyyy-MM-dd");
 
+    // 3. Conflict Check
     if (hasConflict(dateStr, dutyForm.startTime, dutyForm.endTime)) {
-      toast({ variant: "destructive", title: "Schedule Conflict", description: "This lawyer already has an assignment during this time slot." });
+      toast({ 
+        variant: "destructive", 
+        title: "Schedule Conflict", 
+        description: "This lawyer already has an assignment during this time slot." 
+      });
       return;
     }
 
@@ -193,7 +228,13 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
             <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
               <CardHeader className="bg-muted/30 pb-4"><CardTitle className="text-xs font-black uppercase tracking-widest text-primary/40">Select Observation Date</CardTitle></CardHeader>
               <CardContent className="p-4">
-                <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} className="mx-auto" />
+                <Calendar 
+                  mode="single" 
+                  selected={selectedDate} 
+                  onSelect={setSelectedDate} 
+                  disabled={{ before: startOfToday() }}
+                  className="mx-auto" 
+                />
               </CardContent>
             </Card>
 
@@ -270,6 +311,12 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
               <DialogDescription className="text-white/60 font-bold uppercase tracking-widest text-[10px]">Administrative Duty Allocation</DialogDescription>
             </DialogHeader>
             <div className="p-10 space-y-6 flex-1 overflow-y-auto">
+              <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-3 mb-2">
+                <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                <p className="text-[11px] text-amber-800 font-bold leading-relaxed">
+                  Reminder: Statutory office hours are 08:00 AM to 05:00 PM. Assignments must be chronological and within this window.
+                </p>
+              </div>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">Duty Category</Label>
@@ -281,8 +328,14 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">Duty Title</Label><Input value={dutyForm.title} onChange={e => setDutyForm({...dutyForm, title: e.target.value})} className="h-12 rounded-xl" placeholder="e.g. Jail Visit Unit A" /></div>
               </div>
               <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">Start Time</Label><Input type="time" value={dutyForm.startTime} onChange={e => setDutyForm({...dutyForm, startTime: e.target.value})} className="h-12 rounded-xl" /></div>
-                <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">End Time</Label><Input type="time" value={dutyForm.endTime} onChange={e => setDutyForm({...dutyForm, endTime: e.target.value})} className="h-12 rounded-xl" /></div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">Start Time (Min 08:00)</Label>
+                  <Input type="time" value={dutyForm.startTime} onChange={e => setDutyForm({...dutyForm, startTime: e.target.value})} className="h-12 rounded-xl" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">End Time (Max 17:00)</Label>
+                  <Input type="time" value={dutyForm.endTime} onChange={e => setDutyForm({...dutyForm, endTime: e.target.value})} className="h-12 rounded-xl" />
+                </div>
               </div>
               <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">Exact Location</Label><Input value={dutyForm.location} onChange={e => setDutyForm({...dutyForm, location: e.target.value})} className="h-12 rounded-xl" /></div>
               <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">Instructions / Audit Notes</Label><Textarea value={dutyForm.description} onChange={e => setDutyForm({...dutyForm, description: e.target.value})} className="rounded-2xl min-h-[100px]" placeholder="Specific instructions for the lawyer..." /></div>
