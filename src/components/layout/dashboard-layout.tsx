@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -82,7 +83,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
         { icon: ShieldCheck, label: "Client Triage", path: "/dashboard/admin/triage" },
         { icon: Users, label: "Client Directory", path: "/dashboard/admin/users" },
         { icon: History, label: "Visit Registry", path: "/dashboard/admin/appointments" },
-        { icon: Briefcase, label: "Lawyer Directory", path: "/dashboard/admin/lawyers" },
+        { icon: Briefcase, label: "Staff Management", path: "/dashboard/admin/lawyers" },
         { icon: Database, label: "Legal Standards", path: "/dashboard/admin/case-requirements" },
       ];
     }
@@ -131,10 +132,10 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
                 <SidebarMenuItem key={item.path + item.label}>
                   <SidebarMenuButton 
                     asChild
-                    isActive={pathname === item.path}
+                    isActive={pathname === item.path || pathname.startsWith(item.path + '/')}
                     className={cn(
                       "flex items-center gap-3 px-4 py-6 rounded-2xl transition-all duration-300",
-                      pathname === item.path 
+                      (pathname === item.path || pathname.startsWith(item.path + '/'))
                         ? "bg-primary text-white shadow-xl scale-[1.02]" 
                         : "text-primary hover:bg-primary/5"
                     )}
@@ -142,7 +143,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
                     <Link href={item.path}>
                       <item.icon className={cn(
                         "h-5 w-5",
-                        pathname === item.path ? "text-white" : "text-primary"
+                        (pathname === item.path || pathname.startsWith(item.path + '/')) ? "text-white" : "text-primary"
                       )} />
                       <span className="font-bold text-sm">{item.label}</span>
                     </Link>

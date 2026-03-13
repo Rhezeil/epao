@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -65,6 +66,26 @@
         "uploadDate": { "type": "string", "format": "date-time" },
         "uploadedBy": { "type": "string" }
       }
+    },
+    "LawyerDuty": {
+      "title": "LawyerDuty",
+      "description": "An administrative assignment for a lawyer (Court, Field, Prison, etc).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "lawyerId": { "type": "string" },
+        "adminId": { "type": "string" },
+        "category": { "type": "string", "enum": ["Office Work", "Field Work", "Court Work", "Prison and Jail Visits"] },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "startTime": { "type": "string" },
+        "endTime": { "type": "string" },
+        "location": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "notified": { "type": "boolean" }
+      }
     }
   },
   "auth": {
@@ -98,6 +119,10 @@
     "/cases/{caseId}/documents/{docId}": {
       "schema": "#/backend/entities/CaseDocument",
       "description": "Document metadata for case folders."
+    },
+    "/lawyerDuties/{dutyId}": {
+      "schema": "#/backend/entities/LawyerDuty",
+      "description": "Official administrative assignments registry."
     }
   }
 }
