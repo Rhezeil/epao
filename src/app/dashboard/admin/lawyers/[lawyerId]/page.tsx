@@ -264,12 +264,12 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
 
         {/* --- ASSIGN DUTY DIALOG --- */}
         <Dialog open={isAssignOpen} onOpenChange={setIsAssignOpen}>
-          <DialogContent className="rounded-[3rem] max-w-2xl p-0 overflow-hidden border-none shadow-2xl">
-            <DialogHeader className="p-8 bg-secondary text-white">
+          <DialogContent className="rounded-[3rem] max-w-2xl p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[90vh]">
+            <DialogHeader className="p-8 bg-secondary text-white shrink-0">
               <DialogTitle className="text-3xl font-black">Official Assignment</DialogTitle>
               <DialogDescription className="text-white/60 font-bold uppercase tracking-widest text-[10px]">Administrative Duty Allocation</DialogDescription>
             </DialogHeader>
-            <div className="p-10 space-y-6 max-h-[70vh] overflow-y-auto">
+            <div className="p-10 space-y-6 flex-1 overflow-y-auto">
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">Duty Category</Label>
@@ -287,7 +287,7 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
               <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">Exact Location</Label><Input value={dutyForm.location} onChange={e => setDutyForm({...dutyForm, location: e.target.value})} className="h-12 rounded-xl" /></div>
               <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">Instructions / Audit Notes</Label><Textarea value={dutyForm.description} onChange={e => setDutyForm({...dutyForm, description: e.target.value})} className="rounded-2xl min-h-[100px]" placeholder="Specific instructions for the lawyer..." /></div>
             </div>
-            <DialogFooter className="p-8 bg-muted/30 gap-3">
+            <DialogFooter className="p-8 bg-muted/30 gap-3 shrink-0">
               <Button variant="outline" onClick={() => setIsAssignOpen(false)} className="rounded-xl h-12 px-8 font-bold">Cancel</Button>
               <Button onClick={handleAssignDuty} disabled={isSubmitting} className="rounded-xl h-12 bg-secondary text-white font-black px-10 shadow-xl">
                 {isSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
