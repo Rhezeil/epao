@@ -114,6 +114,19 @@ export default function AdminTriagePage() {
         notified: false 
       });
 
+      // --- NOTIFICATION ---
+      const notifId = crypto.randomUUID();
+      setDocumentNonBlocking(doc(db, "notifications", notifId), {
+        id: notifId,
+        type: "lawyer",
+        userRole: "admin",
+        description: `Lawyer assigned to pending intake ${selectedAppt.referenceCode}.`,
+        referenceId: selectedAppt.id,
+        referenceCode: selectedAppt.referenceCode,
+        status: "unread",
+        createdAt: new Date().toISOString()
+      }, { merge: true });
+
       toast({ title: "Client Qualified", description: "Reference confirmed and lawyer assigned." });
       setSelectedAppt(null);
       setScreening({ indigency: false, merit: false, idVerified: false });
@@ -133,7 +146,6 @@ export default function AdminTriagePage() {
       let clientId = selectedAppt.clientId;
       const email = selectedAppt.guestEmail || selectedAppt.clientEmail || `${selectedAppt.guestMobile || selectedAppt.clientMobile}@epao.mobile`;
 
-      // 1. Account Activation (Unified Client Registration)
       if (!clientId) {
         try {
           const secondaryApp = initializeApp(firebaseConfig, "client-reg-" + Date.now());
@@ -143,20 +155,17 @@ export default function AdminTriagePage() {
           await deleteApp(secondaryApp);
         } catch (authError: any) {
           if (authError.code !== 'auth/email-already-in-use') {
-             // If error is something else, we might need a fallback UID
              clientId = clientId || crypto.randomUUID();
           }
         }
       }
 
-      // 2. Link initial appointment to newly created Client UID for history synchronization
       const apptRef = doc(db, "appointments", selectedAppt.id);
       updateDocumentNonBlocking(apptRef, {
         clientId: clientId,
         updatedAt: new Date().toISOString()
       });
 
-      // 3. Initialize Case Record (Synchronized with Admin/Lawyer/Client)
       const caseRef = doc(db, "cases", caseId);
       setDocumentNonBlocking(caseRef, {
         id: caseId,
@@ -169,7 +178,6 @@ export default function AdminTriagePage() {
         createdAt: new Date().toISOString()
       }, { merge: true });
 
-      // 4. Update Citizen Record (Shared User Database)
       const userRef = doc(db, "users", clientId || "");
       setDocumentNonBlocking(userRef, {
         id: clientId,
@@ -178,6 +186,19 @@ export default function AdminTriagePage() {
         fullName: selectedAppt.guestName || selectedAppt.clientName || "",
         role: "client",
         status: "Active Case",
+        createdAt: new Date().toISOString()
+      }, { merge: true });
+
+      // --- NOTIFICATION ---
+      const notifId = crypto.randomUUID();
+      setDocumentNonBlocking(doc(db, "notifications", notifId), {
+        id: notifId,
+        type: "case",
+        userRole: "admin",
+        description: `New Case ${caseId} created from intake conversion.`,
+        referenceId: caseId,
+        referenceCode: selectedAppt.referenceCode,
+        status: "unread",
         createdAt: new Date().toISOString()
       }, { merge: true });
 

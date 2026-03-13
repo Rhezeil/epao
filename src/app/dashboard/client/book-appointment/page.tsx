@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, Suspense, useMemo, useEffect } from "react";
@@ -109,25 +110,6 @@ function BookAppointmentContent() {
   }, [profile, user]);
 
   const dateStr = selectedDate ? format(selectedDate, "yyyy-MM-dd") : null;
-  
-  // Lawyer Availability Check
-  const lawyerAvailRef = useMemoFirebase(() => {
-    if (!db || !activeCase?.lawyerId || !dateStr) return null;
-    return doc(db, "roleLawyer", activeCase.lawyerId, "availability", dateStr);
-  }, [db, activeCase?.lawyerId, dateStr]);
-  const { data: lawyerAvail } = useDoc(lawyerAvailRef);
-
-  const getServiceLabel = (p: string) => {
-    switch (p) {
-      case 'follow-up': return 'Follow-up Consultation';
-      case 'consultation': return 'Legal Consultation';
-      case 'notarization': return 'Document Notarization';
-      case 'document-preparation': return 'Document Preparation';
-      case 'legal-advice': return 'Legal Advice';
-      default: return 'General Service';
-    }
-  };
-
   const existingApptsQuery = useMemoFirebase(() => {
     if (!db || !dateStr) return null;
     return query(collection(db, "appointments"), where("dateString", "==", dateStr));
@@ -138,69 +120,24 @@ function BookAppointmentContent() {
   const timeSlots = useMemo(() => {
     const slots = [];
     const now = new Date();
-
     for (let h = 8; h <= 16; h++) {
       for (let m = 0; m < 60; m += 30) {
         if (h === 12) continue;
         if (h === 16 && m > 30) continue;
-
         const ampm = h >= 12 ? 'PM' : 'AM';
         const displayHour = h % 12 || 12;
         const timeString = `${displayHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
-        
         const slotDate = selectedDate ? setMinutes(setHours(new Date(selectedDate), h), m) : null;
-        
         const isPast = slotDate ? isBefore(slotDate, now) : false;
-        
-        // Slot is specific to this lawyer
-        const isLawyerAssignedToThisSlot = existingAppts?.some(a => 
-          a.time === timeString && 
-          a.status !== 'cancelled' && 
-          a.lawyerId === activeCase?.lawyerId
-        );
-
-        // Check Lawyer Professional Availability (Leaves/Partial Hours)
-        let isLawyerUnavailable = false;
-        if (lawyerAvail) {
-          if (lawyerAvail.availabilityType === 'FullDayLeave') {
-            isLawyerUnavailable = true;
-          } else if (lawyerAvail.availabilityType.includes('Partial')) {
-            const slotTimeVal = h + m / 60;
-            const startArr = (lawyerAvail.startTime || "08:00").split(':');
-            const endArr = (lawyerAvail.endTime || "17:00").split(':');
-            const startVal = parseInt(startArr[0]) + parseInt(startArr[1]) / 60;
-            const endVal = parseInt(endArr[0]) + parseInt(endArr[1]) / 60;
-
-            if (lawyerAvail.availabilityType === 'PartialLeave') {
-              if (slotTimeVal >= startVal && slotTimeVal < endVal) isLawyerUnavailable = true;
-            } else if (lawyerAvail.availabilityType === 'PartialDayAvailable') {
-              if (slotTimeVal < startVal || slotTimeVal >= endVal) isLawyerUnavailable = true;
-            }
-          }
-        }
-        
-        slots.push({
-          time: timeString,
-          isBooked: isLawyerAssignedToThisSlot || isLawyerUnavailable,
-          isPast
-        });
+        const isLawyerAssignedToThisSlot = existingAppts?.some(a => a.time === timeString && a.status !== 'cancelled' && a.lawyerId === activeCase?.lawyerId);
+        slots.push({ time: timeString, isBooked: isLawyerAssignedToThisSlot, isPast });
       }
     }
     return slots;
-  }, [selectedDate, existingAppts, activeCase?.lawyerId, lawyerAvail]);
-
-  const validateStep2 = () => {
-    const { name, mobile, email, address } = clientInfo;
-    if (!name || !mobile || !email || !address) {
-      toast({ variant: "destructive", title: "Missing Information", description: "All contact details are required for the official record." });
-      return false;
-    }
-    return true;
-  };
+  }, [selectedDate, existingAppts, activeCase?.lawyerId]);
 
   const handleBooking = async () => {
     if (!selectedDate || !selectedTime || !user || !db) return;
-
     setIsSubmitting(true);
     const refCode = `PAO-${Math.floor(100000 + Math.random() * 900000)}`;
     const appointmentId = crypto.randomUUID();
@@ -214,7 +151,7 @@ function BookAppointmentContent() {
       caseCategory: categoryParam,
       caseType: caseTypeParam,
       purpose: purpose,
-      serviceType: getServiceLabel(purpose),
+      serviceType: "Follow-up Consultation",
       clientName: clientInfo.name,
       clientMobile: clientInfo.mobile,
       clientEmail: clientInfo.email,
@@ -227,6 +164,19 @@ function BookAppointmentContent() {
     };
 
     setDocumentNonBlocking(apptRef, appointmentData, { merge: true });
+
+    // --- NOTIFICATION ---
+    const notifId = crypto.randomUUID();
+    setDocumentNonBlocking(doc(db, "notifications", notifId), {
+      id: notifId,
+      type: "appointment",
+      userRole: "client",
+      description: `Client ${clientInfo.name} booked a follow-up consultation for ${format(selectedDate, "MMM dd")} @ ${selectedTime}.`,
+      referenceId: appointmentId,
+      referenceCode: refCode,
+      status: "unread",
+      createdAt: new Date().toISOString()
+    }, { merge: true });
     
     setTimeout(() => {
       setBookedRef(refCode);
@@ -240,22 +190,10 @@ function BookAppointmentContent() {
       <DashboardLayout role={role}>
         <div className="max-w-xl mx-auto py-12">
           <Card className="border-none shadow-2xl bg-white text-center p-8 space-y-6 rounded-[2.5rem]">
-            <div className="flex justify-center">
-              <div className="p-4 bg-primary text-white rounded-full animate-pulse shadow-xl">
-                <CheckCircle className="h-12 w-12" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-3xl font-black text-primary font-headline">Visit Confirmed</h2>
-              <p className="text-muted-foreground font-medium">Your follow-up session has been successfully added to the schedule.</p>
-            </div>
-            <div className="bg-primary/5 p-6 rounded-3xl space-y-2 border-2 border-dashed border-primary/20">
-              <p className="text-[10px] font-black text-primary uppercase tracking-widest">Confirmation Code</p>
-              <p className="text-4xl font-black text-primary tracking-tighter">{bookedRef}</p>
-            </div>
-            <Button className="w-full h-12 rounded-2xl font-bold bg-primary hover:bg-[#1A3B6B] text-white shadow-lg" onClick={() => router.push("/dashboard/client")}>
-              Return to Dashboard
-            </Button>
+            <div className="flex justify-center"><div className="p-4 bg-primary text-white rounded-full animate-pulse shadow-xl"><CheckCircle className="h-12 w-12" /></div></div>
+            <div className="space-y-2"><h2 className="text-3xl font-black text-primary font-headline">Visit Confirmed</h2><p className="text-muted-foreground font-medium">Your follow-up session has been added.</p></div>
+            <div className="bg-primary/5 p-6 rounded-3xl space-y-2 border-2 border-dashed border-primary/20"><p className="text-[10px] font-black text-primary uppercase tracking-widest">Confirmation Code</p><p className="text-4xl font-black text-primary tracking-tighter">{bookedRef}</p></div>
+            <Button className="w-full h-12 rounded-2xl font-bold bg-primary hover:bg-[#1A3B6B] text-white" onClick={() => router.push("/dashboard/client")}>Return to Dashboard</Button>
           </Card>
         </div>
       </DashboardLayout>
@@ -265,21 +203,7 @@ function BookAppointmentContent() {
   return (
     <DashboardLayout role={role}>
       <div className="max-w-6xl mx-auto space-y-8 px-4">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Schedule Follow-up</h1>
-          {assignedLawyer && (
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-              <p className="text-sm font-bold text-secondary flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4" /> 
-                Booking with Atty. {assignedLawyer.firstName} {assignedLawyer.lastName}
-              </p>
-              {lawyerAvail && lawyerAvail.availabilityType.includes('Leave') && (
-                <Badge className="bg-red-100 text-red-700 text-[10px] font-black uppercase w-fit">Lawyer On Leave</Badge>
-              )}
-            </div>
-          )}
-        </div>
-
+        <div className="space-y-2"><h1 className="text-3xl font-black text-primary font-headline tracking-tight">Schedule Follow-up</h1></div>
         <Card className="border-none shadow-xl bg-white/80 backdrop-blur-md rounded-[2.5rem] overflow-hidden">
           <CardContent className="p-10">
             {step === 1 && (
@@ -287,210 +211,39 @@ function BookAppointmentContent() {
                 <div className="space-y-6">
                   <div className="space-y-4">
                     <Label className="text-xs font-black text-primary/60 uppercase tracking-widest">1. Preferred Date</Label>
-                    <div className="p-4 bg-white rounded-3xl border border-primary/10 shadow-sm">
-                      <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={(date) => {
-                          if (date && (isWeekend(date) || isHoliday(date) || isBefore(date, startOfToday()))) return;
-                          setSelectedDate(date);
-                          setSelectedTime("");
-                        }}
-                        disabled={[
-                          { before: startOfToday() },
-                          { dayOfWeek: [0, 6] },
-                          (date) => isHoliday(date)
-                        ]}
-                        className="w-full rounded-md border-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="p-6 bg-primary/5 rounded-3xl border-2 border-dashed border-primary/10">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Info className="h-5 w-5 text-primary" />
-                      <p className="text-xs font-black text-primary uppercase tracking-widest">Automatic Intent</p>
-                    </div>
-                    <p className="text-sm text-[#2E5A99] font-bold">
-                      Classified as <span className="text-secondary">Follow-up Consultation</span> for active legal cases.
-                    </p>
+                    <div className="p-4 bg-white rounded-3xl border border-primary/10 shadow-sm"><Calendar mode="single" selected={selectedDate} onSelect={(date) => { if (date && !isWeekend(date) && !isHoliday(date) && !isBefore(date, startOfToday())) { setSelectedDate(date); setSelectedTime(""); } }} disabled={[{ before: startOfToday() }, { dayOfWeek: [0, 6] }, (date) => isHoliday(date)]} className="w-full rounded-md border-none" /></div>
                   </div>
                 </div>
-
                 <div className="space-y-6">
                   <div className="space-y-4">
-                    <div className="flex justify-between items-end">
-                      <Label className="text-xs font-black text-primary/60 uppercase tracking-widest">2. Lawyer Availability Slots</Label>
-                      <div className="flex gap-2 text-[8px] font-bold uppercase">
-                        <span className="flex items-center gap-1"><div className="w-2 h-2 bg-green-500 rounded-full" /> Open</span>
-                        <span className="flex items-center gap-1"><div className="w-2 h-2 bg-red-500 rounded-full" /> Unavailable</span>
-                      </div>
-                    </div>
-                    
-                    {!selectedDate ? (
-                      <div className="h-[300px] flex flex-col items-center justify-center text-muted-foreground bg-primary/5 rounded-3xl border border-dashed">
-                        <Clock className="h-10 w-10 mb-2 opacity-20" />
-                        <p className="text-sm font-bold text-center">Select a date to view your lawyer's schedule.</p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-2 gap-2 max-h-[350px] overflow-y-auto p-2 scrollbar-hide">
-                        {timeSlots.map(slot => (
-                          <Button
-                            key={slot.time}
-                            disabled={slot.isBooked || slot.isPast}
-                            variant={selectedTime === slot.time ? "default" : "outline"}
-                            className={cn(
-                              "h-12 rounded-xl font-bold transition-all border-2",
-                              selectedTime === slot.time 
-                                ? "bg-yellow-400 text-black border-yellow-500" 
-                                : slot.isBooked || slot.isPast
-                                ? "bg-red-50 text-red-300 border-red-100 opacity-50 cursor-not-allowed" 
-                                : "bg-green-500 text-white border-green-600 hover:bg-green-600 shadow-sm"
-                            )}
-                            onClick={() => setSelectedTime(slot.time)}
-                          >
-                            {slot.time}
-                          </Button>
-                        ))}
-                      </div>
-                    )}
+                    <Label className="text-xs font-black text-primary/60 uppercase tracking-widest">2. Available Slots</Label>
+                    {selectedDate ? (
+                      <div className="grid grid-cols-2 gap-2 max-h-[350px] overflow-y-auto pr-2">{timeSlots.map(slot => (<Button key={slot.time} disabled={slot.isBooked || slot.isPast} variant={selectedTime === slot.time ? "default" : "outline"} className={cn("h-12 rounded-xl font-bold", selectedTime === slot.time ? "bg-yellow-400 text-black" : "bg-green-500 text-white")} onClick={() => setSelectedTime(slot.time)}>{slot.time}</Button>))}</div>
+                    ) : <div className="h-[300px] flex items-center justify-center text-muted-foreground bg-primary/5 rounded-3xl border-dashed">Pick a date first</div>}
                   </div>
-
-                  <Button 
-                    className="w-full h-16 bg-primary hover:bg-[#1A3B6B] text-white text-lg font-black rounded-2xl shadow-lg"
-                    disabled={!selectedDate || !selectedTime}
-                    onClick={() => setStep(2)}
-                  >
-                    Confirm Contact Details <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
+                  <Button className="w-full h-16 bg-primary text-white text-lg font-black rounded-2xl" disabled={!selectedDate || !selectedTime} onClick={() => setStep(2)}>Confirm Contact Info <ArrowRight className="ml-2 h-5 w-5" /></Button>
                 </div>
               </div>
             )}
-
             {step === 2 && (
-              <div className="max-w-3xl mx-auto space-y-8 animate-in slide-in-from-right-8 duration-500">
-                <div className="space-y-1">
-                  <h3 className="text-xl font-bold text-primary">Confirm Contact Information</h3>
-                  <p className="text-sm text-muted-foreground">Verify your records for this specific visit.</p>
-                </div>
-
+              <div className="max-w-3xl mx-auto space-y-8">
+                <div className="space-y-1"><h3 className="text-xl font-bold text-primary">Confirm Contact Details</h3></div>
                 <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-black text-primary/60 uppercase tracking-widest">Full Name</Label>
-                    <Input 
-                      className="h-14 rounded-2xl border-primary/20 bg-white font-bold"
-                      value={clientInfo.name}
-                      onChange={(e) => setClientInfo({...clientInfo, name: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-black text-primary/60 uppercase tracking-widest">Mobile Number</Label>
-                    <Input 
-                      className="h-14 rounded-2xl border-primary/20 bg-white font-bold"
-                      value={clientInfo.mobile}
-                      onChange={(e) => setClientInfo({...clientInfo, mobile: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <Label className="text-xs font-black text-primary/60 uppercase tracking-widest">Email Address</Label>
-                    <Input 
-                      disabled
-                      className="h-14 rounded-2xl border-primary/20 bg-muted/50 font-bold text-muted-foreground"
-                      value={clientInfo.email}
-                    />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <Label className="text-xs font-black text-primary/60 uppercase tracking-widest">Home Address</Label>
-                    <Textarea 
-                      className="min-h-[100px] rounded-2xl border-primary/20 bg-white font-bold pt-4"
-                      value={clientInfo.address}
-                      onChange={(e) => setClientInfo({...clientInfo, address: e.target.value})}
-                    />
-                  </div>
+                  <div className="space-y-2"><Label className="text-xs font-black uppercase text-primary/60">Full Name</Label><Input className="h-14 rounded-2xl" value={clientInfo.name} onChange={(e) => setClientInfo({...clientInfo, name: e.target.value})} /></div>
+                  <div className="space-y-2"><Label className="text-xs font-black uppercase text-primary/60">Mobile</Label><Input className="h-14 rounded-2xl" value={clientInfo.mobile} onChange={(e) => setClientInfo({...clientInfo, mobile: e.target.value})} /></div>
+                  <div className="md:col-span-2 space-y-2"><Label className="text-xs font-black uppercase text-primary/60">Address</Label><Textarea className="min-h-[100px] rounded-2xl" value={clientInfo.address} onChange={(e) => setClientInfo({...clientInfo, address: e.target.value})} /></div>
                 </div>
-
-                <div className="flex gap-4 pt-4">
-                  <Button variant="outline" className="h-14 px-8 rounded-2xl font-bold border-2" onClick={() => setStep(1)}>
-                    <ChevronLeft className="mr-2 h-4 w-4" /> Schedule
-                  </Button>
-                  <Button 
-                    className="flex-1 h-14 rounded-2xl text-lg font-black bg-primary text-white shadow-xl"
-                    onClick={() => {
-                      if (validateStep2()) setStep(3);
-                    }}
-                  >
-                    Review & Finalize <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </div>
+                <div className="flex gap-4"><Button variant="outline" className="h-14 px-8 rounded-2xl" onClick={() => setStep(1)}>Back</Button><Button className="flex-1 h-14 rounded-2xl bg-primary text-white font-black" onClick={() => setStep(3)}>Review & Finalize <ArrowRight className="ml-2 h-5 w-5" /></Button></div>
               </div>
             )}
-
             {step === 3 && (
-              <div className="max-w-3xl mx-auto space-y-8 animate-in zoom-in-95 duration-500">
-                <div className="text-center space-y-2">
-                  <ShieldCheck className="h-12 w-12 text-primary mx-auto" />
-                  <h3 className="text-2xl font-black text-primary font-headline">Review Final Booking</h3>
-                  <p className="text-muted-foreground font-medium">Please ensure all details are correct for your official follow-up record.</p>
+              <div className="max-w-3xl mx-auto space-y-8 text-center">
+                <ShieldCheck className="h-12 w-12 text-primary mx-auto" /><h3 className="text-2xl font-black text-primary">Review Final Booking</h3>
+                <div className="grid gap-6 text-left">
+                  <div className="p-6 bg-primary/5 rounded-[2rem] border border-primary/10"><p className="font-bold text-primary">{clientInfo.name}</p><p className="text-sm text-primary/60">{clientInfo.mobile}</p></div>
+                  <div className="p-6 bg-secondary/5 rounded-[2rem] border border-secondary/10"><p className="font-bold text-secondary">{selectedDate ? format(selectedDate, "PPPP") : ""} @ {selectedTime}</p></div>
                 </div>
-
-                <div className="grid gap-6">
-                  <div className="p-6 bg-primary/5 rounded-[2rem] border border-primary/10">
-                    <h4 className="text-[10px] font-black uppercase text-primary tracking-widest mb-4">Client Registry Data</h4>
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Full Name</p>
-                        <p className="font-bold text-primary">{clientInfo.name}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Mobile</p>
-                        <p className="font-bold text-primary">{clientInfo.mobile}</p>
-                      </div>
-                      <div className="space-y-1 md:col-span-2">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Email</p>
-                        <p className="font-bold text-primary">{clientInfo.email}</p>
-                      </div>
-                      <div className="space-y-1 md:col-span-2">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Home Address</p>
-                        <p className="font-bold text-primary">{clientInfo.address}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-6 bg-secondary/5 rounded-[2rem] border border-secondary/10">
-                    <h4 className="text-[10px] font-black uppercase text-secondary tracking-widest mb-4">Appointment Schedule</h4>
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Date</p>
-                        <p className="font-bold text-secondary">{selectedDate ? format(selectedDate, "PPPP") : ""}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Time</p>
-                        <p className="font-bold text-secondary">{selectedTime}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Service</p>
-                        <p className="font-bold text-secondary">{getServiceLabel(purpose)}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Attorney</p>
-                        <p className="font-bold text-secondary">{assignedLawyer ? `Atty. ${assignedLawyer.firstName} ${assignedLawyer.lastName}` : "Pending Assignment"}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-4 pt-4">
-                  <Button variant="outline" className="h-14 px-8 rounded-2xl font-bold border-2 border-primary text-primary" onClick={() => setStep(2)}>
-                    <Edit3 className="mr-2 h-4 w-4" /> Edit Details
-                  </Button>
-                  <Button 
-                    className="flex-1 h-14 rounded-2xl text-lg font-black bg-primary text-white shadow-xl"
-                    disabled={isSubmitting}
-                    onClick={handleBooking}
-                  >
-                    {isSubmitting ? <Loader2 className="animate-spin h-6 w-6" /> : "Confirm Follow-up"}
-                  </Button>
-                </div>
+                <Button className="w-full h-14 bg-primary text-white font-black rounded-2xl" disabled={isSubmitting} onClick={handleBooking}>Confirm Follow-up</Button>
               </div>
             )}
           </CardContent>
@@ -502,7 +255,7 @@ function BookAppointmentContent() {
 
 export default function BookAppointmentPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen text-primary font-black animate-pulse">Initializing Scheduler...</div>}>
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading Scheduler...</div>}>
       <BookAppointmentContent />
     </Suspense>
   );

@@ -92,18 +92,6 @@ export default function LawyerDashboard() {
   // Reschedule Logic
   const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
   const [selectedApptToReschedule, setSelectedApptToReschedule] = useState<any>(null);
-  const [rescheduleReason, setRescheduleReason] = useState({
-    category: Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0],
-    reason: OFFICIAL_LEAVE_CATEGORIES[Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0] as keyof typeof OFFICIAL_LEAVE_CATEGORIES][0]
-  });
-
-  // Cancellation Logic
-  const [isCancelOpen, setIsCancelOpen] = useState(false);
-  const [selectedApptToCancel, setSelectedApptToCancel] = useState<any>(null);
-  const [cancelReason, setCancelReason] = useState({
-    category: Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0],
-    reason: OFFICIAL_LEAVE_CATEGORIES[Object.keys(OFFICIAL_LEAVE_CATEGORIES)[0] as keyof typeof OFFICIAL_LEAVE_CATEGORIES][0]
-  });
   
   // Availability Form State
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -203,12 +191,27 @@ export default function LawyerDashboard() {
   // Handlers
   const updateStatus = (apptId: string, status: string) => {
     if (!db) return;
+    const appt = apptsData?.find(a => a.id === apptId);
     updateDocumentNonBlocking(doc(db, "appointments", apptId), { 
       status, 
       notified: true,
       clientNotified: false,
       updatedAt: new Date().toISOString()
     });
+
+    // --- NOTIFICATION ---
+    const notifId = crypto.randomUUID();
+    setDocumentNonBlocking(doc(db, "notifications", notifId), {
+      id: notifId,
+      type: "appointment",
+      userRole: "lawyer",
+      description: `Lawyer marked appointment ${appt?.referenceCode} as ${status}.`,
+      referenceId: apptId,
+      referenceCode: appt?.referenceCode,
+      status: "unread",
+      createdAt: new Date().toISOString()
+    }, { merge: true });
+
     toast({ title: `Status Updated`, description: `Marked as ${status}.` });
   };
 
@@ -236,6 +239,18 @@ export default function LawyerDashboard() {
         updatedAt: new Date().toISOString()
       }, { merge: true });
     });
+
+    // --- NOTIFICATION ---
+    const notifId = crypto.randomUUID();
+    setDocumentNonBlocking(doc(db, "notifications", notifId), {
+      id: notifId,
+      type: "lawyer",
+      userRole: "lawyer",
+      description: `Atty. ${lawyerData?.lastName} updated availability to ${availForm.type}.`,
+      status: "unread",
+      createdAt: new Date().toISOString()
+    }, { merge: true });
+
     setIsAvailabilityOpen(false);
     toast({ title: "Schedule Updated", description: "Availability synchronized." });
   };

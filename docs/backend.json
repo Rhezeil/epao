@@ -86,6 +86,21 @@
         "createdAt": { "type": "string", "format": "date-time" },
         "notified": { "type": "boolean" }
       }
+    },
+    "SystemNotification": {
+      "title": "SystemNotification",
+      "description": "A system-wide event alert for administrative tracking.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["appointment", "case", "lawyer", "client", "system"] },
+        "userRole": { "type": "string", "enum": ["guest", "client", "lawyer", "admin"] },
+        "description": { "type": "string" },
+        "referenceId": { "type": "string" },
+        "referenceCode": { "type": "string" },
+        "status": { "type": "string", "enum": ["unread", "read"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "auth": {
@@ -123,6 +138,10 @@
     "/lawyerDuties/{dutyId}": {
       "schema": "#/backend/entities/LawyerDuty",
       "description": "Official administrative assignments registry."
+    },
+    "/notifications/{notificationId}": {
+      "schema": "#/backend/entities/SystemNotification",
+      "description": "Centralized system audit and activity notifications."
     }
   }
 }

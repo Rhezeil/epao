@@ -6,7 +6,7 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc, setDocumentNonBlocking } from "@/firebase";
 import { collection, query, where, doc, getDoc, DocumentData } from "firebase/firestore";
 import { Search, Calendar as CalendarIcon, XCircle, Loader2, CheckCircle2, AlertCircle, Lock, ShieldCheck, User, Clock, Edit3, ChevronRight, ArrowRight, ShieldAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -191,7 +191,21 @@ export default function ManageAppointmentPage() {
     if (!db || !appointment) return;
     setIsCancelling(true);
     const apptRef = doc(db, "appointments", appointment.id);
-    updateDocumentNonBlocking(apptRef, { status: "cancelled" });
+    updateDocumentNonBlocking(apptRef, { status: "cancelled", updatedAt: new Date().toISOString() });
+
+    // --- NOTIFICATION ---
+    const notifId = crypto.randomUUID();
+    setDocumentNonBlocking(doc(db, "notifications", notifId), {
+      id: notifId,
+      type: "appointment",
+      userRole: "guest",
+      description: `Appointment ${appointment.referenceCode} cancelled by guest user.`,
+      referenceId: appointment.id,
+      referenceCode: appointment.referenceCode,
+      status: "unread",
+      createdAt: new Date().toISOString()
+    }, { merge: true });
+
     setTimeout(() => {
       setIsCancelling(false);
       setIsOtpOpen(false);
@@ -207,8 +221,23 @@ export default function ManageAppointmentPage() {
       date: rescheduleDate.toISOString(),
       dateString: format(rescheduleDate, "yyyy-MM-dd"),
       time: rescheduleTime,
-      status: "rescheduled"
+      status: "rescheduled",
+      updatedAt: new Date().toISOString()
     });
+
+    // --- NOTIFICATION ---
+    const notifId = crypto.randomUUID();
+    setDocumentNonBlocking(doc(db, "notifications", notifId), {
+      id: notifId,
+      type: "appointment",
+      userRole: "guest",
+      description: `Appointment ${appointment.referenceCode} rescheduled by guest to ${format(rescheduleDate, "MMM dd")} @ ${rescheduleTime}.`,
+      referenceId: appointment.id,
+      referenceCode: appointment.referenceCode,
+      status: "unread",
+      createdAt: new Date().toISOString()
+    }, { merge: true });
+
     setTimeout(() => {
       setIsRescheduling(false);
       setIsRescheduleOpen(false);
@@ -356,9 +385,9 @@ export default function ManageAppointmentPage() {
                 <CardHeader className="p-8 bg-white/10 border-b border-white/5">
                   <CardTitle className="text-sm font-black uppercase tracking-widest">Lawyer Registry</CardTitle>
                 </CardHeader>
-                <CardContent className="p-10 space-y-6">
+                <CardContent className="p-10 space-y-6 text-center">
                   {assignedLawyer ? (
-                    <div className="space-y-6 text-center">
+                    <div className="space-y-6">
                       <div className="flex justify-center">
                         <div className="h-24 w-24 rounded-full bg-white/20 border-4 border-white/30 flex items-center justify-center shadow-inner relative">
                           <User className="h-12 w-12 text-white" />
@@ -379,7 +408,7 @@ export default function ManageAppointmentPage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="text-center py-8 space-y-4">
+                    <div className="space-y-4">
                       <div className="h-16 w-16 bg-white/5 rounded-full flex items-center justify-center mx-auto">
                         <Loader2 className="h-8 w-8 text-white/20 animate-spin" />
                       </div>

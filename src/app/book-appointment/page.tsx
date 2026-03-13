@@ -184,6 +184,19 @@ function BookAppointmentContent() {
 
     setDocumentNonBlocking(apptRef, data, { merge: true });
 
+    // --- NOTIFICATION ---
+    const notifId = crypto.randomUUID();
+    setDocumentNonBlocking(doc(db, "notifications", notifId), {
+      id: notifId,
+      type: "appointment",
+      userRole: "guest",
+      description: `New consultation appointment booked by ${guestInfo.name} for ${format(selectedDate, "MMM dd")} @ ${selectedTime}.`,
+      referenceId: id,
+      referenceCode: code,
+      status: "unread",
+      createdAt: new Date().toISOString()
+    }, { merge: true });
+
     setTimeout(() => {
       setRefCode(code);
       setStep(5);

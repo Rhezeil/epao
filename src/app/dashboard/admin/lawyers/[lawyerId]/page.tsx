@@ -107,7 +107,6 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
     const startVal = parseInt(start.replace(':', ''));
     const endVal = parseInt(end.replace(':', ''));
 
-    // Check existing duties
     const conflictDuty = duties?.find(d => {
       if (!d.date.startsWith(date)) return false;
       const dStart = parseInt(d.startTime.replace(':', ''));
@@ -128,37 +127,22 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
     const endH = parseInt(endParts[0]);
     const endM = parseInt(endParts[1]);
 
-    // 1. Office Hours Check (8 AM - 5 PM)
     if (startH < 8 || (endH > 17 || (endH === 17 && endM > 0))) {
-      toast({ 
-        variant: "destructive", 
-        title: "Outside Office Hours", 
-        description: "Statutory office hours are restricted to 8:00 AM - 5:00 PM." 
-      });
+      toast({ variant: "destructive", title: "Outside Office Hours", description: "Statutory office hours are restricted to 8:00 AM - 5:00 PM." });
       return;
     }
 
-    // 2. Past Date/Time Check
     const now = new Date();
     const assignmentStart = setMinutes(setHours(new Date(selectedDate), startH), startM);
     if (isBefore(assignmentStart, now)) {
-      toast({ 
-        variant: "destructive", 
-        title: "Invalid Timing", 
-        description: "Official assignments cannot be logged for past dates or times." 
-      });
+      toast({ variant: "destructive", title: "Invalid Timing", description: "Official assignments cannot be logged for past dates or times." });
       return;
     }
 
     const dateStr = format(selectedDate, "yyyy-MM-dd");
 
-    // 3. Conflict Check
     if (hasConflict(dateStr, dutyForm.startTime, dutyForm.endTime)) {
-      toast({ 
-        variant: "destructive", 
-        title: "Schedule Conflict", 
-        description: "This lawyer already has an assignment during this time slot." 
-      });
+      toast({ variant: "destructive", title: "Schedule Conflict", description: "This lawyer already has an assignment during this time slot." });
       return;
     }
 
@@ -183,6 +167,18 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
     };
 
     setDocumentNonBlocking(dutyRef, data, { merge: true });
+
+    // --- NOTIFICATION ---
+    const notifId = crypto.randomUUID();
+    setDocumentNonBlocking(doc(db, "notifications", notifId), {
+      id: notifId,
+      type: "lawyer",
+      userRole: "admin",
+      description: `New duty assignment (${dutyForm.category}) created for Atty. ${lawyer?.lastName}.`,
+      referenceId: dutyId,
+      status: "unread",
+      createdAt: new Date().toISOString()
+    }, { merge: true });
     
     setTimeout(() => {
       setIsSubmitting(false);
