@@ -173,6 +173,34 @@ export default function AdminDashboard() {
     setDeepAnalysis({ isOpen: true, title: `Analysis: ${data.label || data.name || 'Segment'}`, data: data, type: type });
   };
 
+  const getInsight = (type: string, data: any) => {
+    const val = data?.count || data?.value || 0;
+    const name = data?.name || data?.label || "this segment";
+
+    if (type === 'demand') {
+      if (val > 10) return `Significant intake volume detected for ${name}. Administrative oversight should ensure that triage processing times remain within target KPIs to avoid backlogs.`;
+      if (val > 0) return `Stable demand for ${name}. Current resources are well-aligned with the intake rate. No structural shifts required at this time.`;
+      return `Zero intake recorded for ${name}. This may indicate a reporting delay or a temporary shift in public demand for legal assistance in this specific period.`;
+    }
+
+    if (type === 'category') {
+      const total = cases?.length || 1;
+      const ratio = val / total;
+      if (ratio > 0.3) return `${name} represents a major pillar of the office's active caseload. Staffing allocations should prioritize attorneys with expertise in this jurisdiction to ensure high-quality representation.`;
+      if (val > 0) return `${name} maintains a steady volume within the system. Current standardized templates are sufficient for handling this load without additional specialization.`;
+      return `${name} has no active cases. Consider reviewing if this jurisdiction requires better public awareness or if it reflects current community legal trends.`;
+    }
+
+    if (type === 'appointment') {
+      if (name === 'Completed') return "Operational efficiency is optimal. High completion rates reflect successful coordination between the office and the citizens.";
+      if (name === 'Cancelled') return "Elevated cancellation rate detected. Reviewing the automated notification logs is recommended to identify potential communication gaps before the visit date.";
+      if (name === 'Pending') return "The triage queue is active. Ensuring that the admin team reviews these within 24 hours will maintain the system's reputation for responsive public service.";
+      return `Current status distribution for ${name} is consistent with historical patterns. Monitor for any sudden deviations in weekly logs.`;
+    }
+
+    return "System-wide resource consumption for this segment remains consistent. No immediate realignment required.";
+  };
+
   const performanceRangeStart = useMemo(() => {
     const now = new Date();
     if (performanceRange === "day") return startOfToday();
@@ -429,7 +457,12 @@ export default function AdminDashboard() {
               </div>
             </div>
             <div className="bg-primary/5 p-6 rounded-[2rem] border-2 border-dashed border-primary/10">
-              <p className="text-xs font-medium text-primary/70 leading-relaxed italic">"System-wide resource consumption for this segment remains consistent. No immediate realignment required."</p>
+              <p className="text-sm font-bold text-primary mb-2 flex items-center gap-2">
+                <Lightbulb className="h-4 w-4" /> Administrative Insight:
+              </p>
+              <p className="text-xs font-medium text-primary/70 leading-relaxed italic">
+                "{getInsight(deepAnalysis.type, deepAnalysis.data)}"
+              </p>
             </div>
           </div>
           <DialogFooter className="p-8 bg-muted/30 shrink-0">
