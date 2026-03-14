@@ -80,7 +80,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
     if (role === "admin") {
       return [
         { icon: LayoutDashboard, label: "System Analytics", path: "/dashboard/admin" },
-        { icon: ShieldCheck, label: "Eligibility Screening", path: "/dashboard/admin/triage" },
+        { icon: ShieldCheck, label: "Intake Assessment", path: "/dashboard/admin/triage" },
         { icon: Users, label: "Client Directory", path: "/dashboard/admin/users" },
         { icon: History, label: "Visit Registry", path: "/dashboard/admin/appointments" },
         { icon: Briefcase, label: "Staff Management", path: "/dashboard/admin/lawyers" },

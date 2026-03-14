@@ -300,7 +300,7 @@ export default function AdminIntakeAssessmentPage() {
                   <TableHeader className="bg-muted/30">
                     <TableRow>
                       <TableHead className="px-8 font-black text-[10px] uppercase tracking-widest text-primary/40">Filing Ref</TableHead>
-                      <TableHead className="text-[10px) font-black uppercase tracking-widest text-primary/40">Applicant Name</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Applicant Name</TableHead>
                       <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Intake Category</TableHead>
                       <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Action</TableHead>
                     </TableRow>
@@ -372,7 +372,7 @@ export default function AdminIntakeAssessmentPage() {
           </TabsContent>
 
           <TabsContent value="accepted" className="mt-8">
-            <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
+            <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
               <CardHeader className="bg-primary/5 border-b border-primary/10 p-8">
                 <CardTitle className="text-xl font-bold text-primary flex items-center gap-2">
                   <Scale className="h-6 w-6" /> Accepted Consultations - Pending Activation
@@ -429,7 +429,7 @@ export default function AdminIntakeAssessmentPage() {
             </DialogHeader>
             <div className="p-10 space-y-8 flex-1 overflow-y-auto">
               <div className="p-6 bg-primary/5 rounded-[2rem] border-2 border-dashed border-primary/10 space-y-4">
-                <div className="flex items-center gap-2 mb-2"><ClipboardCheck className="h-4 w-4 text-primary" /><span className="text-[10px] font-black uppercase tracking-widest">Mandatory Criteria Checklist</span></div>
+                <div className="flex items-center gap-2 mb-2"><ClipboardCheck className="h-4 w-4 text-primary" /><span className="text-[10px] font-black uppercase tracking-widest">Assessment Criteria Checklist</span></div>
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3 bg-white p-3 rounded-xl border">
                     <Checkbox id="ind" checked={screening.indigency} onCheckedChange={c => setScreening({...screening, indigency: !!c})} />
@@ -537,7 +537,7 @@ export default function AdminIntakeAssessmentPage() {
             <DialogFooter className="p-8 bg-muted/30 flex gap-4">
               <Button variant="outline" onClick={() => setSelectedAppt(null)} className="flex-1 h-12 rounded-xl font-bold">Cancel</Button>
               <Button 
-                onClick={handleStartConsultation} 
+                onClick={() => handleStartConsultation()} 
                 disabled={!assignedLawyer || isProcessing} 
                 className="flex-1 h-12 rounded-xl font-black text-white shadow-lg bg-secondary"
               >

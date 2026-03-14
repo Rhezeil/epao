@@ -283,7 +283,7 @@ export default function LawyerDashboard() {
                         </div>
                         <div className="space-y-1 min-w-0 flex-1">
                           <div className="flex flex-row items-center gap-2">
-                            <h3 className="text-xl font-black text-secondary truncate break-words whitespace-normal">{appt.guestName || appt.clientName}</h3>
+                            <h3 className="text-xl font-black text-secondary truncate break-words whitespace-normal leading-tight">{appt.guestName || appt.clientName}</h3>
                             <Badge className="bg-red-500 text-white text-[8px] font-black uppercase px-2 py-0.5 border-none shrink-0">
                               IN PROGRESS
                             </Badge>
@@ -318,7 +318,7 @@ export default function LawyerDashboard() {
             <div className="space-y-4">
               <div className="flex items-center gap-2 px-1 text-primary">
                 <Scale className="h-5 w-5" />
-                <h2 className="text-sm font-black uppercase tracking-widest">Pending Case Activation ({filterAcceptedPendingActivation.length})</h2>
+                <h2 className="text-sm font-black uppercase tracking-widest">Accepted - Pending Case Activation ({filterAcceptedPendingActivation.length})</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {filterAcceptedPendingActivation.map(appt => (
@@ -330,17 +330,19 @@ export default function LawyerDashboard() {
                         </div>
                         <div className="space-y-1 min-w-0 flex-1">
                           <div className="flex flex-row items-center gap-2">
-                            <h3 className="text-xl font-black text-primary truncate break-words whitespace-normal">{appt.guestName || appt.clientName}</h3>
+                            <h3 className="text-xl font-black text-primary truncate break-words whitespace-normal leading-tight">{appt.guestName || appt.clientName}</h3>
                             <Badge className="bg-primary text-white text-[8px] font-black uppercase px-2 py-0.5 border-none shrink-0">
-                              ACCEPTED
+                              ACCEPTED - READY FOR FILING
                             </Badge>
                           </div>
                           <div className="flex flex-col">
                             <Badge variant="outline" className="text-[9px] uppercase border-primary/10 bg-primary/5 text-primary w-fit">
                               {appt.serviceType || appt.purpose || appt.caseType}
                             </Badge>
-                            {appt.caseType && appt.caseType !== (appt.serviceType || appt.purpose) && (
-                              <span className="text-[8px] text-muted-foreground font-bold mt-1 uppercase truncate">{appt.caseType}</span>
+                            {appt.outcome && (
+                              <p className="text-[9px] text-muted-foreground font-bold mt-1 italic leading-tight">
+                                Outcome: {appt.outcome}
+                              </p>
                             )}
                           </div>
                         </div>
@@ -401,7 +403,7 @@ export default function LawyerDashboard() {
                         <div>
                           <div className="flex items-center gap-2">
                             <h4 className="text-lg font-black text-secondary">{item.type === 'appt' ? (item.data.guestName || item.data.clientName) : item.data.title}</h4>
-                            <Badge variant="outline" className={cn("text-[8px] font-black uppercase", item.type === 'appt' ? "border-amber-200 text-amber-700 bg-amber-50" : "border-blue-200 text-blue-700 bg-blue-50")}>{item.type === 'appt' ? "Consultation" : item.data.category}</Badge>
+                            <Badge variant="outline" className={cn("text-[8px] font-black uppercase", item.type === 'appt' ? "border-amber-200 text-amber-700 bg-amber-50" : "border-blue-200 text-blue-700 bg-blue-50")}>{item.type === 'appt' ? "Legal Consultation" : item.data.category}</Badge>
                           </div>
                           <div className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground mt-1 uppercase tracking-widest">
                             <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {item.time}</span>
