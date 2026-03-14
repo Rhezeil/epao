@@ -274,9 +274,6 @@ export default function ManageAppointmentPage() {
                       <p className="text-xl font-black text-[#1A3B6B]">
                         {appointment.serviceType || appointment.purpose || appointment.caseType}
                       </p>
-                      <Badge variant="outline" className="border-primary/20 text-[10px] font-bold text-primary px-3">
-                        {appointment.caseType}
-                      </Badge>
                     </div>
                   </div>
 
