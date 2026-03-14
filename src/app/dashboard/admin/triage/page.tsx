@@ -1,4 +1,3 @@
-
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -22,7 +21,8 @@ import {
   Clock,
   Lock,
   ArrowRight,
-  User
+  User,
+  Info
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
