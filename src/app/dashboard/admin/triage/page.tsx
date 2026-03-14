@@ -103,43 +103,40 @@ export default function AdminIntakeAssessmentPage() {
   if (loading) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!user || role !== 'admin') return null;
 
-  const handleScreeningResult = async (result: 'Eligible' | 'Not Eligible') => {
+  const handleScreeningResult = (result: 'Eligible' | 'Not Eligible') => {
     if (!db || !selectedAppt || !user) return;
     
     setIsProcessing(true);
-    try {
-      const apptRef = doc(db, "appointments", selectedAppt.id);
-      updateDocumentNonBlocking(apptRef, {
-        status: result,
-        screeningDetails: {
-          ...screening,
-          adminId: user.uid,
-          screenedAt: new Date().toISOString(),
-          rejectionReason: result === 'Not Eligible' ? rejectionReason : null
-        },
-        updatedAt: new Date().toISOString()
-      });
+    const apptRef = doc(db, "appointments", selectedAppt.id);
+    updateDocumentNonBlocking(apptRef, {
+      status: result,
+      screeningDetails: {
+        ...screening,
+        adminId: user.uid,
+        screenedAt: new Date().toISOString(),
+        rejectionReason: result === 'Not Eligible' ? rejectionReason : null
+      },
+      updatedAt: new Date().toISOString()
+    });
 
-      const notifId = crypto.randomUUID();
-      setDocumentNonBlocking(doc(db, "notifications", notifId), {
-        id: notifId,
-        type: "system",
-        userRole: "admin",
-        description: `Intake screening complete for ${selectedAppt.referenceCode}: Marked as ${result}.`,
-        referenceId: selectedAppt.id,
-        referenceCode: selectedAppt.referenceCode,
-        status: "unread",
-        createdAt: new Date().toISOString()
-      }, { merge: true });
+    const notifId = crypto.randomUUID();
+    setDocumentNonBlocking(doc(db, "notifications", notifId), {
+      id: notifId,
+      type: "system",
+      userRole: "admin",
+      description: `Intake screening complete for ${selectedAppt.referenceCode}: Marked as ${result}.`,
+      referenceId: selectedAppt.id,
+      referenceCode: selectedAppt.referenceCode,
+      status: "unread",
+      createdAt: new Date().toISOString()
+    }, { merge: true });
 
-      toast({ title: "Evaluation Recorded", description: `Citizen record marked as ${result}.` });
-      setIsEvaluationOpen(false);
-      setSelectedAppt(null);
-      setScreening({ indigency: false, merit: false, idVerified: false, notes: "" });
-      setRejectionReason("");
-    } finally {
-      setIsProcessing(false);
-    }
+    toast({ title: "Evaluation Recorded", description: `Citizen record marked as ${result}.` });
+    setIsEvaluationOpen(false);
+    setSelectedAppt(null);
+    setScreening({ indigency: false, merit: false, idVerified: false, notes: "" });
+    setRejectionReason("");
+    setIsProcessing(false);
   };
 
   const handleStartConsultation = async () => {
@@ -251,7 +248,7 @@ export default function AdminIntakeAssessmentPage() {
       <div className="space-y-8">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-primary text-white rounded-2xl shadow-lg">
-            <ClipboardCheck className="h-8 w-8" />
+            <ShieldCheck className="h-8 w-8" />
           </div>
           <div>
             <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Citizen Intake Assessment</h1>

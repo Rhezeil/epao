@@ -56,7 +56,7 @@ service cloud.firestore {
 
     match /admins/{userId} {
       allow read: if isSignedIn() || true;
-      allow write: if isAdmin() || (isSignedIn() && request.auth.token.email.lower() == "admin@epao.com");
+      allow write: if isAdmin();
     }
 
     match /roleLawyer/{userId} {

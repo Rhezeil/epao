@@ -30,7 +30,8 @@ import {
   Search,
   ShieldCheck,
   Heart,
-  History
+  History,
+  Activity
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
@@ -76,7 +77,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
 
     if (role === "admin") {
       return [
-        { icon: LayoutDashboard, label: "Diagnostic Analysis", path: "/dashboard/admin", exact: true },
+        { icon: Activity, label: "Diagnostic Analysis", path: "/dashboard/admin", exact: true },
         { icon: ShieldCheck, label: "Intake Assessment", path: "/dashboard/admin/triage" },
         { icon: Users, label: "Client Directory", path: "/dashboard/admin/users" },
         { icon: History, label: "Visit Registry", path: "/dashboard/admin/appointments" },
@@ -137,7 +138,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
                       className={cn(
                         "flex items-center gap-3 px-4 py-6 rounded-2xl transition-all duration-300 border-none",
                         isActive
-                          ? "bg-primary text-white shadow-xl scale-[1.02]" 
+                          ? "bg-primary text-white shadow-xl scale-[1.02] hover:bg-primary" 
                           : "bg-slate-950 text-slate-300 hover:bg-slate-900 hover:text-white"
                       )}
                     >

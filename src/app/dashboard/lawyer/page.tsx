@@ -247,7 +247,7 @@ export default function LawyerDashboard() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {filterAcceptedPendingActivation.map(appt => (
                   <Card key={appt.id} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden border-l-8 border-primary">
-                    <CardContent className="p-8 flex items-center justify-between gap-6">
+                    <CardContent className="p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                       <div className="flex items-center gap-5 flex-1 min-w-0">
                         <div className="p-3 bg-primary/5 rounded-2xl text-primary shrink-0"><CheckCircle2 className="h-6 w-6" /></div>
                         <div className="min-w-0 flex-1">
@@ -311,14 +311,14 @@ export default function LawyerDashboard() {
                   <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Intake Category</Label>
                     <Select value={consultationForm.caseType} onValueChange={(v) => setConsultationForm({...consultationForm, caseType: v})}><SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="Select Category" /></SelectTrigger><SelectContent>{Object.keys(caseCategories).map(cat => <SelectItem key={cat} value={cat} className="font-bold">{cat}</SelectItem>)}</SelectContent></Select>
                   </div>
-                  <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Official Legal Assessment</Label><Textarea placeholder="Brief assessment..." className="rounded-2xl h-24" value={consultationForm.assessment || ""} onChange={e => setConsultationForm({...consultationForm, assessment: e.target.value})} /></div>
+                  <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Official Legal Assessment</Label><Textarea placeholder="Brief assessment..." className="rounded-2xl h-24" value={consultationForm.assessment ?? ""} onChange={e => setConsultationForm({...consultationForm, assessment: e.target.value})} /></div>
                 </div>
                 <div className="space-y-6">
                   <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Consultation Outcome</Label>
                     <Select value={consultationForm.outcome} onValueChange={(v) => setConsultationForm({...consultationForm, outcome: v})}><SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="Select Result" /></SelectTrigger><SelectContent>{OUTCOME_OPTIONS.map(opt => <SelectItem key={opt} value={opt} className="font-bold">{opt}</SelectItem>)}</SelectContent></Select>
                   </div>
                   {consultationForm.outcome === OUTCOME_OPTIONS[1] && <div className="space-y-2 animate-in fade-in"><Label className="text-[10px] font-black uppercase text-red-600/60 ml-1">Reason for Denial</Label><Select value={consultationForm.denialReason} onValueChange={(v) => setConsultationForm({...consultationForm, denialReason: v})}><SelectTrigger className="h-12 rounded-xl border-red-100 bg-red-50/30"><SelectValue placeholder="Select Reason" /></SelectTrigger><SelectContent>{DENIAL_REASONS.map(r => <SelectItem key={r} value={r} className="font-bold">{r}</SelectItem>)}</SelectContent></Select></div>}
-                  <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Confidential Case Notes</Label><Textarea placeholder="Factual summary..." className="rounded-2xl h-24" value={consultationForm.notes || ""} onChange={e => setConsultationForm({...consultationForm, notes: e.target.value})} /></div>
+                  <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Confidential Case Notes</Label><Textarea placeholder="Factual summary..." className="rounded-2xl h-24" value={consultationForm.notes ?? ""} onChange={e => setConsultationForm({...consultationForm, notes: e.target.value})} /></div>
                 </div>
               </div>
             </div>
