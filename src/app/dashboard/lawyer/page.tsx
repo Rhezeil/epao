@@ -257,20 +257,26 @@ export default function LawyerDashboard() {
         {/* --- PRIORITY CONSULTATIONS --- */}
         {pendingConsultations.length > 0 && (
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 px-1">
               <Activity className="h-5 w-5 text-red-500 animate-pulse" />
               <h2 className="text-sm font-black uppercase tracking-widest text-secondary">Awaiting Consultation ({pendingConsultations.length})</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {pendingConsultations.map(appt => (
                 <Card key={appt.id} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden border-l-8 border-red-500">
-                  <CardContent className="p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                    <div className="flex items-start gap-5 min-w-0">
-                      <div className="p-3 bg-red-50 rounded-2xl text-red-600 shrink-0"><User className="h-6 w-6" /></div>
-                      <div className="min-w-0">
-                        <h3 className="text-lg font-black text-secondary truncate">{appt.guestName || appt.clientName}</h3>
-                        <p className="text-[10px] font-black uppercase text-red-600 tracking-widest mt-1">Status: Consultation in Progress</p>
-                        <Badge variant="outline" className="mt-2 text-[9px] uppercase border-red-100 bg-red-50/50 block w-fit truncate max-w-full">{appt.caseType}</Badge>
+                  <CardContent className="p-5 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
+                    <div className="flex items-start gap-5 min-w-0 flex-1">
+                      <div className="p-3 bg-red-50 rounded-2xl text-red-600 shrink-0">
+                        <User className="h-6 w-6" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-xl font-black text-secondary truncate">{appt.guestName || appt.clientName}</h3>
+                        <p className="text-[10px] font-black uppercase text-red-600 tracking-widest mt-1">Consultation in Progress</p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <Badge variant="outline" className="text-[9px] uppercase border-red-100 bg-red-50/50 max-w-full truncate inline-block">
+                            {appt.caseType}
+                          </Badge>
+                        </div>
                       </div>
                     </div>
                     <Button 
@@ -278,7 +284,7 @@ export default function LawyerDashboard() {
                         setActiveConsultation(appt);
                         setConsultationForm({ ...consultationForm, caseType: appt.caseType });
                       }}
-                      className="w-full sm:w-auto h-14 rounded-2xl bg-secondary hover:bg-secondary/90 text-white font-black px-8 shadow-lg shrink-0"
+                      className="w-full sm:w-auto h-12 rounded-xl bg-secondary hover:bg-secondary/90 text-white font-black px-6 shadow-lg shrink-0"
                     >
                       Start Assessment <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
@@ -362,13 +368,13 @@ export default function LawyerDashboard() {
                 <div className="p-3 bg-white/20 rounded-2xl"><GavelIcon className="h-6 w-6 text-white" /></div>
               </div>
             </DialogHeader>
-            <div className="p-10 space-y-8 flex-1 overflow-y-auto">
+            <div className="p-6 sm:p-10 space-y-8 flex-1 overflow-y-auto min-h-0">
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Case Classification</Label>
                     <Select value={consultationForm.caseType} onValueChange={(v) => setConsultationForm({...consultationForm, caseType: v})}>
-                      <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="Select Category" /></SelectTrigger>
+                      <SelectTrigger className="h-12 rounded-xl border-secondary/10 font-bold"><SelectValue placeholder="Select Category" /></SelectTrigger>
                       <SelectContent>
                         {Object.keys(caseCategories).map(cat => (
                           <SelectItem key={cat} value={cat} className="font-bold">{cat}</SelectItem>
@@ -384,7 +390,7 @@ export default function LawyerDashboard() {
                     <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Initial Assessment</Label>
                     <Textarea 
                       placeholder="Brief legal assessment of the concern..." 
-                      className="rounded-2xl h-24"
+                      className="rounded-2xl h-24 border-secondary/10 focus-visible:ring-secondary/20"
                       value={consultationForm.assessment}
                       onChange={e => setConsultationForm({...consultationForm, assessment: e.target.value})}
                     />
@@ -395,7 +401,7 @@ export default function LawyerDashboard() {
                     <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Recommended Legal Action</Label>
                     <Textarea 
                       placeholder="Next steps (e.g., File Petition, Mediation, etc.)..." 
-                      className="rounded-2xl h-24"
+                      className="rounded-2xl h-24 border-secondary/10 focus-visible:ring-secondary/20"
                       value={consultationForm.recommendation}
                       onChange={e => setConsultationForm({...consultationForm, recommendation: e.target.value})}
                     />
@@ -404,7 +410,7 @@ export default function LawyerDashboard() {
                     <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Internal Consultation Notes</Label>
                     <Textarea 
                       placeholder="Detailed factual summary and evidence review..." 
-                      className="rounded-2xl h-24"
+                      className="rounded-2xl h-24 border-secondary/10 focus-visible:ring-secondary/20"
                       value={consultationForm.notes}
                       onChange={e => setConsultationForm({...consultationForm, notes: e.target.value})}
                     />
@@ -419,12 +425,12 @@ export default function LawyerDashboard() {
                 </p>
               </div>
             </div>
-            <DialogFooter className="p-8 bg-muted/30 flex gap-4 shrink-0">
-              <Button variant="outline" onClick={() => setActiveConsultation(null)} className="flex-1 h-14 rounded-xl font-bold">Close Record</Button>
+            <DialogFooter className="p-8 bg-muted/30 flex flex-col sm:flex-row gap-4 shrink-0">
+              <Button variant="outline" onClick={() => setActiveConsultation(null)} className="flex-1 h-14 rounded-xl font-bold border-2">Close Record</Button>
               <Button 
                 onClick={handleFinalizeCaseActivation} 
                 disabled={isSubmitting || !consultationForm.caseType || !consultationForm.assessment} 
-                className="flex-1 h-14 rounded-xl font-black text-white shadow-xl bg-secondary"
+                className="flex-1 h-14 rounded-xl font-black text-white shadow-xl bg-secondary hover:bg-secondary/90"
               >
                 {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : <Scale className="mr-2 h-5 w-5" />}
                 Activate Official Case Record
