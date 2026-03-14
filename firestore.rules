@@ -5,7 +5,7 @@ service cloud.firestore {
 
     /**
      * LexConnect Security Architecture
-     * Centralized synchronization for a multi-portal legal system.
+     * Explicit authorization for administrative and professional legal management.
      */
 
     function isSignedIn() {

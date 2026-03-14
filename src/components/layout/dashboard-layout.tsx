@@ -61,7 +61,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   const getMenuItems = () => {
     if (!user) {
       return [
-        { icon: Compass, label: "Case Requirements Navigator", path: "/case-navigator" },
+        { icon: Compass, label: "Navigator", path: "/case-navigator" },
         { icon: Calendar, label: "Book Appointment", path: "/book-appointment" },
         { icon: Search, label: "Manage Visit", path: "/manage-appointment" },
         { icon: Heart, label: "About Us", path: "/about" },

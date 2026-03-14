@@ -459,12 +459,12 @@ export default function AdminIntakeAssessmentPage() {
                 ) : null}
               </div>
             </div>
-            <DialogFooter className="p-8 bg-muted/30 flex flex-col sm:flex-row gap-3">
+            <DialogFooter className="p-8 bg-muted/30 flex flex-col sm:flex-row justify-center items-center gap-3">
               <Button 
                 variant="outline" 
                 onClick={() => handleScreeningResult('Not Eligible')} 
                 disabled={isProcessing || !rejectionReason}
-                className="flex-1 h-12 rounded-xl font-bold border-red-200 text-red-600 hover:bg-red-50"
+                className="w-full sm:w-auto min-w-[120px] h-12 rounded-xl font-bold border-red-200 text-red-600 hover:bg-red-50"
               >
                 Mark Ineligible
               </Button>
@@ -472,14 +472,14 @@ export default function AdminIntakeAssessmentPage() {
                 variant="outline"
                 onClick={() => handleScreeningResult('For Completion')} 
                 disabled={isProcessing}
-                className="flex-1 h-12 rounded-xl font-bold border-amber-200 text-amber-600 hover:bg-amber-50"
+                className="w-full sm:w-auto min-w-[120px] h-12 rounded-xl font-bold border-amber-200 text-amber-600 hover:bg-amber-50"
               >
                 For Completion
               </Button>
               <Button 
                 onClick={() => handleScreeningResult('Eligible')} 
                 disabled={isProcessing || !screening.indigency || !screening.merit || !screening.idVerified} 
-                className="flex-1 h-12 rounded-xl font-black text-white shadow-lg bg-primary"
+                className="w-full sm:w-auto min-w-[140px] h-12 rounded-xl font-black text-white shadow-lg bg-primary"
               >
                 {isProcessing ? <Loader2 className="animate-spin h-5 w-5" /> : "Approve Eligibility"}
               </Button>
