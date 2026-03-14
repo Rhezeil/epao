@@ -270,10 +270,10 @@ export default function LawyerDashboard() {
                         <User className="h-6 w-6" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h3 className="text-xl font-black text-secondary truncate">{appt.guestName || appt.clientName}</h3>
+                        <h3 className="text-xl font-black text-secondary break-words leading-tight">{appt.guestName || appt.clientName}</h3>
                         <p className="text-[10px] font-black uppercase text-red-600 tracking-widest mt-1">Consultation in Progress</p>
                         <div className="mt-2 flex flex-wrap gap-2">
-                          <Badge variant="outline" className="text-[9px] uppercase border-red-100 bg-red-50/50 max-w-full truncate inline-block">
+                          <Badge variant="outline" className="text-[9px] uppercase border-red-100 bg-red-50/50 whitespace-normal text-left">
                             {appt.caseType}
                           </Badge>
                         </div>
