@@ -178,7 +178,7 @@ export default function AdminDashboard() {
     const name = data?.name || data?.label || "this segment";
 
     if (type === 'demand') {
-      if (val > 10) return `Significant intake volume detected for ${name}. Administrative oversight should ensure that triage processing times remain within target KPIs to avoid backlogs.`;
+      if (val > 10) return `Significant intake volume detected for ${name}. Administrative oversight should ensure that intake processing times remain within target KPIs to avoid backlogs.`;
       if (val > 0) return `Stable demand for ${name}. Current resources are well-aligned with the intake rate. No structural shifts required at this time.`;
       return `Zero intake recorded for ${name}. This may indicate a reporting delay or a temporary shift in public demand for legal assistance in this specific period.`;
     }
@@ -194,7 +194,7 @@ export default function AdminDashboard() {
     if (type === 'appointment') {
       if (name === 'Completed') return "Operational efficiency is optimal. High completion rates reflect successful coordination between the office and the citizens.";
       if (name === 'Cancelled') return "Elevated cancellation rate detected. Reviewing the automated notification logs is recommended to identify potential communication gaps before the visit date.";
-      if (name === 'Pending') return "The triage queue is active. Ensuring that the admin team reviews these within 24 hours will maintain the system's reputation for responsive public service.";
+      if (name === 'Pending') return "The intake queue is active. Ensuring that the admin team reviews these within 24 hours will maintain the system's reputation for responsive public service.";
       return `Current status distribution for ${name} is consistent with historical patterns. Monitor for any sudden deviations in weekly logs.`;
     }
 
@@ -452,7 +452,7 @@ export default function AdminDashboard() {
           <div className="p-10 space-y-10 overflow-y-auto flex-1 scrollbar-hide">
             <div className="grid grid-cols-2 gap-8">
               <div className="space-y-2">
-                <p className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Intensity</p>
+                <p className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Caseload Volume</p>
                 <p className="text-5xl font-black text-primary">{deepAnalysis.data?.count || deepAnalysis.data?.value || 0} Units</p>
               </div>
             </div>

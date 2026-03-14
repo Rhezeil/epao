@@ -1,3 +1,4 @@
+
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -97,7 +98,7 @@ export default function AdminTriagePage() {
     if (!db || !selectedAppt || !user) return;
     
     if (result === 'Eligible' && (!screening.indigency || !screening.merit || !screening.idVerified)) {
-      toast({ variant: "destructive", title: "Incomplete Screening", description: "All eligibility tests must be passed for approval." });
+      toast({ variant: "destructive", title: "Incomplete Screening", description: "All eligibility criteria must be satisfied for approval." });
       return;
     }
 
@@ -184,7 +185,7 @@ export default function AdminTriagePage() {
             <ClipboardCheck className="h-8 w-8" />
           </div>
           <div>
-            <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Intake Triage Workstation</h1>
+            <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Citizen Intake Assessment</h1>
             <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest mt-1">Official screening and consultation assignment</p>
           </div>
         </div>
@@ -270,20 +271,20 @@ export default function AdminTriagePage() {
           </TabsContent>
         </Tabs>
 
-        {/* --- SCREENING EVALUATION DIALOG --- */}
+        {/* --- ELIGIBILITY EVALUATION DIALOG --- */}
         <Dialog open={isEvaluationOpen} onOpenChange={setIsEvaluationOpen}>
           <DialogContent className="rounded-[3rem] max-w-lg p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[90vh]">
             <DialogHeader className="p-8 bg-primary text-white">
-              <DialogTitle className="text-2xl font-black">Screening Evaluation</DialogTitle>
+              <DialogTitle className="text-2xl font-black">Eligibility Evaluation</DialogTitle>
               <DialogDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest">Ref: {selectedAppt?.referenceCode}</DialogDescription>
             </DialogHeader>
             <div className="p-10 space-y-8 flex-1 overflow-y-auto">
               <div className="p-6 bg-primary/5 rounded-[2rem] border-2 border-dashed border-primary/10 space-y-4">
-                <div className="flex items-center gap-2 mb-2"><ClipboardCheck className="h-4 w-4 text-primary" /><span className="text-[10px] font-black uppercase tracking-widest">Eligibility Checklist</span></div>
+                <div className="flex items-center gap-2 mb-2"><ClipboardCheck className="h-4 w-4 text-primary" /><span className="text-[10px] font-black uppercase tracking-widest">Mandatory Criteria Checklist</span></div>
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3 bg-white p-3 rounded-xl border">
                     <Checkbox id="ind" checked={screening.indigency} onCheckedChange={c => setScreening({...screening, indigency: !!c})} />
-                    <label htmlFor="ind" className="text-xs font-bold text-primary">Indigency Test Passed (Income limit)</label>
+                    <label htmlFor="ind" className="text-xs font-bold text-primary">Indigency Criteria Satisfied (Income limit)</label>
                   </div>
                   <div className="flex items-center space-x-3 bg-white p-3 rounded-xl border">
                     <Checkbox id="mer" checked={screening.merit} onCheckedChange={c => setScreening({...screening, merit: !!c})} />
@@ -291,7 +292,7 @@ export default function AdminTriagePage() {
                   </div>
                   <div className="flex items-center space-x-3 bg-white p-3 rounded-xl border">
                     <Checkbox id="idv" checked={screening.idVerified} onCheckedChange={c => setScreening({...screening, idVerified: !!c})} />
-                    <label htmlFor="idv" className="text-xs font-bold text-primary">Identity & Residency Verified</label>
+                    <label htmlFor="idv" className="text-xs font-bold text-primary">Identity Credentials Verified</label>
                   </div>
                 </div>
               </div>
@@ -333,7 +334,7 @@ export default function AdminTriagePage() {
                 Mark Ineligible
               </Button>
               <Button 
-                onClick={() => handleScreeningResult('Eligible')} 
+                onClick={handleScreeningResult('Eligible')} 
                 disabled={isProcessing || !screening.indigency || !screening.merit || !screening.idVerified} 
                 className="flex-1 h-12 rounded-xl font-black text-white shadow-lg bg-primary"
               >

@@ -200,7 +200,7 @@ export const universalPaoFlow = [
   { 
     step: 2, 
     title: "Client Interview", 
-    content: "A Public Attorney will conduct an interview to assess both the Indigency Test (financial status) and the Merit Test (legal basis of the case)." 
+    content: "A Public Attorney will conduct an interview to assess both the Indigency Evaluation (financial status) and the Legal Merit (legal basis of the case)." 
   },
   { 
     step: 3, 
@@ -215,8 +215,8 @@ export const universalPaoFlow = [
 ];
 
 export const pAONotes = [
-  "Indigency Test: Your net income must not exceed the agency regional threshold (currently based on minimum wage standards).",
-  "Merit Test: The Public Attorney must determine that the case has a reasonable chance of success and is not intended to harass.",
+  "Indigency Evaluation: Your net income must not exceed the agency regional threshold (currently based on minimum wage standards).",
+  "Legal Merit: The Public Attorney must determine that the case has a reasonable chance of success and is not intended to harass.",
   "Conflict of Interest: PAO cannot represent two parties with opposing interests in the same case.",
   "Free Service: All legal services are free. Only minimal court filing fees or publication costs (if required by law) are paid by the client.",
   "Priority: Priority is given to detained persons, women and children in VAWC cases, and indigent laborers."
@@ -236,17 +236,17 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   },
   "Homicide (Art. 249)": {
     description: "Killing without the qualifying circumstances mentioned in Art. 248.",
-    requirements: ["Death Certificate", "Post-Mortem Examination", "Police Blotter", "Witness Sworn Statements", "Medico-Legal Certificate"],
+    requirements: ["Death Certificate", "Post-Mortem Examination", "Police Blotter", "Witness Sworn Statements", "Medical Evidence Report"],
     steps: universalPaoFlow
   },
   "Physical Injuries (Arts. 262–266)": {
     description: "Serious, less serious, or slight bodily harm inflicted on another.",
-    requirements: ["Medical Certificate (Original)", "Hospital Records/Discharge Summary", "Photographs of injuries", "Police Blotter", "Barangay Certification to File Action (If applicable)"],
+    requirements: ["Medical Examination Report (Original)", "Hospital Records/Discharge Summary", "Photographs of injuries", "Police Blotter", "Barangay Certification to File Action (If applicable)"],
     steps: universalPaoFlow
   },
   "Abortion (Arts. 256–259)": {
-    description: "Unlawful termination of pregnancy. Requires medical confirmation.",
-    requirements: ["Medical Certificate from attending physician", "Death Certificate of fetus (if applicable)", "Police Blotter", "Witness Sworn Statements"],
+    description: "Unlawful termination of pregnancy. Requires professional medical confirmation.",
+    requirements: ["Medical Examination Report from attending physician", "Death Certificate of fetus (if applicable)", "Police Blotter", "Witness Sworn Statements"],
     steps: universalPaoFlow
   },
   "Discharge of Firearms (Art. 254 / RA 11926)": {
@@ -315,13 +315,13 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
     steps: universalPaoFlow
   },
   "Rape (Art. 266-A)": {
-    description: "Sexual assault. Requires specialized medico-legal evidence.",
-    requirements: ["Medico-Legal Report (PNP/NBI)", "Psychological Evaluation Report", "Sworn Statement of victim", "Police Investigation Report"],
+    description: "Sexual assault. Requires specialized medical examination evidence.",
+    requirements: ["Medical Evidence Report (PNP/NBI)", "Psychological Evaluation Report", "Sworn Statement of victim", "Police Investigation Report"],
     steps: universalPaoFlow
   },
   "Acts of Lasciviousness (Art. 336)": {
     description: "Indecent acts committed against another.",
-    requirements: ["Medico-Legal Report (if physical contact occurred)", "Sworn Statement of victim", "Police Blotter", "Witness Sworn Statements"],
+    requirements: ["Medical Evidence Report (if physical contact occurred)", "Sworn Statement of victim", "Police Blotter", "Witness Sworn Statements"],
     steps: universalPaoFlow
   },
   "Rebellion (Art. 134)": {
@@ -346,17 +346,17 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   },
   "Drug Cases (RA 9165)": {
     description: "Possession, sale, or delivery of dangerous drugs.",
-    requirements: ["Copy of Information (Charge Sheet)", "Inventory of Seized Items", "Chemistry Report (PDEA/PNP)", "Chain of Custody Form", "Arrest Report (Booking Form)"],
+    requirements: ["Copy of Information (Charge Sheet)", "Inventory of Seized Items", "Laboratory Analysis Report (PDEA/PNP)", "Chain of Custody Form", "Arrest Report (Booking Form)"],
     steps: universalPaoFlow
   },
   "VAWC Criminal (RA 9262)": {
     description: "Violence (Physical, Sexual, Psychological, Economic) against women and their children.",
-    requirements: ["Medical Certificate", "PSA Marriage Certificate/Birth Certificate of child", "Barangay Protection Order (If any)", "Psychological Evaluation Report", "Threatening messages/Evidence of abuse"],
+    requirements: ["Medical Examination Report", "PSA Marriage Certificate/Birth Certificate of child", "Barangay Protection Order (If any)", "Psychological Evaluation Report", "Threatening messages/Evidence of abuse"],
     steps: universalPaoFlow
   },
   "Child Abuse (RA 7610)": {
     description: "Abuse, exploitation, or discrimination against children.",
-    requirements: ["Medico-Legal Report", "PSA Birth Certificate of child", "Psychological Evaluation Report", "Police Blotter", "Witness Sworn Statements"],
+    requirements: ["Medical Evidence Report", "PSA Birth Certificate of child", "Psychological Evaluation Report", "Police Blotter", "Witness Sworn Statements"],
     steps: universalPaoFlow
   },
   "Cybercrime (RA 10175)": {
@@ -383,12 +383,12 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   // --- CIVIL ---
   "Declaration of Nullity of Marriage (Art. 36)": {
     description: "Marriage declared void from the beginning due to psychological incapacity.",
-    requirements: ["PSA Marriage Certificate", "PSA Birth Certificates of children", "Psychological Evaluation Report (Clinical)", "Witness Testimonies (Friends/Family)", "Certificate of No Marriage (CENOMAR)"],
+    requirements: ["PSA Marriage Certificate", "PSA Birth Certificates of children", "Psychological Evaluation Report", "Witness Testimonies (Friends/Family)", "Certificate of No Marriage (CENOMAR)"],
     steps: universalPaoFlow
   },
   "Annulment of Marriage (Arts. 45–47)": {
     description: "Marriage cancelled due to lack of parental consent, insanity, fraud, force, or physical incapacity.",
-    requirements: ["PSA Marriage Certificate", "PSA Birth Certificates of children", "Clinical Psychologist Report", "Witness Sworn Statements", "CENOMAR"],
+    requirements: ["PSA Marriage Certificate", "PSA Birth Certificates of children", "Psychologist's Expert Opinion", "Witness Sworn Statements", "CENOMAR"],
     steps: universalPaoFlow
   },
   "Support (Child or Spouse)": {
@@ -403,7 +403,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   },
   "VAWC Civil Protection Order (RA 9262)": {
     description: "Civil protection for victims of domestic violence to keep the perpetrator away.",
-    requirements: ["Medical Certificate", "Police Blotter or incident report", "Barangay Protection Order (BPO) if available", "Proof of relationship (Marriage/Birth Cert)", "Photos of physical abuse"],
+    requirements: ["Medical Examination Report", "Police Blotter or incident report", "Barangay Protection Order (BPO) if available", "Proof of relationship (Marriage/Birth Cert)", "Photos of physical abuse"],
     steps: universalPaoFlow
   },
   "Petition for Habeas Corpus (Minor)": {
@@ -453,7 +453,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   },
   "Damages (Tort / Quasi-Delict Art. 2176)": {
     description: "Civil liability for injury or loss caused by negligence.",
-    requirements: ["Medical Certificates/Death Certificate", "Hospital Receipts/Repair Estimates", "Police Report", "Witness Sworn Statements"],
+    requirements: ["Medical Examination Reports", "Hospital Receipts/Repair Estimates", "Police Report", "Witness Sworn Statements"],
     steps: universalPaoFlow
   },
   "Defamation Civil Damages": {
@@ -463,7 +463,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   },
   "Guardianship (Rules 92–97)": {
     description: "Legal petition for the care of an incompetent or a minor's property.",
-    requirements: ["PSA Birth Certificate of ward", "Medical Certificate of incompetency", "Inventory of ward's properties", "Affidavit of proposed guardian"],
+    requirements: ["PSA Birth Certificate of ward", "Medical Evidence of incompetency", "Inventory of ward's properties", "Affidavit of proposed guardian"],
     steps: universalPaoFlow
   },
   "Settlement of Estate (Rule 74)": {
@@ -540,7 +540,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   },
   "Claims for Damages (Labor)": {
     description: "Damages for bad faith dismissal or workplace injuries.",
-    requirements: ["Medical Certificates", "Incident Reports", "Proof of bad faith (emails/messages)", "Witness statements"],
+    requirements: ["Medical Examination Reports", "Incident Reports", "Proof of bad faith (emails/messages)", "Witness statements"],
     steps: universalPaoFlow
   },
   "OFW Money Claims (RA 8042/10022)": {
@@ -607,7 +607,7 @@ export const caseSpecificData: Record<string, { requirements: string[], steps: a
   },
   "Anti-Torture Complaint (RA 9745)": {
     description: "Complaints vs state actors for torture or cruel treatment.",
-    requirements: ["Medico-Legal Report (Government/CHR doctor)", "Sworn Statement of victim", "Photographs of injuries", "Witness statements"],
+    requirements: ["Official Medical Evidence Report", "Sworn Statement of victim", "Photographs of injuries", "Witness statements"],
     steps: universalPaoFlow
   }
 };

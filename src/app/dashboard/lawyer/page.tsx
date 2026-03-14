@@ -362,11 +362,11 @@ export default function LawyerDashboard() {
 
         {/* --- CONSULTATION NOTES DIALOG --- */}
         <Dialog open={!!activeConsultation} onOpenChange={() => setActiveConsultation(null)}>
-          <DialogContent className="rounded-[3rem] max-w-4xl p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[95vh]">
+          <DialogContent className="rounded-[3rem] max-w-4xl p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[90vh]">
             <DialogHeader className="p-8 bg-secondary text-white shrink-0">
               <div className="flex justify-between items-center">
                 <div>
-                  <DialogTitle className="text-2xl font-black">Clinical Consultation Record</DialogTitle>
+                  <DialogTitle className="text-2xl font-black">Official Legal Consultation</DialogTitle>
                   <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">Citizen: {activeConsultation?.guestName || activeConsultation?.clientName}</DialogDescription>
                 </div>
                 <div className="p-3 bg-white/20 rounded-2xl"><GavelIcon className="h-6 w-6 text-white" /></div>
@@ -391,7 +391,7 @@ export default function LawyerDashboard() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Initial Assessment</Label>
+                    <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Initial Legal Assessment</Label>
                     <Textarea 
                       placeholder="Brief legal assessment of the concern..." 
                       className="rounded-2xl h-24 border-secondary/10 focus-visible:ring-secondary/20"
@@ -411,7 +411,7 @@ export default function LawyerDashboard() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Internal Consultation Notes</Label>
+                    <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Confidential Case Notes</Label>
                     <Textarea 
                       placeholder="Detailed factual summary and evidence review..." 
                       className="rounded-2xl h-24 border-secondary/10 focus-visible:ring-secondary/20"
