@@ -38,6 +38,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+const HOLIDAYS = [
+  "2024-01-01", "2024-04-09", "2024-05-01", "2024-06-12", "2024-08-26",
+  "2024-11-01", "2024-11-30", "2024-12-25", "2024-12-30", 
+  "2025-01-01", "2025-02-25", "2025-04-17", "2025-04-18", "2025-05-01"
+];
+
+const isHoliday = (date: Date) => {
+  const ds = format(date, "yyyy-MM-dd");
+  return HOLIDAYS.includes(ds);
+};
+
 const DUTY_CATEGORIES = [
   "Office Work",
   "Field Work",
@@ -292,9 +303,16 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
                 <Calendar 
                   mode="single" 
                   selected={selectedDate} 
-                  onSelect={setSelectedDate} 
-                  disabled={{ before: startOfToday() }}
-                  className="mx-auto" 
+                  onSelect={(date) => {
+                    if (date && (isWeekend(date) || isHoliday(date) || isBefore(date, startOfToday()))) return;
+                    setSelectedDate(date);
+                  }} 
+                  disabled={[
+                    { before: startOfToday() },
+                    { dayOfWeek: [0, 6] },
+                    (date) => isHoliday(date)
+                  ]}
+                  className="mx-auto border rounded-xl p-2" 
                 />
               </CardContent>
             </Card>

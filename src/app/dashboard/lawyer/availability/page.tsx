@@ -14,10 +14,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { format, startOfToday } from "date-fns";
+import { format, startOfToday, isWeekend, isBefore } from "date-fns";
 import { Clock, CalendarDays, Loader2, Save, CheckCircle2, AlertCircle, Ban } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+
+const HOLIDAYS = [
+  "2024-01-01", "2024-04-09", "2024-05-01", "2024-06-12", "2024-08-26",
+  "2024-11-01", "2024-11-30", "2024-12-25", "2024-12-30", 
+  "2025-01-01", "2025-02-25", "2025-04-17", "2025-04-18", "2025-05-01"
+];
+
+const isHoliday = (date: Date) => {
+  const ds = format(date, "yyyy-MM-dd");
+  return HOLIDAYS.includes(ds);
+};
 
 const AVAILABILITY_TYPES = [
   { value: "Available", label: "Office Standard (08:00 - 17:00)", color: "text-green-600 bg-green-50 border-green-100" },
@@ -95,8 +106,6 @@ export default function LawyerAvailabilityPage() {
   if (loading) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin text-secondary" /></div>;
   if (!user || role !== 'lawyer') return null;
 
-  const currentTypeInfo = AVAILABILITY_TYPES.find(t => t.value === formData.availabilityType);
-
   return (
     <DashboardLayout role="lawyer">
       <div className="space-y-8 max-w-6xl mx-auto">
@@ -116,14 +125,21 @@ export default function LawyerAvailabilityPage() {
               <Calendar
                 mode="single"
                 selected={selectedDate}
-                onSelect={setSelectedDate}
-                disabled={{ before: startOfToday() }}
+                onSelect={(date) => {
+                  if (date && (isWeekend(date) || isHoliday(date) || isBefore(date, startOfToday()))) return;
+                  setSelectedDate(date);
+                }}
+                disabled={[
+                  { before: startOfToday() },
+                  { dayOfWeek: [0, 6] },
+                  (date) => isHoliday(date)
+                ]}
                 className="mx-auto border rounded-2xl p-4"
               />
               <div className="mt-6 p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                 <p className="text-[10px] text-amber-800 font-bold leading-relaxed">
-                  Citizens can only book slots based on your published availability. Changes are real-time.
+                  The office is closed on weekends. Availability can only be published for official working days (Mon-Fri).
                 </p>
               </div>
             </CardContent>
