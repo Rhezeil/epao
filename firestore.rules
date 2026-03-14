@@ -73,13 +73,11 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if isSignedIn() && (isOwner(userId) || isAdmin() || isLawyer());
-      allow create, update: if isOwner(userId) || isAdmin() || isLawyer();
+      allow write: if isOwner(userId) || isAdmin() || isLawyer();
 
-      // Explicit permission for nested documents (Profiles, etc.)
       match /{allSubcollections=**} {
         allow read: if isSignedIn() && (isOwner(userId) || isAdmin() || isLawyer());
-        allow create, update: if isOwner(userId) || isAdmin() || isLawyer();
-        allow delete: if isAdmin();
+        allow write: if isOwner(userId) || isAdmin() || isLawyer();
       }
     }
 
