@@ -5,8 +5,8 @@ import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { useAuth } from "@/components/auth-provider";
 import { useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking } from "@/firebase";
-import { collection, query, orderBy, where, doc } from "firebase/firestore";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { collection, query, orderBy, doc } from "firebase/firestore";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,13 +17,7 @@ import {
   Filter, 
   Trash2, 
   Loader2, 
-  Calendar, 
-  CheckCircle2, 
-  XCircle, 
-  Clock, 
-  AlertCircle,
-  FileText,
-  User,
+  User, 
   Briefcase
 } from "lucide-react";
 import { format } from "date-fns";
@@ -84,8 +78,8 @@ export default function AdminAppointmentsRegistry() {
               <History className="h-8 w-8" />
             </div>
             <div>
-              <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Visit Registry</h1>
-              <p className="text-muted-foreground font-medium">Comprehensive logs of all citizen consultations and interactions.</p>
+              <h1 className="text-3xl font-black text-primary font-headline tracking-tight">System Intake Registry</h1>
+              <p className="text-muted-foreground font-medium">Comprehensive logs of all screening appointments and consultations.</p>
             </div>
           </div>
         </div>
@@ -96,7 +90,7 @@ export default function AdminAppointmentsRegistry() {
               <div className="relative flex-1 w-full">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/30" />
                 <Input 
-                  placeholder="Search Ref, Citizen or Case Type..." 
+                  placeholder="Search Ref, Applicant or Matter..." 
                   className="h-12 pl-12 rounded-2xl border-primary/10 bg-white"
                   value={search}
                   onChange={e => setSearch(e.target.value)}
@@ -110,11 +104,11 @@ export default function AdminAppointmentsRegistry() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all" className="font-bold">All Records</SelectItem>
-                    <SelectItem value="pending" className="font-bold text-amber-600">Pending Triage</SelectItem>
-                    <SelectItem value="scheduled" className="font-bold text-green-600">Scheduled</SelectItem>
-                    <SelectItem value="completed" className="font-bold text-blue-600">Completed</SelectItem>
-                    <SelectItem value="cancelled" className="font-bold text-red-600">Cancelled</SelectItem>
-                    <SelectItem value="rescheduled" className="font-bold text-purple-600">Rescheduled</SelectItem>
+                    <SelectItem value="For Screening" className="font-bold text-amber-600">For Screening</SelectItem>
+                    <SelectItem value="Eligible" className="font-bold text-green-600">Eligible</SelectItem>
+                    <SelectItem value="Not Eligible" className="font-bold text-red-600">Not Eligible</SelectItem>
+                    <SelectItem value="scheduled" className="font-bold text-blue-600">Consultation Set</SelectItem>
+                    <SelectItem value="completed" className="font-bold text-gray-600">Concluded</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -128,11 +122,10 @@ export default function AdminAppointmentsRegistry() {
                 <TableHeader className="bg-muted/30">
                   <TableRow>
                     <TableHead className="px-8 font-black text-[10px] uppercase tracking-widest text-primary/40">Filing Ref</TableHead>
-                    <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40">Citizen</TableHead>
-                    <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40">Case</TableHead>
-                    <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40">Assigned Attorney</TableHead>
-                    <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40">Schedule</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40">Applicant</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40">Matter</TableHead>
                     <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40">Status</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase tracking-widest text-primary/40">Schedule</TableHead>
                     <TableHead className="text-right px-8 font-black text-[10px] uppercase tracking-widest text-primary/40">Action</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -157,32 +150,21 @@ export default function AdminAppointmentsRegistry() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {lawyer ? (
-                            <div className="flex items-center gap-2">
-                              <Briefcase className="h-3 w-3 text-secondary/60" />
-                              <span className="text-xs font-bold text-secondary">
-                                {lawyer.firstName ? `Atty. ${lawyer.firstName} ${lawyer.lastName}` : lawyer.email.split('@')[0]}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-[10px] font-bold text-muted-foreground italic uppercase">Unassigned</span>
-                          )}
+                          <Badge className={cn(
+                            "font-black text-[9px] uppercase px-3",
+                            a.status === 'Eligible' ? 'bg-green-500' : 
+                            a.status === 'Not Eligible' ? 'bg-red-500' : 
+                            a.status === 'For Screening' ? 'bg-amber-500' : 
+                            a.status === 'scheduled' ? 'bg-blue-500' : 'bg-gray-500'
+                          )}>
+                            {a.status}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="space-y-0.5">
                             <p className="text-xs font-bold text-primary">{format(new Date(a.date), "MMM dd, yyyy")}</p>
                             <p className="text-[10px] text-muted-foreground font-medium">{a.time}</p>
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={cn(
-                            "font-black text-[9px] uppercase px-3",
-                            a.status === 'completed' ? 'bg-blue-500' : 
-                            a.status === 'cancelled' ? 'bg-red-500' : 
-                            a.status === 'pending' ? 'bg-amber-500' : 'bg-green-500'
-                          )}>
-                            {a.status}
-                          </Badge>
                         </TableCell>
                         <TableCell className="text-right px-8">
                           <Button 
@@ -199,9 +181,8 @@ export default function AdminAppointmentsRegistry() {
                   })}
                   {filteredAppts.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-24 text-muted-foreground italic font-medium">
-                        <History className="h-12 w-12 mx-auto mb-4 opacity-10" />
-                        No archival records match your search criteria.
+                      <TableCell colSpan={6} className="text-center py-24 text-muted-foreground italic font-medium">
+                        No intake records match your search criteria.
                       </TableCell>
                     </TableRow>
                   )}

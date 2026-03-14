@@ -25,7 +25,8 @@ import {
   Edit3,
   ShieldCheck,
   ChevronLeft,
-  Lock
+  Lock,
+  Info
 } from "lucide-react";
 import { useFirestore, setDocumentNonBlocking, useCollection, useMemoFirebase } from "@/firebase";
 import { doc, collection, query, where } from "firebase/firestore";
@@ -73,7 +74,7 @@ function BookAppointmentContent() {
 
   const getServiceLabel = (p: string) => {
     switch (p) {
-      case 'consultation': return 'Legal Consultation';
+      case 'consultation': return 'Screening & Consultation';
       case 'notarization': return 'Document Notarization';
       case 'document-preparation': return 'Document Preparation';
       case 'legal-advice': return 'Legal Advice';
@@ -177,7 +178,7 @@ function BookAppointmentContent() {
       date: selectedDate.toISOString(),
       dateString: format(selectedDate, "yyyy-MM-dd"),
       time: selectedTime,
-      status: "pending",
+      status: "For Screening",
       type: "initial",
       createdAt: new Date().toISOString()
     };
@@ -190,7 +191,7 @@ function BookAppointmentContent() {
       id: notifId,
       type: "appointment",
       userRole: "guest",
-      description: `New consultation appointment booked by ${guestInfo.name} for ${format(selectedDate, "MMM dd")} @ ${selectedTime}.`,
+      description: `New screening appointment booked by ${guestInfo.name} for ${format(selectedDate, "MMM dd")} @ ${selectedTime}.`,
       referenceId: id,
       referenceCode: code,
       status: "unread",
@@ -202,8 +203,8 @@ function BookAppointmentContent() {
       setStep(5);
       setIsSubmitting(false);
       toast({
-        title: "Booking Successful",
-        description: "Your legal consultation has been officially scheduled."
+        title: "Screening Scheduled",
+        description: "Your eligibility screening has been officially scheduled."
       });
     }, 1500);
   };
@@ -215,19 +216,19 @@ function BookAppointmentContent() {
           <Card className="border-none shadow-2xl bg-white text-center p-8 space-y-6 rounded-[3rem]">
             <div className="flex justify-center">
               <div className="p-4 bg-primary text-white rounded-full animate-bounce shadow-xl">
-                <CheckCircle className="h-12 w-12" />
+                <ShieldCheck className="h-12 w-12" />
               </div>
             </div>
             <div className="space-y-2">
-              <h2 className="text-3xl font-black text-primary font-headline">Booking Confirmed</h2>
-              <p className="text-muted-foreground font-medium">Your request has been successfully processed by the system.</p>
+              <h2 className="text-3xl font-black text-primary font-headline">Screening Scheduled</h2>
+              <p className="text-muted-foreground font-medium">Your initial eligibility interview is now in the system queue.</p>
             </div>
             <div className="bg-primary/5 p-8 rounded-[2rem] space-y-2 border-2 border-dashed border-primary/20">
-              <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Appointment Reference Code</p>
+              <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Screening Reference Code</p>
               <p className="text-5xl font-black text-primary tracking-tighter">{refCode}</p>
             </div>
             <div className="text-sm text-muted-foreground italic bg-amber-50 p-4 rounded-xl border border-amber-100">
-              Please present this code and your valid ID upon arrival at the office.
+              Please present this code and your valid ID upon arrival at the office for your eligibility screening.
             </div>
             <Button className="w-full h-14 rounded-2xl font-bold text-lg bg-primary hover:bg-[#1A3B6B] text-white shadow-lg" onClick={() => router.push("/case-navigator")}>
               Return to Navigator
@@ -242,16 +243,17 @@ function BookAppointmentContent() {
     <DashboardLayout role={null}>
       <div className="max-w-6xl mx-auto space-y-8 py-4 px-4">
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Schedule Legal Appointment</h1>
+          <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Schedule Screening Appointment</h1>
+          <p className="text-sm text-muted-foreground font-medium">All legal assistance requires an initial in-office eligibility interview.</p>
         </div>
 
-        <Card className="border-none shadow-2xl bg-white/90 backdrop-blur-md rounded-[3rem] overflow-hidden">
+        <Card className="border-none shadow-xl bg-white/90 backdrop-blur-md rounded-[3rem] overflow-hidden">
           <CardContent className="p-10">
             {step === 1 && (
               <div className="grid lg:grid-cols-2 gap-12 animate-in fade-in duration-500">
                 <div className="space-y-6">
                   <div className="space-y-4">
-                    <Label className="text-xs font-black text-primary/60 uppercase tracking-widest">1. Select Visit Date</Label>
+                    <Label className="text-xs font-black text-primary/60 uppercase tracking-widest">1. Select Interview Date</Label>
                     <div className="p-4 bg-white rounded-3xl border border-primary/10 shadow-sm flex justify-center">
                       <Calendar
                         mode="single"
@@ -278,7 +280,7 @@ function BookAppointmentContent() {
                         <SelectValue placeholder="Select purpose" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="consultation">Legal Consultation</SelectItem>
+                        <SelectItem value="consultation">Screening & Consultation</SelectItem>
                         {!fromNavigator && <SelectItem value="notarization">Document Notarization</SelectItem>}
                         {!fromNavigator && <SelectItem value="document-preparation">Document Preparation</SelectItem>}
                         <SelectItem value="legal-advice">Legal Advice</SelectItem>
@@ -290,11 +292,10 @@ function BookAppointmentContent() {
                 <div className="space-y-6">
                   <div className="space-y-4">
                     <div className="flex justify-between items-end">
-                      <Label className="text-xs font-black text-primary/60 uppercase tracking-widest">3. Select Time Slot</Label>
+                      <Label className="text-xs font-black text-primary/60 uppercase tracking-widest">3. Select Interview Slot</Label>
                       <div className="flex gap-2 text-[8px] font-bold uppercase">
                         <span className="flex items-center gap-1"><div className="w-2 h-2 bg-green-500 rounded-full" /> Available</span>
-                        <span className="flex items-center gap-1"><div className="w-2 h-2 bg-red-500 rounded-full" /> not available</span>
-                        <span className="flex items-center gap-1"><div className="w-2 h-2 bg-yellow-400 rounded-full" /> Selected</span>
+                        <span className="flex items-center gap-1"><div className="w-2 h-2 bg-red-500 rounded-full" /> Full</span>
                       </div>
                     </div>
                     
@@ -417,16 +418,16 @@ function BookAppointmentContent() {
               <div className="max-w-3xl mx-auto space-y-8 animate-in zoom-in-95 duration-500">
                 <div className="text-center space-y-2">
                   <div className="inline-flex p-3 bg-amber-100 text-amber-900 rounded-full mb-2">
-                    <ShieldCheck className="h-8 w-8" />
+                    <Info className="h-8 w-8" />
                   </div>
-                  <h3 className="text-2xl font-black text-primary font-headline">Review Your Booking</h3>
+                  <h3 className="text-2xl font-black text-primary font-headline">Review Screening Appointment</h3>
                   <p className="text-muted-foreground font-medium">Please verify all information below before identity verification.</p>
                 </div>
 
                 <div className="grid gap-6">
                   <Card className="border-none bg-primary/5 rounded-[2rem]">
                     <CardHeader className="pb-2 border-b border-primary/10">
-                      <CardTitle className="text-xs font-black uppercase text-primary tracking-widest">Personal Information</CardTitle>
+                      <CardTitle className="text-xs font-black uppercase text-primary tracking-widest">Applicant Information</CardTitle>
                     </CardHeader>
                     <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-12">
                       <div className="space-y-1">
@@ -450,11 +451,11 @@ function BookAppointmentContent() {
 
                   <Card className="border-none bg-secondary/5 rounded-[2rem]">
                     <CardHeader className="pb-2 border-b border-secondary/10">
-                      <CardTitle className="text-xs font-black uppercase text-secondary tracking-widest">Appointment Details</CardTitle>
+                      <CardTitle className="text-xs font-black uppercase text-secondary tracking-widest">Screening Schedule</CardTitle>
                     </CardHeader>
                     <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-12">
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Visit Date</p>
+                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Interview Date</p>
                         <p className="font-bold text-secondary">{selectedDate ? format(selectedDate, "PPPP") : ""}</p>
                       </div>
                       <div className="space-y-1">

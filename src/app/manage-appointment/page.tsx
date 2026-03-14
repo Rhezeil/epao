@@ -3,15 +3,15 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc, setDocumentNonBlocking } from "@/firebase";
 import { collection, query, where, doc, getDoc, DocumentData } from "firebase/firestore";
-import { Search, Calendar as CalendarIcon, XCircle, Loader2, CheckCircle2, AlertCircle, Lock, ShieldCheck, User, Clock, Edit3, ChevronRight, ArrowRight, ShieldAlert } from "lucide-react";
+import { Search, Calendar as CalendarIcon, XCircle, Loader2, CheckCircle2, AlertCircle, Lock, ShieldCheck, User, Clock, Edit3, ChevronRight, ArrowRight, ShieldAlert, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { format, isWeekend, startOfToday, setHours, setMinutes, isBefore, addHours, differenceInHours } from "date-fns";
+import { format, isWeekend, startOfToday, setHours, setMinutes, isBefore, differenceInHours } from "date-fns";
 import { cn } from "@/lib/utils";
 import { sendOtpSms } from "@/ai/flows/sms-service";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -58,7 +58,6 @@ export default function ManageAppointmentPage() {
   const { data: results, isLoading } = useCollection(appointmentQuery);
   const appointment = results?.[0];
 
-  // Fetch lawyer info if assigned
   useEffect(() => {
     async function fetchLawyer() {
       if (appointment?.lawyerId && db) {
@@ -72,16 +71,7 @@ export default function ManageAppointmentPage() {
     fetchLawyer();
   }, [appointment, db]);
 
-  // Reschedule Availability Queries
   const rescheduleDateStr = rescheduleDate ? format(rescheduleDate, "yyyy-MM-dd") : null;
-  
-  // Assigned Lawyer Availability
-  const lawyerAvailRef = useMemoFirebase(() => {
-    if (!db || !appointment?.lawyerId || !rescheduleDateStr) return null;
-    return doc(db, "roleLawyer", appointment.lawyerId, "availability", rescheduleDateStr);
-  }, [db, appointment?.lawyerId, rescheduleDateStr]);
-  const { data: lawyerAvail } = useDoc(lawyerAvailRef);
-
   const existingApptsQuery = useMemoFirebase(() => {
     if (!db || !rescheduleDateStr) return null;
     return query(collection(db, "appointments"), where("dateString", "==", rescheduleDateStr));
@@ -93,53 +83,19 @@ export default function ManageAppointmentPage() {
     const now = new Date();
     for (let h = 8; h <= 16; h++) {
       for (let m = 0; m < 60; m += 30) {
-        if (h === 12) continue; // Lunch
+        if (h === 12) continue;
         if (h === 16 && m > 30) continue;
         const ampm = h >= 12 ? 'PM' : 'AM';
         const displayHour = h % 12 || 12;
         const timeString = `${displayHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
         const slotDate = rescheduleDate ? setMinutes(setHours(new Date(rescheduleDate), h), m) : null;
         const isPast = slotDate ? isBefore(slotDate, now) : false;
-        
-        // Global booking check
-        const isGloballyBooked = existingAppts?.some(a => a.time === timeString && a.status !== 'cancelled');
-        
-        // Lawyer-specific booking check
-        const isLawyerAssignedHere = appointment?.lawyerId && existingAppts?.some(a => 
-          a.time === timeString && 
-          a.status !== 'cancelled' && 
-          a.lawyerId === appointment.lawyerId
-        );
-
-        // Professional Availability (Leaves/Overrides)
-        let isLawyerUnavailable = false;
-        if (lawyerAvail) {
-          if (lawyerAvail.availabilityType === 'FullDayLeave') {
-            isLawyerUnavailable = true;
-          } else if (lawyerAvail.availabilityType.includes('Partial')) {
-            const slotTimeVal = h + m / 60;
-            const startArr = (lawyerAvail.startTime || "08:00").split(':');
-            const endArr = (lawyerAvail.endTime || "17:00").split(':');
-            const startVal = parseInt(startArr[0]) + parseInt(startArr[1]) / 60;
-            const endVal = parseInt(endArr[0]) + parseInt(endArr[1]) / 60;
-
-            if (lawyerAvail.availabilityType === 'PartialLeave') {
-              if (slotTimeVal >= startVal && slotTimeVal < endVal) isLawyerUnavailable = true;
-            } else if (lawyerAvail.availabilityType === 'PartialDayAvailable') {
-              if (slotTimeVal < startVal || slotTimeVal >= endVal) isLawyerUnavailable = true;
-            }
-          }
-        }
-
-        slots.push({ 
-          time: timeString, 
-          isBooked: isLawyerAssignedHere || isLawyerUnavailable, 
-          isPast 
-        });
+        const isBooked = existingAppts?.some(a => a.time === timeString && a.status !== 'cancelled');
+        slots.push({ time: timeString, isBooked, isPast });
       }
     }
     return slots;
-  }, [rescheduleDate, existingAppts, appointment?.lawyerId, lawyerAvail]);
+  }, [rescheduleDate, existingAppts]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,11 +112,7 @@ export default function ManageAppointmentPage() {
   const initiateCancellation = async () => {
     if (!appointment) return;
     if (!checkCutoff()) {
-      toast({ 
-        variant: "destructive", 
-        title: "Policy Restriction", 
-        description: "Appointments can only be cancelled at least 24 hours in advance." 
-      });
+      toast({ variant: "destructive", title: "Policy Restriction", description: "Appointments can only be cancelled at least 24 hours in advance." });
       return;
     }
     setIsSmsSending(true);
@@ -193,7 +145,6 @@ export default function ManageAppointmentPage() {
     const apptRef = doc(db, "appointments", appointment.id);
     updateDocumentNonBlocking(apptRef, { status: "cancelled", updatedAt: new Date().toISOString() });
 
-    // --- NOTIFICATION ---
     const notifId = crypto.randomUUID();
     setDocumentNonBlocking(doc(db, "notifications", notifId), {
       id: notifId,
@@ -209,7 +160,7 @@ export default function ManageAppointmentPage() {
     setTimeout(() => {
       setIsCancelling(false);
       setIsOtpOpen(false);
-      toast({ title: "Success", description: "Your visit has been cancelled. The time slot is now available." });
+      toast({ title: "Success", description: "Your visit has been cancelled." });
     }, 1000);
   };
 
@@ -221,11 +172,9 @@ export default function ManageAppointmentPage() {
       date: rescheduleDate.toISOString(),
       dateString: format(rescheduleDate, "yyyy-MM-dd"),
       time: rescheduleTime,
-      status: "rescheduled",
       updatedAt: new Date().toISOString()
     });
 
-    // --- NOTIFICATION ---
     const notifId = crypto.randomUUID();
     setDocumentNonBlocking(doc(db, "notifications", notifId), {
       id: notifId,
@@ -252,8 +201,8 @@ export default function ManageAppointmentPage() {
           <div className="inline-flex p-3 bg-primary/10 rounded-2xl mb-2">
             <CalendarIcon className="h-10 w-10 text-primary" />
           </div>
-          <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Client Appointment Manager</h1>
-          <p className="text-muted-foreground font-medium max-w-md mx-auto">Verify your status, reschedule, or cancel your visit using your unique reference code.</p>
+          <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Visit Management</h1>
+          <p className="text-muted-foreground font-medium max-w-md mx-auto">Verify your screening status or consultation schedule using your reference code.</p>
         </div>
 
         <Card className="border-none shadow-xl bg-white/90 backdrop-blur-md rounded-[2.5rem]">
@@ -272,7 +221,7 @@ export default function ManageAppointmentPage() {
                 />
               </div>
               <Button type="submit" size="lg" className="h-14 rounded-2xl bg-primary px-10 font-black shadow-lg hover:scale-105 transition-all">
-                {isLoading ? <Loader2 className="animate-spin" /> : "Verify Booking"}
+                {isLoading ? <Loader2 className="animate-spin" /> : "Verify Intake"}
               </Button>
             </form>
           </CardContent>
@@ -281,8 +230,8 @@ export default function ManageAppointmentPage() {
         {searchTriggered && !isLoading && !appointment && (
           <div className="text-center p-16 bg-white/40 rounded-[3rem] border-2 border-dashed border-primary/10 animate-in fade-in zoom-in-95">
             <ShieldAlert className="h-16 w-16 text-primary/10 mx-auto mb-4" />
-            <h3 className="text-2xl font-black text-primary">Reference Not Found</h3>
-            <p className="text-muted-foreground font-medium">Please verify the code provided during your initial booking.</p>
+            <h3 className="text-2xl font-black text-primary">Intake Record Not Found</h3>
+            <p className="text-muted-foreground font-medium">Please check the code provided during your booking.</p>
           </div>
         )}
 
@@ -297,9 +246,10 @@ export default function ManageAppointmentPage() {
                   </div>
                   <Badge className={cn(
                     "px-6 py-3 rounded-full font-black uppercase text-[10px] shadow-lg",
-                    appointment.status === 'pending' ? 'bg-amber-400 text-amber-900' : 
-                    appointment.status === 'scheduled' || appointment.status === 'rescheduled' ? 'bg-green-400 text-green-900' : 
-                    appointment.status === 'completed' ? 'bg-blue-400 text-blue-900' : 'bg-red-400 text-red-900'
+                    appointment.status === 'For Screening' ? 'bg-amber-400 text-amber-900' : 
+                    appointment.status === 'Eligible' ? 'bg-green-400 text-green-900' : 
+                    appointment.status === 'scheduled' ? 'bg-blue-400 text-blue-900' : 
+                    appointment.status === 'completed' ? 'bg-gray-400 text-gray-900' : 'bg-red-400 text-red-900'
                   )}>
                     {appointment.status}
                   </Badge>
@@ -308,7 +258,7 @@ export default function ManageAppointmentPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-primary font-black uppercase text-[10px] tracking-widest mb-1">
-                        <CalendarIcon className="h-4 w-4" /> Visit Schedule
+                        <CalendarIcon className="h-4 w-4" /> Date & Time
                       </div>
                       <p className="text-xl font-black text-[#1A3B6B]">
                         {format(new Date(appointment.date), "PPPP")}
@@ -319,7 +269,7 @@ export default function ManageAppointmentPage() {
                     </div>
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-primary font-black uppercase text-[10px] tracking-widest mb-1">
-                        <CheckCircle2 className="h-4 w-4" /> Legal Case
+                        <CheckCircle2 className="h-4 w-4" /> Intake Category
                       </div>
                       <p className="text-xl font-black text-[#1A3B6B]">{appointment.caseType}</p>
                       <Badge variant="outline" className="border-primary/20 text-[10px] font-bold text-primary px-3">
@@ -328,31 +278,33 @@ export default function ManageAppointmentPage() {
                     </div>
                   </div>
 
-                  {appointment.status === 'completed' && (
-                    <div className="p-8 bg-blue-50 rounded-[2.5rem] border border-blue-100 flex items-start gap-4">
-                      <div className="p-3 bg-blue-100 rounded-2xl text-blue-700">
-                        <CheckCircle2 className="h-6 w-6" />
+                  {appointment.status === 'For Screening' && (
+                    <div className="p-8 bg-amber-50 rounded-[2.5rem] border border-amber-100 flex items-start gap-4">
+                      <div className="p-3 bg-amber-100 rounded-2xl text-amber-700">
+                        <Info className="h-6 w-6" />
                       </div>
                       <div className="space-y-1">
-                        <h4 className="text-xs font-black text-blue-900 uppercase tracking-widest">Visit Concluded</h4>
-                        <p className="text-sm text-blue-800 font-medium leading-relaxed">
-                          This legal consultation has been marked as completed by the office and is now archived for your record. It can no longer be rescheduled or cancelled.
+                        <h4 className="text-xs font-black text-amber-900 uppercase tracking-widest">Eligibility Screening</h4>
+                        <p className="text-sm text-amber-800 font-medium leading-relaxed">
+                          Your appointment is currently for **screening**. A Public Attorney will verify your indigency and merit upon arrival before proceeding with legal services.
                         </p>
                       </div>
                     </div>
                   )}
 
-                  <div className="p-8 bg-primary/5 rounded-[2.5rem] border border-primary/10 flex items-start gap-4">
-                    <div className="p-3 bg-white rounded-2xl shadow-sm">
-                      <ShieldCheck className="h-6 w-6 text-primary" />
+                  {appointment.status === 'Eligible' && (
+                    <div className="p-8 bg-green-50 rounded-[2.5rem] border border-green-100 flex items-start gap-4">
+                      <div className="p-3 bg-green-100 rounded-2xl text-green-700">
+                        <ShieldCheck className="h-6 w-6" />
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="text-xs font-black text-green-900 uppercase tracking-widest">Screening Passed</h4>
+                        <p className="text-sm text-green-800 font-medium leading-relaxed">
+                          You have been marked as **Eligible**. The office is currently activating your case file and assigning your legal counsel.
+                        </p>
+                      </div>
                     </div>
-                    <div className="space-y-1">
-                      <h4 className="text-xs font-black text-primary uppercase tracking-widest">Arrival Instructions</h4>
-                      <p className="text-sm text-[#2E5A99] font-medium leading-relaxed">
-                        Please arrive 15 minutes before your time slot. Present this reference code and your valid ID. Failure to attend within 20 minutes of your time will result in automatic cancellation.
-                      </p>
-                    </div>
-                  </div>
+                  )}
 
                   {appointment.status !== 'cancelled' && appointment.status !== 'completed' && (
                     <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-primary/5">
@@ -363,7 +315,7 @@ export default function ManageAppointmentPage() {
                         }}
                         className="flex-1 h-16 bg-[#F0F4F8] hover:bg-primary/5 text-primary font-black text-lg rounded-2xl border-2 border-primary/10 shadow-sm"
                       >
-                        <Edit3 className="mr-2 h-5 w-5" /> Reschedule Visit
+                        <Edit3 className="mr-2 h-5 w-5" /> Reschedule
                       </Button>
                       <Button 
                         variant="outline" 
@@ -372,7 +324,7 @@ export default function ManageAppointmentPage() {
                         onClick={initiateCancellation}
                       >
                         {isSmsSending ? <Loader2 className="animate-spin h-6 w-6 mr-2" /> : <XCircle className="mr-2 h-6 w-6" />}
-                        Cancel Appointment
+                        Cancel
                       </Button>
                     </div>
                   )}
@@ -383,7 +335,7 @@ export default function ManageAppointmentPage() {
             <div className="space-y-6">
               <Card className="border-none shadow-xl bg-primary text-white rounded-[3rem] overflow-hidden">
                 <CardHeader className="p-8 bg-white/10 border-b border-white/5">
-                  <CardTitle className="text-sm font-black uppercase tracking-widest">Lawyer Registry</CardTitle>
+                  <CardTitle className="text-sm font-black uppercase tracking-widest">Counsel Status</CardTitle>
                 </CardHeader>
                 <CardContent className="p-10 space-y-6 text-center">
                   {assignedLawyer ? (
@@ -400,11 +352,7 @@ export default function ManageAppointmentPage() {
                         <p className="text-2xl font-black tracking-tight leading-tight">
                           {assignedLawyer.firstName ? `Atty. ${assignedLawyer.firstName} ${assignedLawyer.lastName}` : assignedLawyer.email.split('@')[0]}
                         </p>
-                        <p className="text-[10px] font-black uppercase text-white/60 tracking-widest mt-2">Authorized Public Attorney</p>
-                      </div>
-                      <div className="pt-4 border-t border-white/10 text-xs font-bold text-white/80 space-y-3">
-                        <p className="flex items-center justify-center gap-2"><Clock className="h-3 w-3" /> Office Hours: 8 AM - 5 PM</p>
-                        <Badge className="bg-green-500/20 text-green-300 border-none text-[9px] uppercase font-black px-3 py-1">Identity Verified</Badge>
+                        <p className="text-[10px] font-black uppercase text-white/60 tracking-widest mt-2">Assigned Public Attorney</p>
                       </div>
                     </div>
                   ) : (
@@ -413,34 +361,11 @@ export default function ManageAppointmentPage() {
                         <Loader2 className="h-8 w-8 text-white/20 animate-spin" />
                       </div>
                       <p className="text-xs font-bold text-white/60 leading-relaxed italic px-4">
-                        Your Case is currently in the Triage Queue. A lawyer will be assigned upon system approval.
+                        A lawyer will be assigned automatically once your eligibility screening is completed and approved.
                       </p>
                     </div>
                   )}
                 </CardContent>
-              </Card>
-
-              <Card className="border-none shadow-xl bg-amber-50 rounded-[3rem] p-8 space-y-4">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 bg-amber-100 rounded-xl text-amber-700">
-                    <ShieldAlert className="h-5 w-5" />
-                  </div>
-                  <h4 className="text-sm font-black text-amber-900 uppercase tracking-widest leading-none">Office Policy</h4>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex gap-3">
-                    <div className="h-1.5 w-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                    <p className="text-xs text-amber-800/80 font-bold leading-relaxed">Cancellations must occur 24h prior.</p>
-                  </div>
-                  <div className="flex gap-3">
-                    <div className="h-1.5 w-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                    <p className="text-xs text-amber-800/80 font-bold leading-relaxed">One active booking per citizen.</p>
-                  </div>
-                  <div className="flex gap-3">
-                    <div className="h-1.5 w-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                    <p className="text-xs text-amber-800/80 font-bold leading-relaxed">Identity verification required for all changes.</p>
-                  </div>
-                </div>
               </Card>
             </div>
           </div>
@@ -456,7 +381,7 @@ export default function ManageAppointmentPage() {
               </div>
               <DialogTitle className="text-3xl font-black text-center text-primary">Authorize Action</DialogTitle>
               <DialogDescription className="text-center font-bold text-muted-foreground leading-relaxed">
-                Enter the 6-digit verification code sent to your mobile to finalize your cancellation.
+                Enter the code sent to your mobile to finalize your cancellation.
               </DialogDescription>
             </DialogHeader>
             <div className="py-8 space-y-6">
@@ -467,11 +392,6 @@ export default function ManageAppointmentPage() {
                 value={otpValue}
                 onChange={(e) => setOtpValue(e.target.value)}
               />
-              <div className="text-center">
-                <Button variant="link" size="sm" className="text-xs font-black text-muted-foreground uppercase tracking-widest" onClick={initiateCancellation} disabled={isSmsSending}>
-                  {isSmsSending ? "Processing..." : "Resend Code"}
-                </Button>
-              </div>
             </div>
             <DialogFooter className="flex gap-4">
               <Button variant="outline" className="flex-1 h-14 rounded-2xl font-bold" onClick={() => setIsOtpOpen(false)}>Back</Button>
@@ -480,7 +400,7 @@ export default function ManageAppointmentPage() {
                 disabled={isCancelling || otpValue.length < 6}
                 onClick={handleVerifyAndCancel}
               >
-                {isCancelling ? <Loader2 className="animate-spin h-6 w-6" /> : "Authorize Cancel"}
+                {isCancelling ? <Loader2 className="animate-spin h-6 w-6" /> : "Confirm Cancel"}
               </Button>
             </DialogFooter>
           </DialogContent>
