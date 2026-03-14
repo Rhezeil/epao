@@ -11,7 +11,7 @@ import { useState, useEffect } from "react";
 import { doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { User, Shield, Lock, Phone, Mail, Camera, Loader2 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function ProfilePage() {
   const { user } = useUser();
