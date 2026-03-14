@@ -137,15 +137,15 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
                       "flex items-center gap-3 px-4 py-6 rounded-2xl transition-all duration-300",
                       (pathname === item.path || pathname.startsWith(item.path + '/'))
                         ? "bg-primary text-white shadow-xl scale-[1.02]" 
-                        : "text-primary hover:bg-primary/5"
+                        : "bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-white shadow-md"
                     )}
                   >
                     <Link href={item.path}>
                       <item.icon className={cn(
                         "h-5 w-5",
-                        (pathname === item.path || pathname.startsWith(item.path + '/')) ? "text-white" : "text-primary"
+                        (pathname === item.path || pathname.startsWith(item.path + '/')) ? "text-white" : "text-slate-300"
                       )} />
-                      <span className="font-bold text-sm">{item.label}</span>
+                      <span className="font-black text-sm">{item.label}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
