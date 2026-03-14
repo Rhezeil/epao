@@ -21,20 +21,18 @@ import {
   AlertCircle,
   Clock,
   Lock,
-  ArrowRight
+  ArrowRight,
+  User
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
+import { format, startOfToday } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { initializeApp, deleteApp } from "firebase/app";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import { firebaseConfig } from "@/firebase/config";
 import { Textarea } from "@/components/ui/textarea";
 
 export default function AdminTriagePage() {
@@ -73,9 +71,24 @@ export default function AdminTriagePage() {
     return query(collection(db, "roleLawyer"));
   }, [db, user, role]);
 
+  const dutiesQuery = useMemoFirebase(() => {
+    if (!db || !user || role !== 'admin') return null;
+    return query(collection(db, "lawyerDuties"), where("date", ">=", startOfToday().toISOString()));
+  }, [db, user, role]);
+
   const { data: screeningAppointments, isLoading: isScreeningLoading } = useCollection(screeningQuery);
   const { data: eligibleAppointments, isLoading: isEligibleLoading } = useCollection(eligibleQuery);
   const { data: lawyers } = useCollection(lawyersQuery);
+  const { data: currentDuties } = useCollection(dutiesQuery);
+
+  const lawyersOnDuty = useMemo(() => {
+    if (!lawyers || !currentDuties) return [];
+    const today = format(new Date(), "yyyy-MM-dd");
+    return lawyers.map(l => {
+      const isOnOfficeDuty = currentDuties.some(d => d.lawyerId === l.id && d.category === "Office Work" && d.date.startsWith(today));
+      return { ...l, isOnOfficeDuty };
+    });
+  }, [lawyers, currentDuties]);
 
   if (loading) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!user || role !== 'admin') return null;
@@ -130,79 +143,32 @@ export default function AdminTriagePage() {
     }
   };
 
-  const handleActivateCase = async () => {
+  const handleStartConsultation = async () => {
     if (!db || !selectedAppt || !assignedLawyer || !user) return;
     setIsProcessing(true);
 
     try {
-      const year = new Date().getFullYear();
-      const caseId = `CASE-${year}-${Math.floor(1000 + Math.random() * 9000)}`;
-      
-      let clientId = selectedAppt.clientId;
-      const email = selectedAppt.guestEmail || selectedAppt.clientEmail || `${selectedAppt.guestMobile || selectedAppt.clientMobile}@epao.mobile`;
-
-      if (!clientId) {
-        try {
-          const secondaryApp = initializeApp(firebaseConfig, "client-activation-" + Date.now());
-          const secondaryAuth = getAuth(secondaryApp);
-          const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, "password123");
-          clientId = userCredential.user.uid;
-          await deleteApp(secondaryApp);
-        } catch (authError: any) {
-          if (authError.code !== 'auth/email-already-in-use') {
-             clientId = clientId || crypto.randomUUID();
-          }
-        }
-      }
-
-      // 1. Update Appointment to Scheduled Consultation
       const apptRef = doc(db, "appointments", selectedAppt.id);
       updateDocumentNonBlocking(apptRef, {
-        status: "scheduled",
+        status: "Consultation in Progress",
         lawyerId: assignedLawyer,
-        clientId: clientId,
         updatedAt: new Date().toISOString()
       });
-
-      // 2. Create Official Case record
-      const caseRef = doc(db, "cases", caseId);
-      setDocumentNonBlocking(caseRef, {
-        id: caseId,
-        clientId: clientId,
-        lawyerId: assignedLawyer,
-        caseType: selectedAppt.caseType,
-        status: "Active",
-        initialAppointmentId: selectedAppt.id,
-        description: `Official record activated from screening ${selectedAppt.referenceCode}. Notes: ${selectedAppt.screeningDetails?.notes || 'N/A'}`,
-        createdAt: new Date().toISOString()
-      }, { merge: true });
-
-      // 3. Initialize/Update User Account
-      const userRef = doc(db, "users", clientId);
-      setDocumentNonBlocking(userRef, {
-        id: clientId,
-        mobileNumber: selectedAppt.guestMobile || selectedAppt.clientMobile || "",
-        email: email,
-        fullName: selectedAppt.guestName || selectedAppt.clientName || "",
-        role: "client",
-        status: "Active Case",
-        createdAt: new Date().toISOString()
-      }, { merge: true });
 
       // --- NOTIFICATION ---
       const notifId = crypto.randomUUID();
       setDocumentNonBlocking(doc(db, "notifications", notifId), {
         id: notifId,
-        type: "case",
+        type: "appointment",
         userRole: "admin",
-        description: `Official Case ${caseId} created from screening conversion.`,
-        referenceId: caseId,
+        description: `Citizen ${selectedAppt.guestName || selectedAppt.clientName} assigned to Atty. ${lawyers?.find(l => l.id === assignedLawyer)?.lastName} for consultation.`,
+        referenceId: selectedAppt.id,
         referenceCode: selectedAppt.referenceCode,
         status: "unread",
         createdAt: new Date().toISOString()
       }, { merge: true });
 
-      toast({ title: "Case Activated", description: `Legal record ${caseId} is now live.` });
+      toast({ title: "Consultation Started", description: "The assigned lawyer has been notified of the incoming intake." });
       setSelectedAppt(null);
       setAssignedLawyer("");
     } finally {
@@ -213,9 +179,14 @@ export default function AdminTriagePage() {
   return (
     <DashboardLayout role="admin">
       <div className="space-y-8">
-        <div>
-          <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Eligibility Screening Workstation</h1>
-          <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest mt-1">Official intake evaluation and case activation portal</p>
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-primary text-white rounded-2xl shadow-lg">
+            <ClipboardCheck className="h-8 w-8" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Intake Triage Workstation</h1>
+            <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest mt-1">Official screening and consultation assignment</p>
+          </div>
         </div>
 
         <Tabs defaultValue="screening" className="w-full">
@@ -225,8 +196,8 @@ export default function AdminTriagePage() {
           </TabsList>
 
           <TabsContent value="screening" className="mt-8">
-            <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden">
-              <CardHeader className="bg-amber-50/50 border-b border-amber-100/50">
+            <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
+              <CardHeader className="bg-amber-50/50 border-b border-amber-100/50 p-8">
                 <CardTitle className="text-xl font-bold text-amber-900 flex items-center gap-2">
                   <Search className="h-6 w-6" /> Pending Eligibility Evaluation
                 </CardTitle>
@@ -262,10 +233,10 @@ export default function AdminTriagePage() {
           </TabsContent>
 
           <TabsContent value="eligible" className="mt-8">
-            <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden">
-              <CardHeader className="bg-green-50/50 border-b border-green-100/50">
+            <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
+              <CardHeader className="bg-green-50/50 border-b border-green-100/50 p-8">
                 <CardTitle className="text-xl font-bold text-green-900 flex items-center gap-2">
-                  <ShieldCheck className="h-6 w-6" /> Eligible for Case Activation
+                  <ShieldCheck className="h-6 w-6" /> Eligible for Consultation Assignment
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
@@ -285,12 +256,12 @@ export default function AdminTriagePage() {
                         <TableCell className="font-bold">{appt.guestName || appt.clientName}</TableCell>
                         <TableCell className="text-xs font-medium">{appt.screeningDetails?.screenedAt ? format(new Date(appt.screeningDetails.screenedAt), "PPP") : '---'}</TableCell>
                         <TableCell className="text-right px-8">
-                          <Button size="sm" onClick={() => setSelectedAppt(appt)} className="rounded-xl font-black bg-secondary text-white">Activate Case File</Button>
+                          <Button size="sm" onClick={() => setSelectedAppt(appt)} className="rounded-xl font-black bg-secondary text-white">Assign Consultation</Button>
                         </TableCell>
                       </TableRow>
                     ))}
                     {eligibleAppointments?.length === 0 && (
-                      <TableRow><TableCell colSpan={4} className="text-center py-24 text-muted-foreground italic">No approved intakes awaiting activation.</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={4} className="text-center py-24 text-muted-foreground italic">No approved intakes awaiting assignment.</TableCell></TableRow>
                     )}
                   </TableBody>
                 </Table>
@@ -372,20 +343,19 @@ export default function AdminTriagePage() {
           </DialogContent>
         </Dialog>
 
-        {/* --- CASE ACTIVATION DIALOG (For Eligible) --- */}
+        {/* --- CONSULTATION ASSIGNMENT DIALOG --- */}
         <Dialog open={!!selectedAppt && selectedAppt.status === 'Eligible'} onOpenChange={() => setSelectedAppt(null)}>
           <DialogContent className="rounded-[3rem] max-w-lg p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[90vh]">
             <DialogHeader className="p-8 bg-secondary text-white">
-              <DialogTitle className="text-2xl font-black">Official Case Activation</DialogTitle>
-              <DialogDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest">Assigning Attorney for {selectedAppt?.referenceCode}</DialogDescription>
+              <DialogTitle className="text-2xl font-black">Lawyer Assignment</DialogTitle>
+              <DialogDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest">Assigning Counsel for {selectedAppt?.referenceCode}</DialogDescription>
             </DialogHeader>
             <div className="p-10 space-y-8 flex-1 overflow-y-auto">
               <div className="p-6 bg-secondary/5 rounded-[2rem] border-2 border-dashed border-secondary/10">
-                <p className="text-[10px] font-black uppercase text-secondary tracking-widest mb-2">Screening Outcome</p>
+                <p className="text-[10px] font-black uppercase text-secondary tracking-widest mb-2">Citizen Interest</p>
                 <div className="flex items-center gap-2 text-secondary font-bold">
-                  <CheckCircle2 className="h-4 w-4" /> Eligible for Public Assistance
+                  <Badge variant="outline" className="border-secondary/20">{selectedAppt?.caseType}</Badge>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2 italic">"{selectedAppt?.screeningDetails?.notes || 'No remarks provided.'}"</p>
               </div>
 
               <div className="space-y-6">
@@ -393,14 +363,23 @@ export default function AdminTriagePage() {
                   <Label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">Handling Public Attorney</Label>
                   <Select value={assignedLawyer} onValueChange={setAssignedLawyer}>
                     <SelectTrigger className="h-12 rounded-xl border-primary/10 font-bold shadow-sm"><SelectValue placeholder="Select Attorney" /></SelectTrigger>
-                    <SelectContent>{lawyers?.map(l => <SelectItem key={l.id} value={l.id} className="font-bold">{l.firstName ? `Atty. ${l.firstName} ${l.lastName}` : l.email}</SelectItem>)}</SelectContent>
+                    <SelectContent>
+                      {lawyersOnDuty?.map(l => (
+                        <SelectItem key={l.id} value={l.id} className="font-bold">
+                          <div className="flex items-center gap-2">
+                            <span>{l.firstName ? `Atty. ${l.firstName} ${l.lastName}` : l.email}</span>
+                            {l.isOnOfficeDuty && <Badge className="bg-green-500 text-[8px] h-4">OFFICE DUTY</Badge>}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
                   </Select>
                 </div>
                 
-                <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-3">
-                  <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-                  <p className="text-[11px] text-amber-800 font-bold leading-relaxed">
-                    Activation will notify the citizen via SMS/Email and create their official portal account.
+                <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 flex items-start gap-3">
+                  <Info className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+                  <p className="text-[11px] text-blue-800 font-bold leading-relaxed">
+                    Priority is given to lawyers currently on "Office Work" duty for walk-in consultations.
                   </p>
                 </div>
               </div>
@@ -408,11 +387,11 @@ export default function AdminTriagePage() {
             <DialogFooter className="p-8 bg-muted/30 flex gap-4">
               <Button variant="outline" onClick={() => setSelectedAppt(null)} className="flex-1 h-12 rounded-xl font-bold">Cancel</Button>
               <Button 
-                onClick={handleActivateCase} 
+                onClick={handleStartConsultation} 
                 disabled={!assignedLawyer || isProcessing} 
                 className="flex-1 h-12 rounded-xl font-black text-white shadow-lg bg-secondary"
               >
-                {isProcessing ? <Loader2 className="animate-spin h-5 w-5" /> : "Finalize Activation"}
+                {isProcessing ? <Loader2 className="animate-spin h-5 w-5" /> : "Commence Consultation"}
               </Button>
             </DialogFooter>
           </DialogContent>

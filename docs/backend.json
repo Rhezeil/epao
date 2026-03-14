@@ -38,7 +38,10 @@
         "date": { "type": "string", "format": "date-time" },
         "time": { "type": "string" },
         "status": { "type": "string" },
-        "caseType": { "type": "string" }
+        "caseType": { "type": "string" },
+        "consultationNotes": { "type": "string" },
+        "recommendation": { "type": "string" },
+        "assessment": { "type": "string" }
       }
     },
     "LegalCase": {
@@ -134,6 +137,10 @@
     "/cases/{caseId}/documents/{docId}": {
       "schema": "#/backend/entities/CaseDocument",
       "description": "Document metadata for case folders."
+    },
+    "/lawyersEmail/{email}": {
+      "schema": { "type": "object", "properties": { "email": { "type": "string" } } },
+      "description": "Whitelist for lawyer authorization."
     },
     "/lawyerDuties/{dutyId}": {
       "schema": "#/backend/entities/LawyerDuty",
