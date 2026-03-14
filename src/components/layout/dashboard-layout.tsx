@@ -31,7 +31,8 @@ import {
   ShieldCheck,
   Heart,
   History,
-  Activity
+  Activity,
+  Clock
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
@@ -90,6 +91,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
       return [
         { icon: LayoutDashboard, label: "Workstation Home", path: "/dashboard/lawyer", exact: true },
         { icon: FileText, label: "My Cases", path: "/dashboard/lawyer/cases" },
+        { icon: Clock, label: "Availability", path: "/dashboard/lawyer/availability" },
       ];
     }
 
@@ -136,7 +138,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
                     <SidebarMenuButton 
                       asChild
                       className={cn(
-                        "flex items-center gap-3 px-4 py-6 rounded-2xl transition-all duration-300 border-none",
+                        "flex items-center gap-3 px-4 py-6 rounded-2xl transition-all duration-300 border-none h-14",
                         isActive
                           ? "bg-primary text-white shadow-xl scale-[1.02] hover:bg-primary" 
                           : "bg-slate-950 text-slate-300 hover:bg-slate-900 hover:text-white"

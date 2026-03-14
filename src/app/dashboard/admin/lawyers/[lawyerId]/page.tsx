@@ -1,12 +1,12 @@
 
 "use client";
 
-import { useState, useMemo, use } from "react";
+import { useState, useMemo, use, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { useAuth } from "@/components/auth-provider";
 import { useFirestore, useDoc, useCollection, useMemoFirebase, setDocumentNonBlocking } from "@/firebase";
 import { doc, collection, query, where, orderBy } from "firebase/firestore";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +27,8 @@ import {
   AlertCircle,
   FileText,
   User,
-  History
+  History,
+  Save
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { format, startOfToday, isBefore, isWeekend, setHours, setMinutes } from "date-fns";
@@ -35,6 +36,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const DUTY_CATEGORIES = [
   "Office Work",
@@ -49,6 +51,13 @@ const LOCATIONS = {
   "Court Work": "Regional Trial Court",
   "Prison and Jail Visits": "Detention Facility"
 };
+
+const AVAILABILITY_TYPES = [
+  { value: "Available", label: "Office Standard (08:00 - 17:00)" },
+  { value: "FullDayLeave", label: "Official Leave (Full Day)" },
+  { value: "PartialLeave", label: "Unavailable During Specific Hours" },
+  { value: "PartialDayAvailable", label: "Available Only During Specific Hours" },
+];
 
 export default function LawyerScheduleWorkstation({ params }: { params: Promise<{ lawyerId: string }> }) {
   const { lawyerId } = use(params);
@@ -70,6 +79,13 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
     location: LOCATIONS[DUTY_CATEGORIES[0] as keyof typeof LOCATIONS]
   });
 
+  const [availForm, setAvailForm] = useState({
+    availabilityType: "Available",
+    startTime: "08:00",
+    endTime: "17:00",
+    notes: ""
+  });
+
   // Queries
   const lawyerRef = useMemoFirebase(() => db ? doc(db, "roleLawyer", lawyerId) : null, [db, lawyerId]);
   const apptsQuery = useMemoFirebase(() => {
@@ -85,10 +101,35 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
     return query(collection(db, "cases"), where("lawyerId", "==", lawyerId), where("status", "==", "Active"));
   }, [db, lawyerId]);
 
+  const dateStr = selectedDate ? format(selectedDate, "yyyy-MM-dd") : null;
+  const availRef = useMemoFirebase(() => {
+    if (!db || !dateStr) return null;
+    return doc(db, "roleLawyer", lawyerId, "availability", dateStr);
+  }, [db, lawyerId, dateStr]);
+
   const { data: lawyer } = useDoc(lawyerRef);
   const { data: appts } = useCollection(apptsQuery);
   const { data: duties } = useCollection(dutiesQuery);
   const { data: activeCases } = useCollection(casesQuery);
+  const { data: availData, isLoading: isAvailLoading } = useDoc(availRef);
+
+  useEffect(() => {
+    if (availData) {
+      setAvailForm({
+        availabilityType: availData.availabilityType || "Available",
+        startTime: availData.startTime || "08:00",
+        endTime: availData.endTime || "17:00",
+        notes: availData.notes || ""
+      });
+    } else {
+      setAvailForm({
+        availabilityType: "Available",
+        startTime: "08:00",
+        endTime: "17:00",
+        notes: ""
+      });
+    }
+  }, [availData]);
 
   const selectedDayItems = useMemo(() => {
     if (!selectedDate) return [];
@@ -139,9 +180,9 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
       return;
     }
 
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    const ds = format(selectedDate, "yyyy-MM-dd");
 
-    if (hasConflict(dateStr, dutyForm.startTime, dutyForm.endTime)) {
+    if (hasConflict(ds, dutyForm.startTime, dutyForm.endTime)) {
       toast({ variant: "destructive", title: "Schedule Conflict", description: "This lawyer already has an assignment during this time slot." });
       return;
     }
@@ -188,23 +229,47 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
     }, 1000);
   };
 
+  const handleUpdateAvailability = async () => {
+    if (!db || !dateStr) return;
+    setIsSubmitting(true);
+    
+    try {
+      const data = {
+        date: dateStr,
+        ...availForm,
+        adminId: user?.uid,
+        updatedAt: new Date().toISOString()
+      };
+      setDocumentNonBlocking(availRef!, data, { merge: true });
+      toast({ title: "Availability Updated", description: `Professional status for ${format(selectedDate!, "MMM dd")} synchronized.` });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (!lawyer) return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-primary" /></div>;
 
   return (
     <DashboardLayout role="admin">
       <div className="space-y-8 pb-20">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-xl"><ArrowLeft className="h-5 w-5" /></Button>
-          <Avatar className="h-16 w-16 border-2 border-primary/10">
-            <AvatarImage src={lawyer.photoUrl} className="object-cover" />
-            <AvatarFallback className="font-black">{lawyer.firstName?.[0]}</AvatarFallback>
-          </Avatar>
-          <div>
-            <h1 className="text-3xl font-black text-primary font-headline tracking-tight">
-              Atty. {lawyer.firstName} {lawyer.lastName}
-            </h1>
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Master Schedule Registry</p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-xl"><ArrowLeft className="h-5 w-5" /></Button>
+            <Avatar className="h-16 w-16 border-2 border-primary/10">
+              <AvatarImage src={lawyer.photoUrl} className="object-cover" />
+              <AvatarFallback className="font-black">{lawyer.firstName?.[0]}</AvatarFallback>
+            </Avatar>
+            <div>
+              <h1 className="text-3xl font-black text-primary font-headline tracking-tight">
+                Atty. {lawyer.firstName} {lawyer.lastName}
+              </h1>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Master Schedule Registry</p>
+            </div>
           </div>
+          <Badge className={cn(
+            "font-black text-[10px] px-4 py-2 rounded-full uppercase",
+            lawyer.status === 'Available' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'
+          )}>{lawyer.status}</Badge>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -243,59 +308,112 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
           </div>
 
           <div className="lg:col-span-3">
-            <Card className="border-none shadow-xl rounded-[3rem] bg-white overflow-hidden">
-              <CardHeader className="bg-primary/5 p-8 border-b border-primary/10">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary text-white rounded-xl"><Clock className="h-5 w-5" /></div>
-                    <div>
-                      <CardTitle className="text-xl font-bold text-primary">Daily Workflow Breakdown</CardTitle>
-                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{selectedDate ? format(selectedDate, "PPPP") : ""}</p>
+            <Tabs defaultValue="workflow" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 bg-white/50 p-1.5 rounded-[2rem] border-2 border-primary/5 shadow-inner h-16 mb-8">
+                <TabsTrigger value="workflow" className="rounded-[1.5rem] font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">
+                  Daily Workflow Breakdown
+                </TabsTrigger>
+                <TabsTrigger value="availability" className="rounded-[1.5rem] font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">
+                  Availability Override
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="workflow">
+                <Card className="border-none shadow-xl rounded-[3rem] bg-white overflow-hidden">
+                  <CardHeader className="bg-primary/5 p-8 border-b border-primary/10">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-primary text-white rounded-xl"><Clock className="h-5 w-5" /></div>
+                      <div>
+                        <CardTitle className="text-xl font-bold text-primary">Daily Schedule</CardTitle>
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{selectedDate ? format(selectedDate, "PPPP") : ""}</p>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                {selectedDayItems.length > 0 ? (
-                  <div className="divide-y divide-primary/5">
-                    {selectedDayItems.map((item, idx) => (
-                      <div key={idx} className="p-8 flex items-center justify-between hover:bg-muted/10 transition-colors group">
-                        <div className="flex items-center gap-8">
-                          <div className="w-24 text-right">
-                            <p className="text-lg font-black text-primary">{item.time}</p>
-                            <p className="text-[10px] font-bold text-muted-foreground uppercase">Scheduled</p>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    {selectedDayItems.length > 0 ? (
+                      <div className="divide-y divide-primary/5">
+                        {selectedDayItems.map((item, idx) => (
+                          <div key={idx} className="p-8 flex items-center justify-between hover:bg-muted/10 transition-colors group">
+                            <div className="flex items-center gap-8">
+                              <div className="w-24 text-right">
+                                <p className="text-lg font-black text-primary">{item.time}</p>
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase">Scheduled</p>
+                              </div>
+                              <div className="h-12 w-1 bg-primary/10 rounded-full group-hover:bg-primary transition-colors" />
+                              <div>
+                                <div className="flex items-center gap-3 mb-1">
+                                  <h4 className="text-lg font-black text-primary">
+                                    {item.type === 'appt' ? (item.data.guestName || item.data.clientName) : item.data.title}
+                                  </h4>
+                                  <Badge variant="outline" className={cn(
+                                    "text-[9px] font-black uppercase px-2 py-0.5",
+                                    item.type === 'appt' ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-blue-50 text-blue-700 border-blue-200"
+                                  )}>
+                                    {item.type === 'appt' ? "Citizen Visit" : item.data.category}
+                                  </Badge>
+                                </div>
+                                <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground">
+                                  <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {item.type === 'appt' ? "PAO Main Office" : item.data.location}</span>
+                                  <span className="flex items-center gap-1"><ShieldCheck className="h-3 w-3" /> Ref: {item.type === 'appt' ? item.data.referenceCode : item.data.id.slice(0, 8)}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <Badge className="bg-primary/5 text-primary border-none font-black text-[10px] px-4 py-1 rounded-full uppercase">Scheduled</Badge>
                           </div>
-                          <div className="h-12 w-1 bg-primary/10 rounded-full group-hover:bg-primary transition-colors" />
-                          <div>
-                            <div className="flex items-center gap-3 mb-1">
-                              <h4 className="text-lg font-black text-primary">
-                                {item.type === 'appt' ? item.data.caseType : item.data.title}
-                              </h4>
-                              <Badge variant="outline" className={cn(
-                                "text-[9px] font-black uppercase px-2 py-0.5",
-                                item.type === 'appt' ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-blue-50 text-blue-700 border-blue-200"
-                              )}>
-                                {item.type === 'appt' ? "Client Visit" : item.data.category}
-                              </Badge>
-                            </div>
-                            <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground">
-                              <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {item.type === 'appt' ? "PAO Main Office" : item.data.location}</span>
-                              <span className="flex items-center gap-1"><ShieldCheck className="h-3 w-3" /> Ref: {item.type === 'appt' ? item.data.referenceCode : item.data.id.slice(0, 8)}</span>
-                            </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="py-32 text-center space-y-4">
+                        <History className="h-16 w-16 text-primary/10 mx-auto" />
+                        <p className="text-muted-foreground font-medium italic">No assignments recorded for this date.</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="availability">
+                <Card className="border-none shadow-xl rounded-[3rem] bg-white overflow-hidden">
+                  <CardHeader className="bg-primary/5 p-8 border-b border-primary/10">
+                    <CardTitle className="text-xl font-bold text-primary">Professional Availability Override</CardTitle>
+                    <p className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Admin Control Panel</p>
+                  </CardHeader>
+                  <CardContent className="p-10 space-y-8">
+                    <div className="grid md:grid-cols-2 gap-8">
+                      <div className="space-y-4">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">Availability Type</Label>
+                        <Select value={availForm.availabilityType} onValueChange={(v) => setAvailForm({...availForm, availabilityType: v})}>
+                          <SelectTrigger className="h-12 rounded-xl"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {AVAILABILITY_TYPES.map(t => <SelectItem key={t.value} value={t.value} className="font-bold">{t.label}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {(availForm.availabilityType.includes('Partial')) && (
+                        <div className="grid grid-cols-2 gap-4 animate-in fade-in">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Start Time</Label>
+                            <Input type="time" value={availForm.startTime} onChange={e => setAvailForm({...availForm, startTime: e.target.value})} className="h-12 rounded-xl" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">End Time</Label>
+                            <Input type="time" value={availForm.endTime} onChange={e => setAvailForm({...availForm, endTime: e.target.value})} className="h-12 rounded-xl" />
                           </div>
                         </div>
-                        <Badge className="bg-primary/5 text-primary border-none font-black text-[10px] px-4 py-1 rounded-full uppercase">Active</Badge>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="py-32 text-center space-y-4">
-                    <History className="h-16 w-16 text-primary/10 mx-auto" />
-                    <p className="text-muted-foreground font-medium italic">No assignments recorded for this date.</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Administrative Notes</Label>
+                      <Textarea value={availForm.notes} onChange={e => setAvailForm({...availForm, notes: e.target.value})} className="rounded-2xl h-24" placeholder="Reason for status override..." />
+                    </div>
+                    <Button onClick={handleUpdateAvailability} disabled={isSubmitting} className="w-full h-14 bg-primary text-white font-black rounded-2xl shadow-xl">
+                      {isSubmitting ? <Loader2 className="animate-spin mr-2 h-5 w-5" /> : <Save className="mr-2 h-5 w-5" />}
+                      Confirm Schedule Override
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
 
