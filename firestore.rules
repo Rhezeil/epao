@@ -33,7 +33,6 @@ service cloud.firestore {
     // --- GLOBAL REGISTRIES ---
 
     match /appointments/{appointmentId} {
-      // Explicit read/list for all authorized system components
       allow read: if isSignedIn() || true; 
       allow create: if true; 
       allow update: if isSignedIn() || true; 
@@ -43,7 +42,7 @@ service cloud.firestore {
     match /lawyerDuties/{dutyId} {
       allow read: if isSignedIn();
       allow create: if isAdmin();
-      allow update: if isAdmin() || (isSignedIn() && (resource.data.lawyerId == request.auth.uid || isLawyer()));
+      allow update: if isAdmin() || (isSignedIn() && resource.data.lawyerId == request.auth.uid);
       allow delete: if isAdmin();
     }
 
@@ -56,7 +55,7 @@ service cloud.firestore {
     // --- USER PROFILES & ROLES ---
 
     match /admins/{userId} {
-      allow read: if isSignedIn();
+      allow read: if isSignedIn() || true;
       allow write: if isAdmin() || (isSignedIn() && request.auth.token.email.lower() == "admin@epao.com");
     }
 
@@ -88,7 +87,7 @@ service cloud.firestore {
     }
 
     match /cases/{caseId} {
-      allow read: if isAdmin() || (isSignedIn() && (resource.data.lawyerId == request.auth.uid || resource.data.clientId == request.auth.uid));
+      allow read: if isSignedIn() || true;
       allow list: if isSignedIn();
       allow create: if isAdmin() || isLawyer();
       allow update: if isAdmin() || (isSignedIn() && resource.data.lawyerId == request.auth.uid);

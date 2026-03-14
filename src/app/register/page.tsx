@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from "react";
@@ -98,7 +99,8 @@ export default function RegisterPage() {
       }, { merge: true });
 
       if (userRole === "admin") {
-        setDocumentNonBlocking(doc(db, "roleAdmin", user.uid), {
+        // Corrected: Using 'admins' collection to match rules and login
+        setDocumentNonBlocking(doc(db, "admins", user.uid), {
           id: user.uid,
           email: user.email,
           role: "admin",
