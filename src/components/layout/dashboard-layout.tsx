@@ -65,7 +65,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
       return [
         { icon: Compass, label: "Case Requirements Navigator", path: "/case-navigator" },
         { icon: Calendar, label: "Book Appointment", path: "/book-appointment" },
-        { icon: Search, label: "Manage Booking", path: "/manage-appointment" },
+        { icon: Search, label: "Manage Visit", path: "/manage-appointment" },
         { icon: Heart, label: "About Us", path: "/about" },
       ];
     }
@@ -79,7 +79,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
 
     if (role === "admin") {
       return [
-        { icon: LayoutDashboard, label: "System Analytics", path: "/dashboard/admin" },
+        { icon: LayoutDashboard, label: "Diagnostic Analysis", path: "/dashboard/admin" },
         { icon: ShieldCheck, label: "Intake Assessment", path: "/dashboard/admin/triage" },
         { icon: Users, label: "Client Directory", path: "/dashboard/admin/users" },
         { icon: History, label: "Visit Registry", path: "/dashboard/admin/appointments" },
@@ -90,7 +90,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
 
     if (role === "lawyer") {
       return [
-        { icon: LayoutDashboard, label: "Home", path: "/dashboard/lawyer" },
+        { icon: LayoutDashboard, label: "Workstation Home", path: "/dashboard/lawyer" },
         { icon: FileText, label: "My Cases", path: "/dashboard/lawyer/cases" },
       ];
     }
@@ -127,29 +127,32 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
           </SidebarHeader>
           
           <SidebarContent className="px-4">
-            <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.path + item.label}>
-                  <SidebarMenuButton 
-                    asChild
-                    isActive={pathname === item.path || pathname.startsWith(item.path + '/')}
-                    className={cn(
-                      "flex items-center gap-3 px-4 py-6 rounded-2xl transition-all duration-300",
-                      (pathname === item.path || pathname.startsWith(item.path + '/'))
-                        ? "bg-primary text-white shadow-xl scale-[1.02]" 
-                        : "bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-white shadow-md"
-                    )}
-                  >
-                    <Link href={item.path}>
-                      <item.icon className={cn(
-                        "h-5 w-5",
-                        (pathname === item.path || pathname.startsWith(item.path + '/')) ? "text-white" : "text-slate-300"
-                      )} />
-                      <span className="font-black text-sm">{item.label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+            <SidebarMenu className="space-y-2">
+              {menuItems.map((item) => {
+                const isActive = pathname === item.path || pathname.startsWith(item.path + '/');
+                return (
+                  <SidebarMenuItem key={item.path + item.label}>
+                    <SidebarMenuButton 
+                      asChild
+                      isActive={isActive}
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-6 rounded-2xl transition-all duration-300",
+                        isActive
+                          ? "bg-primary text-white shadow-xl scale-[1.02] border-none" 
+                          : "bg-slate-950 text-slate-300 hover:bg-slate-900 hover:text-white shadow-md border-none"
+                      )}
+                    >
+                      <Link href={item.path}>
+                        <item.icon className={cn(
+                          "h-5 w-5",
+                          isActive ? "text-white" : "text-slate-400"
+                        )} />
+                        <span className="font-black text-sm">{item.label}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarContent>
 

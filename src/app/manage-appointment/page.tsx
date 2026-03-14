@@ -126,7 +126,7 @@ export default function ManageAppointmentPage() {
       if (result.success) {
         setGeneratedOtp(result.code);
         setIsOtpOpen(true);
-        toast({ title: "Mock SMS Received", description: result.message });
+        toast({ title: "Verification Code Sent", description: result.message });
       }
     } catch (e) {
       toast({ variant: "destructive", title: "SMS Service Unavailable", description: "Please try again later." });

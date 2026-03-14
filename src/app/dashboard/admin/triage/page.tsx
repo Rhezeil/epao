@@ -17,14 +17,10 @@ import {
   XCircle, 
   Search, 
   Scale,
-  Calendar,
   AlertCircle,
-  Clock,
-  Lock,
-  ArrowRight,
-  User,
   Info,
-  Gavel
+  Gavel,
+  User
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -112,16 +108,6 @@ export default function AdminIntakeAssessmentPage() {
   const handleScreeningResult = async (result: 'Eligible' | 'Not Eligible') => {
     if (!db || !selectedAppt || !user) return;
     
-    if (result === 'Eligible' && (!screening.indigency || !screening.merit || !screening.idVerified)) {
-      toast({ variant: "destructive", title: "Incomplete Screening", description: "All eligibility criteria must be satisfied for approval." });
-      return;
-    }
-
-    if (result === 'Not Eligible' && !rejectionReason) {
-      toast({ variant: "destructive", title: "Reason Required", description: "Please provide a reason for ineligibility." });
-      return;
-    }
-
     setIsProcessing(true);
     try {
       const apptRef = doc(db, "appointments", selectedAppt.id);
@@ -456,7 +442,7 @@ export default function AdminIntakeAssessmentPage() {
 
                 {!screening.indigency || !screening.merit || !screening.idVerified ? (
                   <div className="space-y-2 animate-in fade-in">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-red-600/60 ml-1">Reason for Rejection (If failing)</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-red-600/60 ml-1">Reason for Denial (If failing)</Label>
                     <Select value={rejectionReason} onValueChange={setRejectionReason}>
                       <SelectTrigger className="rounded-xl border-red-100 bg-red-50/30 font-bold"><SelectValue placeholder="Select Reason" /></SelectTrigger>
                       <SelectContent>

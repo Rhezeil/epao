@@ -8,31 +8,24 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
 import { collection, query, orderBy, doc, limit } from "firebase/firestore";
 import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  AreaChart, Area, ReferenceLine, Legend, BarChart, Bar, Cell, PieChart, Pie
+  BarChart, Bar, Cell, PieChart, Pie, Tooltip, ResponsiveContainer, CartesianGrid, XAxis, YAxis
 } from "recharts";
 import { 
-  ShieldCheck, Users, Briefcase, Calendar, 
-  TrendingUp, Filter, ArrowUpRight, ArrowDownRight, 
-  Scale, Gavel, Loader2, Search, Clock, 
-  Activity, PieChart as PieIcon, Sparkles, AlertCircle,
-  TrendingDown, BrainCircuit, BarChart3, CheckCircle2,
-  ListChecks, Lightbulb, Info, FileText, CalendarCheck,
-  Zap, Target, Layers, ArrowRight, ChevronDown, Bell, Eye,
+  ShieldCheck, Briefcase, 
+  Activity, PieChart as PieIcon, Lightbulb, 
   Microscope,
-  FileSearch
+  FileSearch,
+  Bell,
+  Target
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { format, subMonths, addMonths, parseISO, startOfToday, subDays, isAfter } from "date-fns";
-import { caseCategories } from "@/app/lib/case-data";
+import { format, startOfToday, subDays, isAfter } from "date-fns";
 
 export default function AdminDashboard() {
   const db = useFirestore();
@@ -43,19 +36,6 @@ export default function AdminDashboard() {
   const [lawyerSearch, setLawyerSearch] = useState("");
   const [performanceRange, setPerformanceRange] = useState("month");
   const [notifFilter, setNotifFilter] = useState("all");
-  
-  // Deep Analysis Modal State
-  const [deepAnalysis, setDeepAnalysis] = useState<{
-    isOpen: boolean;
-    title: string;
-    data: any;
-    type: 'screening' | 'reason' | 'workload';
-  }>({
-    isOpen: false,
-    title: "",
-    data: null,
-    type: 'screening'
-  });
 
   // Database Queries
   const casesQuery = useMemoFirebase(() => {
@@ -125,7 +105,7 @@ export default function AdminDashboard() {
       return `Significant denial rate detected (${analysis.ineligiblePct}%). The primary cause is "${analysis.topReason}". This diagnostic pattern suggests that walk-in applicants are frequently failing basic statutory criteria. Recommendation: Update the Public Portal Case Navigator to emphasize these specific documentation requirements before booking.`;
     }
     
-    return `Healthly intake distribution. ${analysis.eligiblePct}% of applicants meet PAO eligibility standards. "${analysis.topReason}" remains the most frequent reason for rejection among those disqualified. Existing guidance is effective, but monitoring "${analysis.topReason}" patterns may help further refine initial document checklists.`;
+    return `Healthy intake distribution. ${analysis.eligiblePct}% of applicants meet PAO eligibility standards. "${analysis.topReason}" remains the most frequent reason for rejection among those disqualified. Existing guidance is effective, but monitoring "${analysis.topReason}" patterns may help further refine initial document checklists.`;
   };
 
   const filteredNotifs = useMemo(() => {
@@ -151,7 +131,7 @@ export default function AdminDashboard() {
     updateDocumentNonBlocking(doc(db, "notifications", id), { status: "read" });
   };
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  if (loading) return <div className="flex items-center justify-center min-h-screen"><Activity className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!user || role !== 'admin') return null;
 
   return (
@@ -186,7 +166,7 @@ export default function AdminDashboard() {
                 <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden lg:col-span-1">
                   <CardHeader className="bg-primary/5 pb-6">
                     <CardTitle className="text-sm font-black uppercase text-primary flex items-center gap-2">
-                      <PieIcon className="h-4 w-4" /> Outcome Summary
+                      <PieIcon className="h-4 w-4" /> Screening Result Summary
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-8 flex flex-col items-center">
@@ -259,7 +239,7 @@ export default function AdminDashboard() {
                       <Lightbulb className="h-16 w-16 text-amber-400" />
                     </div>
                     <div className="space-y-4 flex-1">
-                      <h3 className="text-2xl font-black font-headline">Diagnostic Insight: Screening Patterns</h3>
+                      <h3 className="text-2xl font-black font-headline">Diagnostic Insight: Main Cause of Rejection</h3>
                       <p className="text-lg font-medium leading-relaxed opacity-90 italic">
                         "{getDiagnosticInsight()}"
                       </p>

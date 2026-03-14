@@ -277,22 +277,20 @@ export default function LawyerDashboard() {
                 {pendingConsultations.map(appt => (
                   <Card key={appt.id} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden border-l-8 border-red-500">
                     <CardContent className="p-5 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
-                      <div className="flex items-start gap-5 flex-1 min-w-0">
+                      <div className="flex items-center gap-5 flex-1 min-w-0">
                         <div className="p-3 bg-red-50 rounded-2xl text-red-600 shrink-0">
                           <User className="h-6 w-6" />
                         </div>
-                        <div className="space-y-1 min-w-0 flex-1">
-                          <div className="flex flex-row items-center gap-3">
-                            <h3 className="text-xl font-black text-secondary break-words whitespace-normal leading-tight">{appt.guestName || appt.clientName}</h3>
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <div className="flex items-center gap-3">
+                            <h3 className="text-xl font-black text-secondary truncate">{appt.guestName || appt.clientName}</h3>
                             <Badge className="bg-red-500 text-white text-[8px] font-black uppercase px-2 py-0.5 border-none shrink-0">
                               IN PROGRESS
                             </Badge>
                           </div>
-                          <div className="flex flex-col">
-                            <Badge variant="outline" className="text-[9px] uppercase border-red-100 bg-red-50/50 text-red-700 w-fit">
-                              {appt.serviceType || appt.purpose || appt.caseType}
-                            </Badge>
-                          </div>
+                          <Badge variant="outline" className="text-[9px] uppercase border-red-100 bg-red-50/50 text-red-700 w-fit mt-1">
+                            {appt.serviceType || appt.purpose || appt.caseType}
+                          </Badge>
                         </div>
                       </div>
                       <Button 
@@ -321,23 +319,23 @@ export default function LawyerDashboard() {
                 {filterAcceptedPendingActivation.map(appt => (
                   <Card key={appt.id} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden border-l-8 border-primary">
                     <CardContent className="p-5 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
-                      <div className="flex items-start gap-5 flex-1 min-w-0">
+                      <div className="flex items-center gap-5 flex-1 min-w-0">
                         <div className="p-3 bg-primary/5 rounded-2xl text-primary shrink-0">
                           <CheckCircle2 className="h-6 w-6" />
                         </div>
-                        <div className="space-y-1 min-w-0 flex-1">
-                          <div className="flex flex-row items-center gap-3">
-                            <h3 className="text-xl font-black text-primary break-words whitespace-normal leading-tight">{appt.guestName || appt.clientName}</h3>
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <div className="flex items-center gap-3">
+                            <h3 className="text-xl font-black text-primary truncate">{appt.guestName || appt.clientName}</h3>
                             <Badge className="bg-primary text-white text-[8px] font-black uppercase px-2 py-0.5 border-none shrink-0">
                               ACCEPTED
                             </Badge>
                           </div>
-                          <div className="flex flex-col">
+                          <div className="flex flex-col mt-1">
                             <Badge variant="outline" className="text-[9px] uppercase border-primary/10 bg-primary/5 text-primary w-fit">
                               {appt.serviceType || appt.purpose || appt.caseType}
                             </Badge>
                             {appt.outcome && (
-                              <p className="text-[9px] text-muted-foreground font-bold mt-1 italic leading-tight">
+                              <p className="text-[9px] text-muted-foreground font-bold mt-1 italic truncate">
                                 Outcome: {appt.outcome}
                               </p>
                             )}
@@ -400,7 +398,7 @@ export default function LawyerDashboard() {
                         <div>
                           <div className="flex items-center gap-2">
                             <h4 className="text-lg font-black text-secondary">{item.type === 'appt' ? (item.data.guestName || item.data.clientName) : item.data.title}</h4>
-                            <Badge variant="outline" className={cn("text-[8px] font-black uppercase", item.type === 'appt' ? "border-amber-200 text-amber-700 bg-amber-50" : "border-blue-200 text-blue-700 bg-blue-50")}>{item.type === 'appt' ? "Legal Consultation" : item.data.category}</Badge>
+                            <Badge variant="outline" className={cn("text-[8px] font-black uppercase", item.type === 'appt' ? "border-amber-200 text-amber-700 bg-amber-50" : "border-blue-200 text-blue-700 bg-blue-50")}>{item.type === 'appt' ? "Official Consultation" : item.data.category}</Badge>
                           </div>
                           <div className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground mt-1 uppercase tracking-widest">
                             <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {item.time}</span>
