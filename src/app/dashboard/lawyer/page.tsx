@@ -2,84 +2,54 @@
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/components/auth-provider";
-import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc, setDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
-import { collection, query, where, doc, getDoc } from "firebase/firestore";
-import { format, startOfToday, isWeekend, isBefore, eachDayOfInterval, addDays, setHours, setMinutes } from "date-fns";
+import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc, setDocumentNonBlocking } from "@/firebase";
+import { collection, query, where, doc } from "firebase/firestore";
+import { format, startOfToday } from "date-fns";
 import { 
   Calendar as CalendarIcon, 
   Clock, 
   CheckCircle2, 
-  XCircle, 
-  MoreVertical, 
   Briefcase, 
   User, 
   ChevronRight, 
   Loader2,
-  CalendarDays, 
-  Check,
-  Plus,
-  Trash2,
-  AlertCircle,
-  FileText,
-  Info,
-  CalendarCheck,
-  Gavel,
-  Edit3,
-  ShieldAlert,
-  Bell,
   Inbox,
   MapPin,
   Scale,
   ArrowRight,
   Gavel as GavelIcon,
-  Activity
+  Activity,
+  AlertCircle,
+  FileText
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
-  DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel
-} from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { DateRange } from "react-day-picker";
 import { caseCategories } from "@/app/lib/case-data";
 import { initializeApp, deleteApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { firebaseConfig } from "@/firebase/config";
 
-const OFFICIAL_LEAVE_CATEGORIES = {
-  "Personal Leave": [
-    "Wellness Leave",
-    "Special Leave Privileges (SLP)"
-  ],
-  "Work-Related Leave": [
-    "Mandatory Continuing Professional Development (CPD)",
-    "Official Business / Official Time",
-    "Court Attendance (Official Witness)",
-    "Occupational Disease / Work-Related Injury Leave",
-    "Office Suspension (Emergency Situations)",
-    "Inquest / Jail Visitation Duty Recovery Leave",
-    "Conflict of Interest Documentation Leave",
-    "Preparation of Mandatory Reports"
-  ]
-};
+const OUTCOME_OPTIONS = [
+  "Completed Consultation – Accept Legal Assistance",
+  "Completed Consultation – Denial of Legal Assistance"
+];
 
-const HOLIDAYS = [
-  "2024-01-01", "2024-04-09", "2024-05-01", "2024-06-12", "2024-08-26",
-  "2024-11-01", "2024-11-30", "2024-12-25", "2024-12-30", 
-  "2025-01-01", "2025-02-25", "2025-04-17", "2025-04-18", "2025-05-01"
+const DENIAL_REASONS = [
+  "Client not eligible for PAO services (Income limit)",
+  "Case not covered by PAO (Jurisdictional exclusion)",
+  "Insufficient legal merit"
 ];
 
 export default function LawyerDashboard() {
@@ -90,7 +60,6 @@ export default function LawyerDashboard() {
   
   // UI State
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [isAvailabilityOpen, setIsAvailabilityOpen] = useState(false);
   
   // Consultation State
   const [activeConsultation, setActiveConsultation] = useState<any>(null);
@@ -98,7 +67,9 @@ export default function LawyerDashboard() {
     notes: "",
     recommendation: "",
     assessment: "",
-    caseType: ""
+    caseType: "",
+    outcome: "",
+    denialReason: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -120,11 +91,6 @@ export default function LawyerDashboard() {
     return query(collection(db, "cases"), where("lawyerId", "==", user.uid), where("status", "==", "Active"));
   }, [db, user, role]);
 
-  const availabilityQuery = useMemoFirebase(() => {
-    if (!db || !user || role !== 'lawyer') return null;
-    return collection(db, "roleLawyer", user.uid, "availability");
-  }, [db, user, role]);
-
   const dutiesQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'lawyer') return null;
     return query(collection(db, "lawyerDuties"), where("lawyerId", "==", user.uid));
@@ -132,12 +98,16 @@ export default function LawyerDashboard() {
 
   const { data: apptsData, isLoading: isApptsLoading } = useCollection(apptsQuery);
   const { data: activeCases } = useCollection(casesQuery);
-  const { data: availabilityList } = useCollection(availabilityQuery);
   const { data: dutiesData } = useCollection(dutiesQuery);
 
   const pendingConsultations = useMemo(() => {
     if (!apptsData) return [];
     return apptsData.filter(a => a.status === "Consultation in Progress");
+  }, [apptsData]);
+
+  const filterAcceptedPendingActivation = useMemo(() => {
+    if (!apptsData) return [];
+    return apptsData.filter(a => a.status === OUTCOME_OPTIONS[0]);
   }, [apptsData]);
 
   const filteredSchedule = useMemo(() => {
@@ -153,21 +123,64 @@ export default function LawyerDashboard() {
     ].sort((a, b) => a.time.localeCompare(b.time));
   }, [apptsData, dutiesData, selectedDate]);
 
-  const handleFinalizeCaseActivation = async () => {
-    if (!db || !activeConsultation || !user) return;
+  const handleCompleteConsultation = async () => {
+    if (!db || !activeConsultation || !user || !consultationForm.outcome) return;
+    setIsSubmitting(true);
+
+    try {
+      const apptRef = doc(db, "appointments", activeConsultation.id);
+      const isAccepted = consultationForm.outcome === OUTCOME_OPTIONS[0];
+
+      updateDocumentNonBlocking(apptRef, {
+        status: consultationForm.outcome,
+        consultationNotes: consultationForm.notes,
+        recommendation: consultationForm.recommendation,
+        assessment: consultationForm.assessment,
+        outcome: consultationForm.outcome,
+        denialReason: isAccepted ? null : consultationForm.denialReason,
+        completedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+
+      // --- NOTIFICATIONS ---
+      const notifId = crypto.randomUUID();
+      setDocumentNonBlocking(doc(db, "notifications", notifId), {
+        id: notifId,
+        type: "appointment",
+        userRole: "lawyer",
+        description: `Consultation for ${activeConsultation.referenceCode} completed. Outcome: ${isAccepted ? 'Accepted' : 'Denied'}.`,
+        referenceId: activeConsultation.id,
+        referenceCode: activeConsultation.referenceCode,
+        status: "unread",
+        createdAt: new Date().toISOString()
+      }, { merge: true });
+
+      toast({ 
+        title: "Consultation Concluded", 
+        description: isAccepted ? "Citizen marked for legal assistance." : "Consultation closed with denial." 
+      });
+      setActiveConsultation(null);
+      setConsultationForm({ notes: "", recommendation: "", assessment: "", caseType: "", outcome: "", denialReason: "" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleActivateCase = async (appt: any) => {
+    if (!db || !user || !appt) return;
     setIsSubmitting(true);
 
     try {
       const year = new Date().getFullYear();
       const caseId = `CASE-${year}-${Math.floor(1000 + Math.random() * 9000)}`;
       
-      let clientId = activeConsultation.clientId;
-      const citizenEmail = activeConsultation.guestEmail || activeConsultation.clientEmail || `${activeConsultation.guestMobile || activeConsultation.clientMobile}@epao.mobile`;
+      let clientId = appt.clientId;
+      const citizenEmail = appt.guestEmail || appt.clientEmail || `${appt.guestMobile || appt.clientMobile}@epao.mobile`;
 
       // 1. Provision Account if Guest
       if (!clientId) {
         try {
-          const secondaryApp = initializeApp(firebaseConfig, "consultation-activation-" + Date.now());
+          const secondaryApp = initializeApp(firebaseConfig, "case-activation-" + Date.now());
           const secondaryAuth = getAuth(secondaryApp);
           const userCredential = await createUserWithEmailAndPassword(secondaryAuth, citizenEmail, "password123");
           clientId = userCredential.user.uid;
@@ -179,57 +192,55 @@ export default function LawyerDashboard() {
         }
       }
 
-      // 2. Update Appointment
-      const apptRef = doc(db, "appointments", activeConsultation.id);
+      // 2. Update Appointment to fully completed/case active
+      const apptRef = doc(db, "appointments", appt.id);
       updateDocumentNonBlocking(apptRef, {
         status: "completed",
-        clientId: clientId,
-        consultationNotes: consultationForm.notes,
-        recommendation: consultationForm.recommendation,
-        assessment: consultationForm.assessment,
         caseId: caseId,
+        clientId: clientId,
         updatedAt: new Date().toISOString()
       });
 
-      // 3. Create Case
+      // 3. Create Official Case record
       const caseRef = doc(db, "cases", caseId);
       setDocumentNonBlocking(caseRef, {
         id: caseId,
         clientId: clientId,
         lawyerId: user.uid,
-        caseType: consultationForm.caseType || activeConsultation.caseType,
+        caseType: appt.caseType,
         status: "Active",
-        description: `Consultation Reference ${activeConsultation.referenceCode}. Assessment: ${consultationForm.assessment}`,
+        description: appt.assessment || "Case activated following official consultation.",
+        consultationRef: appt.referenceCode,
         createdAt: new Date().toISOString()
       }, { merge: true });
 
-      // 4. Update Citizen record
+      // 4. Link citizen record
       const userRef = doc(db, "users", clientId);
       setDocumentNonBlocking(userRef, {
         id: clientId,
-        mobileNumber: activeConsultation.guestMobile || activeConsultation.clientMobile || "",
+        mobileNumber: appt.guestMobile || appt.clientMobile || "",
         email: citizenEmail,
-        fullName: activeConsultation.guestName || activeConsultation.clientName || "",
+        fullName: appt.guestName || appt.clientName || "",
         role: "client",
         status: "Active Case",
         createdAt: new Date().toISOString()
       }, { merge: true });
 
-      // --- NOTIFICATIONS ---
+      // --- NOTIFICATION ---
       const notifId = crypto.randomUUID();
       setDocumentNonBlocking(doc(db, "notifications", notifId), {
         id: notifId,
         type: "case",
         userRole: "lawyer",
-        description: `Official Case ${caseId} activated by Atty. ${lawyerData?.lastName} after consultation.`,
+        description: `New Official Case ${caseId} activated for citizen ${appt.guestName || appt.clientName}.`,
         referenceId: caseId,
         status: "unread",
         createdAt: new Date().toISOString()
       }, { merge: true });
 
-      toast({ title: "Case Activated", description: `Official record ${caseId} is now live.` });
-      setActiveConsultation(null);
-      setConsultationForm({ notes: "", recommendation: "", assessment: "", caseType: "" });
+      toast({ title: "Legal Case Activated", description: `Case ${caseId} is now in the active registry.` });
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Activation Failed", description: e.message });
     } finally {
       setIsSubmitting(false);
     }
@@ -254,56 +265,92 @@ export default function LawyerDashboard() {
           </div>
         </div>
 
-        {/* --- PRIORITY CONSULTATIONS --- */}
-        {pendingConsultations.length > 0 && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 px-1">
-              <Activity className="h-5 w-5 text-red-500 animate-pulse" />
-              <h2 className="text-sm font-black uppercase tracking-widest text-secondary">Awaiting Consultation ({pendingConsultations.length})</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {pendingConsultations.map(appt => (
-                <Card key={appt.id} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden border-l-8 border-red-500">
-                  <CardContent className="p-5 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
-                    <div className="flex items-start gap-5 min-w-0 flex-1">
-                      <div className="p-3 bg-red-50 rounded-2xl text-red-600 shrink-0">
-                        <User className="h-6 w-6" />
-                      </div>
-                      <div className="min-w-0 flex-1 space-y-1.5">
-                        <div className="flex flex-row items-center gap-3 min-w-0">
-                          <h3 className="text-xl font-black text-secondary truncate">{appt.guestName || appt.clientName}</h3>
-                          <Badge className="bg-red-500 text-white text-[8px] font-black uppercase shrink-0 px-2 py-0.5 border-none shadow-sm">
-                            IN PROGRESS
-                          </Badge>
+        {/* --- PRIORITY WORKFLOWS --- */}
+        <div className="grid grid-cols-1 gap-8">
+          {pendingConsultations.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 px-1">
+                <Activity className="h-5 w-5 text-red-500 animate-pulse" />
+                <h2 className="text-sm font-black uppercase tracking-widest text-secondary">Awaiting Outcome Assessment ({pendingConsultations.length})</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {pendingConsultations.map(appt => (
+                  <Card key={appt.id} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden border-l-8 border-red-500">
+                    <CardContent className="p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                      <div className="flex items-start gap-5 flex-1">
+                        <div className="p-3 bg-red-50 rounded-2xl text-red-600 shrink-0">
+                          <User className="h-6 w-6" />
                         </div>
-                        <div className="flex">
-                          <Badge variant="outline" className="text-[9px] uppercase border-red-100 bg-red-50/50 text-red-700 truncate max-w-full">
+                        <div className="space-y-1">
+                          <div className="flex flex-wrap items-center gap-3">
+                            <h3 className="text-xl font-black text-secondary">{appt.guestName || appt.clientName}</h3>
+                            <Badge className="bg-red-500 text-white text-[8px] font-black uppercase px-2 py-0.5 border-none">
+                              IN PROGRESS
+                            </Badge>
+                          </div>
+                          <Badge variant="outline" className="text-[9px] uppercase border-red-100 bg-red-50/50 text-red-700">
                             {appt.caseType}
                           </Badge>
                         </div>
                       </div>
-                    </div>
-                    <Button 
-                      onClick={() => {
-                        setActiveConsultation(appt);
-                        setConsultationForm({ ...consultationForm, caseType: appt.caseType });
-                      }}
-                      className="w-full sm:w-auto h-12 rounded-xl bg-secondary hover:bg-secondary/90 text-white font-black px-6 shadow-lg shrink-0"
-                    >
-                      Start Assessment <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
+                      <Button 
+                        onClick={() => {
+                          setActiveConsultation(appt);
+                          setConsultationForm({ ...consultationForm, caseType: appt.caseType });
+                        }}
+                        className="h-12 rounded-xl bg-secondary hover:bg-secondary/90 text-white font-black px-6 shadow-lg"
+                      >
+                        Complete Consultation <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+
+          {filterAcceptedPendingActivation.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 px-1 text-primary">
+                <Scale className="h-5 w-5" />
+                <h2 className="text-sm font-black uppercase tracking-widest">Pending Case Activation ({filterAcceptedPendingActivation.length})</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {filterAcceptedPendingActivation.map(appt => (
+                  <Card key={appt.id} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden border-l-8 border-primary">
+                    <CardContent className="p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                      <div className="flex items-start gap-5 flex-1">
+                        <div className="p-3 bg-primary/5 rounded-2xl text-primary shrink-0">
+                          <CheckCircle2 className="h-6 w-6" />
+                        </div>
+                        <div className="space-y-1">
+                          <h3 className="text-xl font-black text-primary">{appt.guestName || appt.clientName}</h3>
+                          <Badge className="bg-primary text-white text-[8px] font-black uppercase px-2 py-0.5 border-none">
+                            ACCEPTED - READY FOR FILING
+                          </Badge>
+                        </div>
+                      </div>
+                      <Button 
+                        onClick={() => handleActivateCase(appt)}
+                        disabled={isSubmitting}
+                        className="h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-black px-6 shadow-lg"
+                      >
+                        {isSubmitting ? <Loader2 className="animate-spin h-4 w-4" /> : <Scale className="mr-2 h-4 w-4" />}
+                        Activate Case
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="border-none shadow-xl rounded-[2.5rem] bg-secondary text-white overflow-hidden relative">
             <div className="absolute top-0 right-0 p-4 opacity-10"><Briefcase className="h-24 w-24" /></div>
             <CardContent className="p-8">
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Active Caseload</p>
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-60">My Active Caseload</p>
               <p className="text-5xl font-black">{activeCases?.length || 0}</p>
               <p className="text-xs font-bold opacity-80 pt-2 flex items-center gap-1 cursor-pointer" onClick={() => router.push('/dashboard/lawyer/cases')}>Open Registry <ChevronRight className="h-3 w-3" /></p>
             </CardContent>
@@ -311,9 +358,9 @@ export default function LawyerDashboard() {
           <Card className="border-none shadow-xl rounded-[2.5rem] bg-white text-secondary overflow-hidden border-2 border-secondary/5">
             <CardContent className="p-8 flex justify-between items-start">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Today's Sessions</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Today's Schedule</p>
                 <p className="text-5xl font-black">{filteredSchedule.length}</p>
-                <p className="text-xs font-bold text-muted-foreground pt-2">Combined office schedule</p>
+                <p className="text-xs font-bold text-muted-foreground pt-2">Office & External Duties</p>
               </div>
               <div className="p-3 bg-secondary/5 rounded-2xl"><Clock className="h-6 w-6 text-secondary" /></div>
             </CardContent>
@@ -321,7 +368,7 @@ export default function LawyerDashboard() {
         </div>
 
         <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
-          <CardHeader className="bg-secondary/5 pb-4 border-b border-secondary/10"><CardTitle className="text-lg font-bold text-secondary flex items-center gap-2"><CalendarIcon className="h-5 w-5" /> Official Workstation Calendar</CardTitle></CardHeader>
+          <CardHeader className="bg-secondary/5 pb-4 border-b border-secondary/10"><CardTitle className="text-lg font-bold text-secondary flex items-center gap-2"><CalendarIcon className="h-5 w-5" /> Workstation Calendar</CardTitle></CardHeader>
           <CardContent className="p-0">
             <div className="grid grid-cols-1 xl:grid-cols-12">
               <div className="xl:col-span-4 p-8 border-r border-secondary/5 bg-secondary/[0.02]">
@@ -360,19 +407,19 @@ export default function LawyerDashboard() {
           </CardContent>
         </Card>
 
-        {/* --- CONSULTATION NOTES DIALOG --- */}
+        {/* --- CONSULTATION COMPLETION DIALOG --- */}
         <Dialog open={!!activeConsultation} onOpenChange={() => setActiveConsultation(null)}>
           <DialogContent className="rounded-[3rem] max-w-4xl p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[90vh]">
             <DialogHeader className="p-8 bg-secondary text-white shrink-0">
               <div className="flex justify-between items-center">
                 <div>
-                  <DialogTitle className="text-2xl font-black">Official Legal Consultation</DialogTitle>
+                  <DialogTitle className="text-2xl font-black">Conclude Legal Consultation</DialogTitle>
                   <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">Citizen: {activeConsultation?.guestName || activeConsultation?.clientName}</DialogDescription>
                 </div>
                 <div className="p-3 bg-white/20 rounded-2xl"><GavelIcon className="h-6 w-6 text-white" /></div>
               </div>
             </DialogHeader>
-            <div className="p-6 sm:p-10 space-y-8 flex-1 overflow-y-auto min-h-0">
+            <div className="p-10 space-y-8 flex-1 overflow-y-auto min-h-0">
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="space-y-6">
                   <div className="space-y-2">
@@ -383,15 +430,11 @@ export default function LawyerDashboard() {
                         {Object.keys(caseCategories).map(cat => (
                           <SelectItem key={cat} value={cat} className="font-bold">{cat}</SelectItem>
                         ))}
-                        <SelectItem value="Criminal" className="font-bold">Criminal Case</SelectItem>
-                        <SelectItem value="Civil" className="font-bold">Civil Case</SelectItem>
-                        <SelectItem value="Labor" className="font-bold">Labor Dispute</SelectItem>
-                        <SelectItem value="Family Law" className="font-bold">Family Law</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Initial Legal Assessment</Label>
+                    <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Official Legal Assessment</Label>
                     <Textarea 
                       placeholder="Brief legal assessment of the concern..." 
                       className="rounded-2xl h-24 border-secondary/10 focus-visible:ring-secondary/20"
@@ -402,18 +445,29 @@ export default function LawyerDashboard() {
                 </div>
                 <div className="space-y-6">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Recommended Legal Action</Label>
-                    <Textarea 
-                      placeholder="Next steps (e.g., File Petition, Mediation, etc.)..." 
-                      className="rounded-2xl h-24 border-secondary/10 focus-visible:ring-secondary/20"
-                      value={consultationForm.recommendation}
-                      onChange={e => setConsultationForm({...consultationForm, recommendation: e.target.value})}
-                    />
+                    <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Consultation Outcome</Label>
+                    <Select value={consultationForm.outcome} onValueChange={(v) => setConsultationForm({...consultationForm, outcome: v})}>
+                      <SelectTrigger className="h-12 rounded-xl border-secondary/10 font-bold"><SelectValue placeholder="Select Result" /></SelectTrigger>
+                      <SelectContent>
+                        {OUTCOME_OPTIONS.map(opt => <SelectItem key={opt} value={opt} className="font-bold">{opt}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
+                  {consultationForm.outcome === OUTCOME_OPTIONS[1] && (
+                    <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                      <Label className="text-[10px] font-black uppercase text-red-600/60 ml-1">Reason for Denial</Label>
+                      <Select value={consultationForm.denialReason} onValueChange={(v) => setConsultationForm({...consultationForm, denialReason: v})}>
+                        <SelectTrigger className="h-12 rounded-xl border-red-100 bg-red-50/30 font-bold"><SelectValue placeholder="Select Reason" /></SelectTrigger>
+                        <SelectContent>
+                          {DENIAL_REASONS.map(r => <SelectItem key={opt} value={r} className="font-bold">{r}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Confidential Case Notes</Label>
                     <Textarea 
-                      placeholder="Detailed factual summary and evidence review..." 
+                      placeholder="Detailed factual summary..." 
                       className="rounded-2xl h-24 border-secondary/10 focus-visible:ring-secondary/20"
                       value={consultationForm.notes}
                       onChange={e => setConsultationForm({...consultationForm, notes: e.target.value})}
@@ -421,23 +475,16 @@ export default function LawyerDashboard() {
                   </div>
                 </div>
               </div>
-
-              <div className="p-6 bg-amber-50 rounded-[2rem] border border-amber-100 flex items-start gap-4">
-                <ShieldAlert className="h-6 w-6 text-amber-600 shrink-0" />
-                <p className="text-xs text-amber-800 font-bold leading-relaxed italic">
-                  Activation will generate an official Case ID and link these notes to the permanent citizen record. Ensure all statutory criteria are satisfied before finalizing.
-                </p>
-              </div>
             </div>
             <DialogFooter className="p-8 bg-muted/30 flex flex-col sm:flex-row gap-4 shrink-0">
-              <Button variant="outline" onClick={() => setActiveConsultation(null)} className="flex-1 h-14 rounded-xl font-bold border-2">Close Record</Button>
+              <Button variant="outline" onClick={() => setActiveConsultation(null)} className="flex-1 h-14 rounded-xl font-bold border-2">Cancel</Button>
               <Button 
-                onClick={handleFinalizeCaseActivation} 
-                disabled={isSubmitting || !consultationForm.caseType || !consultationForm.assessment} 
+                onClick={handleCompleteConsultation} 
+                disabled={isSubmitting || !consultationForm.outcome || (consultationForm.outcome === OUTCOME_OPTIONS[1] && !consultationForm.denialReason)} 
                 className="flex-1 h-14 rounded-xl font-black text-white shadow-xl bg-secondary hover:bg-secondary/90"
               >
-                {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : <Scale className="mr-2 h-5 w-5" />}
-                Activate Official Case Record
+                {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : <CheckCircle2 className="mr-2 h-5 w-5" />}
+                Complete & Record Outcome
               </Button>
             </DialogFooter>
           </DialogContent>

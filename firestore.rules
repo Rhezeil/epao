@@ -48,7 +48,7 @@ service cloud.firestore {
 
     match /notifications/{notificationId} {
       allow read, update: if isAdmin();
-      allow create: if true;
+      allow create: if true; 
       allow delete: if isAdmin();
     }
 
@@ -71,11 +71,11 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if isSignedIn() && (isOwner(userId) || isAdmin() || isLawyer());
-      allow write: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId) || isAdmin() || isLawyer();
 
       match /profile/{profileId} {
         allow read: if isOwner(userId) || isAdmin() || isLawyer();
-        allow write: if isOwner(userId) || isAdmin();
+        allow write: if isOwner(userId) || isAdmin() || isLawyer();
       }
     }
 

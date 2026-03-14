@@ -23,7 +23,8 @@ import {
   Lock,
   ArrowRight,
   User,
-  Info
+  Info,
+  Gavel
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -35,6 +36,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
+import { initializeApp, deleteApp } from "firebase/app";
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { firebaseConfig } from "@/firebase/config";
+
+const OUTCOME_OPTIONS = [
+  "Completed Consultation – Accept Legal Assistance",
+  "Completed Consultation – Denial of Legal Assistance"
+];
 
 export default function AdminTriagePage() {
   const db = useFirestore();
@@ -67,6 +76,11 @@ export default function AdminTriagePage() {
     return query(collection(db, "appointments"), where("status", "==", "Eligible"));
   }, [db, user, role]);
 
+  const acceptedQuery = useMemoFirebase(() => {
+    if (!db || !user || role !== 'admin') return null;
+    return query(collection(db, "appointments"), where("status", "==", OUTCOME_OPTIONS[0]));
+  }, [db, user, role]);
+
   const lawyersQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'admin') return null;
     return query(collection(db, "roleLawyer"));
@@ -79,6 +93,7 @@ export default function AdminTriagePage() {
 
   const { data: screeningAppointments, isLoading: isScreeningLoading } = useCollection(screeningQuery);
   const { data: eligibleAppointments, isLoading: isEligibleLoading } = useCollection(eligibleQuery);
+  const { data: acceptedAppointments, isLoading: isAcceptedLoading } = useCollection(acceptedQuery);
   const { data: lawyers } = useCollection(lawyersQuery);
   const { data: currentDuties } = useCollection(dutiesQuery);
 
@@ -177,6 +192,82 @@ export default function AdminTriagePage() {
     }
   };
 
+  const handleAdminActivateCase = async (appt: any) => {
+    if (!db || !user || !appt) return;
+    setIsProcessing(true);
+
+    try {
+      const year = new Date().getFullYear();
+      const caseId = `CASE-${year}-${Math.floor(1000 + Math.random() * 9000)}`;
+      
+      let clientId = appt.clientId;
+      const citizenEmail = appt.guestEmail || appt.clientEmail || `${appt.guestMobile || appt.clientMobile}@epao.mobile`;
+
+      if (!clientId) {
+        try {
+          const secondaryApp = initializeApp(firebaseConfig, "admin-activation-" + Date.now());
+          const secondaryAuth = getAuth(secondaryApp);
+          const userCredential = await createUserWithEmailAndPassword(secondaryAuth, citizenEmail, "password123");
+          clientId = userCredential.user.uid;
+          await deleteApp(secondaryApp);
+        } catch (authError: any) {
+          if (authError.code !== 'auth/email-already-in-use') {
+             clientId = clientId || crypto.randomUUID();
+          }
+        }
+      }
+
+      // Update Appointment
+      updateDocumentNonBlocking(doc(db, "appointments", appt.id), {
+        status: "completed",
+        caseId: caseId,
+        clientId: clientId,
+        updatedAt: new Date().toISOString()
+      });
+
+      // Create Case
+      setDocumentNonBlocking(doc(db, "cases", caseId), {
+        id: caseId,
+        clientId: clientId,
+        lawyerId: appt.lawyerId,
+        caseType: appt.caseType,
+        status: "Active",
+        description: appt.assessment || "Official case activated by Admin following approved consultation.",
+        consultationRef: appt.referenceCode,
+        createdAt: new Date().toISOString()
+      }, { merge: true });
+
+      // Link Citizen
+      setDocumentNonBlocking(doc(db, "users", clientId), {
+        id: clientId,
+        mobileNumber: appt.guestMobile || appt.clientMobile || "",
+        email: citizenEmail,
+        fullName: appt.guestName || appt.clientName || "",
+        role: "client",
+        status: "Active Case",
+        createdAt: new Date().toISOString()
+      }, { merge: true });
+
+      // --- NOTIFICATION ---
+      const notifId = crypto.randomUUID();
+      setDocumentNonBlocking(doc(db, "notifications", notifId), {
+        id: notifId,
+        type: "case",
+        userRole: "admin",
+        description: `Admin activated Official Case ${caseId} following consultation review.`,
+        referenceId: caseId,
+        status: "unread",
+        createdAt: new Date().toISOString()
+      }, { merge: true });
+
+      toast({ title: "Administrative Activation Complete", description: `Record ${caseId} is now live.` });
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Activation Error", description: e.message });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <DashboardLayout role="admin">
       <div className="space-y-8">
@@ -191,9 +282,10 @@ export default function AdminTriagePage() {
         </div>
 
         <Tabs defaultValue="screening" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 max-w-xl bg-white/50 p-1 rounded-2xl border-2 border-primary/5 h-14">
+          <TabsList className="grid w-full grid-cols-3 max-w-2xl bg-white/50 p-1 rounded-2xl border-2 border-primary/5 h-14">
             <TabsTrigger value="screening" className="rounded-xl font-bold">Screening Queue</TabsTrigger>
             <TabsTrigger value="eligible" className="rounded-xl font-bold">Approved Intakes</TabsTrigger>
+            <TabsTrigger value="accepted" className="rounded-xl font-bold">Consultation Review</TabsTrigger>
           </TabsList>
 
           <TabsContent value="screening" className="mt-8">
@@ -263,6 +355,54 @@ export default function AdminTriagePage() {
                     ))}
                     {eligibleAppointments?.length === 0 && (
                       <TableRow><TableCell colSpan={4} className="text-center py-24 text-muted-foreground italic">No approved intakes awaiting assignment.</TableCell></TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="accepted" className="mt-8">
+            <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
+              <CardHeader className="bg-primary/5 border-b border-primary/10 p-8">
+                <CardTitle className="text-xl font-bold text-primary flex items-center gap-2">
+                  <Scale className="h-6 w-6" /> Accepted Consultations - Pending Activation
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader className="bg-muted/30">
+                    <TableRow>
+                      <TableHead className="px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Reference</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Citizen</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Handling Lawyer</TableHead>
+                      <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {acceptedAppointments?.map((appt) => {
+                      const lawyer = lawyers?.find(l => l.id === appt.lawyerId);
+                      return (
+                        <TableRow key={appt.id} className="hover:bg-primary/5 transition-colors">
+                          <TableCell className="px-8 font-black text-primary py-6">{appt.referenceCode}</TableCell>
+                          <TableCell className="font-bold">{appt.guestName || appt.clientName}</TableCell>
+                          <TableCell className="text-xs font-bold text-secondary">Atty. {lawyer?.lastName || '---'}</TableCell>
+                          <TableCell className="text-right px-8">
+                            <Button 
+                              size="sm" 
+                              onClick={() => handleAdminActivateCase(appt)}
+                              disabled={isProcessing}
+                              className="rounded-xl font-black bg-primary text-white"
+                            >
+                              {isProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : <Gavel className="mr-2 h-4 w-4" />}
+                              Activate Case
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                    {acceptedAppointments?.length === 0 && (
+                      <TableRow><TableCell colSpan={4} className="text-center py-24 text-muted-foreground italic">No completed consultations awaiting activation.</TableCell></TableRow>
                     )}
                   </TableBody>
                 </Table>
