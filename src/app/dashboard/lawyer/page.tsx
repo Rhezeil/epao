@@ -264,13 +264,13 @@ export default function LawyerDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {pendingConsultations.map(appt => (
                 <Card key={appt.id} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden border-l-8 border-red-500">
-                  <CardContent className="p-8 flex items-center justify-between gap-6">
-                    <div className="flex items-start gap-5">
-                      <div className="p-3 bg-red-50 rounded-2xl text-red-600"><User className="h-6 w-6" /></div>
-                      <div>
-                        <h3 className="text-lg font-black text-secondary">{appt.guestName || appt.clientName}</h3>
+                  <CardContent className="p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                    <div className="flex items-start gap-5 min-w-0">
+                      <div className="p-3 bg-red-50 rounded-2xl text-red-600 shrink-0"><User className="h-6 w-6" /></div>
+                      <div className="min-w-0">
+                        <h3 className="text-lg font-black text-secondary truncate">{appt.guestName || appt.clientName}</h3>
                         <p className="text-[10px] font-black uppercase text-red-600 tracking-widest mt-1">Status: Consultation in Progress</p>
-                        <Badge variant="outline" className="mt-2 text-[9px] uppercase border-red-100 bg-red-50/50">{appt.caseType}</Badge>
+                        <Badge variant="outline" className="mt-2 text-[9px] uppercase border-red-100 bg-red-50/50 block w-fit truncate max-w-full">{appt.caseType}</Badge>
                       </div>
                     </div>
                     <Button 
@@ -278,7 +278,7 @@ export default function LawyerDashboard() {
                         setActiveConsultation(appt);
                         setConsultationForm({ ...consultationForm, caseType: appt.caseType });
                       }}
-                      className="h-14 rounded-2xl bg-secondary hover:bg-secondary/90 text-white font-black px-8 shadow-lg"
+                      className="w-full sm:w-auto h-14 rounded-2xl bg-secondary hover:bg-secondary/90 text-white font-black px-8 shadow-lg shrink-0"
                     >
                       Start Assessment <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
