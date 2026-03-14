@@ -144,8 +144,8 @@ export default function AdminDashboard() {
                 <Target className="h-8 w-8" />
               </div>
               <div>
-                <h1 className="text-3xl font-black text-primary font-headline tracking-tight">System Intelligence</h1>
-                <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest mt-1">Diagnostic Analysis & Administrative Oversight</p>
+                <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Diagnostic Analysis</h1>
+                <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest mt-1">Eligibility Patterns & Intake Oversight</p>
               </div>
             </div>
           </div>
@@ -153,7 +153,7 @@ export default function AdminDashboard() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 max-w-md bg-white/50 p-1 rounded-2xl border-2 border-primary/5 h-14 mb-8">
               <TabsTrigger value="analysis" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
-                <Microscope className="h-4 w-4 mr-2" /> Diagnostic Analysis
+                <Microscope className="h-4 w-4 mr-2" /> Screening Summary
               </TabsTrigger>
               <TabsTrigger value="workload" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
                 <Activity className="h-4 w-4 mr-2" /> Lawyer Activity

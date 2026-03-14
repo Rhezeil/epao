@@ -69,7 +69,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
 
     if (role === "client") {
       return [
-        { icon: LayoutDashboard, label: "My Dashboard", path: "/dashboard/client" },
+        { icon: LayoutDashboard, label: "My Dashboard", path: "/dashboard/client", exact: true },
         { icon: CalendarCheck, label: "Schedule Follow-up", path: "/dashboard/client/book-appointment" },
       ];
     }
@@ -128,13 +128,12 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
               {menuItems.map((item) => {
                 const isActive = item.exact 
                   ? pathname === item.path 
-                  : pathname === item.path || pathname.startsWith(item.path + '/');
+                  : (pathname === item.path || pathname.startsWith(item.path + '/'));
                 
                 return (
                   <SidebarMenuItem key={item.path + item.label}>
                     <SidebarMenuButton 
                       asChild
-                      isActive={isActive}
                       className={cn(
                         "flex items-center gap-3 px-4 py-6 rounded-2xl transition-all duration-300 border-none",
                         isActive

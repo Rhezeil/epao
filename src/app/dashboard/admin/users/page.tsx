@@ -245,12 +245,12 @@ export default function AdminUsersPage() {
     if (!db || !selectedClientId) return;
     const profileDocRef = doc(db, "users", selectedClientId, "profile", "profile");
     
-    // Sanitize data before Firebase update
+    // Sanitize data before Firebase update to prevent 'undefined' errors
     const sanitizedProfile = {
-      firstName: editProfile.firstName ?? "",
-      lastName: editProfile.lastName ?? "",
-      phoneNumber: editProfile.phoneNumber ?? "",
-      address: editProfile.address ?? ""
+      firstName: editProfile.firstName || "",
+      lastName: editProfile.lastName || "",
+      phoneNumber: editProfile.phoneNumber || "",
+      address: editProfile.address || ""
     };
 
     updateDocumentNonBlocking(profileDocRef, sanitizedProfile);
@@ -269,9 +269,9 @@ export default function AdminUsersPage() {
   const handleSaveCase = () => {
     if (!db || !activeCase) return;
     const sanitizedCase = {
-      caseType: editCase.caseType ?? "",
-      description: editCase.description ?? "",
-      lawyerId: editCase.lawyerId ?? ""
+      caseType: editCase.caseType || "",
+      description: editCase.description || "",
+      lawyerId: editCase.lawyerId || ""
     };
     updateDocumentNonBlocking(doc(db, "cases", activeCase.id), sanitizedCase);
     setIsEditingCase(false);
@@ -373,8 +373,8 @@ export default function AdminUsersPage() {
                               <UserCircle className="h-6 w-6 text-primary" />
                             </div>
                             <div>
-                              <p className="font-black text-primary leading-none mb-1">{client.fullName ?? client.email?.split('@')[0] ?? "Citizen"}</p>
-                              <p className="text-[10px] text-muted-foreground font-bold">{client.mobileNumber ?? "---"}</p>
+                              <p className="font-black text-primary leading-none mb-1">{client.fullName || client.email?.split('@')[0] || "Citizen"}</p>
+                              <p className="text-[10px] text-muted-foreground font-bold">{client.mobileNumber || "---"}</p>
                             </div>
                           </div>
                         </TableCell>
@@ -384,7 +384,7 @@ export default function AdminUsersPage() {
                             client.status === 'Active Case' ? 'bg-green-500' : 
                             client.status === 'Inactive' ? 'bg-red-500' : 
                             client.status === 'Closed Case' ? 'bg-gray-500' : 'bg-primary'
-                          )}>{client.status ?? "New Intake"}</Badge>
+                          )}>{client.status || "New Intake"}</Badge>
                         </TableCell>
                         <TableCell>
                           {lawyer ? (
@@ -437,8 +437,8 @@ export default function AdminUsersPage() {
               </div>
               <div className="grid gap-6">
                 <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Full Citizen Name</Label><Input value={newClient.name ?? ""} onChange={e => setNewClient({...newClient, name: e.target.value})} className="h-12 rounded-xl" placeholder="Juan Dela Cruz" /></div>
-                  <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Mobile Number</Label><Input value={newClient.mobile ?? ""} onChange={e => setNewClient({...newClient, mobile: e.target.value})} className="h-12 rounded-xl" placeholder="09XXXXXXXXX" /></div>
+                  <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Full Citizen Name</Label><Input value={newClient.name || ""} onChange={e => setNewClient({...newClient, name: e.target.value})} className="h-12 rounded-xl" placeholder="Juan Dela Cruz" /></div>
+                  <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Mobile Number</Label><Input value={newClient.mobile || ""} onChange={e => setNewClient({...newClient, mobile: e.target.value})} className="h-12 rounded-xl" placeholder="09XXXXXXXXX" /></div>
                 </div>
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Income Classification</Label>
@@ -447,13 +447,13 @@ export default function AdminUsersPage() {
                       <SelectContent><SelectItem value="Indigent" className="font-bold">Indigent (Priority)</SelectItem><SelectItem value="Low Income" className="font-bold">Low Income</SelectItem><SelectItem value="Government Employee" className="font-bold">Govt Employee</SelectItem></SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Email (Optional)</Label><Input value={newClient.email ?? ""} onChange={e => setNewClient({...newClient, email: e.target.value})} className="h-12 rounded-xl" placeholder="name@email.com" /></div>
+                  <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Email (Optional)</Label><Input value={newClient.email || ""} onChange={e => setNewClient({...newClient, email: e.target.value})} className="h-12 rounded-xl" placeholder="name@email.com" /></div>
                 </div>
-                <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Home Address</Label><Input value={newClient.address ?? ""} onChange={e => setNewClient({...newClient, address: e.target.value})} className="h-12 rounded-xl" placeholder="Street, Barangay, City" /></div>
+                <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Home Address</Label><Input value={newClient.address || ""} onChange={e => setNewClient({...newClient, address: e.target.value})} className="h-12 rounded-xl" placeholder="Street, Barangay, City" /></div>
                 <div className="pt-6 border-t border-primary/5 space-y-6">
                   <div className="flex items-center gap-2"><Scale className="h-4 w-4 text-primary" /><span className="text-[10px] font-black uppercase text-primary tracking-[0.2em]">Initialize Legal Record (Optional)</span></div>
                   <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Case Classification</Label><Input value={newClient.caseType ?? ""} onChange={e => setNewClient({...newClient, caseType: e.target.value})} className="h-12 rounded-xl" placeholder="e.g. Theft, Labor Dispute" /></div>
+                    <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Case Classification</Label><Input value={newClient.caseType || ""} onChange={e => setNewClient({...newClient, caseType: e.target.value})} className="h-12 rounded-xl" placeholder="e.g. Theft, Labor Dispute" /></div>
                     <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Assign Handling Attorney</Label>
                       <Select value={newClient.lawyerId} onValueChange={v => setNewClient({...newClient, lawyerId: v})}>
                         <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="Select Lawyer" /></SelectTrigger>
@@ -474,10 +474,10 @@ export default function AdminUsersPage() {
             <DialogHeader className="p-8 bg-secondary text-white shrink-0">
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
-                  <DialogTitle className="text-2xl font-black">{selectedProfile ? `${selectedProfile.firstName} ${selectedProfile.lastName}` : (selectedUser?.fullName ?? "Citizen Profile")}</DialogTitle>
+                  <DialogTitle className="text-2xl font-black">{selectedProfile ? `${selectedProfile.firstName} ${selectedProfile.lastName}` : (selectedUser?.fullName || "Citizen Profile")}</DialogTitle>
                   <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">ID: {selectedUser?.id?.slice(0, 8)}...</DialogDescription>
                 </div>
-                <Badge className="bg-white text-secondary font-black px-4 py-2 rounded-xl">{selectedUser?.status ?? "Active"}</Badge>
+                <Badge className="bg-white text-secondary font-black px-4 py-2 rounded-xl">{selectedUser?.status || "Active"}</Badge>
               </div>
             </DialogHeader>
             <div className="p-10 overflow-y-auto flex-1">
@@ -491,17 +491,17 @@ export default function AdminUsersPage() {
                   <div className="flex justify-between items-center"><h4 className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Identification & Contact</h4>{!isEditingPersonal ? <Button variant="ghost" size="sm" onClick={() => setIsEditingPersonal(true)} className="h-8 text-primary font-bold"><Edit3 className="h-3 w-3 mr-1" /> Edit</Button> : <div className="flex gap-2"><Button variant="ghost" size="sm" onClick={() => setIsEditingPersonal(false)} className="h-8 text-muted-foreground">Cancel</Button><Button size="sm" onClick={handleSaveProfile} className="h-8 bg-primary text-white">Save</Button></div>}</div>
                   <div className="grid md:grid-cols-2 gap-8">
                     {isEditingPersonal ? <>
-                      <div className="space-y-2"><Label className="text-[10px] font-black uppercase">First Name</Label><Input value={editProfile.firstName ?? ""} onChange={e => setEditProfile({...editProfile, firstName: e.target.value})} /></div>
-                      <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Last Name</Label><Input value={editProfile.lastName ?? ""} onChange={e => setEditProfile({...editProfile, lastName: e.target.value})} /></div>
-                      <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Mobile</Label><Input value={editProfile.phoneNumber ?? ""} onChange={e => setEditProfile({...editProfile, phoneNumber: e.target.value})} /></div>
-                      <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Address</Label><Input value={editProfile.address ?? ""} onChange={e => setEditProfile({...editProfile, address: e.target.value})} /></div>
+                      <div className="space-y-2"><Label className="text-[10px] font-black uppercase">First Name</Label><Input value={editProfile.firstName || ""} onChange={e => setEditProfile({...editProfile, firstName: e.target.value})} /></div>
+                      <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Last Name</Label><Input value={editProfile.lastName || ""} onChange={e => setEditProfile({...editProfile, lastName: e.target.value})} /></div>
+                      <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Mobile</Label><Input value={editProfile.phoneNumber || ""} onChange={e => setEditProfile({...editProfile, phoneNumber: e.target.value})} /></div>
+                      <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Address</Label><Input value={editProfile.address || ""} onChange={e => setEditProfile({...editProfile, address: e.target.value})} /></div>
                     </> : <>
                       <div className="space-y-4">
-                        <p className="font-bold text-primary flex items-center gap-2"><Phone className="h-4 w-4 text-secondary" /> {selectedUser?.mobileNumber ?? "N/A"}</p>
-                        <p className="font-bold text-primary flex items-center gap-2"><Mail className="h-4 w-4 text-secondary" /> {selectedUser?.email ?? "N/A"}</p>
-                        <p className="text-xs font-bold text-primary flex items-start gap-2 leading-relaxed"><MapPin className="h-4 w-4 text-secondary shrink-0 mt-0.5" /> {selectedProfile?.address ?? "No address"}</p>
+                        <p className="font-bold text-primary flex items-center gap-2"><Phone className="h-4 w-4 text-secondary" /> {selectedUser?.mobileNumber || "N/A"}</p>
+                        <p className="font-bold text-primary flex items-center gap-2"><Mail className="h-4 w-4 text-secondary" /> {selectedUser?.email || "N/A"}</p>
+                        <p className="text-xs font-bold text-primary flex items-start gap-2 leading-relaxed"><MapPin className="h-4 w-4 text-secondary shrink-0 mt-0.5" /> {selectedProfile?.address || "No address"}</p>
                       </div>
-                      <div className="space-y-1"><Label className="text-[10px] font-black uppercase text-primary/40">Verified Classification</Label><p className="font-black text-secondary">{selectedUser?.incomeClassification ?? "Indigent"}</p></div>
+                      <div className="space-y-1"><Label className="text-[10px] font-black uppercase text-primary/40">Verified Classification</Label><p className="font-black text-secondary">{selectedUser?.incomeClassification || "Indigent"}</p></div>
                     </>}
                   </div>
                 </TabsContent>
@@ -510,13 +510,13 @@ export default function AdminUsersPage() {
                     <div className="p-6 bg-primary/5 rounded-[2rem] border border-primary/10">
                       <div className="flex justify-between items-center mb-4"><h4 className="font-black text-primary uppercase text-sm flex items-center gap-2"><Scale className="h-5 w-5" /> Official Case File</h4><Button variant="ghost" size="sm" onClick={() => setIsEditingCase(!isEditingCase)} className="h-8 text-primary font-bold">{isEditingCase ? "Cancel" : "Edit Case"}</Button></div>
                       {isEditingCase ? <div className="grid gap-4">
-                        <Input value={editCase.caseType ?? ""} onChange={e => setEditCase({...editCase, caseType: e.target.value})} placeholder="Case Type" />
-                        <Textarea value={editCase.description ?? ""} onChange={e => setEditCase({...editCase, description: e.target.value})} placeholder="Description" />
+                        <Input value={editCase.caseType || ""} onChange={e => setEditCase({...editCase, caseType: e.target.value})} placeholder="Case Type" />
+                        <Textarea value={editCase.description || ""} onChange={e => setEditCase({...editCase, description: e.target.value})} placeholder="Description" />
                         <Button size="sm" onClick={handleSaveCase} className="bg-primary text-white">Save Changes</Button>
                       </div> : <div className="grid grid-cols-2 gap-4">
                         <div><p className="text-[10px] font-black text-muted-foreground uppercase">Ref ID</p><p className="font-black text-primary">{activeCase.id}</p></div>
                         <div><p className="text-[10px] font-black text-muted-foreground uppercase">Category</p><p className="font-black text-primary">{activeCase.caseType}</p></div>
-                        <div className="col-span-2 pt-2"><p className="text-[10px] font-black text-muted-foreground uppercase">Summary</p><p className="text-xs italic text-primary/80">{activeCase.description ?? "---"}</p></div>
+                        <div className="col-span-2 pt-2"><p className="text-[10px] font-black text-muted-foreground uppercase">Summary</p><p className="text-xs italic text-primary/80">{activeCase.description || "---"}</p></div>
                       </div>}
                     </div>
                     <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Handling Public Attorney</Label>
@@ -525,7 +525,7 @@ export default function AdminUsersPage() {
                         <SelectContent>{lawyers?.map(l => <SelectItem key={l.id} value={l.id} className="font-bold">{l.firstName ? `Atty. ${l.firstName} ${l.lastName}` : l.email}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
-                  </div> : <div className="p-10 bg-primary/5 rounded-[2.5rem] border-2 border-dashed text-center space-y-6"><Scale className="h-12 w-12 text-primary/20 mx-auto" /><div><h4 className="text-lg font-black text-primary">Initialize Legal Record</h4><p className="text-xs text-muted-foreground">Citizen is currently registered but has no active case file.</p></div><div className="max-w-xs mx-auto space-y-4 text-left"><div className="space-y-1"><Label className="text-[10px] font-black uppercase text-primary/40">Classification</Label><Input value={newCaseData.caseType ?? ""} onChange={e => setNewCaseData({...newCaseData, caseType: e.target.value})} className="h-10 rounded-lg" /></div><div className="space-y-1"><Label className="text-[10px] font-black uppercase text-primary/40">Assign Attorney</Label>
+                  </div> : <div className="p-10 bg-primary/5 rounded-[2.5rem] border-2 border-dashed text-center space-y-6"><Scale className="h-12 w-12 text-primary/20 mx-auto" /><div><h4 className="text-lg font-black text-primary">Initialize Legal Record</h4><p className="text-xs text-muted-foreground">Citizen is currently registered but has no active case file.</p></div><div className="max-w-xs mx-auto space-y-4 text-left"><div className="space-y-1"><Label className="text-[10px] font-black uppercase text-primary/40">Classification</Label><Input value={newCaseData.caseType || ""} onChange={e => setNewCaseData({...newCaseData, caseType: e.target.value})} className="h-10 rounded-lg" /></div><div className="space-y-1"><Label className="text-[10px] font-black uppercase text-primary/40">Assign Attorney</Label>
                     <Select value={newCaseData.lawyerId} onValueChange={v => setNewCaseData({...newCaseData, lawyerId: v})}><SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Select Attorney" /></SelectTrigger><SelectContent>{lawyers?.map(l => <SelectItem key={l.id} value={l.id} className="font-bold">{l.firstName ? `Atty. ${l.firstName} ${l.lastName}` : l.email}</SelectItem>)}</SelectContent></Select></div><Button className="w-full bg-primary text-white font-black rounded-xl" disabled={!newCaseData.lawyerId || isSubmitting} onClick={handleCreateInitialCase}>Initialize & Assign Case</Button></div></div>}
                 </TabsContent>
                 <TabsContent value="history" className="pt-6 space-y-4"><h4 className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Chronological History</h4>{clientHistory?.length ? <div className="space-y-3">{clientHistory.map(h => <div key={h.id} className="p-4 bg-muted/20 rounded-2xl flex items-center justify-between border border-transparent hover:border-primary/10"><div><p className="text-sm font-bold text-primary">{h.caseType}</p><p className="text-[9px] text-muted-foreground uppercase font-black">{h.date ? format(new Date(h.date), "PPP") : "---"} • {h.status}</p></div><Badge variant="outline" className="text-[8px] font-black uppercase">{h.referenceCode}</Badge></div>)}</div> : <p className="text-center py-10 text-xs italic text-muted-foreground">No synchronized visit history found.</p>}</TabsContent>

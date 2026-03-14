@@ -145,7 +145,7 @@ export default function LawyerDashboard() {
         id: notifId,
         type: "appointment",
         userRole: "lawyer",
-        description: `Consultation for ${activeConsultation.referenceCode} completed. Outcome: ${isAccepted ? 'Accepted' : 'Denied'}.`,
+        description: `Official Legal Consultation for ${activeConsultation.referenceCode} completed. Outcome: ${isAccepted ? 'Accepted' : 'Denied'}.`,
         referenceId: activeConsultation.id,
         referenceCode: activeConsultation.referenceCode,
         status: "unread",
@@ -301,7 +301,7 @@ export default function LawyerDashboard() {
           <DialogContent className="rounded-[3rem] max-w-4xl p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[90vh]">
             <DialogHeader className="p-8 bg-secondary text-white shrink-0">
               <div className="flex justify-between items-center">
-                <div><DialogTitle className="text-2xl font-black">Conclude Official Consultation</DialogTitle><DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">Citizen: {activeConsultation?.guestName || activeConsultation?.clientName}</DialogDescription></div>
+                <div><DialogTitle className="text-2xl font-black">Conclude Official Legal Consultation</DialogTitle><DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">Citizen: {activeConsultation?.guestName || activeConsultation?.clientName}</DialogDescription></div>
                 <div className="p-3 bg-white/20 rounded-2xl"><GavelIcon className="h-6 w-6 text-white" /></div>
               </div>
             </DialogHeader>
@@ -311,14 +311,14 @@ export default function LawyerDashboard() {
                   <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Intake Category</Label>
                     <Select value={consultationForm.caseType} onValueChange={(v) => setConsultationForm({...consultationForm, caseType: v})}><SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="Select Category" /></SelectTrigger><SelectContent>{Object.keys(caseCategories).map(cat => <SelectItem key={cat} value={cat} className="font-bold">{cat}</SelectItem>)}</SelectContent></Select>
                   </div>
-                  <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Official Legal Assessment</Label><Textarea placeholder="Brief assessment..." className="rounded-2xl h-24" value={consultationForm.assessment} onChange={e => setConsultationForm({...consultationForm, assessment: e.target.value})} /></div>
+                  <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Official Legal Assessment</Label><Textarea placeholder="Brief assessment..." className="rounded-2xl h-24" value={consultationForm.assessment || ""} onChange={e => setConsultationForm({...consultationForm, assessment: e.target.value})} /></div>
                 </div>
                 <div className="space-y-6">
                   <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Consultation Outcome</Label>
                     <Select value={consultationForm.outcome} onValueChange={(v) => setConsultationForm({...consultationForm, outcome: v})}><SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="Select Result" /></SelectTrigger><SelectContent>{OUTCOME_OPTIONS.map(opt => <SelectItem key={opt} value={opt} className="font-bold">{opt}</SelectItem>)}</SelectContent></Select>
                   </div>
                   {consultationForm.outcome === OUTCOME_OPTIONS[1] && <div className="space-y-2 animate-in fade-in"><Label className="text-[10px] font-black uppercase text-red-600/60 ml-1">Reason for Denial</Label><Select value={consultationForm.denialReason} onValueChange={(v) => setConsultationForm({...consultationForm, denialReason: v})}><SelectTrigger className="h-12 rounded-xl border-red-100 bg-red-50/30"><SelectValue placeholder="Select Reason" /></SelectTrigger><SelectContent>{DENIAL_REASONS.map(r => <SelectItem key={r} value={r} className="font-bold">{r}</SelectItem>)}</SelectContent></Select></div>}
-                  <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Confidential Case Notes</Label><Textarea placeholder="Factual summary..." className="rounded-2xl h-24" value={consultationForm.notes} onChange={e => setConsultationForm({...consultationForm, notes: e.target.value})} /></div>
+                  <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Confidential Case Notes</Label><Textarea placeholder="Factual summary..." className="rounded-2xl h-24" value={consultationForm.notes || ""} onChange={e => setConsultationForm({...consultationForm, notes: e.target.value})} /></div>
                 </div>
               </div>
             </div>
