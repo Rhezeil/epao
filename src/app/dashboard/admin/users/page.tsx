@@ -26,8 +26,7 @@ import {
   Mail,
   Scale,
   Gavel,
-  ShieldCheck,
-  ShieldAlert
+  ShieldCheck
 } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -197,12 +196,12 @@ export default function AdminUsersPage() {
       const userRef = doc(db, "users", uid);
       setDocumentNonBlocking(userRef, {
         id: uid,
-        mobileNumber: newClient.mobile,
+        mobileNumber: newClient.mobile ?? "",
         email: email,
         role: "client",
         status: newClient.lawyerId ? "Active Case" : "New Intake",
-        fullName: newClient.name,
-        incomeClassification: newClient.income,
+        fullName: newClient.name ?? "",
+        incomeClassification: newClient.income ?? "Indigent",
         createdAt: new Date().toISOString()
       }, { merge: true });
 
@@ -211,8 +210,8 @@ export default function AdminUsersPage() {
         id: "profile",
         firstName: newClient.name.split(' ')[0] ?? "",
         lastName: newClient.name.split(' ').slice(1).join(' ') ?? "",
-        phoneNumber: newClient.mobile,
-        address: newClient.address,
+        phoneNumber: newClient.mobile ?? "",
+        address: newClient.address ?? "",
         createdAt: new Date().toISOString()
       }, { merge: true });
 
@@ -223,7 +222,7 @@ export default function AdminUsersPage() {
           id: caseId,
           clientId: uid,
           lawyerId: newClient.lawyerId,
-          caseType: newClient.caseType,
+          caseType: newClient.caseType ?? "General Assistance",
           status: "Active",
           description: "Record initialized during manual citizen registration.",
           createdAt: new Date().toISOString()
@@ -286,7 +285,7 @@ export default function AdminUsersPage() {
       id: caseId,
       clientId: selectedClientId,
       lawyerId: newCaseData.lawyerId,
-      caseType: newCaseData.caseType,
+      caseType: newCaseData.caseType ?? "General Legal Matter",
       status: "Active",
       description: "Direct assignment from directory workstation.",
       createdAt: new Date().toISOString()

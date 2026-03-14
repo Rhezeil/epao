@@ -55,8 +55,9 @@ service cloud.firestore {
     // --- USER PROFILES & ROLES ---
 
     match /admins/{userId} {
-      allow read: if isSignedIn() || true;
-      allow write: if isAdmin();
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && (request.auth.token.email == "admin@epao.com" || isAdmin());
+      allow update, delete: if isAdmin();
     }
 
     match /roleLawyer/{userId} {
@@ -73,9 +74,11 @@ service cloud.firestore {
       allow read: if isSignedIn() && (isOwner(userId) || isAdmin() || isLawyer());
       allow create, update: if isOwner(userId) || isAdmin() || isLawyer();
 
-      match /profile/{profileId} {
-        allow read: if isOwner(userId) || isAdmin() || isLawyer();
+      // Allow administrative updates to nested profile documents
+      match /{allSubcollections=**} {
+        allow read: if isSignedIn() && (isOwner(userId) || isAdmin() || isLawyer());
         allow create, update: if isOwner(userId) || isAdmin() || isLawyer();
+        allow delete: if isAdmin();
       }
     }
 
@@ -90,7 +93,7 @@ service cloud.firestore {
       allow read: if isSignedIn() || true;
       allow list: if isSignedIn();
       allow create: if isAdmin() || isLawyer();
-      allow update: if isAdmin() || (isSignedIn() && resource.data.lawyerId == request.auth.uid);
+      allow update: if isAdmin() || (isSignedIn() && (resource.data.lawyerId == request.auth.uid || isAdmin()));
       allow delete: if isAdmin();
 
       match /documents/{docId} {
