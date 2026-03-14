@@ -18,7 +18,9 @@ import {
   Activity, PieChart as PieIcon, Sparkles, AlertCircle,
   TrendingDown, BrainCircuit, BarChart3, CheckCircle2,
   ListChecks, Lightbulb, Info, FileText, CalendarCheck,
-  Zap, Target, Layers, ArrowRight, ChevronDown, Bell, Eye
+  Zap, Target, Layers, ArrowRight, ChevronDown, Bell, Eye,
+  Microscope,
+  FileSearch
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,29 +34,13 @@ import { cn } from "@/lib/utils";
 import { format, subMonths, addMonths, parseISO, startOfToday, subDays, isAfter } from "date-fns";
 import { caseCategories } from "@/app/lib/case-data";
 
-const calculateTrend = (data: { x: number, y: number }[]) => {
-  if (data.length < 2) return { slope: 0, intercept: data[0]?.y || 0 };
-  const n = data.length;
-  let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
-  for (let i = 0; i < n; i++) {
-    sumX += data[i].x;
-    sumY += data[i].y;
-    sumXY += data[i].x * data[i].y;
-    sumXX += data[i].x * data[i].x;
-  }
-  const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
-  const intercept = (sumY - slope * sumX) / n;
-  return { slope, intercept };
-};
-
 export default function AdminDashboard() {
   const db = useFirestore();
   const { user, role, loading } = useAuth();
   
   // Dashboard State
-  const [activeTab, setActiveTab] = useState("forecast");
+  const [activeTab, setActiveTab] = useState("analysis");
   const [lawyerSearch, setLawyerSearch] = useState("");
-  const [forecastCategory, setForecastCategory] = useState("all");
   const [performanceRange, setPerformanceRange] = useState("month");
   const [notifFilter, setNotifFilter] = useState("all");
   
@@ -63,12 +49,12 @@ export default function AdminDashboard() {
     isOpen: boolean;
     title: string;
     data: any;
-    type: 'demand' | 'category' | 'appointment';
+    type: 'screening' | 'reason' | 'workload';
   }>({
     isOpen: false,
     title: "",
     data: null,
-    type: 'demand'
+    type: 'screening'
   });
 
   // Database Queries
@@ -97,109 +83,56 @@ export default function AdminDashboard() {
   const { data: lawyers } = useCollection(lawyersQuery);
   const { data: notifications } = useCollection(notifsQuery);
 
-  const forecastData = useMemo(() => {
-    if (!cases) return [];
-    const filteredCases = cases.filter(c => {
-      const matchCat = forecastCategory === "all" || Object.keys(caseCategories).find(cat => 
-        (caseCategories as any)[cat].some((group: any) => group.items.includes(c.caseType))
-      ) === forecastCategory;
-      return matchCat;
+  // Diagnostic Analysis Logic
+  const screeningAnalysis = useMemo(() => {
+    if (!appointments) return { summary: [], reasons: [], total: 0, eligible: 0, ineligible: 0, topReason: "", eligiblePct: "0", ineligiblePct: "0" };
+    
+    const screeningAppts = appointments.filter(a => a.status === 'Eligible' || a.status === 'Not Eligible');
+    const eligible = screeningAppts.filter(a => a.status === 'Eligible');
+    const ineligible = screeningAppts.filter(a => a.status === 'Not Eligible');
+    
+    const reasonsMap: Record<string, number> = {};
+    ineligible.forEach(a => {
+      const reason = a.screeningDetails?.rejectionReason || "Unspecified";
+      reasonsMap[reason] = (reasonsMap[reason] || 0) + 1;
     });
+    
+    const reasonsData = Object.entries(reasonsMap).map(([name, value]) => ({ name, value }));
+    reasonsData.sort((a, b) => b.value - a.value);
 
-    const months = [];
-    for (let i = 5; i >= 0; i--) months.push(format(subMonths(new Date(), i), "yyyy-MM"));
+    const total = screeningAppts.length;
 
-    const historical = months.map((m, index) => {
-      const count = filteredCases.filter(c => c.createdAt && c.createdAt.startsWith(m)).length;
-      return { month: m, count, x: index, isForecast: false, label: format(parseISO(`${m}-01`), 'MMMM yyyy') };
-    });
-
-    const trend = calculateTrend(historical.map(d => ({ x: d.x, y: d.count })));
-    const predictions = [];
-    for (let i = 1; i <= 3; i++) {
-      const futureMonth = format(addMonths(new Date(), i), "yyyy-MM");
-      const x = historical.length + i - 1;
-      const predictedCount = Math.max(0, Math.round(trend.slope * x + trend.intercept));
-      predictions.push({
-        month: futureMonth,
-        count: predictedCount,
-        x: x,
-        isForecast: true,
-        label: format(parseISO(`${futureMonth}-01`), 'MMMM yyyy')
-      });
-    }
-    return [...historical, ...predictions];
-  }, [cases, forecastCategory]);
-
-  const categoryBreakdown = useMemo(() => {
-    if (!cases) return [];
-    return Object.keys(caseCategories).map(cat => {
-      const count = cases.filter(c => 
-        (caseCategories as any)[cat].some((group: any) => group.items.includes(c.caseType))
-      ).length;
-      return { name: cat, value: count };
-    }).sort((a, b) => b.value - a.value);
-  }, [cases]);
-
-  const apptLifecycle = useMemo(() => {
-    if (!appointments) return [];
-    const statuses = ['pending', 'scheduled', 'completed', 'cancelled', 'rescheduled'];
-    return statuses.map(s => ({
-      name: s.charAt(0).toUpperCase() + s.slice(1),
-      value: appointments.filter(a => a.status === s).length
-    }));
+    return {
+      summary: [
+        { name: 'Eligible', value: eligible.length, fill: '#10B981' },
+        { name: 'Not Eligible', value: ineligible.length, fill: '#EF4444' }
+      ],
+      reasons: reasonsData,
+      total: total,
+      eligible: eligible.length,
+      ineligible: ineligible.length,
+      topReason: reasonsData[0]?.name || "N/A",
+      eligiblePct: total > 0 ? ((eligible.length / total) * 100).toFixed(1) : "0",
+      ineligiblePct: total > 0 ? ((ineligible.length / total) * 100).toFixed(1) : "0"
+    };
   }, [appointments]);
+
+  const getDiagnosticInsight = () => {
+    const analysis = screeningAnalysis;
+    if (analysis.total === 0) return "Insufficient screening data to generate diagnostic insights. Continue processing intakes to populate this report.";
+    
+    if (analysis.ineligible > analysis.eligible) {
+      return `Significant denial rate detected (${analysis.ineligiblePct}%). The primary cause is "${analysis.topReason}". This diagnostic pattern suggests that walk-in applicants are frequently failing basic statutory criteria. Recommendation: Update the Public Portal Case Navigator to emphasize these specific documentation requirements before booking.`;
+    }
+    
+    return `Healthly intake distribution. ${analysis.eligiblePct}% of applicants meet PAO eligibility standards. "${analysis.topReason}" remains the most frequent reason for rejection among those disqualified. Existing guidance is effective, but monitoring "${analysis.topReason}" patterns may help further refine initial document checklists.`;
+  };
 
   const filteredNotifs = useMemo(() => {
     if (!notifications) return [];
     if (notifFilter === "all") return notifications;
     return notifications.filter(n => n.type === notifFilter);
   }, [notifications, notifFilter]);
-
-  const getTrendSummary = (data: any[], key: string = 'count') => {
-    if (data.length < 2) return { label: "Stable", color: "text-muted-foreground", icon: Activity };
-    const historicalPoints = data.filter(d => !d.isForecast);
-    if (historicalPoints.length < 2) return { label: "Stable", color: "text-muted-foreground", icon: Activity };
-    const first = historicalPoints[0][key];
-    const last = historicalPoints[historicalPoints.length - 1][key];
-    const diff = last - first;
-    if (diff > 0) return { label: "Increasing Demand", color: "text-red-600", icon: TrendingUp, desc: `Volume increased by ${Math.abs(diff)} units.` };
-    if (diff < 0) return { label: "Decreasing Trend", color: "text-green-600", icon: TrendingDown, desc: `Volume decreased by ${Math.abs(diff)} units.` };
-    return { label: "Stable Distribution", color: "text-blue-600", icon: Activity, desc: "Resource consumption remains consistent." };
-  };
-
-  const handleChartClick = (data: any, type: 'demand' | 'category' | 'appointment') => {
-    if (!data) return;
-    setDeepAnalysis({ isOpen: true, title: `Analysis: ${data.label || data.name || 'Segment'}`, data: data, type: type });
-  };
-
-  const getInsight = (type: string, data: any) => {
-    const val = data?.count || data?.value || 0;
-    const name = data?.name || data?.label || "this segment";
-
-    if (type === 'demand') {
-      if (val > 10) return `Significant intake volume detected for ${name}. Administrative oversight should ensure that intake processing times remain within target KPIs to avoid backlogs.`;
-      if (val > 0) return `Stable demand for ${name}. Current resources are well-aligned with the intake rate. No structural shifts required at this time.`;
-      return `Zero intake recorded for ${name}. This may indicate a reporting delay or a temporary shift in public demand for legal assistance in this specific period.`;
-    }
-
-    if (type === 'category') {
-      const total = cases?.length || 1;
-      const ratio = val / total;
-      if (ratio > 0.3) return `${name} represents a major pillar of the office's active caseload. Staffing allocations should prioritize attorneys with expertise in this jurisdiction to ensure high-quality representation.`;
-      if (val > 0) return `${name} maintains a steady volume within the system. Current standardized templates are sufficient for handling this load without additional specialization.`;
-      return `${name} has no active cases. Consider reviewing if this jurisdiction requires better public awareness or if it reflects current community legal trends.`;
-    }
-
-    if (type === 'appointment') {
-      if (name === 'Completed') return "Operational efficiency is optimal. High completion rates reflect successful coordination between the office and the citizens.";
-      if (name === 'Cancelled') return "Elevated cancellation rate detected. Reviewing the automated notification logs is recommended to identify potential communication gaps before the visit date.";
-      if (name === 'Pending') return "The intake queue is active. Ensuring that the admin team reviews these within 24 hours will maintain the system's reputation for responsive public service.";
-      return `Current status distribution for ${name} is consistent with historical patterns. Monitor for any sudden deviations in weekly logs.`;
-    }
-
-    return "System-wide resource consumption for this segment remains consistent. No immediate realignment required.";
-  };
 
   const performanceRangeStart = useMemo(() => {
     const now = new Date();
@@ -229,100 +162,115 @@ export default function AdminDashboard() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-primary text-white rounded-2xl shadow-lg">
-                <Zap className="h-8 w-8" />
+                <Target className="h-8 w-8" />
               </div>
               <div>
                 <h1 className="text-3xl font-black text-primary font-headline tracking-tight">System Intelligence</h1>
-                <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest mt-1">Real-time synchronization across all legal assistance endpoints</p>
+                <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest mt-1">Diagnostic Analysis & Administrative Oversight</p>
               </div>
             </div>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 max-w-md bg-white/50 p-1 rounded-2xl border-2 border-primary/5 h-14 mb-8">
-              <TabsTrigger value="forecast" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
-                <BrainCircuit className="h-4 w-4 mr-2" /> Predictive Demand
+              <TabsTrigger value="analysis" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
+                <Microscope className="h-4 w-4 mr-2" /> Diagnostic Analysis
               </TabsTrigger>
               <TabsTrigger value="workload" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
                 <Activity className="h-4 w-4 mr-2" /> Lawyer Activity
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="forecast" className="space-y-12 animate-in fade-in duration-500">
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                <div className="lg:col-span-1 space-y-6">
-                  <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
-                    <CardHeader className="bg-primary/5 pb-6">
-                      <CardTitle className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                        <Filter className="h-4 w-4" /> Parameters
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-8 space-y-6">
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Jurisdiction</Label>
-                        <Select value={forecastCategory} onValueChange={setForecastCategory}>
-                          <SelectTrigger className="rounded-xl border-primary/10">
-                            <SelectValue placeholder="All Categories" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all" className="font-bold">All Jurisdictions</SelectItem>
-                            {Object.keys(caseCategories).map(cat => (
-                              <SelectItem key={cat} value={cat} className="font-bold">{cat}</SelectItem>
+            <TabsContent value="analysis" className="space-y-12 animate-in fade-in duration-500">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden lg:col-span-1">
+                  <CardHeader className="bg-primary/5 pb-6">
+                    <CardTitle className="text-sm font-black uppercase text-primary flex items-center gap-2">
+                      <PieIcon className="h-4 w-4" /> Outcome Summary
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-8 flex flex-col items-center">
+                    <div className="h-[250px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={screeningAnalysis.summary}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={60}
+                            outerRadius={80}
+                            paddingAngle={5}
+                            dataKey="value"
+                          >
+                            {screeningAnalysis.summary.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.fill} />
                             ))}
-                          </SelectContent>
-                        </Select>
+                          </Pie>
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 w-full mt-4">
+                      <div className="text-center p-4 bg-emerald-50 rounded-2xl">
+                        <p className="text-[10px] font-black text-emerald-600 uppercase">Eligible</p>
+                        <p className="text-2xl font-black text-emerald-700">{screeningAnalysis.eligiblePct}%</p>
                       </div>
-                    </CardContent>
-                  </Card>
-                </div>
+                      <div className="text-center p-4 bg-rose-50 rounded-2xl">
+                        <p className="text-[10px] font-black text-rose-600 uppercase">Not Eligible</p>
+                        <p className="text-2xl font-black text-rose-700">{screeningAnalysis.ineligiblePct}%</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-                <div className="lg:col-span-3">
-                  <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
-                    <CardHeader className="bg-primary/5 border-b border-primary/5 px-10 pt-8 pb-6">
-                      {(() => {
-                        const trend = getTrendSummary(forecastData);
-                        return (
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                <trend.icon className={cn("h-4 w-4", trend.color)} />
-                                <span className={cn("text-sm font-black uppercase tracking-widest", trend.color)}>{trend.label}</span>
-                              </div>
-                              <CardTitle className="text-xl font-black text-primary">Intake Demand Projection</CardTitle>
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </CardHeader>
-                    <CardContent className="p-10">
-                      <div className="h-[350px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={forecastData} onClick={(e) => e && e.activePayload && handleChartClick(e.activePayload[0].payload, 'demand')}>
-                            <defs>
-                              <linearGradient id="colorCount" x1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#1A237E" stopOpacity={0.1}/>
-                                <stop offset="95%" stopColor="#1A237E" stopOpacity={0}/>
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
-                            <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: '#64748B' }} formatter={(val: string) => val.split('-')[1] + '/' + val.split('-')[0].slice(2)} />
-                            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748B' }} />
-                            <Tooltip content={({ active, payload }) => {
-                              if (active && payload && payload.length) {
-                                const data = payload[0].payload;
-                                return <div className="bg-white p-4 rounded-2xl shadow-2xl border border-primary/5"><p className="text-sm font-black text-primary">{data.label}</p><p className="text-2xl font-black text-primary">{data.count}</p></div>;
-                              }
-                              return null;
-                            }} />
-                            <Area type="monotone" dataKey="count" stroke="#1A237E" strokeWidth={4} fillOpacity={1} fill="url(#colorCount)" data={forecastData.filter(d => !d.isForecast)} />
-                            <Line type="monotone" dataKey="count" stroke="#008080" strokeWidth={4} strokeDasharray="8 8" dot={{ r: 6, fill: '#008080', strokeWidth: 2, stroke: '#fff' }} data={forecastData.filter((d, i) => i >= forecastData.filter(x => !x.isForecast).length - 1)} />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
+                <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden lg:col-span-2">
+                  <CardHeader className="bg-primary/5 pb-6 border-b border-primary/5">
+                    <div className="flex justify-between items-center">
+                      <CardTitle className="text-sm font-black uppercase text-primary flex items-center gap-2">
+                        <FileSearch className="h-4 w-4" /> Denial Reason Breakdown
+                      </CardTitle>
+                      <Badge variant="outline" className="border-rose-200 text-rose-700 bg-rose-50">TOP: {screeningAnalysis.topReason}</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-10">
+                    <div className="h-[300px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={screeningAnalysis.reasons} layout="vertical" margin={{ left: 40 }}>
+                          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#F1F5F9" />
+                          <XAxis type="number" hide />
+                          <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: '#1A237E' }} width={120} />
+                          <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} />
+                          <Bar dataKey="value" fill="#EF4444" radius={[0, 10, 10, 0]} barSize={20}>
+                            {screeningAnalysis.reasons.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={index === 0 ? '#B91C1C' : '#EF4444'} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
+
+              <Card className="border-none shadow-2xl rounded-[3rem] bg-primary text-white overflow-hidden">
+                <CardContent className="p-12">
+                  <div className="flex flex-col md:flex-row items-center gap-10">
+                    <div className="p-6 bg-white/10 rounded-[2.5rem] shadow-inner">
+                      <Lightbulb className="h-16 w-16 text-amber-400" />
+                    </div>
+                    <div className="space-y-4 flex-1">
+                      <h3 className="text-2xl font-black font-headline">Diagnostic Insight: Screening Patterns</h3>
+                      <p className="text-lg font-medium leading-relaxed opacity-90 italic">
+                        "{getDiagnosticInsight()}"
+                      </p>
+                      <div className="flex gap-4 pt-4">
+                        <Badge className="bg-white/20 hover:bg-white/30 text-white border-none py-2 px-4 rounded-xl font-bold">Most Common: {screeningAnalysis.topReason}</Badge>
+                        <Badge className="bg-white/20 hover:bg-white/30 text-white border-none py-2 px-4 rounded-xl font-bold">Total Evaluated: {screeningAnalysis.total}</Badge>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="workload" className="animate-in slide-in-from-bottom-4 duration-500">
@@ -439,37 +387,6 @@ export default function AdminDashboard() {
           </Card>
         </div>
       </div>
-
-      {/* --- DEEP ANALYSIS MODAL --- */}
-      <Dialog open={deepAnalysis.isOpen} onOpenChange={(open) => setDeepAnalysis({ ...deepAnalysis, isOpen: open })}>
-        <DialogContent className="rounded-[3rem] max-w-2xl p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
-          <DialogHeader className="p-8 bg-primary text-white shrink-0">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-white/20 rounded-2xl"><BrainCircuit className="h-8 w-8" /></div>
-              <DialogTitle className="text-2xl font-black">{deepAnalysis.title}</DialogTitle>
-            </div>
-          </DialogHeader>
-          <div className="p-10 space-y-10 overflow-y-auto flex-1 scrollbar-hide">
-            <div className="grid grid-cols-2 gap-8">
-              <div className="space-y-2">
-                <p className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Caseload Volume</p>
-                <p className="text-5xl font-black text-primary">{deepAnalysis.data?.count || deepAnalysis.data?.value || 0} Units</p>
-              </div>
-            </div>
-            <div className="bg-primary/5 p-6 rounded-[2rem] border-2 border-dashed border-primary/10">
-              <p className="text-sm font-bold text-primary mb-2 flex items-center gap-2">
-                <Lightbulb className="h-4 w-4" /> Administrative Insight:
-              </p>
-              <p className="text-xs font-medium text-primary/70 leading-relaxed italic">
-                "{getInsight(deepAnalysis.type, deepAnalysis.data)}"
-              </p>
-            </div>
-          </div>
-          <DialogFooter className="p-8 bg-muted/30 shrink-0">
-            <Button onClick={() => setDeepAnalysis({ ...deepAnalysis, isOpen: false })} className="w-full h-14 bg-primary text-white font-black rounded-2xl shadow-xl">Acknowledge & Close</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </DashboardLayout>
   );
 }
