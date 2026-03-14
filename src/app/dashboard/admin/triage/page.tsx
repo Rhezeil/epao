@@ -42,11 +42,11 @@ const OUTCOME_OPTIONS = [
 ];
 
 const REJECTION_REASONS = [
-  "Failure to Provide Proof of Indigency (ITR, Payslip, or Brgy Cert)",
-  "Missing Case-Specific Documents (Subpoena, Contracts, complaints, or affidavits)",
+  "Failure to Provide Proof of Indigency (ITR, Payslips, or Brgy Cert)",
+  "Missing Case-Specific Documents (Subpoenas, Contracts, etc.)",
   "Issues with Barangay Certification",
-  "Lack of Proper Identification (Valid, government-issued IDs)",
-  "Misunderstanding of Requirements (Financial eligibility or case-specific docs)",
+  "Lack of Proper Identification (Valid Govt IDs)",
+  "Misunderstanding of Requirements",
   "Unpreparedness in Gathering Information",
   "Income exceeds statutory limit",
   "Conflict of interest",
@@ -145,12 +145,14 @@ export default function AdminIntakeAssessmentPage() {
       createdAt: new Date().toISOString()
     }, { merge: true });
 
-    toast({ title: "Evaluation Recorded", description: `Citizen record marked as ${result}.` });
-    setIsEvaluationOpen(false);
-    setSelectedAppt(null);
-    setScreening({ indigency: false, merit: false, idVerified: false, notes: "" });
-    setRejectionReason("");
-    setIsProcessing(false);
+    setTimeout(() => {
+      toast({ title: "Evaluation Recorded", description: `Citizen record marked as ${result}.` });
+      setIsEvaluationOpen(false);
+      setSelectedAppt(null);
+      setScreening({ indigency: false, merit: false, idVerified: false, notes: "" });
+      setRejectionReason("");
+      setIsProcessing(false);
+    }, 500);
   };
 
   const handleStartConsultation = async () => {
@@ -463,14 +465,14 @@ export default function AdminIntakeAssessmentPage() {
                 disabled={isProcessing || !rejectionReason}
                 className="flex-1 h-12 rounded-xl font-bold border-red-200 text-red-600 hover:bg-red-50"
               >
-                Mark Ineligible
+                Mark Ineligible for completion
               </Button>
               <Button 
                 onClick={() => handleScreeningResult('Eligible')} 
                 disabled={isProcessing || !screening.indigency || !screening.merit || !screening.idVerified} 
                 className="flex-1 h-12 rounded-xl font-black text-white shadow-lg bg-primary"
               >
-                {isProcessing ? <Loader2 className="animate-spin h-5 w-5" /> : "Approve Eligibility"}
+                {isProcessing ? <Loader2 className="animate-spin h-5 w-5" /> : "Approve Eligibility for completion"}
               </Button>
             </DialogFooter>
           </DialogContent>

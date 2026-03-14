@@ -14,14 +14,15 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn() && (
-        (request.auth.token.email != null && request.auth.token.email.lower() == "admin@epao.com") ||
+        request.auth.token.email == "admin@epao.com" ||
         exists(/databases/$(database)/documents/admins/$(request.auth.uid))
       );
     }
 
     function isLawyer() {
       return isSignedIn() && (
-        (request.auth.token.email != null && (request.auth.token.email.lower().endsWith('@lawyers.com') || request.auth.token.email.lower().endsWith('@lawyers.mobile'))) ||
+        request.auth.token.email.matches(".*@lawyers.com$") || 
+        request.auth.token.email.matches(".*@lawyers.mobile$") ||
         exists(/databases/$(database)/documents/roleLawyer/$(request.auth.uid))
       );
     }
@@ -74,7 +75,7 @@ service cloud.firestore {
       allow read: if isSignedIn() && (isOwner(userId) || isAdmin() || isLawyer());
       allow create, update: if isOwner(userId) || isAdmin() || isLawyer();
 
-      // Allow administrative updates to nested profile documents
+      // Allow administrative updates to nested documents
       match /{allSubcollections=**} {
         allow read: if isSignedIn() && (isOwner(userId) || isAdmin() || isLawyer());
         allow create, update: if isOwner(userId) || isAdmin() || isLawyer();

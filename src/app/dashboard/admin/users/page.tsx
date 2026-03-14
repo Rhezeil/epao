@@ -244,6 +244,7 @@ export default function AdminUsersPage() {
     if (!db || !selectedClientId) return;
     const profileDocRef = doc(db, "users", selectedClientId, "profile", "profile");
     
+    // Strict sanitization to prevent 'undefined' values
     const sanitizedProfile = {
       firstName: editProfile.firstName ?? "",
       lastName: editProfile.lastName ?? "",

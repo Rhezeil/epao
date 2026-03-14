@@ -128,7 +128,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
             <SidebarMenu className="space-y-2">
               {menuItems.map((item) => {
                 const isActive = item.exact 
-                  ? pathname === item.path 
+                  ? pathname === item.path || pathname === item.path + '/'
                   : (pathname === item.path || pathname.startsWith(item.path + '/'));
                 
                 return (
