@@ -45,7 +45,7 @@ const OUTCOME_OPTIONS = [
   "Completed Consultation – Denial of Legal Assistance"
 ];
 
-export default function AdminTriagePage() {
+export default function AdminIntakeAssessmentPage() {
   const db = useFirestore();
   const { user, role, loading } = useAuth();
   const { toast } = useToast();
@@ -300,7 +300,7 @@ export default function AdminTriagePage() {
                   <TableHeader className="bg-muted/30">
                     <TableRow>
                       <TableHead className="px-8 font-black text-[10px] uppercase tracking-widest text-primary/40">Filing Ref</TableHead>
-                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Applicant Name</TableHead>
+                      <TableHead className="text-[10px) font-black uppercase tracking-widest text-primary/40">Applicant Name</TableHead>
                       <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Intake Category</TableHead>
                       <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Action</TableHead>
                     </TableRow>
@@ -483,7 +483,7 @@ export default function AdminTriagePage() {
                 Mark Ineligible
               </Button>
               <Button 
-                onClick={handleScreeningResult('Eligible')} 
+                onClick={() => handleScreeningResult('Eligible')} 
                 disabled={isProcessing || !screening.indigency || !screening.merit || !screening.idVerified} 
                 className="flex-1 h-12 rounded-xl font-black text-white shadow-lg bg-primary"
               >
