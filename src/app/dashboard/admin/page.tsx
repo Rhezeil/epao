@@ -4,14 +4,14 @@
 import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { useAuth } from "@/components/auth-provider";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
 import { collection, query, orderBy, doc, limit } from "firebase/firestore";
 import { 
   BarChart, Bar, Cell, PieChart, Pie, Tooltip, ResponsiveContainer, CartesianGrid, XAxis, YAxis
 } from "recharts";
 import { 
-  ShieldCheck, Briefcase, 
+  Briefcase, 
   Activity, PieChart as PieIcon, Lightbulb, 
   Microscope,
   FileSearch,
@@ -138,7 +138,6 @@ export default function AdminDashboard() {
     <DashboardLayout role="admin">
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 pb-20">
         <div className="xl:col-span-3 space-y-12">
-          {/* --- HEADER --- */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-primary text-white rounded-2xl shadow-lg">
@@ -301,7 +300,6 @@ export default function AdminDashboard() {
           </Tabs>
         </div>
 
-        {/* --- NOTIFICATION PANEL --- */}
         <div className="xl:col-span-1 space-y-6">
           <Card className="border-none shadow-2xl bg-white rounded-[2.5rem] overflow-hidden flex flex-col h-[calc(100vh-12rem)] sticky top-24">
             <CardHeader className="bg-primary p-8 text-white shrink-0">
@@ -328,7 +326,7 @@ export default function AdminDashboard() {
               </div>
             </CardHeader>
             <CardContent className="p-0 overflow-y-auto flex-1 divide-y divide-primary/5">
-              {filteredNotifs.length > 0 ? (
+              {filteredNotifs && filteredNotifs.length > 0 ? (
                 filteredNotifs.map((notif) => (
                   <div 
                     key={notif.id} 
@@ -348,7 +346,7 @@ export default function AdminDashboard() {
                       )}>
                         {notif.type}
                       </Badge>
-                      <span className="text-[9px] font-bold text-muted-foreground uppercase">{format(new Date(notif.createdAt), "HH:mm")}</span>
+                      <span className="text-[9px] font-bold text-muted-foreground uppercase">{notif.createdAt ? format(new Date(notif.createdAt), "HH:mm") : '---'}</span>
                     </div>
                     <p className="text-sm font-bold text-primary leading-snug">{notif.description}</p>
                     <div className="flex justify-between items-center mt-3">

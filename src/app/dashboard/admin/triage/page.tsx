@@ -13,11 +13,9 @@ import {
   ShieldCheck, 
   Loader2, 
   ClipboardCheck, 
-  CheckCircle2, 
   XCircle, 
   Search, 
   Scale,
-  AlertCircle,
   Info,
   Gavel,
   User
@@ -122,20 +120,19 @@ export default function AdminIntakeAssessmentPage() {
         updatedAt: new Date().toISOString()
       });
 
-      // --- NOTIFICATION ---
       const notifId = crypto.randomUUID();
       setDocumentNonBlocking(doc(db, "notifications", notifId), {
         id: notifId,
         type: "system",
         userRole: "admin",
-        description: `Screening complete for ${selectedAppt.referenceCode}: Marked as ${result}.`,
+        description: `Intake screening complete for ${selectedAppt.referenceCode}: Marked as ${result}.`,
         referenceId: selectedAppt.id,
         referenceCode: selectedAppt.referenceCode,
         status: "unread",
         createdAt: new Date().toISOString()
       }, { merge: true });
 
-      toast({ title: "Screening Recorded", description: `Citizen record marked as ${result}.` });
+      toast({ title: "Evaluation Recorded", description: `Citizen record marked as ${result}.` });
       setIsEvaluationOpen(false);
       setSelectedAppt(null);
       setScreening({ indigency: false, merit: false, idVerified: false, notes: "" });
@@ -157,7 +154,6 @@ export default function AdminIntakeAssessmentPage() {
         updatedAt: new Date().toISOString()
       });
 
-      // --- NOTIFICATION ---
       const notifId = crypto.randomUUID();
       setDocumentNonBlocking(doc(db, "notifications", notifId), {
         id: notifId,
@@ -170,7 +166,7 @@ export default function AdminIntakeAssessmentPage() {
         createdAt: new Date().toISOString()
       }, { merge: true });
 
-      toast({ title: "Consultation Started", description: "The assigned lawyer has been notified of the incoming intake." });
+      toast({ title: "Consultation Initialized", description: "The assigned lawyer has been synchronized." });
       setSelectedAppt(null);
       setAssignedLawyer("");
     } finally {
@@ -203,7 +199,6 @@ export default function AdminIntakeAssessmentPage() {
         }
       }
 
-      // Update Appointment
       updateDocumentNonBlocking(doc(db, "appointments", appt.id), {
         status: "completed",
         caseId: caseId,
@@ -211,7 +206,6 @@ export default function AdminIntakeAssessmentPage() {
         updatedAt: new Date().toISOString()
       });
 
-      // Create Case
       setDocumentNonBlocking(doc(db, "cases", caseId), {
         id: caseId,
         clientId: clientId,
@@ -223,7 +217,6 @@ export default function AdminIntakeAssessmentPage() {
         createdAt: new Date().toISOString()
       }, { merge: true });
 
-      // Link Citizen
       setDocumentNonBlocking(doc(db, "users", clientId), {
         id: clientId,
         mobileNumber: appt.guestMobile || appt.clientMobile || "",
@@ -234,7 +227,6 @@ export default function AdminIntakeAssessmentPage() {
         createdAt: new Date().toISOString()
       }, { merge: true });
 
-      // --- NOTIFICATION ---
       const notifId = crypto.randomUUID();
       setDocumentNonBlocking(doc(db, "notifications", notifId), {
         id: notifId,
@@ -246,7 +238,7 @@ export default function AdminIntakeAssessmentPage() {
         createdAt: new Date().toISOString()
       }, { merge: true });
 
-      toast({ title: "Administrative Activation Complete", description: `Record ${caseId} is now live.` });
+      toast({ title: "Registry Update Complete", description: `Record ${caseId} is now live.` });
     } catch (e: any) {
       toast({ variant: "destructive", title: "Activation Error", description: e.message });
     } finally {
@@ -263,7 +255,7 @@ export default function AdminIntakeAssessmentPage() {
           </div>
           <div>
             <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Citizen Intake Assessment</h1>
-            <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest mt-1">Official screening and consultation assignment</p>
+            <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest mt-1">Official eligibility screening and counsel assignment</p>
           </div>
         </div>
 
@@ -297,11 +289,9 @@ export default function AdminIntakeAssessmentPage() {
                         <TableCell className="px-8 font-black text-primary py-6">{appt.referenceCode}</TableCell>
                         <TableCell className="font-bold">{appt.guestName || appt.clientName}</TableCell>
                         <TableCell className="text-center">
-                          <div className="flex flex-col items-center">
-                            <Badge variant="outline" className="text-[9px] uppercase px-3 bg-primary/5 text-primary border-primary/10">
-                              {appt.serviceType || appt.purpose || appt.caseType}
-                            </Badge>
-                          </div>
+                          <Badge variant="outline" className="text-[9px] uppercase px-3 bg-primary/5 text-primary border-primary/10">
+                            {appt.serviceType || appt.purpose || appt.caseType}
+                          </Badge>
                         </TableCell>
                         <TableCell className="text-right px-8">
                           <Button size="sm" onClick={() => { setSelectedAppt(appt); setIsEvaluationOpen(true); }} className="rounded-xl font-black bg-primary text-white">Start Screening</Button>

@@ -25,14 +25,11 @@ import {
   Calendar,
   CalendarCheck,
   User,
-  Settings,
   LogIn,
   Database,
   Search,
   ShieldCheck,
-  Clock,
   Heart,
-  Gavel,
   History
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
@@ -79,7 +76,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
 
     if (role === "admin") {
       return [
-        { icon: LayoutDashboard, label: "Diagnostic Analysis", path: "/dashboard/admin" },
+        { icon: LayoutDashboard, label: "Diagnostic Analysis", path: "/dashboard/admin", exact: true },
         { icon: ShieldCheck, label: "Intake Assessment", path: "/dashboard/admin/triage" },
         { icon: Users, label: "Client Directory", path: "/dashboard/admin/users" },
         { icon: History, label: "Visit Registry", path: "/dashboard/admin/appointments" },
@@ -90,7 +87,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
 
     if (role === "lawyer") {
       return [
-        { icon: LayoutDashboard, label: "Workstation Home", path: "/dashboard/lawyer" },
+        { icon: LayoutDashboard, label: "Workstation Home", path: "/dashboard/lawyer", exact: true },
         { icon: FileText, label: "My Cases", path: "/dashboard/lawyer/cases" },
       ];
     }
@@ -129,17 +126,20 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
           <SidebarContent className="px-4">
             <SidebarMenu className="space-y-2">
               {menuItems.map((item) => {
-                const isActive = pathname === item.path || pathname.startsWith(item.path + '/');
+                const isActive = item.exact 
+                  ? pathname === item.path 
+                  : pathname === item.path || pathname.startsWith(item.path + '/');
+                
                 return (
                   <SidebarMenuItem key={item.path + item.label}>
                     <SidebarMenuButton 
                       asChild
                       isActive={isActive}
                       className={cn(
-                        "flex items-center gap-3 px-4 py-6 rounded-2xl transition-all duration-300",
+                        "flex items-center gap-3 px-4 py-6 rounded-2xl transition-all duration-300 border-none",
                         isActive
-                          ? "bg-primary text-white shadow-xl scale-[1.02] border-none" 
-                          : "bg-slate-950 text-slate-300 hover:bg-slate-900 hover:text-white shadow-md border-none"
+                          ? "bg-primary text-white shadow-xl scale-[1.02]" 
+                          : "bg-slate-950 text-slate-300 hover:bg-slate-900 hover:text-white"
                       )}
                     >
                       <Link href={item.path}>
