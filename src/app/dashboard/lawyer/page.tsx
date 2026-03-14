@@ -323,16 +323,26 @@ export default function LawyerDashboard() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {filterAcceptedPendingActivation.map(appt => (
                   <Card key={appt.id} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden border-l-8 border-primary">
-                    <CardContent className="p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                    <CardContent className="p-5 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
                       <div className="flex items-start gap-5 flex-1 min-w-0">
                         <div className="p-3 bg-primary/5 rounded-2xl text-primary shrink-0">
                           <CheckCircle2 className="h-6 w-6" />
                         </div>
                         <div className="space-y-1 min-w-0 flex-1">
-                          <h3 className="text-xl font-black text-primary truncate break-words whitespace-normal">{appt.guestName || appt.clientName}</h3>
-                          <Badge className="bg-primary text-white text-[8px] font-black uppercase px-2 py-0.5 border-none shrink-0">
-                            ACCEPTED - READY FOR FILING
-                          </Badge>
+                          <div className="flex flex-row items-center gap-2">
+                            <h3 className="text-xl font-black text-primary truncate break-words whitespace-normal">{appt.guestName || appt.clientName}</h3>
+                            <Badge className="bg-primary text-white text-[8px] font-black uppercase px-2 py-0.5 border-none shrink-0">
+                              ACCEPTED
+                            </Badge>
+                          </div>
+                          <div className="flex flex-col">
+                            <Badge variant="outline" className="text-[9px] uppercase border-primary/10 bg-primary/5 text-primary w-fit">
+                              {appt.serviceType || appt.purpose || appt.caseType}
+                            </Badge>
+                            {appt.caseType && appt.caseType !== (appt.serviceType || appt.purpose) && (
+                              <span className="text-[8px] text-muted-foreground font-bold mt-1 uppercase truncate">{appt.caseType}</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <Button 
