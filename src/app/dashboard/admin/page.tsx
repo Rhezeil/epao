@@ -217,7 +217,7 @@ export default function AdminDashboard() {
                         <BarChart data={screeningAnalysis.reasons} layout="vertical" margin={{ left: 40 }}>
                           <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#F1F5F9" />
                           <XAxis type="number" hide />
-                          <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: '#1A237E' }} width={120} />
+                          <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 8, fontWeight: 700, fill: '#1A237E' }} width={120} />
                           <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} />
                           <Bar dataKey="value" fill="#EF4444" radius={[0, 10, 10, 0]} barSize={20}>
                             {screeningAnalysis.reasons.map((entry, index) => (

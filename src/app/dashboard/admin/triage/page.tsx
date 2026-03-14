@@ -18,7 +18,8 @@ import {
   Scale,
   Info,
   Gavel,
-  User
+  User,
+  CheckCircle2
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -33,10 +34,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { initializeApp, deleteApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { firebaseConfig } from "@/firebase/config";
+import { caseCategories } from "@/app/lib/case-data";
 
 const OUTCOME_OPTIONS = [
   "Completed Consultation – Accept Legal Assistance",
   "Completed Consultation – Denial of Legal Assistance"
+];
+
+const REJECTION_REASONS = [
+  "Failure to Provide Proof of Indigency (ITR, Payslip, or Brgy Cert)",
+  "Missing Case-Specific Documents (Subpoena, Contracts, complaints, or affidavits)",
+  "Issues with Barangay Certification",
+  "Lack of Proper Identification (Valid, government-issued IDs)",
+  "Misunderstanding of Requirements (Financial eligibility or case-specific docs)",
+  "Unpreparedness in Gathering Information",
+  "Income exceeds statutory limit",
+  "Conflict of interest",
+  "Outside legal jurisdiction"
 ];
 
 export default function AdminIntakeAssessmentPage() {
@@ -433,10 +447,9 @@ export default function AdminIntakeAssessmentPage() {
                     <Select value={rejectionReason} onValueChange={setRejectionReason}>
                       <SelectTrigger className="rounded-xl border-red-100 bg-red-50/30 font-bold"><SelectValue placeholder="Select Reason" /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Income exceeds limit" className="font-bold">Income Exceeds Limit</SelectItem>
-                        <SelectItem value="Conflict of interest" className="font-bold">Conflict of Interest</SelectItem>
-                        <SelectItem value="Outside legal jurisdiction" className="font-bold">Outside PAO Scope</SelectItem>
-                        <SelectItem value="Incomplete documentation" className="font-bold">Incomplete Documentation</SelectItem>
+                        {REJECTION_REASONS.map((reason) => (
+                          <SelectItem key={reason} value={reason} className="font-bold">{reason}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>

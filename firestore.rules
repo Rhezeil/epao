@@ -33,9 +33,9 @@ service cloud.firestore {
     // --- GLOBAL REGISTRIES ---
 
     match /appointments/{appointmentId} {
-      allow read: if isSignedIn() || true; 
+      allow read: if isSignedIn(); 
       allow create: if true; 
-      allow update: if isSignedIn() || true; 
+      allow update: if isSignedIn(); 
       allow delete: if isAdmin();
     }
 
@@ -90,7 +90,7 @@ service cloud.firestore {
     }
 
     match /cases/{caseId} {
-      allow read: if isSignedIn() || true;
+      allow read: if isSignedIn();
       allow list: if isSignedIn();
       allow create: if isAdmin() || isLawyer();
       allow update: if isAdmin() || (isSignedIn() && (resource.data.lawyerId == request.auth.uid || isAdmin()));
