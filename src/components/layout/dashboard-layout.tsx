@@ -172,23 +172,6 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
               )}
               
               <SidebarMenu>
-                {user && (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton 
-                      asChild 
-                      isActive={pathname === '/profile'}
-                      className={cn(
-                        "w-full rounded-xl transition-all",
-                        pathname === '/profile' ? "bg-primary/10 text-primary" : "text-primary hover:bg-primary/5"
-                      )}
-                    >
-                      <Link href="/profile">
-                        <Settings className="h-4 w-4 mr-2" />
-                        <span className="text-xs font-bold">Profile Settings</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )}
                 <SidebarMenuItem>
                   {user ? (
                     <SidebarMenuButton onClick={signOut} className="w-full text-red-600 hover:bg-red-50 rounded-xl">
