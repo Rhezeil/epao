@@ -458,7 +458,7 @@ export default function AdminIntakeAssessmentPage() {
                 ) : null}
               </div>
             </div>
-            <DialogFooter className="p-8 bg-muted/30 flex gap-4">
+            <DialogFooter className="p-8 bg-muted/30 flex flex-col sm:flex-row gap-3">
               <Button 
                 variant="outline" 
                 onClick={() => handleScreeningResult('Not Eligible')} 
@@ -519,10 +519,10 @@ export default function AdminIntakeAssessmentPage() {
                 </div>
               </div>
             </div>
-            <DialogFooter className="p-8 bg-muted/30 flex gap-4">
+            <DialogFooter className="p-8 bg-muted/30 flex flex-col sm:flex-row gap-3">
               <Button variant="outline" onClick={() => setSelectedAppt(null)} className="flex-1 h-12 rounded-xl font-bold">Cancel</Button>
               <Button 
-                onClick={() => handleStartConsultation()} 
+                onClick={handleStartConsultation()} 
                 disabled={!assignedLawyer || isProcessing} 
                 className="flex-1 h-12 rounded-xl font-black text-white shadow-lg bg-secondary"
               >

@@ -75,7 +75,7 @@ service cloud.firestore {
       allow read: if isSignedIn() && (isOwner(userId) || isAdmin() || isLawyer());
       allow create, update: if isOwner(userId) || isAdmin() || isLawyer();
 
-      // Allow administrative updates to nested documents
+      // Explicit permission for nested documents (Profiles, etc.)
       match /{allSubcollections=**} {
         allow read: if isSignedIn() && (isOwner(userId) || isAdmin() || isLawyer());
         allow create, update: if isOwner(userId) || isAdmin() || isLawyer();
