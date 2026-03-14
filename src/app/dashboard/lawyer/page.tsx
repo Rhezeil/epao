@@ -269,11 +269,15 @@ export default function LawyerDashboard() {
                       <div className="p-3 bg-red-50 rounded-2xl text-red-600 shrink-0">
                         <User className="h-6 w-6" />
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <h3 className="text-xl font-black text-secondary break-words leading-tight">{appt.guestName || appt.clientName}</h3>
-                        <p className="text-[10px] font-black uppercase text-red-600 tracking-widest mt-1">Consultation in Progress</p>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          <Badge variant="outline" className="text-[9px] uppercase border-red-100 bg-red-50/50 whitespace-normal text-left">
+                      <div className="min-w-0 flex-1 space-y-1.5">
+                        <div className="flex flex-row items-center gap-3 min-w-0">
+                          <h3 className="text-xl font-black text-secondary truncate">{appt.guestName || appt.clientName}</h3>
+                          <Badge className="bg-red-500 text-white text-[8px] font-black uppercase shrink-0 px-2 py-0.5 border-none shadow-sm">
+                            IN PROGRESS
+                          </Badge>
+                        </div>
+                        <div className="flex">
+                          <Badge variant="outline" className="text-[9px] uppercase border-red-100 bg-red-50/50 text-red-700 truncate max-w-full">
                             {appt.caseType}
                           </Badge>
                         </div>
