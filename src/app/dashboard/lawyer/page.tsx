@@ -282,8 +282,8 @@ export default function LawyerDashboard() {
                           <User className="h-6 w-6" />
                         </div>
                         <div className="space-y-1 min-w-0 flex-1">
-                          <div className="flex flex-row items-center gap-2">
-                            <h3 className="text-xl font-black text-secondary truncate break-words whitespace-normal leading-tight">{appt.guestName || appt.clientName}</h3>
+                          <div className="flex flex-row items-center gap-3">
+                            <h3 className="text-xl font-black text-secondary break-words whitespace-normal leading-tight">{appt.guestName || appt.clientName}</h3>
                             <Badge className="bg-red-500 text-white text-[8px] font-black uppercase px-2 py-0.5 border-none shrink-0">
                               IN PROGRESS
                             </Badge>
@@ -292,9 +292,6 @@ export default function LawyerDashboard() {
                             <Badge variant="outline" className="text-[9px] uppercase border-red-100 bg-red-50/50 text-red-700 w-fit">
                               {appt.serviceType || appt.purpose || appt.caseType}
                             </Badge>
-                            {appt.caseType && appt.caseType !== (appt.serviceType || appt.purpose) && (
-                              <span className="text-[8px] text-muted-foreground font-bold mt-1 uppercase truncate">{appt.caseType}</span>
-                            )}
                           </div>
                         </div>
                       </div>
@@ -329,10 +326,10 @@ export default function LawyerDashboard() {
                           <CheckCircle2 className="h-6 w-6" />
                         </div>
                         <div className="space-y-1 min-w-0 flex-1">
-                          <div className="flex flex-row items-center gap-2">
-                            <h3 className="text-xl font-black text-primary truncate break-words whitespace-normal leading-tight">{appt.guestName || appt.clientName}</h3>
+                          <div className="flex flex-row items-center gap-3">
+                            <h3 className="text-xl font-black text-primary break-words whitespace-normal leading-tight">{appt.guestName || appt.clientName}</h3>
                             <Badge className="bg-primary text-white text-[8px] font-black uppercase px-2 py-0.5 border-none shrink-0">
-                              ACCEPTED - READY FOR FILING
+                              ACCEPTED
                             </Badge>
                           </div>
                           <div className="flex flex-col">

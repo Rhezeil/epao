@@ -150,9 +150,6 @@ export default function AdminAppointmentsRegistry() {
                             <Badge variant="outline" className="bg-primary/5 border-primary/10 text-[9px] font-black uppercase w-fit">
                               {a.serviceType || a.purpose || a.caseType}
                             </Badge>
-                            {a.caseType && a.caseType !== (a.serviceType || a.purpose) && (
-                              <span className="text-[8px] text-muted-foreground font-bold mt-1 uppercase tracking-tighter">{a.caseType}</span>
-                            )}
                           </div>
                         </TableCell>
                         <TableCell>

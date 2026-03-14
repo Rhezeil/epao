@@ -315,9 +315,6 @@ export default function AdminIntakeAssessmentPage() {
                             <Badge variant="outline" className="text-[9px] uppercase px-3 bg-primary/5 text-primary border-primary/10">
                               {appt.serviceType || appt.purpose || appt.caseType}
                             </Badge>
-                            {appt.caseType && appt.caseType !== (appt.serviceType || appt.purpose) && (
-                              <span className="text-[8px] text-muted-foreground font-black uppercase mt-1 tracking-tighter">{appt.caseType}</span>
-                            )}
                           </div>
                         </TableCell>
                         <TableCell className="text-right px-8">
