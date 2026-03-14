@@ -52,7 +52,8 @@ export default function AdminAppointmentsRegistry() {
         a.referenceCode?.toLowerCase().includes(search.toLowerCase()) ||
         a.guestName?.toLowerCase().includes(search.toLowerCase()) ||
         a.clientName?.toLowerCase().includes(search.toLowerCase()) ||
-        a.caseType?.toLowerCase().includes(search.toLowerCase());
+        a.caseType?.toLowerCase().includes(search.toLowerCase()) ||
+        a.serviceType?.toLowerCase().includes(search.toLowerCase());
       
       const matchesStatus = statusFilter === "all" || a.status === statusFilter;
       
@@ -145,9 +146,14 @@ export default function AdminAppointmentsRegistry() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="bg-primary/5 border-primary/10 text-[9px] font-black uppercase">
-                            {a.caseType}
-                          </Badge>
+                          <div className="flex flex-col">
+                            <Badge variant="outline" className="bg-primary/5 border-primary/10 text-[9px] font-black uppercase w-fit">
+                              {a.serviceType || a.purpose || a.caseType}
+                            </Badge>
+                            {a.caseType && a.caseType !== (a.serviceType || a.purpose) && (
+                              <span className="text-[8px] text-muted-foreground font-bold mt-1 uppercase tracking-tighter">{a.caseType}</span>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell>
                           <Badge className={cn(

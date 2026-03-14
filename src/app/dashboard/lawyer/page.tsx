@@ -271,26 +271,31 @@ export default function LawyerDashboard() {
             <div className="space-y-4">
               <div className="flex items-center gap-2 px-1">
                 <Activity className="h-5 w-5 text-red-500 animate-pulse" />
-                <h2 className="text-sm font-black uppercase tracking-widest text-secondary">Awaiting Outcome Assessment ({pendingConsultations.length})</h2>
+                <h2 className="text-sm font-black uppercase tracking-widest text-secondary">Awaiting Assessment ({pendingConsultations.length})</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {pendingConsultations.map(appt => (
                   <Card key={appt.id} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden border-l-8 border-red-500">
-                    <CardContent className="p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                      <div className="flex items-start gap-5 flex-1">
+                    <CardContent className="p-5 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
+                      <div className="flex items-start gap-5 flex-1 min-w-0">
                         <div className="p-3 bg-red-50 rounded-2xl text-red-600 shrink-0">
                           <User className="h-6 w-6" />
                         </div>
-                        <div className="space-y-1">
-                          <div className="flex flex-wrap items-center gap-3">
-                            <h3 className="text-xl font-black text-secondary">{appt.guestName || appt.clientName}</h3>
-                            <Badge className="bg-red-500 text-white text-[8px] font-black uppercase px-2 py-0.5 border-none">
+                        <div className="space-y-1 min-w-0 flex-1">
+                          <div className="flex flex-row items-center gap-2">
+                            <h3 className="text-xl font-black text-secondary truncate break-words whitespace-normal">{appt.guestName || appt.clientName}</h3>
+                            <Badge className="bg-red-500 text-white text-[8px] font-black uppercase px-2 py-0.5 border-none shrink-0">
                               IN PROGRESS
                             </Badge>
                           </div>
-                          <Badge variant="outline" className="text-[9px] uppercase border-red-100 bg-red-50/50 text-red-700">
-                            {appt.caseType}
-                          </Badge>
+                          <div className="flex flex-col">
+                            <Badge variant="outline" className="text-[9px] uppercase border-red-100 bg-red-50/50 text-red-700 w-fit">
+                              {appt.serviceType || appt.purpose || appt.caseType}
+                            </Badge>
+                            {appt.caseType && appt.caseType !== (appt.serviceType || appt.purpose) && (
+                              <span className="text-[8px] text-muted-foreground font-bold mt-1 uppercase truncate">{appt.caseType}</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <Button 
@@ -298,9 +303,9 @@ export default function LawyerDashboard() {
                           setActiveConsultation(appt);
                           setConsultationForm({ ...consultationForm, caseType: appt.caseType });
                         }}
-                        className="h-12 rounded-xl bg-secondary hover:bg-secondary/90 text-white font-black px-6 shadow-lg"
+                        className="h-12 rounded-xl bg-secondary hover:bg-secondary/90 text-white font-black px-6 shadow-lg shrink-0"
                       >
-                        Complete Consultation <ArrowRight className="ml-2 h-4 w-4" />
+                        Start Assessment <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
                     </CardContent>
                   </Card>
@@ -319,13 +324,13 @@ export default function LawyerDashboard() {
                 {filterAcceptedPendingActivation.map(appt => (
                   <Card key={appt.id} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden border-l-8 border-primary">
                     <CardContent className="p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                      <div className="flex items-start gap-5 flex-1">
+                      <div className="flex items-start gap-5 flex-1 min-w-0">
                         <div className="p-3 bg-primary/5 rounded-2xl text-primary shrink-0">
                           <CheckCircle2 className="h-6 w-6" />
                         </div>
-                        <div className="space-y-1">
-                          <h3 className="text-xl font-black text-primary">{appt.guestName || appt.clientName}</h3>
-                          <Badge className="bg-primary text-white text-[8px] font-black uppercase px-2 py-0.5 border-none">
+                        <div className="space-y-1 min-w-0 flex-1">
+                          <h3 className="text-xl font-black text-primary truncate break-words whitespace-normal">{appt.guestName || appt.clientName}</h3>
+                          <Badge className="bg-primary text-white text-[8px] font-black uppercase px-2 py-0.5 border-none shrink-0">
                             ACCEPTED - READY FOR FILING
                           </Badge>
                         </div>
@@ -333,7 +338,7 @@ export default function LawyerDashboard() {
                       <Button 
                         onClick={() => handleActivateCase(appt)}
                         disabled={isSubmitting}
-                        className="h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-black px-6 shadow-lg"
+                        className="h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-black px-6 shadow-lg shrink-0"
                       >
                         {isSubmitting ? <Loader2 className="animate-spin h-4 w-4" /> : <Scale className="mr-2 h-4 w-4" />}
                         Activate Case
@@ -413,7 +418,7 @@ export default function LawyerDashboard() {
             <DialogHeader className="p-8 bg-secondary text-white shrink-0">
               <div className="flex justify-between items-center">
                 <div>
-                  <DialogTitle className="text-2xl font-black">Conclude Legal Consultation</DialogTitle>
+                  <DialogTitle className="text-2xl font-black">Conclude Official Consultation</DialogTitle>
                   <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">Citizen: {activeConsultation?.guestName || activeConsultation?.clientName}</DialogDescription>
                 </div>
                 <div className="p-3 bg-white/20 rounded-2xl"><GavelIcon className="h-6 w-6 text-white" /></div>
@@ -423,7 +428,7 @@ export default function LawyerDashboard() {
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="space-y-6">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Case Classification</Label>
+                    <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Intake Category</Label>
                     <Select value={consultationForm.caseType} onValueChange={(v) => setConsultationForm({...consultationForm, caseType: v})}>
                       <SelectTrigger className="h-12 rounded-xl border-secondary/10 font-bold"><SelectValue placeholder="Select Category" /></SelectTrigger>
                       <SelectContent>
@@ -459,7 +464,7 @@ export default function LawyerDashboard() {
                       <Select value={consultationForm.denialReason} onValueChange={(v) => setConsultationForm({...consultationForm, denialReason: v})}>
                         <SelectTrigger className="h-12 rounded-xl border-red-100 bg-red-50/30 font-bold"><SelectValue placeholder="Select Reason" /></SelectTrigger>
                         <SelectContent>
-                          {DENIAL_REASONS.map(r => <SelectItem key={opt} value={r} className="font-bold">{r}</SelectItem>)}
+                          {DENIAL_REASONS.map(r => <SelectItem key={r} value={r} className="font-bold">{r}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>

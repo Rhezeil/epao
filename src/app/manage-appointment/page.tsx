@@ -271,9 +271,11 @@ export default function ManageAppointmentPage() {
                       <div className="flex items-center gap-2 text-primary font-black uppercase text-[10px] tracking-widest mb-1">
                         <CheckCircle2 className="h-4 w-4" /> Intake Category
                       </div>
-                      <p className="text-xl font-black text-[#1A3B6B]">{appointment.caseType}</p>
+                      <p className="text-xl font-black text-[#1A3B6B]">
+                        {appointment.serviceType || appointment.purpose || appointment.caseType}
+                      </p>
                       <Badge variant="outline" className="border-primary/20 text-[10px] font-bold text-primary px-3">
-                        {appointment.serviceType || appointment.purpose}
+                        {appointment.caseType}
                       </Badge>
                     </div>
                   </div>
@@ -441,7 +443,7 @@ export default function ManageAppointmentPage() {
                       <p className="text-xs font-black uppercase">Pick a Date</p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto p-1 scrollbar-hide">
+                    <div className="grid grid-cols-2 gap-2 max-h-[350px] overflow-y-auto p-1 scrollbar-hide">
                       {timeSlots.map(slot => (
                         <Button
                           key={slot.time}
@@ -470,7 +472,7 @@ export default function ManageAppointmentPage() {
                     disabled={!rescheduleDate || !rescheduleTime || isRescheduling}
                     onClick={handleReschedule}
                   >
-                    {isRescheduling ? <Loader2 className="animate-spin h-6 w-6" /> : "Update Schedule"}
+                    {isRescheduling ? <Loader2 className="animate-spin h-6 w-6 mr-2" /> : "Update Schedule"}
                   </Button>
                 </div>
               </div>

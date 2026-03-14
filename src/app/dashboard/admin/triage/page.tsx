@@ -299,9 +299,9 @@ export default function AdminTriagePage() {
                 <Table>
                   <TableHeader className="bg-muted/30">
                     <TableRow>
-                      <TableHead className="px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Filing Ref</TableHead>
+                      <TableHead className="px-8 font-black text-[10px] uppercase tracking-widest text-primary/40">Filing Ref</TableHead>
                       <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Applicant Name</TableHead>
-                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Legal Concern</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Intake Category</TableHead>
                       <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Action</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -310,7 +310,16 @@ export default function AdminTriagePage() {
                       <TableRow key={appt.id} className="hover:bg-primary/5 transition-colors">
                         <TableCell className="px-8 font-black text-primary py-6">{appt.referenceCode}</TableCell>
                         <TableCell className="font-bold">{appt.guestName || appt.clientName}</TableCell>
-                        <TableCell className="text-center"><Badge variant="outline" className="text-[9px] uppercase px-3">{appt.caseType}</Badge></TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex flex-col items-center">
+                            <Badge variant="outline" className="text-[9px] uppercase px-3 bg-primary/5 text-primary border-primary/10">
+                              {appt.serviceType || appt.purpose || appt.caseType}
+                            </Badge>
+                            {appt.caseType && appt.caseType !== (appt.serviceType || appt.purpose) && (
+                              <span className="text-[8px] text-muted-foreground font-black uppercase mt-1 tracking-tighter">{appt.caseType}</span>
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell className="text-right px-8">
                           <Button size="sm" onClick={() => { setSelectedAppt(appt); setIsEvaluationOpen(true); }} className="rounded-xl font-black bg-primary text-white">Start Screening</Button>
                         </TableCell>
@@ -336,7 +345,7 @@ export default function AdminTriagePage() {
                 <Table>
                   <TableHeader className="bg-muted/30">
                     <TableRow>
-                      <TableHead className="px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Reference</TableHead>
+                      <TableHead className="px-8 font-black text-[10px] uppercase tracking-widest text-primary/40">Reference</TableHead>
                       <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Citizen</TableHead>
                       <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Screened On</TableHead>
                       <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Action</TableHead>
@@ -373,7 +382,7 @@ export default function AdminTriagePage() {
                 <Table>
                   <TableHeader className="bg-muted/30">
                     <TableRow>
-                      <TableHead className="px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Reference</TableHead>
+                      <TableHead className="px-8 font-black text-[10px] uppercase tracking-widest text-primary/40">Reference</TableHead>
                       <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Citizen</TableHead>
                       <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Handling Lawyer</TableHead>
                       <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Action</TableHead>
@@ -495,7 +504,7 @@ export default function AdminTriagePage() {
               <div className="p-6 bg-secondary/5 rounded-[2rem] border-2 border-dashed border-secondary/10">
                 <p className="text-[10px] font-black uppercase text-secondary tracking-widest mb-2">Citizen Interest</p>
                 <div className="flex items-center gap-2 text-secondary font-bold">
-                  <Badge variant="outline" className="border-secondary/20">{selectedAppt?.caseType}</Badge>
+                  <Badge variant="outline" className="border-secondary/20">{selectedAppt?.serviceType || selectedAppt?.purpose || selectedAppt?.caseType}</Badge>
                 </div>
               </div>
 
