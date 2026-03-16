@@ -51,7 +51,14 @@ function BookAppointmentContent() {
 
   const [assignedLawyer, setAssignedLawyer] = useState<any>(null);
 
-  // Fetch client profile for registered data
+  // Fetch visitorInfo from master User record
+  const userDocRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return doc(db, "users", user.uid);
+  }, [db, user]);
+  const { data: userData } = useDoc(userDocRef);
+
+  // Fetch client profile sub-doc
   const profileDocRef = useMemoFirebase(() => {
     if (!db || !user) return null;
     return doc(db, "users", user.uid, "profile", "profile");
@@ -118,9 +125,9 @@ function BookAppointmentContent() {
   }, [selectedDate, existingAppts, activeCase?.lawyerId]);
 
   const handleTriggerOtp = async () => {
-    const mobile = profile?.phoneNumber || user?.email?.split('@')[0];
+    const mobile = userData?.mobileNumber || profile?.phoneNumber;
     if (!mobile || !/^\d{10,11}$/.test(mobile)) {
-      toast({ variant: "destructive", title: "Registration Incomplete", description: "Your registered mobile number is invalid. Please update your profile." });
+      toast({ variant: "destructive", title: "Registration Incomplete", description: "Your registered mobile number is missing. Please update your profile settings first." });
       return;
     }
 
@@ -151,7 +158,7 @@ function BookAppointmentContent() {
     const appointmentId = crypto.randomUUID();
     const apptRef = doc(db, "appointments", appointmentId);
 
-    const clientName = profile ? `${profile.firstName} ${profile.lastName}` : (user.displayName || "Client");
+    const clientName = userData?.fullName || (profile ? `${profile.firstName} ${profile.lastName}` : (user.displayName || "Citizen"));
 
     const appointmentData = {
       id: appointmentId,
@@ -163,9 +170,9 @@ function BookAppointmentContent() {
       purpose: "follow-up",
       serviceType: "Follow-up Consultation",
       clientName: clientName,
-      clientMobile: profile?.phoneNumber || "",
+      clientMobile: userData?.mobileNumber || profile?.phoneNumber || "",
       clientEmail: user.email || "",
-      clientAddress: profile?.address || "",
+      clientAddress: profile?.address || userData?.address || "",
       date: selectedDate.toISOString(),
       dateString: format(selectedDate, "yyyy-MM-dd"),
       time: selectedTime,
@@ -284,29 +291,29 @@ function BookAppointmentContent() {
                 <div className="text-center space-y-2">
                   <div className="inline-flex p-3 bg-primary/10 rounded-2xl mb-2"><ShieldCheck className="h-10 w-10 text-primary" /></div>
                   <h3 className="text-2xl font-black text-primary font-headline">Identity Verification</h3>
-                  <p className="text-sm text-muted-foreground font-bold">Booking will be confirmed using your registered details.</p>
+                  <p className="text-sm text-muted-foreground font-bold">Booking will be confirmed using your registered visitor information.</p>
                 </div>
 
                 <div className="grid gap-6">
                   <Card className="border-none bg-primary/5 rounded-[2rem] overflow-hidden">
                     <CardHeader className="bg-primary/5 border-b border-primary/10 py-4 px-8">
-                      <CardTitle className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Registered Profile</CardTitle>
+                      <CardTitle className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Registered Visitor Info</CardTitle>
                     </CardHeader>
                     <CardContent className="p-8 grid md:grid-cols-2 gap-8">
                       <div className="space-y-4">
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-white rounded-xl shadow-sm text-primary"><User className="h-4 w-4" /></div>
-                          <div><p className="text-[9px] font-bold text-muted-foreground uppercase">Full Name</p><p className="font-black text-primary">{profile?.firstName} {profile?.lastName}</p></div>
+                          <div><p className="text-[9px] font-bold text-muted-foreground uppercase">Full Name</p><p className="font-black text-primary">{userData?.fullName || (profile ? `${profile.firstName} ${profile.lastName}` : "...")}</p></div>
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-white rounded-xl shadow-sm text-primary"><Phone className="h-4 w-4" /></div>
-                          <div><p className="text-[9px] font-bold text-muted-foreground uppercase">Mobile Number</p><p className="font-black text-primary">{profile?.phoneNumber || 'Not Set'}</p></div>
+                          <div><p className="text-[9px] font-bold text-muted-foreground uppercase">Mobile Number</p><p className="font-black text-primary">{userData?.mobileNumber || profile?.phoneNumber || 'Not Set'}</p></div>
                         </div>
                       </div>
                       <div className="space-y-4">
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-white rounded-xl shadow-sm text-primary"><MapPin className="h-4 w-4" /></div>
-                          <div><p className="text-[9px] font-bold text-muted-foreground uppercase">Home Address</p><p className="text-[11px] font-bold text-primary leading-tight">{profile?.address || 'Not Set'}</p></div>
+                          <div><p className="text-[9px] font-bold text-muted-foreground uppercase">Home Address</p><p className="text-[11px] font-bold text-primary leading-tight">{profile?.address || userData?.address || 'Not Set'}</p></div>
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-white rounded-xl shadow-sm text-primary"><Clock className="h-4 w-4" /></div>
@@ -319,7 +326,7 @@ function BookAppointmentContent() {
                   <div className="p-6 bg-amber-50 rounded-[2rem] border border-amber-100 flex items-start gap-4">
                     <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                     <p className="text-xs text-amber-800 font-bold leading-relaxed">
-                      A 6-digit verification code will be sent to your registered mobile number to authorize this follow-up booking.
+                      A 6-digit verification code will be sent to your registered mobile number ({userData?.mobileNumber || profile?.phoneNumber}) to authorize this follow-up booking.
                     </p>
                   </div>
                 </div>

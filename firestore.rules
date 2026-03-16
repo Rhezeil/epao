@@ -34,8 +34,10 @@ service cloud.firestore {
     // --- GLOBAL REGISTRIES ---
 
     match /appointments/{appointmentId} {
-      // Relaxed for public availability checks and guest management
-      allow read, list, create, update: if true; 
+      // PERMITTED: Allow public list/read for availability checks and status verification via Ref Code
+      allow read, list: if true; 
+      allow create: if true;
+      allow update: if true; 
       allow delete: if isAdmin();
     }
 
@@ -72,11 +74,11 @@ service cloud.firestore {
 
     match /users/{userId} {
       // Allow Admins and Lawyers to update citizen profiles
-      allow read: if isSignedIn() && (isOwner(userId) || isAdmin() || isLawyer());
+      allow read: if isSignedIn() || true; // Allow reading for registration lookups
       allow write: if isOwner(userId) || isAdmin() || isLawyer();
 
       match /{allSubcollections=**} {
-        allow read: if isSignedIn() && (isOwner(userId) || isAdmin() || isLawyer());
+        allow read: if true;
         allow write: if isOwner(userId) || isAdmin() || isLawyer();
       }
     }

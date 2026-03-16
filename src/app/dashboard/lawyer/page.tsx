@@ -265,7 +265,7 @@ export default function LawyerDashboard() {
                           </div>
                           <div className="space-y-3 flex-1 min-w-0">
                             <div className="flex flex-wrap items-center gap-3">
-                              <h3 className="text-2xl font-black text-secondary truncate max-w-[300px]">
+                              <h3 className="text-2xl font-black text-secondary truncate">
                                 {appt.guestName || appt.clientName}
                               </h3>
                               <Badge className="bg-red-500 text-white text-[9px] font-black uppercase px-3 py-1 border-none shadow-sm">IN PROGRESS</Badge>
@@ -277,7 +277,7 @@ export default function LawyerDashboard() {
                               </div>
                               <div className="flex items-center gap-2 text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-xl border border-muted-foreground/10">
                                 <Scale className="h-3 w-3 text-red-400" />
-                                <span className="text-[10px] font-black uppercase tracking-widest truncate max-w-[200px]">{appt.serviceType || appt.purpose || appt.caseType}</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest truncate">{appt.serviceType || appt.purpose || appt.caseType}</span>
                               </div>
                               {(appt.guestMobile || appt.clientMobile) && (
                                 <div className="flex items-center gap-2 text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-xl border border-muted-foreground/10">
@@ -316,7 +316,7 @@ export default function LawyerDashboard() {
                           </div>
                           <div className="space-y-3 flex-1 min-w-0">
                             <div className="flex flex-wrap items-center gap-3">
-                              <h3 className="text-2xl font-black text-primary truncate max-w-[300px]">
+                              <h3 className="text-2xl font-black text-primary truncate">
                                 {appt.guestName || appt.clientName}
                               </h3>
                               <Badge className="bg-primary text-white text-[9px] font-black uppercase px-3 py-1 border-none shadow-sm">ACCEPTED</Badge>
@@ -328,7 +328,7 @@ export default function LawyerDashboard() {
                               </div>
                               <div className="flex items-center gap-2 text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-xl border border-muted-foreground/10">
                                 <Scale className="h-3 w-3 text-primary/40" />
-                                <span className="text-[10px] font-black uppercase tracking-widest truncate max-w-[200px]">{appt.serviceType || appt.purpose || appt.caseType}</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest truncate">{appt.serviceType || appt.purpose || appt.caseType}</span>
                               </div>
                               {appt.outcome && (
                                 <div className="flex items-center gap-2 text-muted-foreground bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200">
