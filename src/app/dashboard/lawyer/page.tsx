@@ -289,7 +289,7 @@ export default function LawyerDashboard() {
                           </div>
                         </div>
                         <Button 
-                          onClick={() => { setActiveConsultation(appt); setConsultationForm({ ...consultationForm, caseType: appt.caseType }); }} 
+                          onClick={() => { setActiveConsultation(appt); setConsultationForm({ ...consultationForm, caseType: appt.caseType || "" }); }} 
                           className="h-16 rounded-2xl bg-secondary hover:bg-secondary/90 text-white font-black px-10 shadow-xl shrink-0 text-lg transition-transform hover:scale-105"
                         >
                           Start Official Assessment <ArrowRight className="ml-2 h-6 w-6" />
@@ -453,7 +453,7 @@ export default function LawyerDashboard() {
                 </div>
               </div>
             </div>
-            <DialogFooter className="p-8 bg-muted/30 flex gap-4"><Button variant="outline" onClick={() => setActiveConsultation(null)} className="flex-1 h-14 rounded-xl font-bold border-2">Cancel</Button><Button onClick={handleCompleteConsultation} disabled={isSubmitting || !consultationForm.outcome || (consultationForm.outcome === OUTCOME_OPTIONS[1] && !consultationForm.denialReason)} className="flex-1 h-14 rounded-xl font-black text-white shadow-xl bg-secondary hover:bg-secondary/90">{isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : <CheckCircle2 className="mr-2 h-5 w-5" />}Complete & Record Outcome</Button></DialogFooter>
+            <DialogFooter className="p-8 bg-muted/30 flex gap-4"><Button variant="outline" onClick={() => setActiveConsultation(null)} className="flex-1 h-14 rounded-xl font-bold border-2">Cancel</Button><Button onClick={handleCompleteConsultation} disabled={isSubmitting || !consultationForm.outcome || (consultationForm.outcome === OUTCOME_OPTIONS[1] && !consultationForm.denialReason)} className="flex-1 h-14 rounded-xl font-black text-white shadow-xl bg-secondary hover:bg-secondary/90">{isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}Complete & Record Outcome</Button></DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
