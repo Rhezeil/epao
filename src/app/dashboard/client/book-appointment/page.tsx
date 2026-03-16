@@ -51,7 +51,7 @@ function BookAppointmentContent() {
 
   const [assignedLawyer, setAssignedLawyer] = useState<any>(null);
 
-  // Fetch visitorInfo from master User record
+  // Fetch Visitor Info from master User record
   const userDocRef = useMemoFirebase(() => {
     if (!db || !user) return null;
     return doc(db, "users", user.uid);
@@ -172,7 +172,7 @@ function BookAppointmentContent() {
       clientName: clientName,
       clientMobile: userData?.mobileNumber || profile?.phoneNumber || "",
       clientEmail: user.email || "",
-      clientAddress: profile?.address || userData?.address || "",
+      clientAddress: userData?.address || profile?.address || "",
       date: selectedDate.toISOString(),
       dateString: format(selectedDate, "yyyy-MM-dd"),
       time: selectedTime,
@@ -313,7 +313,7 @@ function BookAppointmentContent() {
                       <div className="space-y-4">
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-white rounded-xl shadow-sm text-primary"><MapPin className="h-4 w-4" /></div>
-                          <div><p className="text-[9px] font-bold text-muted-foreground uppercase">Home Address</p><p className="text-[11px] font-bold text-primary leading-tight">{profile?.address || userData?.address || 'Not Set'}</p></div>
+                          <div><p className="text-[9px] font-bold text-muted-foreground uppercase">Home Address</p><p className="text-[11px] font-bold text-primary leading-tight">{userData?.address || profile?.address || 'Not Set'}</p></div>
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-white rounded-xl shadow-sm text-primary"><Clock className="h-4 w-4" /></div>
@@ -346,7 +346,7 @@ function BookAppointmentContent() {
             )}
 
             {step === 3 && (
-              <div className="max-w-lg mx-auto space-y-8 animate-in zoom-in-95 duration-500">
+              <div className="max-lg mx-auto space-y-8 animate-in zoom-in-95 duration-500">
                 <div className="text-center space-y-4">
                   <div className="inline-flex p-4 bg-secondary/10 text-secondary rounded-full shadow-inner"><Lock className="h-8 w-8" /></div>
                   <h3 className="text-2xl font-black text-primary font-headline">Verify OTP</h3>
@@ -397,7 +397,7 @@ function BookAppointmentContent() {
 
 export default function BookAppointmentPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>}>
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 text-primary" /></div>}>
       <BookAppointmentContent />
     </Suspense>
   );
