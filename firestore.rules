@@ -74,7 +74,7 @@ service cloud.firestore {
 
     match /users/{userId} {
       // Allow Admins and Lawyers to list and update citizen profiles
-      allow read, list: if isSignedIn() || true; 
+      allow read, list: if true; 
       allow write: if isOwner(userId) || isAdmin() || isLawyer();
 
       match /{allSubcollections=**} {

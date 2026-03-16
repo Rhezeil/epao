@@ -197,7 +197,7 @@ export default function AdminIntakeAssessmentPage() {
       const caseId = `CASE-${year}-${Math.floor(1000 + Math.random() * 9000)}`;
       
       let clientId = appt.clientId;
-      const citizenEmail = appt.guestEmail || appt.clientEmail || `${appt.guestMobile || appt.clientMobile}@epao.mobile`;
+      const citizenEmail = appt.guestEmail || appt.clientEmail || `${appt.guestMobile || appt.clientMobile || appt.mobileNumber}@epao.mobile`;
 
       if (!clientId) {
         try {
@@ -231,12 +231,17 @@ export default function AdminIntakeAssessmentPage() {
         createdAt: new Date().toISOString()
       }, { merge: true });
 
+      const finalAddress = appt.guestAddress || appt.clientAddress || appt.address || "";
+      const finalMobile = appt.guestMobile || appt.clientMobile || appt.mobileNumber || "";
+
       setDocumentNonBlocking(doc(db, "users", clientId), {
         id: clientId,
-        mobileNumber: appt.guestMobile || appt.clientMobile || "",
+        mobileNumber: finalMobile,
         email: citizenEmail,
         fullName: appt.guestName || appt.clientName || "",
-        address: appt.guestAddress || appt.clientAddress || "",
+        address: finalAddress,
+        guestAddress: finalAddress,
+        guestMobile: finalMobile,
         role: "client",
         status: "Active Case",
         createdAt: new Date().toISOString()

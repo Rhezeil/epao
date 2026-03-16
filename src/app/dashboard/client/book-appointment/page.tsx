@@ -125,7 +125,7 @@ function BookAppointmentContent() {
   }, [selectedDate, existingAppts, activeCase?.lawyerId]);
 
   const handleTriggerOtp = async () => {
-    const mobile = userData?.mobileNumber || profile?.phoneNumber;
+    const mobile = userData?.mobileNumber || profile?.phoneNumber || userData?.guestMobile;
     if (!mobile || !/^\d{10,11}$/.test(mobile)) {
       toast({ variant: "destructive", title: "Registration Incomplete", description: "Your registered mobile number is missing. Please update your profile settings first." });
       return;
@@ -170,9 +170,9 @@ function BookAppointmentContent() {
       purpose: "follow-up",
       serviceType: "Follow-up Consultation",
       clientName: clientName,
-      clientMobile: userData?.mobileNumber || profile?.phoneNumber || "",
+      clientMobile: userData?.mobileNumber || profile?.phoneNumber || userData?.guestMobile || "",
       clientEmail: user.email || "",
-      clientAddress: userData?.address || profile?.address || "",
+      clientAddress: userData?.address || userData?.guestAddress || profile?.address || "",
       date: selectedDate.toISOString(),
       dateString: format(selectedDate, "yyyy-MM-dd"),
       time: selectedTime,
@@ -307,13 +307,13 @@ function BookAppointmentContent() {
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-white rounded-xl shadow-sm text-primary"><Phone className="h-4 w-4" /></div>
-                          <div><p className="text-[9px] font-bold text-muted-foreground uppercase">Mobile Number</p><p className="font-black text-primary">{userData?.mobileNumber || profile?.phoneNumber || 'Not Set'}</p></div>
+                          <div><p className="text-[9px] font-bold text-muted-foreground uppercase">Mobile Number</p><p className="font-black text-primary">{userData?.mobileNumber || profile?.phoneNumber || userData?.guestMobile || 'Not Set'}</p></div>
                         </div>
                       </div>
                       <div className="space-y-4">
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-white rounded-xl shadow-sm text-primary"><MapPin className="h-4 w-4" /></div>
-                          <div><p className="text-[9px] font-bold text-muted-foreground uppercase">Home Address</p><p className="text-[11px] font-bold text-primary leading-tight">{userData?.address || profile?.address || 'Not Set'}</p></div>
+                          <div><p className="text-[9px] font-bold text-muted-foreground uppercase">Home Address</p><p className="text-[11px] font-bold text-primary leading-tight">{userData?.address || userData?.guestAddress || profile?.address || 'Not Set'}</p></div>
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-white rounded-xl shadow-sm text-primary"><Clock className="h-4 w-4" /></div>
@@ -326,7 +326,7 @@ function BookAppointmentContent() {
                   <div className="p-6 bg-amber-50 rounded-[2rem] border border-amber-100 flex items-start gap-4">
                     <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                     <p className="text-xs text-amber-800 font-bold leading-relaxed">
-                      A 6-digit verification code will be sent to your registered mobile number ({userData?.mobileNumber || profile?.phoneNumber}) to authorize this follow-up booking.
+                      A 6-digit verification code will be sent to your registered mobile number ({userData?.mobileNumber || profile?.phoneNumber || userData?.guestMobile}) to authorize this follow-up booking.
                     </p>
                   </div>
                 </div>
