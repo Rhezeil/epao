@@ -3,15 +3,17 @@
   "entities": {
     "User": {
       "title": "User",
-      "description": "Top-level user account metadata.",
+      "description": "Top-level user account metadata including contact and residential details.",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
         "email": { "type": "string", "format": "email" },
         "fullName": { "type": "string" },
         "mobileNumber": { "type": "string" },
+        "address": { "type": "string" },
         "role": { "type": "string", "enum": ["admin", "lawyer", "client"] },
         "status": { "type": "string" },
+        "incomeClassification": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       }
     },

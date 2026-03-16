@@ -96,6 +96,7 @@ function LoginContent() {
           id: user.uid,
           mobileNumber: normalizedEmail.split('@')[0],
           email: normalizedEmail,
+          address: "",
           role: "client",
           profileId: "profile",
           createdAt: new Date().toISOString()

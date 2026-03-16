@@ -42,14 +42,14 @@ service cloud.firestore {
     }
 
     match /lawyerDuties/{dutyId} {
-      allow read: if isSignedIn();
+      allow read, list: if isSignedIn();
       allow create: if isAdmin();
       allow update: if isAdmin() || (isSignedIn() && resource.data.lawyerId == request.auth.uid);
       allow delete: if isAdmin();
     }
 
     match /notifications/{notificationId} {
-      allow read, update: if isAdmin() || isLawyer();
+      allow read, list, update: if isAdmin() || isLawyer();
       allow create: if true; 
       allow delete: if isAdmin();
     }
@@ -57,28 +57,28 @@ service cloud.firestore {
     // --- USER PROFILES & ROLES ---
 
     match /admins/{userId} {
-      allow read: if isSignedIn();
+      allow read, list: if isSignedIn();
       allow create: if isSignedIn() && (request.auth.token.email == "admin@epao.com" || isAdmin());
       allow update, delete: if isAdmin();
     }
 
     match /roleLawyer/{userId} {
-      allow read: if isSignedIn();
+      allow read, list: if isSignedIn();
       allow write: if isAdmin();
       
       match /availability/{dateId} {
-        allow read: if true;
+        allow read, list: if true;
         allow write: if isOwner(userId) || isAdmin();
       }
     }
 
     match /users/{userId} {
-      // Allow Admins and Lawyers to update citizen profiles
-      allow read: if isSignedIn() || true; // Allow reading for registration lookups
+      // Allow Admins and Lawyers to list and update citizen profiles
+      allow read, list: if isSignedIn() || true; 
       allow write: if isOwner(userId) || isAdmin() || isLawyer();
 
       match /{allSubcollections=**} {
-        allow read: if true;
+        allow read, list: if true;
         allow write: if isOwner(userId) || isAdmin() || isLawyer();
       }
     }
@@ -86,24 +86,23 @@ service cloud.firestore {
     // --- CASE MANAGEMENT ---
 
     match /caseRequirements/{caseId} {
-      allow read: if true;
+      allow read, list: if true;
       allow write: if isAdmin();
     }
 
     match /cases/{caseId} {
-      allow read: if isSignedIn();
-      allow list: if isSignedIn();
+      allow read, list: if isSignedIn();
       allow create: if isAdmin() || isLawyer();
       allow update: if isAdmin() || (isSignedIn() && (resource.data.lawyerId == request.auth.uid || isAdmin()));
       allow delete: if isAdmin();
 
       match /documents/{docId} {
-        allow read, write: if isAdmin() || (isSignedIn() && (get(/databases/$(database)/documents/cases/$(caseId)).data.lawyerId == request.auth.uid || get(/databases/$(database)/documents/cases/$(caseId)).data.clientId == request.auth.uid));
+        allow read, list, write: if isAdmin() || (isSignedIn() && (get(/databases/$(database)/documents/cases/$(caseId)).data.lawyerId == request.auth.uid || get(/databases/$(database)/documents/cases/$(caseId)).data.clientId == request.auth.uid));
       }
     }
 
     match /lawyersEmail/{email} {
-      allow read: if true;
+      allow read, list: if true;
     }
   }
 }

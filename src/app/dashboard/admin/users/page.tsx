@@ -198,6 +198,7 @@ export default function AdminUsersPage() {
         id: uid,
         mobileNumber: newClient.mobile ?? "",
         email: email,
+        address: newClient.address ?? "",
         role: "client",
         status: newClient.lawyerId ? "Active Case" : "New Intake",
         fullName: newClient.name ?? "",
@@ -258,7 +259,8 @@ export default function AdminUsersPage() {
     const fullName = `${sanitizedProfile.firstName} ${sanitizedProfile.lastName}`.trim();
     updateDocumentNonBlocking(userRef, { 
       fullName: fullName,
-      mobileNumber: sanitizedProfile.phoneNumber
+      mobileNumber: sanitizedProfile.phoneNumber,
+      address: sanitizedProfile.address
     });
 
     setIsEditingPersonal(false);
@@ -337,7 +339,7 @@ export default function AdminUsersPage() {
                 placeholder="Search citizens..." 
                 className="pl-9 h-11 rounded-xl border-primary/10 bg-white"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => searchQuery(e.target.value)}
               />
             </div>
           </CardHeader>
@@ -492,13 +494,13 @@ export default function AdminUsersPage() {
                     {isEditingPersonal ? <>
                       <div className="space-y-2"><Label className="text-[10px] font-black uppercase">First Name</Label><Input value={editProfile.firstName ?? ""} onChange={e => setEditProfile({...editProfile, firstName: e.target.value})} /></div>
                       <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Last Name</Label><Input value={editProfile.lastName ?? ""} onChange={e => setEditProfile({...editProfile, lastName: e.target.value})} /></div>
-                      <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Mobile</Label><Input value={editProfile.phoneNumber ?? ""} onChange={e => setEditProfile({...editProfile, phoneNumber: e.target.value})} /></div>
+                      <div className="space-y-2"><Label className="text-[10px) font-black uppercase">Mobile</Label><Input value={editProfile.phoneNumber ?? ""} onChange={e => setEditProfile({...editProfile, phoneNumber: e.target.value})} /></div>
                       <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Address</Label><Input value={editProfile.address ?? ""} onChange={e => setEditProfile({...editProfile, address: e.target.value})} /></div>
                     </> : <>
                       <div className="space-y-4">
                         <p className="font-bold text-primary flex items-center gap-2"><Phone className="h-4 w-4 text-secondary" /> {selectedUser?.mobileNumber || "N/A"}</p>
                         <p className="font-bold text-primary flex items-center gap-2"><Mail className="h-4 w-4 text-secondary" /> {selectedUser?.email || "N/A"}</p>
-                        <p className="text-xs font-bold text-primary flex items-start gap-2 leading-relaxed"><MapPin className="h-4 w-4 text-secondary shrink-0 mt-0.5" /> {selectedProfile?.address || "No address"}</p>
+                        <p className="text-xs font-bold text-primary flex items-start gap-2 leading-relaxed"><MapPin className="h-4 w-4 text-secondary shrink-0 mt-0.5" /> {selectedUser?.address || selectedProfile?.address || "No address"}</p>
                       </div>
                       <div className="space-y-1"><Label className="text-[10px] font-black uppercase text-primary/40">Verified Classification</Label><p className="font-black text-secondary">{selectedUser?.incomeClassification || "Indigent"}</p></div>
                     </>}

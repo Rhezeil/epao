@@ -95,11 +95,11 @@ export default function RegisterPage() {
         firstName,
         lastName,
         phoneNumber: regMode === "client" ? mobileNumber : "",
+        address: "",
         createdAt: new Date().toISOString(),
       }, { merge: true });
 
       if (userRole === "admin") {
-        // Corrected: Using 'admins' collection to match rules and login
         setDocumentNonBlocking(doc(db, "admins", user.uid), {
           id: user.uid,
           email: user.email,
@@ -120,6 +120,7 @@ export default function RegisterPage() {
           id: user.uid,
           mobileNumber: mobileNumber,
           email: user.email,
+          address: "",
           role: "client",
           fullName: `${firstName} ${lastName}`.trim(),
           profileId: "profile",

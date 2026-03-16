@@ -236,6 +236,7 @@ export default function AdminIntakeAssessmentPage() {
         mobileNumber: appt.guestMobile || appt.clientMobile || "",
         email: citizenEmail,
         fullName: appt.guestName || appt.clientName || "",
+        address: appt.guestAddress || appt.clientAddress || "",
         role: "client",
         status: "Active Case",
         createdAt: new Date().toISOString()
