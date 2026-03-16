@@ -20,7 +20,9 @@ import {
   Scale,
   ArrowRight,
   Gavel as GavelIcon,
-  Activity
+  Activity,
+  MoreVertical,
+  XCircle
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,6 +40,14 @@ import { caseCategories } from "@/app/lib/case-data";
 import { initializeApp, deleteApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { firebaseConfig } from "@/firebase/config";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuTrigger, 
+  DropdownMenuSeparator 
+} from "@/components/ui/dropdown-menu";
 
 const OUTCOME_OPTIONS = [
   "Completed Consultation – Accept Legal Assistance",
@@ -120,6 +130,28 @@ export default function LawyerDashboard() {
       ...dayDuties.map(d => ({ type: 'duty', data: d, time: d.startTime }))
     ].sort((a, b) => a.time.localeCompare(b.time));
   }, [apptsData, dutiesData, selectedDate]);
+
+  const handleMarkStatus = (apptId: string, status: string) => {
+    if (!db) return;
+    updateDocumentNonBlocking(doc(db, "appointments", apptId), {
+      status: status,
+      updatedAt: new Date().toISOString()
+    });
+    
+    // Notification
+    const notifId = crypto.randomUUID();
+    setDocumentNonBlocking(doc(db, "notifications", notifId), {
+      id: notifId,
+      type: "appointment",
+      userRole: "lawyer",
+      description: `Appointment marked as ${status} by Atty. ${lawyerData?.lastName || 'Staff'}.`,
+      referenceId: apptId,
+      status: "unread",
+      createdAt: new Date().toISOString()
+    }, { merge: true });
+
+    toast({ title: "Status Updated", description: `Appointment marked as ${status}.` });
+  };
 
   const handleCompleteConsultation = async () => {
     if (!db || !activeConsultation || !user || !consultationForm.outcome) return;
@@ -290,6 +322,42 @@ export default function LawyerDashboard() {
                         <div className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground mt-1 uppercase tracking-widest"><span><Clock className="h-3 w-3 inline mr-1" /> {item.time}</span><span><MapPin className="h-3 w-3 inline mr-1" /> {item.type === 'appt' ? "Office" : item.data.location}</span></div>
                       </div>
                     </div>
+                    {/* Action Section for Appointments */}
+                    {item.type === 'appt' && (
+                      <div className="flex items-center gap-3">
+                        {(item.data.status === 'completed' || item.data.status === 'No Show' || item.data.status?.startsWith('Completed')) ? (
+                          <Badge variant="outline" className={cn(
+                            "font-black text-[9px] uppercase px-3",
+                            item.data.status === 'No Show' ? "border-red-200 text-red-700 bg-red-50" : "border-green-200 text-green-700 bg-green-50"
+                          )}>
+                            {item.data.status}
+                          </Badge>
+                        ) : (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-secondary/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <MoreVertical className="h-5 w-5 text-secondary" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="rounded-2xl w-56 p-2">
+                              <DropdownMenuLabel className="text-[10px] font-black uppercase text-secondary/40 tracking-widest px-2 pb-2 text-center border-b mb-2">Record Outcome</DropdownMenuLabel>
+                              <DropdownMenuItem 
+                                onClick={() => { setActiveConsultation(item.data); setConsultationForm({ ...consultationForm, caseType: item.data.caseType || "" }); }}
+                                className="rounded-xl font-bold py-3"
+                              >
+                                <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" /> Mark Completed
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleMarkStatus(item.data.id, 'No Show')}
+                                className="rounded-xl font-bold py-3 text-red-600"
+                              >
+                                <XCircle className="mr-2 h-4 w-4" /> No Show / Absent
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )) : <div className="py-32 text-center space-y-4"><Inbox className="h-20 w-20 text-secondary/10 mx-auto" /><p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">No entries for this date</p></div>}
               </div>
