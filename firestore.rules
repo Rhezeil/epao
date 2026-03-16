@@ -35,9 +35,7 @@ service cloud.firestore {
 
     match /appointments/{appointmentId} {
       // Relaxed for public availability checks and guest management
-      allow read, list: if true; 
-      allow create: if true; 
-      allow update: if true; 
+      allow read, list, create, update: if true; 
       allow delete: if isAdmin();
     }
 
