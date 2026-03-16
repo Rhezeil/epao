@@ -1,3 +1,4 @@
+
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -21,7 +22,10 @@ import {
   Gavel as GavelIcon,
   Activity,
   MoreVertical,
-  XCircle
+  XCircle,
+  Hash,
+  Phone,
+  Mail
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -250,21 +254,47 @@ export default function LawyerDashboard() {
           {pendingConsultations.length > 0 && (
             <div className="space-y-4">
               <div className="flex items-center gap-2 px-1"><Activity className="h-5 w-5 text-red-500 animate-pulse" /><h2 className="text-sm font-black uppercase tracking-widest text-secondary">Awaiting Assessment ({pendingConsultations.length})</h2></div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6">
                 {pendingConsultations.map(appt => (
-                  <Card key={appt.id} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden border-l-8 border-red-500">
-                    <CardContent className="p-8 flex items-center justify-between gap-6">
-                      <div className="flex items-center gap-5 flex-1 min-w-0">
-                        <div className="p-3 bg-red-50 rounded-2xl text-red-600 shrink-0"><User className="h-6 w-6" /></div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-3">
-                            <h3 className="text-xl font-black text-secondary truncate">{appt.guestName || appt.clientName}</h3>
-                            <Badge className="bg-red-500 text-white text-[8px] font-black uppercase px-2 py-0.5 border-none shrink-0">IN PROGRESS</Badge>
+                  <Card key={appt.id} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden border-l-8 border-red-500 transition-all hover:scale-[1.01]">
+                    <CardContent className="p-8">
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+                        <div className="flex items-start gap-6 flex-1 min-w-0">
+                          <div className="p-4 bg-red-50 rounded-3xl text-red-600 shrink-0">
+                            <User className="h-8 w-8" />
                           </div>
-                          <Badge variant="outline" className="text-[9px] uppercase border-red-100 bg-red-50/50 text-red-700 mt-1">{appt.serviceType || appt.purpose || appt.caseType}</Badge>
+                          <div className="space-y-3 flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-3">
+                              <h3 className="text-2xl font-black text-secondary truncate max-w-[300px]">
+                                {appt.guestName || appt.clientName}
+                              </h3>
+                              <Badge className="bg-red-500 text-white text-[9px] font-black uppercase px-3 py-1 border-none shadow-sm">IN PROGRESS</Badge>
+                            </div>
+                            <div className="flex flex-wrap gap-4">
+                              <div className="flex items-center gap-2 text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-xl border border-muted-foreground/10">
+                                <Hash className="h-3 w-3 text-red-400" />
+                                <span className="text-[10px] font-black uppercase tracking-widest">{appt.referenceCode}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-xl border border-muted-foreground/10">
+                                <Scale className="h-3 w-3 text-red-400" />
+                                <span className="text-[10px] font-black uppercase tracking-widest truncate max-w-[200px]">{appt.serviceType || appt.purpose || appt.caseType}</span>
+                              </div>
+                              {(appt.guestMobile || appt.clientMobile) && (
+                                <div className="flex items-center gap-2 text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-xl border border-muted-foreground/10">
+                                  <Phone className="h-3 w-3 text-red-400" />
+                                  <span className="text-[10px] font-black uppercase tracking-widest">{appt.guestMobile || appt.clientMobile}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </div>
+                        <Button 
+                          onClick={() => { setActiveConsultation(appt); setConsultationForm({ ...consultationForm, caseType: appt.caseType }); }} 
+                          className="h-16 rounded-2xl bg-secondary hover:bg-secondary/90 text-white font-black px-10 shadow-xl shrink-0 text-lg transition-transform hover:scale-105"
+                        >
+                          Start Official Assessment <ArrowRight className="ml-2 h-6 w-6" />
+                        </Button>
                       </div>
-                      <Button onClick={() => { setActiveConsultation(appt); setConsultationForm({ ...consultationForm, caseType: appt.caseType }); }} className="h-12 rounded-xl bg-secondary hover:bg-secondary/90 text-white font-black px-6 shadow-lg shrink-0">Start Assessment <ArrowRight className="ml-2 h-4 w-4" /></Button>
                     </CardContent>
                   </Card>
                 ))}
@@ -275,24 +305,49 @@ export default function LawyerDashboard() {
           {filterAcceptedPendingActivation.length > 0 && (
             <div className="space-y-4">
               <div className="flex items-center gap-2 px-1 text-primary"><Scale className="h-5 w-5" /><h2 className="text-sm font-black uppercase tracking-widest">Accepted - Pending Activation ({filterAcceptedPendingActivation.length})</h2></div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6">
                 {filterAcceptedPendingActivation.map(appt => (
-                  <Card key={appt.id} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden border-l-8 border-primary">
-                    <CardContent className="p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                      <div className="flex items-center gap-5 flex-1 min-w-0">
-                        <div className="p-3 bg-primary/5 rounded-2xl text-primary shrink-0"><CheckCircle2 className="h-6 w-6" /></div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-3">
-                            <h3 className="text-xl font-black text-primary truncate">{appt.guestName || appt.clientName}</h3>
-                            <Badge className="bg-primary text-white text-[8px] font-black uppercase px-2 py-0.5 border-none shrink-0">ACCEPTED</Badge>
+                  <Card key={appt.id} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden border-l-8 border-primary transition-all hover:scale-[1.01]">
+                    <CardContent className="p-8">
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+                        <div className="flex items-start gap-6 flex-1 min-w-0">
+                          <div className="p-4 bg-primary/5 rounded-3xl text-primary shrink-0">
+                            <CheckCircle2 className="h-8 w-8" />
                           </div>
-                          <div className="flex flex-col mt-1">
-                            <Badge variant="outline" className="text-[9px] uppercase border-primary/10 bg-primary/5 text-primary w-fit">{appt.serviceType || appt.purpose || appt.caseType}</Badge>
-                            {appt.outcome && <p className="text-[9px] text-muted-foreground font-bold mt-1 italic truncate">Outcome: {appt.outcome}</p>}
+                          <div className="space-y-3 flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-3">
+                              <h3 className="text-2xl font-black text-primary truncate max-w-[300px]">
+                                {appt.guestName || appt.clientName}
+                              </h3>
+                              <Badge className="bg-primary text-white text-[9px] font-black uppercase px-3 py-1 border-none shadow-sm">ACCEPTED</Badge>
+                            </div>
+                            <div className="flex flex-wrap gap-4">
+                              <div className="flex items-center gap-2 text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-xl border border-muted-foreground/10">
+                                <Hash className="h-3 w-3 text-primary/40" />
+                                <span className="text-[10px] font-black uppercase tracking-widest">{appt.referenceCode}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-xl border border-muted-foreground/10">
+                                <Scale className="h-3 w-3 text-primary/40" />
+                                <span className="text-[10px] font-black uppercase tracking-widest truncate max-w-[200px]">{appt.serviceType || appt.purpose || appt.caseType}</span>
+                              </div>
+                              {appt.outcome && (
+                                <div className="flex items-center gap-2 text-muted-foreground bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200">
+                                  <Activity className="h-3 w-3 text-amber-600" />
+                                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-700 italic">Outcome Recorded</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
+                        <Button 
+                          onClick={() => handleActivateCase(appt)} 
+                          disabled={isSubmitting} 
+                          className="h-16 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black px-10 shadow-xl shrink-0 text-lg transition-transform hover:scale-105"
+                        >
+                          {isSubmitting ? <Loader2 className="animate-spin h-6 w-6 mr-2" /> : <Scale className="mr-2 h-6 w-6" />}
+                          Activate Case Record
+                        </Button>
                       </div>
-                      <Button onClick={() => handleActivateCase(appt)} disabled={isSubmitting} className="h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-black px-6 shadow-lg shrink-0">{isSubmitting ? <Loader2 className="animate-spin h-4 w-4" /> : <Scale className="mr-2 h-4 w-4" />}Activate Case</Button>
                     </CardContent>
                   </Card>
                 ))}
