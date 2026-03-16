@@ -1,4 +1,3 @@
-
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -311,7 +310,17 @@ export default function LawyerDashboard() {
           <CardHeader className="bg-secondary/5 pb-4 border-b border-secondary/10"><CardTitle className="text-lg font-bold text-secondary flex items-center gap-2"><CalendarIcon className="h-5 w-5" /> Workstation Calendar</CardTitle></CardHeader>
           <CardContent className="p-0">
             <div className="grid grid-cols-1 xl:grid-cols-12">
-              <div className="xl:col-span-4 p-8 border-r border-secondary/5 bg-secondary/[0.02]"><Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} className="mx-auto" /></div>
+              <div className="xl:col-span-4 p-8 border-r border-secondary/5 bg-secondary/[0.02]">
+                <Calendar 
+                  mode="single" 
+                  selected={selectedDate} 
+                  onSelect={setSelectedDate} 
+                  className="mx-auto" 
+                  disabled={[
+                    { dayOfWeek: [0, 6] }
+                  ]}
+                />
+              </div>
               <div className="xl:col-span-8 divide-y divide-secondary/5">
                 {filteredSchedule.length > 0 ? filteredSchedule.map((item, idx) => (
                   <div key={idx} className="p-8 flex items-center justify-between hover:bg-secondary/5 transition-colors group">
@@ -322,7 +331,6 @@ export default function LawyerDashboard() {
                         <div className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground mt-1 uppercase tracking-widest"><span><Clock className="h-3 w-3 inline mr-1" /> {item.time}</span><span><MapPin className="h-3 w-3 inline mr-1" /> {item.type === 'appt' ? "Office" : item.data.location}</span></div>
                       </div>
                     </div>
-                    {/* Action Section for Appointments */}
                     {item.type === 'appt' && (
                       <div className="flex items-center gap-3">
                         {(item.data.status === 'completed' || item.data.status === 'No Show' || item.data.status?.startsWith('Completed')) ? (

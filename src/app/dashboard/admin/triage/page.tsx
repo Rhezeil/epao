@@ -1,4 +1,3 @@
-
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -435,7 +434,7 @@ export default function AdminIntakeAssessmentPage() {
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">Evaluation Remarks</Label>
+                  <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Evaluation Remarks</Label>
                   <Textarea 
                     placeholder="Notes regarding indigency proof or merit details..." 
                     className="rounded-2xl h-24"
@@ -446,7 +445,7 @@ export default function AdminIntakeAssessmentPage() {
 
                 {!screening.indigency || !screening.merit || !screening.idVerified ? (
                   <div className="space-y-2 animate-in fade-in">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-red-600/60 ml-1">Reason for Denial</Label>
+                    <Label className="text-[10px] font-black uppercase text-red-600/60 ml-1">Reason for Denial</Label>
                     <Select value={rejectionReason} onValueChange={setRejectionReason}>
                       <SelectTrigger className="rounded-xl border-red-100 bg-red-50/30 font-bold"><SelectValue placeholder="Select Reason" /></SelectTrigger>
                       <SelectContent>

@@ -48,7 +48,7 @@ function LoginContent() {
       const normalizedEmail = (user.email || "").toLowerCase().trim();
       const isBootstrapAdmin = normalizedEmail === "admin@epao.com";
 
-      // 1. Check Admin Status (using 'admins' collection)
+      // 1. Check Admin Status
       const adminDocRef = doc(db, "admins", user.uid);
       const adminDoc = await getDoc(adminDocRef);
       
@@ -160,8 +160,8 @@ function LoginContent() {
       await checkAndInitializeUser(userCredential.user);
     } catch (error: any) {
       let errorMsg = error.message;
-      if (error.code === 'auth/user-not-found') errorMsg = "Account not found. Please register first.";
-      if (error.code === 'auth/wrong-password') errorMsg = "Incorrect password. Please try again.";
+      if (error.code === 'auth/user-not-found') errorMsg = "Account not found.";
+      if (error.code === 'auth/wrong-password') errorMsg = "Incorrect password.";
       
       toast({ variant: "destructive", title: "Login failed", description: errorMsg });
       setIsLoading(false);
@@ -308,11 +308,6 @@ function LoginContent() {
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => handleQuickAccess('client')} className="text-[10px] font-black h-12 rounded-xl border-primary/5 hover:bg-primary/5 transition-all">
                   <Phone className="mr-1 h-3 w-3" /> Client
-                </Button>
-              </div>
-              <div className="text-center">
-                <Button variant="link" onClick={() => router.push('/register')} className="text-xs font-bold text-primary flex items-center gap-1 mx-auto">
-                  New citizen user? Create an account <ArrowRight className="h-3 w-3" />
                 </Button>
               </div>
             </CardFooter>

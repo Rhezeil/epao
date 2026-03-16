@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -129,6 +128,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
           <SidebarContent className="px-4">
             <SidebarMenu className="space-y-2">
               {menuItems.map((item) => {
+                // Exact matching for dashboard root links, prefix matching for workstation links
                 const isActive = item.exact 
                   ? pathname === item.path || pathname === item.path + '/'
                   : (pathname === item.path || pathname.startsWith(item.path + '/'));
