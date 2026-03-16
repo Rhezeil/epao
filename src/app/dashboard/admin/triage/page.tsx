@@ -1,3 +1,4 @@
+
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -42,12 +43,12 @@ const OUTCOME_OPTIONS = [
 ];
 
 const REJECTION_REASONS = [
-  "Failure to Provide Proof of Indigency (ITR, Payslips, or Brgy/DSWD Cert)",
-  "Missing Case-Specific Documents (Subpoenas, Contracts, Affidavits, etc.)",
-  "Issues with Barangay Certification (Delays or verification issues)",
-  "Lack of Proper Identification (Valid Government-issued IDs)",
-  "Misunderstanding of Requirements (Financial threshold vs gross income)",
-  "Unpreparedness in Gathering Essential Case Information",
+  "Failure to Provide Proof of Indigency: Clients often fail to bring required documentation, such as the latest Income Tax Return (ITR), pay slips, or a Certificate of Indigency from the Barangay or the Department of Social Welfare and Development (DSWD).",
+  "Missing Case-Specific Documents: Clients frequently arrive without essential documents related to their case, such as subpoenas, contracts, complaints, or affidavits.",
+  "Issues with Barangay Certification: There may be delays in obtaining or submitting the required Barangay Certificate of Indigency.",
+  "Lack of Proper Identification: Failure to bring valid, government-issued IDs.",
+  "Misunderstanding of Requirements: Some clients may not realize the extent of the documentation needed to prove financial eligibility (net income vs. gross income) or that a case-specific document is essential for the initial consultation.",
+  "Unpreparedness in Gathering Information",
   "Income exceeds statutory limit",
   "Conflict of interest",
   "Outside legal jurisdiction"
@@ -423,7 +424,7 @@ export default function AdminIntakeAssessmentPage() {
                   </div>
                   <div className="flex items-center space-x-3 bg-white p-3 rounded-xl border">
                     <Checkbox id="mer" checked={screening.merit} onCheckedChange={c => setScreening({...screening, merit: !!c})} />
-                    <label htmlFor="mer" className="text-xs font-bold text-primary">Legal Merit Validated (Statutory Scope)</label>
+                    <label htmlFor="mer" className="text-xs font-bold text-primary">Legal Merit Validated (PAO Scope)</label>
                   </div>
                   <div className="flex items-center space-x-3 bg-white p-3 rounded-xl border">
                     <Checkbox id="idv" checked={screening.idVerified} onCheckedChange={c => setScreening({...screening, idVerified: !!c})} />
@@ -445,7 +446,7 @@ export default function AdminIntakeAssessmentPage() {
 
                 {!screening.indigency || !screening.merit || !screening.idVerified ? (
                   <div className="space-y-2 animate-in fade-in">
-                    <Label className="text-[10px] font-black uppercase text-red-600/60 ml-1">Reason for Denial</Label>
+                    <Label className="text-[10px] font-black uppercase text-red-600/60 ml-1">Reason for Denial (If failing)</Label>
                     <Select value={rejectionReason} onValueChange={setRejectionReason}>
                       <SelectTrigger className="rounded-xl border-red-100 bg-red-50/30 font-bold"><SelectValue placeholder="Select Reason" /></SelectTrigger>
                       <SelectContent>

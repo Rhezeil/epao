@@ -34,9 +34,10 @@ service cloud.firestore {
     // --- GLOBAL REGISTRIES ---
 
     match /appointments/{appointmentId} {
-      allow read: if isSignedIn(); 
+      // Relaxed for public availability checks and guest management
+      allow read: if true; 
       allow create: if true; 
-      allow update: if isSignedIn(); 
+      allow update: if true; 
       allow delete: if isAdmin();
     }
 
@@ -72,6 +73,7 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
+      // Allow Admins and Lawyers to update citizen profiles
       allow read: if isSignedIn() && (isOwner(userId) || isAdmin() || isLawyer());
       allow write: if isOwner(userId) || isAdmin() || isLawyer();
 
