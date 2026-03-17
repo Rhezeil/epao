@@ -226,6 +226,7 @@ export default function AdminUsersPage() {
           caseType: newClient.caseType ?? "General Assistance",
           status: "Active",
           description: "Record initialized during manual citizen registration.",
+          lawyerNotified: false, // Alert lawyer
           createdAt: new Date().toISOString()
         }, { merge: true });
       }
@@ -245,7 +246,6 @@ export default function AdminUsersPage() {
     if (!db || !selectedClientId) return;
     const profileDocRef = doc(db, "users", selectedClientId, "profile", "profile");
     
-    // Strict sanitization to prevent 'undefined' values
     const sanitizedProfile = {
       firstName: editProfile.firstName ?? "",
       lastName: editProfile.lastName ?? "",
@@ -291,6 +291,7 @@ export default function AdminUsersPage() {
       caseType: newCaseData.caseType ?? "General Legal Matter",
       status: "Active",
       description: "Direct assignment from directory workstation.",
+      lawyerNotified: false, // NEW: Entity alert
       createdAt: new Date().toISOString()
     }, { merge: true });
     updateDocumentNonBlocking(doc(db, "users", selectedClientId), { status: "Active Case" });
@@ -308,7 +309,10 @@ export default function AdminUsersPage() {
 
   const handleReassignLawyer = (caseId: string, newLawyerId: string) => {
     if (!db || !caseId) return;
-    updateDocumentNonBlocking(doc(db, "cases", caseId), { lawyerId: newLawyerId });
+    updateDocumentNonBlocking(doc(db, "cases", caseId), { 
+      lawyerId: newLawyerId,
+      lawyerNotified: false // NEW: Entity alert for new lawyer
+    });
     toast({ title: "Attorney Assigned", description: "Caseload redirected." });
   };
 
@@ -494,7 +498,7 @@ export default function AdminUsersPage() {
                     {isEditingPersonal ? <>
                       <div className="space-y-2"><Label className="text-[10px] font-black uppercase">First Name</Label><Input value={editProfile.firstName ?? ""} onChange={e => setEditProfile({...editProfile, firstName: e.target.value})} /></div>
                       <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Last Name</Label><Input value={editProfile.lastName ?? ""} onChange={e => setEditProfile({...editProfile, lastName: e.target.value})} /></div>
-                      <div className="space-y-2"><Label className="text-[10px) font-black uppercase">Mobile</Label><Input value={editProfile.phoneNumber ?? ""} onChange={e => setEditProfile({...editProfile, phoneNumber: e.target.value})} /></div>
+                      <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Mobile</Label><Input value={editProfile.phoneNumber ?? ""} onChange={e => setEditProfile({...editProfile, phoneNumber: e.target.value})} /></div>
                       <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Address</Label><Input value={editProfile.address ?? ""} onChange={e => setEditProfile({...editProfile, address: e.target.value})} /></div>
                     </> : <>
                       <div className="space-y-4">

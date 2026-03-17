@@ -58,18 +58,31 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   
   const logo = PlaceHolderImages.find(img => img.id === 'pao-logo');
 
-  // Real-time Unread Notifications Query for Badge
-  const unreadQuery = useMemoFirebase(() => {
-    if (!db || !user || !role) return null;
-    if (role === 'admin') {
-      return query(collection(db, "notifications"), where("status", "==", "unread"));
-    }
-    // Lawyers and Clients only see their own unread alerts
-    return query(collection(db, "notifications"), where("targetUserId", "==", user.uid), where("status", "==", "unread"));
+  // Real-time Badge Logic: Merging Notifications (Admin) and Entity-driven alerts (Lawyer)
+  const unreadNotifsQuery = useMemoFirebase(() => {
+    if (!db || !user || !role || role !== 'admin') return null;
+    return query(collection(db, "notifications"), where("status", "==", "unread"));
   }, [db, user, role]);
 
-  const { data: unreadNotifs } = useCollection(unreadQuery);
-  const unreadCount = unreadNotifs?.length || 0;
+  const unreadApptsQuery = useMemoFirebase(() => {
+    if (!db || !user || role !== 'lawyer') return null;
+    return query(collection(db, "appointments"), where("lawyerId", "==", user.uid), where("lawyerNotified", "==", false));
+  }, [db, user, role]);
+
+  const unreadCasesQuery = useMemoFirebase(() => {
+    if (!db || !user || role !== 'lawyer') return null;
+    return query(collection(db, "cases"), where("lawyerId", "==", user.uid), where("lawyerNotified", "==", false));
+  }, [db, user, role]);
+
+  const { data: unreadNotifs } = useCollection(unreadNotifsQuery);
+  const { data: unreadAppts } = useCollection(unreadApptsQuery);
+  const { data: unreadCases } = useCollection(unreadCasesQuery);
+
+  const unreadCount = React.useMemo(() => {
+    if (role === 'admin') return unreadNotifs?.length || 0;
+    if (role === 'lawyer') return (unreadAppts?.length || 0) + (unreadCases?.length || 0);
+    return 0;
+  }, [role, unreadNotifs, unreadAppts, unreadCases]);
 
   const getPortalInfo = () => {
     if (!user) return { label: 'Public Assistance', color: 'bg-teal-500/10 text-teal-700 border-teal-500/20' };

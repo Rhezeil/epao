@@ -109,24 +109,33 @@ export default function LawyerDashboard() {
     return query(collection(db, "lawyerDuties"), where("lawyerId", "==", user.uid));
   }, [db, user, role]);
 
-  const notifsQuery = useMemoFirebase(() => {
+  // NEW: Entity-driven alerts for Lawyers (Acknowledgeable)
+  const unreadApptsQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'lawyer') return null;
-    return query(
-      collection(db, "notifications"), 
-      where("targetUserId", "==", user.uid),
-      orderBy("createdAt", "desc"),
-      limit(20)
-    );
+    return query(collection(db, "appointments"), where("lawyerId", "==", user.uid), where("lawyerNotified", "==", false));
   }, [db, user, role]);
 
-  const { data: apptsData, isLoading: isApptsLoading } = useCollection(apptsQuery);
+  const unreadCasesQuery = useMemoFirebase(() => {
+    if (!db || !user || role !== 'lawyer') return null;
+    return query(collection(db, "cases"), where("lawyerId", "==", user.uid), where("lawyerNotified", "==", false));
+  }, [db, user, role]);
+
+  const { data: apptsData } = useCollection(apptsQuery);
   const { data: activeCases } = useCollection(casesQuery);
   const { data: dutiesData } = useCollection(dutiesQuery);
-  const { data: notifications } = useCollection(notifsQuery);
+  const { data: unreadAppts } = useCollection(unreadApptsQuery);
+  const { data: unreadCases } = useCollection(unreadCasesQuery);
 
-  const unreadNotifsCount = useMemo(() => {
-    return notifications?.filter(n => n.status === 'unread').length || 0;
-  }, [notifications]);
+  const workstationAlerts = useMemo(() => {
+    const alerts = [];
+    if (unreadAppts) {
+      unreadAppts.forEach(a => alerts.push({ ...a, alertType: 'appointment' }));
+    }
+    if (unreadCases) {
+      unreadCases.forEach(c => alerts.push({ ...c, alertType: 'case' }));
+    }
+    return alerts.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  }, [unreadAppts, unreadCases]);
 
   const pendingConsultations = useMemo(() => {
     if (!apptsData) return [];
@@ -150,6 +159,13 @@ export default function LawyerDashboard() {
       ...dayDuties.map(d => ({ type: 'duty', data: d, time: d.startTime }))
     ].sort((a, b) => a.time.localeCompare(b.time));
   }, [apptsData, dutiesData, selectedDate]);
+
+  const handleAcknowledge = (id: string, type: 'appointment' | 'case') => {
+    if (!db) return;
+    const ref = doc(db, type === 'appointment' ? "appointments" : "cases", id);
+    updateDocumentNonBlocking(ref, { lawyerNotified: true, updatedAt: new Date().toISOString() });
+    toast({ title: "Alert Cleared", description: "Record acknowledged in your workstation." });
+  };
 
   const handleMarkStatus = (apptId: string, status: string) => {
     if (!db) return;
@@ -235,7 +251,17 @@ export default function LawyerDashboard() {
       }
 
       updateDocumentNonBlocking(doc(db, "appointments", appt.id), { status: "completed", caseId, clientId, updatedAt: new Date().toISOString() });
-      setDocumentNonBlocking(doc(db, "cases", caseId), { id: caseId, clientId, lawyerId: user.uid, caseType: appt.caseType, status: "Active", description: appt.assessment || "Case activated post-consultation.", consultationRef: appt.referenceCode, createdAt: new Date().toISOString() }, { merge: true });
+      setDocumentNonBlocking(doc(db, "cases", caseId), { 
+        id: caseId, 
+        clientId, 
+        lawyerId: user.uid, 
+        caseType: appt.caseType, 
+        status: "Active", 
+        description: appt.assessment || "Case activated post-consultation.", 
+        consultationRef: appt.referenceCode, 
+        lawyerNotified: true, // They did it themselves
+        createdAt: new Date().toISOString() 
+      }, { merge: true });
       
       const finalAddress = appt.guestAddress || appt.clientAddress || appt.address || "";
       const finalMobile = appt.guestMobile || appt.clientMobile || appt.mobileNumber || "";
@@ -260,12 +286,6 @@ export default function LawyerDashboard() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleAcknowledge = (id: string) => {
-    if (!db) return;
-    updateDocumentNonBlocking(doc(db, "notifications", id), { status: "read" });
-    toast({ title: "Alert Acknowledged", description: "Notification cleared from workstation." });
   };
 
   if (loading) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin text-secondary" /></div>;
@@ -368,29 +388,37 @@ export default function LawyerDashboard() {
                   <Bell className="h-6 w-6 text-white/60" />
                   <CardTitle className="text-xl font-black">Workstation Alerts</CardTitle>
                 </div>
-                {unreadNotifsCount > 0 && (
+                {workstationAlerts.length > 0 && (
                   <Badge className="bg-white/20 text-white border-none font-black text-[10px] animate-pulse">
-                    {unreadNotifsCount} NEW
+                    {workstationAlerts.length} NEW
                   </Badge>
                 )}
               </div>
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mt-2">Assignments & Follow-ups</p>
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mt-2">New Assignments & Bookings</p>
             </CardHeader>
             <CardContent className="p-0 overflow-y-auto flex-1 divide-y divide-secondary/5">
-              {notifications?.filter(n => n.status === 'unread').length ? (
-                notifications.filter(n => n.status === 'unread').map((notif) => (
-                  <div key={notif.id} className="p-6 bg-amber-50/30 relative group hover:bg-amber-50 transition-colors">
+              {workstationAlerts.length > 0 ? (
+                workstationAlerts.map((alert) => (
+                  <div key={alert.id} className="p-6 bg-amber-50/30 relative group hover:bg-amber-50 transition-colors">
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500" />
                     <div className="flex justify-between items-start mb-2">
-                      <Badge className="bg-amber-100 text-amber-700 text-[8px] font-black uppercase border-none px-2 py-0.5">NEW ALERT</Badge>
-                      <span className="text-[9px] font-black text-muted-foreground">{format(new Date(notif.createdAt), "HH:mm")}</span>
+                      <Badge className="bg-amber-100 text-amber-700 text-[8px] font-black uppercase border-none px-2 py-0.5">
+                        {alert.alertType === 'case' ? 'CASE ASSIGNMENT' : 'NEW BOOKING'}
+                      </Badge>
+                      <span className="text-[9px] font-black text-muted-foreground">
+                        {alert.createdAt ? format(new Date(alert.createdAt), "HH:mm") : '---'}
+                      </span>
                     </div>
-                    <p className="text-sm font-bold text-secondary leading-snug">{notif.description}</p>
+                    <p className="text-sm font-bold text-secondary leading-snug">
+                      {alert.alertType === 'case' 
+                        ? `New Case Assignment: ${alert.caseType} for ${alert.id}` 
+                        : `New Consultation Booked: ${alert.caseType} (${alert.referenceCode})`}
+                    </p>
                     <div className="mt-4 flex justify-end">
                       <Button 
                         size="sm" 
                         variant="ghost" 
-                        onClick={() => handleAcknowledge(notif.id)}
+                        onClick={() => handleAcknowledge(alert.id, alert.alertType)}
                         className="h-8 rounded-xl font-black text-[10px] uppercase text-amber-700 hover:bg-amber-100"
                       >
                         <CheckCheck className="h-3 w-3 mr-1.5" /> Acknowledge

@@ -165,6 +165,7 @@ export default function AdminIntakeAssessmentPage() {
       updateDocumentNonBlocking(apptRef, {
         status: "Consultation in Progress",
         lawyerId: assignedLawyer,
+        lawyerNotified: false, // NEW: Entity-driven alert for lawyer
         updatedAt: new Date().toISOString()
       });
 
@@ -230,6 +231,7 @@ export default function AdminIntakeAssessmentPage() {
         status: "Active",
         description: appt.assessment || "Official case activated by Admin workstation.",
         consultationRef: appt.referenceCode,
+        lawyerNotified: false, // NEW: Entity-driven alert for lawyer
         createdAt: new Date().toISOString()
       }, { merge: true });
 
@@ -281,7 +283,7 @@ export default function AdminIntakeAssessmentPage() {
   };
 
   return (
-    <DashboardLayout role="admin">
+    <DashboardLayout role={role}>
       <div className="space-y-8">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-primary text-white rounded-2xl shadow-lg">
@@ -436,7 +438,7 @@ export default function AdminIntakeAssessmentPage() {
             </DialogHeader>
             <div className="p-10 space-y-8 flex-1 overflow-y-auto">
               <div className="p-6 bg-primary/5 rounded-[2rem] border-2 border-dashed border-primary/10 space-y-4">
-                <div className="flex items-center gap-2 mb-2"><ClipboardCheck className="h-4 w-4 text-primary" /><span className="text-[10px] font-black uppercase tracking-widest">Assessment Criteria Checklist</span></div>
+                <div className="flex items-center gap-2 mb-2"><ClipboardCheck className="h-4 w-4 text-primary" /><span className="text-[10px) font-black uppercase tracking-widest">Assessment Criteria Checklist</span></div>
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3 bg-white p-3 rounded-xl border">
                     <Checkbox id="ind" checked={screening.indigency} onCheckedChange={c => setScreening({...screening, indigency: !!c})} />

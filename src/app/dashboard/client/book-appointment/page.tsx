@@ -177,6 +177,7 @@ function BookAppointmentContent() {
       dateString: format(selectedDate, "yyyy-MM-dd"),
       time: selectedTime,
       status: "scheduled",
+      lawyerNotified: false, // NEW: Entity alert for lawyer
       createdAt: new Date().toISOString()
     };
 
