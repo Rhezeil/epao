@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { format, startOfToday, isWeekend, isBefore } from "date-fns";
-import { Clock, CalendarDays, Loader2, Save, CheckCircle2, AlertCircle, Ban, MessageSquare, Briefcase, User, Info } from "lucide-react";
+import { Clock, CalendarDays, Loader2, Save, CheckCircle2, AlertCircle, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -203,7 +203,7 @@ export default function LawyerAvailabilityPage() {
                 )}
               </div>
             </CardHeader>
-            <CardContent className="p-10 space-y-10">
+            <CardContent className="p-8 md:p-10 space-y-8">
               {isDataLoading ? (
                 <div className="py-20 flex justify-center"><Loader2 className="animate-spin h-10 w-10 text-secondary/20" /></div>
               ) : (
@@ -233,7 +233,7 @@ export default function LawyerAvailabilityPage() {
                     <div className="space-y-4 animate-in slide-in-from-top-4 duration-500">
                       <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Leave Reason / Assignment</Label>
                       <Select value={formData.leaveReason} onValueChange={(v) => setFormData({...formData, leaveReason: v})}>
-                        <SelectTrigger className="h-14 rounded-xl border-secondary/10 bg-white font-bold text-sm shadow-sm">
+                        <SelectTrigger className="h-14 rounded-xl border-secondary/10 bg-white font-bold text-sm shadow-sm overflow-hidden">
                           <SelectValue placeholder="Select choice of reason" />
                         </SelectTrigger>
                         <SelectContent className="rounded-xl border-secondary/10">
@@ -253,7 +253,7 @@ export default function LawyerAvailabilityPage() {
                   )}
 
                   {(formData.availabilityType === 'PartialLeave' || formData.availabilityType === 'PartialDayAvailable') && (
-                    <div className="grid grid-cols-2 gap-8 animate-in slide-in-from-top-4 duration-500">
+                    <div className="grid grid-cols-2 gap-6 animate-in slide-in-from-top-4 duration-500">
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">
                           {formData.availabilityType === 'PartialLeave' ? 'Unavailable From' : 'Available From'}
@@ -286,7 +286,7 @@ export default function LawyerAvailabilityPage() {
                   )}
 
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Additional Internal Notes</Label>
+                    <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Registry Notes (Audit/Internal)</Label>
                     <Textarea 
                       placeholder="Specify additional details or specific schedule constraints..." 
                       className="rounded-2xl min-h-[100px] border-secondary/10"

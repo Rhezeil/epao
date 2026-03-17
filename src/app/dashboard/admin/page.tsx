@@ -13,8 +13,7 @@ import {
 } from "recharts";
 import { 
   Briefcase, 
-  Activity, PieChart as PieIcon, Lightbulb, 
-  Microscope,
+  Activity, PieChart as PieIcon, 
   FileSearch,
   Bell,
   Target,

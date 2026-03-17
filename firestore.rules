@@ -28,8 +28,8 @@ service cloud.firestore {
 
     // Centralized Notification Rules
     match /notifications/{notificationId} {
-      // Allow list/read/write for all signed-in users to support real-time dashboards
-      // and audit triggers across all portals.
+      // Allow all signed-in users to write/read to support real-time dashboards
+      // isolation is handled at the query level in the dashboards
       allow read, write: if isSignedIn();
     }
 

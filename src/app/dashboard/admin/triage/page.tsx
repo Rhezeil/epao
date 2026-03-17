@@ -240,8 +240,6 @@ export default function AdminIntakeAssessmentPage() {
         email: citizenEmail,
         fullName: appt.guestName || appt.clientName || "",
         address: finalAddress,
-        guestAddress: finalAddress,
-        guestMobile: finalMobile,
         role: "client",
         status: "Active Case",
         createdAt: new Date().toISOString()
