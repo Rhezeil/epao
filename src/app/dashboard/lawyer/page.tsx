@@ -124,6 +124,10 @@ export default function LawyerDashboard() {
   const { data: dutiesData } = useCollection(dutiesQuery);
   const { data: notifications } = useCollection(notifsQuery);
 
+  const unreadNotifsCount = useMemo(() => {
+    return notifications?.filter(n => n.status === 'unread').length || 0;
+  }, [notifications]);
+
   const pendingConsultations = useMemo(() => {
     if (!apptsData) return [];
     return apptsData.filter(a => a.status === "Consultation in Progress");
@@ -359,9 +363,16 @@ export default function LawyerDashboard() {
         <div className="xl:col-span-1">
           <Card className="border-none shadow-2xl bg-white rounded-[2.5rem] overflow-hidden flex flex-col h-[calc(100vh-12rem)] sticky top-24">
             <CardHeader className="bg-secondary p-8 text-white shrink-0">
-              <div className="flex items-center gap-3">
-                <Bell className="h-6 w-6 text-white/60" />
-                <CardTitle className="text-xl font-black">Workstation Alerts</CardTitle>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <Bell className="h-6 w-6 text-white/60" />
+                  <CardTitle className="text-xl font-black">Workstation Alerts</CardTitle>
+                </div>
+                {unreadNotifsCount > 0 && (
+                  <Badge className="bg-white/20 text-white border-none font-black text-[10px] animate-pulse">
+                    {unreadNotifsCount} NEW
+                  </Badge>
+                )}
               </div>
               <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mt-2">Assignments & Follow-ups</p>
             </CardHeader>

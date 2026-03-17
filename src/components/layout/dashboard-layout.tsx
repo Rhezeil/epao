@@ -13,7 +13,8 @@ import {
   SidebarMenuButton, 
   SidebarProvider,
   SidebarInset,
-  SidebarTrigger
+  SidebarTrigger,
+  SidebarMenuBadge
 } from "@/components/ui/sidebar";
 import { 
   LayoutDashboard, 
@@ -32,13 +33,17 @@ import {
   Heart,
   History,
   Activity,
-  Clock
+  Clock,
+  Bell
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { cn } from "@/lib/utils";
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection, query, where } from "firebase/firestore";
+import { Badge } from "@/components/ui/badge";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -47,10 +52,24 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   const { signOut, user } = useAuth();
+  const db = useFirestore();
   const router = useRouter();
   const pathname = usePathname();
   
   const logo = PlaceHolderImages.find(img => img.id === 'pao-logo');
+
+  // Real-time Unread Notifications Query for Badge
+  const unreadQuery = useMemoFirebase(() => {
+    if (!db || !user || !role) return null;
+    if (role === 'admin') {
+      return query(collection(db, "notifications"), where("status", "==", "unread"));
+    }
+    // Lawyers and Clients only see their own unread alerts
+    return query(collection(db, "notifications"), where("targetUserId", "==", user.uid), where("status", "==", "unread"));
+  }, [db, user, role]);
+
+  const { data: unreadNotifs } = useCollection(unreadQuery);
+  const unreadCount = unreadNotifs?.length || 0;
 
   const getPortalInfo = () => {
     if (!user) return { label: 'Public Assistance', color: 'bg-teal-500/10 text-teal-700 border-teal-500/20' };
@@ -78,7 +97,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
 
     if (role === "admin") {
       return [
-        { icon: Activity, label: "Diagnostic Analysis", path: "/dashboard/admin", exact: true },
+        { icon: Activity, label: "Diagnostic Analysis", path: "/dashboard/admin", exact: true, showBadge: true },
         { icon: ShieldCheck, label: "Intake Assessment", path: "/dashboard/admin/triage" },
         { icon: Users, label: "Client Directory", path: "/dashboard/admin/users" },
         { icon: History, label: "Visit Registry", path: "/dashboard/admin/appointments" },
@@ -89,7 +108,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
 
     if (role === "lawyer") {
       return [
-        { icon: LayoutDashboard, label: "Workstation Home", path: "/dashboard/lawyer", exact: true },
+        { icon: LayoutDashboard, label: "Workstation Home", path: "/dashboard/lawyer", exact: true, showBadge: true },
         { icon: FileText, label: "My Cases", path: "/dashboard/lawyer/cases" },
         { icon: Clock, label: "Availability", path: "/dashboard/lawyer/availability" },
       ];
@@ -150,6 +169,11 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
                           isActive ? "text-white" : "text-slate-400"
                         )} />
                         <span className="font-black text-sm">{item.label}</span>
+                        {item.showBadge && unreadCount > 0 && (
+                          <Badge className="ml-auto bg-amber-500 text-white border-none text-[10px] font-black h-5 min-w-[20px] flex items-center justify-center rounded-full px-1">
+                            {unreadCount}
+                          </Badge>
+                        )}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
