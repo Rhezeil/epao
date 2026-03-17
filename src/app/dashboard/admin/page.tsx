@@ -71,45 +71,6 @@ export default function AdminDashboard() {
   const { data: lawyers } = useCollection(lawyersQuery);
   const { data: notifications } = useCollection(notifsQuery);
 
-  const screeningAnalysis = useMemo(() => {
-    if (!appointments) return { summary: [], reasons: [], total: 0, eligible: 0, ineligible: 0, topReason: "", eligiblePct: "0", ineligiblePct: "0" };
-    
-    const screeningAppts = appointments.filter(a => a.status === 'Eligible' || a.status === 'Not Eligible');
-    const eligible = screeningAppts.filter(a => a.status === 'Eligible');
-    const ineligible = screeningAppts.filter(a => a.status === 'Not Eligible');
-    
-    const reasonsMap: Record<string, number> = {};
-    ineligible.forEach(a => {
-      const reason = a.screeningDetails?.rejectionReason || "Unspecified";
-      reasonsMap[reason] = (reasonsMap[reason] || 0) + 1;
-    });
-    
-    const reasonsData = Object.entries(reasonsMap).map(([name, value]) => ({ name, value }));
-    reasonsData.sort((a, b) => b.value - a.value);
-
-    const total = screeningAppts.length;
-
-    return {
-      summary: [
-        { name: 'Eligible', value: eligible.length, fill: '#10B981' },
-        { name: 'Ineligible', value: ineligible.length, fill: '#EF4444' }
-      ],
-      reasons: reasonsData,
-      total: total,
-      eligible: eligible.length,
-      ineligible: ineligible.length,
-      topReason: reasonsData[0]?.name || "N/A",
-      eligiblePct: total > 0 ? ((eligible.length / total) * 100).toFixed(1) : "0",
-      ineligiblePct: total > 0 ? ((ineligible.length / total) * 100).toFixed(1) : "0"
-    };
-  }, [appointments]);
-
-  const filteredNotifs = useMemo(() => {
-    if (!notifications) return [];
-    if (notifFilter === "all") return notifications;
-    return notifications.filter(n => n.type === notifFilter);
-  }, [notifications, notifFilter]);
-
   const performanceRangeStart = useMemo(() => {
     const now = new Date();
     if (performanceRange === "day") return startOfToday();
@@ -117,10 +78,66 @@ export default function AdminDashboard() {
     return subDays(now, 30);
   }, [performanceRange]);
 
-  const isInPerformanceRange = (dateStr: string | undefined) => {
-    if (!dateStr) return false;
-    try { return isAfter(new Date(dateStr), performanceRangeStart); } catch { return false; }
-  };
+  // Optimized Analysis Pre-processing
+  const analyticsData = useMemo(() => {
+    if (!appointments || !cases || !lawyers) return null;
+
+    // 1. Intake Analysis
+    const screeningAppts = appointments.filter(a => a.status === 'Eligible' || a.status === 'Not Eligible');
+    const eligible = screeningAppts.filter(a => a.status === 'Eligible');
+    const ineligible = screeningAppts.filter(a => a.status === 'Not Eligible');
+    
+    const reasonsMap: Record<string, number> = {};
+    ineligible.forEach(a => {
+      const reason = a.screeningDetails?.rejectionReason || "Unspecified";
+      reasonsMap[reason] = (reason === 'Unspecified') ? 0 : (reasonsMap[reason] || 0) + 1;
+    });
+    
+    const reasonsData = Object.entries(reasonsMap).map(([name, value]) => ({ name, value }));
+    reasonsData.sort((a, b) => b.value - a.value);
+
+    // 2. Lawyer Workload (Single Pass)
+    const apptCountByLawyer: Record<string, number> = {};
+    const activeCaseByLawyer: Record<string, number> = {};
+
+    appointments.forEach(a => {
+      if (!a.lawyerId) return;
+      try {
+        if (isAfter(new Date(a.date), performanceRangeStart)) {
+          apptCountByLawyer[a.lawyerId] = (apptCountByLawyer[a.lawyerId] || 0) + 1;
+        }
+      } catch (e) {}
+    });
+
+    cases.forEach(c => {
+      if (!c.lawyerId || c.status !== 'Active') return;
+      activeCaseByLawyer[c.lawyerId] = (activeCaseByLawyer[c.lawyerId] || 0) + 1;
+    });
+
+    return {
+      screening: {
+        summary: [
+          { name: 'Eligible', value: eligible.length, fill: '#10B981' },
+          { name: 'Ineligible', value: ineligible.length, fill: '#EF4444' }
+        ],
+        reasons: reasonsData,
+        total: screeningAppts.length,
+        eligiblePct: screeningAppts.length > 0 ? ((eligible.length / screeningAppts.length) * 100).toFixed(1) : "0",
+        ineligiblePct: screeningAppts.length > 0 ? ((ineligible.length / screeningAppts.length) * 100).toFixed(1) : "0",
+        topReason: reasonsData[0]?.name || "N/A"
+      },
+      workload: {
+        appts: apptCountByLawyer,
+        cases: activeCaseByLawyer
+      }
+    };
+  }, [appointments, cases, lawyers, performanceRangeStart]);
+
+  const filteredNotifs = useMemo(() => {
+    if (!notifications) return [];
+    if (notifFilter === "all") return notifications;
+    return notifications.filter(n => n.type === notifFilter);
+  }, [notifications, notifFilter]);
 
   const markNotifRead = (id: string) => {
     if (!db) return;
@@ -168,36 +185,40 @@ export default function AdminDashboard() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-8 flex flex-col items-center">
-                    <div className="h-[250px] w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={screeningAnalysis.summary}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={60}
-                            outerRadius={80}
-                            paddingAngle={5}
-                            dataKey="value"
-                          >
-                            {screeningAnalysis.summary.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.fill} />
-                            ))}
-                          </Pie>
-                          <Tooltip />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 w-full mt-4">
-                      <div className="text-center p-4 bg-emerald-50 rounded-2xl">
-                        <p className="text-[10px] font-black text-emerald-600 uppercase">Eligible</p>
-                        <p className="text-2xl font-black text-emerald-700">{screeningAnalysis.eligiblePct}%</p>
-                      </div>
-                      <div className="text-center p-4 bg-rose-50 rounded-2xl">
-                        <p className="text-[10px] font-black text-rose-600 uppercase">Ineligible</p>
-                        <p className="text-2xl font-black text-rose-700">{screeningAnalysis.ineligiblePct}%</p>
-                      </div>
-                    </div>
+                    {!analyticsData ? <Loader2 className="animate-spin h-10 w-10 text-primary/20 my-20" /> : (
+                      <>
+                        <div className="h-[250px] w-full">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={analyticsData.screening.summary}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={60}
+                                outerRadius={80}
+                                paddingAngle={5}
+                                dataKey="value"
+                              >
+                                {analyticsData.screening.summary.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                                ))}
+                              </Pie>
+                              <Tooltip />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 w-full mt-4">
+                          <div className="text-center p-4 bg-emerald-50 rounded-2xl">
+                            <p className="text-[10px] font-black text-emerald-600 uppercase">Eligible</p>
+                            <p className="text-2xl font-black text-emerald-700">{analyticsData.screening.eligiblePct}%</p>
+                          </div>
+                          <div className="text-center p-4 bg-rose-50 rounded-2xl">
+                            <p className="text-[10px] font-black text-rose-600 uppercase">Ineligible</p>
+                            <p className="text-2xl font-black text-rose-700">{analyticsData.screening.ineligiblePct}%</p>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -207,25 +228,27 @@ export default function AdminDashboard() {
                       <CardTitle className="text-xs font-black uppercase text-primary flex items-center gap-2">
                         <FileSearch className="h-4 w-4" /> Root Causes of Ineligibility
                       </CardTitle>
-                      <Badge variant="outline" className="border-rose-200 text-rose-700 bg-rose-50 font-black text-[9px]">TOP: {screeningAnalysis.topReason}</Badge>
+                      <Badge variant="outline" className="border-rose-200 text-rose-700 bg-rose-50 font-black text-[9px]">TOP: {analyticsData?.screening.topReason || '---'}</Badge>
                     </div>
                   </CardHeader>
                   <CardContent className="p-10">
-                    <div className="h-[300px] w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={screeningAnalysis.reasons} layout="vertical" margin={{ left: 40 }}>
-                          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#F1F5F9" />
-                          <XAxis type="number" hide />
-                          <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 8, fontWeight: 700, fill: '#1A237E' }} width={120} />
-                          <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} />
-                          <Bar dataKey="value" fill="#EF4444" radius={[0, 10, 10, 0]} barSize={20}>
-                            {screeningAnalysis.reasons.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={index === 0 ? '#B91C1C' : '#EF4444'} />
-                            ))}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
+                    {!analyticsData ? <Loader2 className="animate-spin h-10 w-10 text-primary/20 my-20" /> : (
+                      <div className="h-[300px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={analyticsData.screening.reasons} layout="vertical" margin={{ left: 40 }}>
+                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#F1F5F9" />
+                            <XAxis type="number" hide />
+                            <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 8, fontWeight: 700, fill: '#1A237E' }} width={120} />
+                            <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} />
+                            <Bar dataKey="value" fill="#EF4444" radius={[0, 10, 10, 0]} barSize={20}>
+                              {analyticsData.screening.reasons.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={index === 0 ? '#B91C1C' : '#EF4444'} />
+                              ))}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -257,17 +280,17 @@ export default function AdminDashboard() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {lawyers?.filter(l => (l.firstName + l.lastName).toLowerCase().includes(lawyerSearch.toLowerCase())).map((lawyer) => {
-                        const lAppts = (appointments?.filter(a => a.lawyerId === lawyer.id) || []).filter(a => isInPerformanceRange(a.date));
-                        const lCases = cases?.filter(c => c.lawyerId === lawyer.id && c.status === 'Active') || [];
+                      {lawyers?.filter(l => (l.firstName + ' ' + l.lastName).toLowerCase().includes(lawyerSearch.toLowerCase())).map((lawyer) => {
+                        const apptCount = analyticsData?.workload.appts[lawyer.id] || 0;
+                        const caseCount = analyticsData?.workload.cases[lawyer.id] || 0;
                         return (
                           <TableRow key={lawyer.id} className="hover:bg-primary/5 transition-colors">
                             <TableCell className="px-10 py-6">
                               <p className="font-black text-primary leading-none">Atty. {lawyer.firstName} {lawyer.lastName}</p>
                               <p className="text-[10px] text-muted-foreground mt-1">{lawyer.email}</p>
                             </TableCell>
-                            <TableCell className="text-center font-black text-lg">{lAppts.length}</TableCell>
-                            <TableCell className="text-center font-black text-lg text-secondary">{lCases.length}</TableCell>
+                            <TableCell className="text-center font-black text-lg">{apptCount}</TableCell>
+                            <TableCell className="text-center font-black text-lg text-secondary">{caseCount}</TableCell>
                           </TableRow>
                         );
                       })}

@@ -49,13 +49,17 @@ function LoginContent() {
       const normalizedEmail = (user.email || "").toLowerCase().trim();
       const isBootstrapAdmin = normalizedEmail === "admin@epao.com";
 
-      // 1. Check Admin Status
-      const adminDocRef = doc(db, "admins", user.uid);
-      const adminDoc = await getDoc(adminDocRef);
-      
+      // Perform checks in parallel for speed
+      const [adminDoc, lawyerDoc, lawyerAuthDoc, clientDoc] = await Promise.all([
+        getDoc(doc(db, "admins", user.uid)),
+        getDoc(doc(db, "roleLawyer", user.uid)),
+        getDoc(doc(db, "lawyersEmail", normalizedEmail)),
+        getDoc(doc(db, "users", user.uid))
+      ]);
+
       if (isBootstrapAdmin || adminDoc.exists()) {
         if (!adminDoc.exists()) {
-          setDocumentNonBlocking(adminDocRef, {
+          setDocumentNonBlocking(doc(db, "admins", user.uid), {
             id: user.uid,
             role: "admin",
             email: normalizedEmail,
@@ -67,15 +71,10 @@ function LoginContent() {
         return;
       }
 
-      // 2. Check Existing Lawyer Record
-      const lawyerDocRef = doc(db, "roleLawyer", user.uid);
-      const lawyerDoc = await getDoc(lawyerDocRef);
-      const lawyerAuthDoc = await getDoc(doc(db, "lawyersEmail", normalizedEmail));
       const isAuthorizedLawyer = lawyerDoc.exists() || lawyerAuthDoc.exists() || normalizedEmail.endsWith("@lawyers.com");
-
       if (isAuthorizedLawyer) {
         if (!lawyerDoc.exists()) {
-          setDocumentNonBlocking(lawyerDocRef, {
+          setDocumentNonBlocking(doc(db, "roleLawyer", user.uid), {
             id: user.uid,
             email: normalizedEmail,
             role: "lawyer",
@@ -87,12 +86,8 @@ function LoginContent() {
         return;
       }
 
-      // 3. Default to Client Status
-      const clientDocRef = doc(db, "users", user.uid);
-      const clientDoc = await getDoc(clientDocRef);
-      
       if (!clientDoc.exists()) {
-        setDocumentNonBlocking(clientDocRef, {
+        setDocumentNonBlocking(doc(db, "users", user.uid), {
           id: user.uid,
           mobileNumber: normalizedEmail.split('@')[0],
           email: normalizedEmail,
@@ -103,11 +98,7 @@ function LoginContent() {
         }, { merge: true });
       }
 
-      if (redirectPath) {
-        router.push(decodeURIComponent(redirectPath));
-      } else {
-        router.push(`/dashboard/client`);
-      }
+      router.push(redirectPath ? decodeURIComponent(redirectPath) : `/dashboard/client`);
     } catch (error: any) {
       toast({ 
         variant: "destructive", 

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
@@ -35,52 +36,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    let unsubUser: () => void = () => {};
-    let unsubAdmin: () => void = () => {};
-    let unsubLawyer: () => void = () => {};
+    let unsubAuth: () => void = () => {};
+    let unsubs: (() => void)[] = [];
 
-    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+    unsubAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       
       // Clear existing listeners
-      unsubUser();
-      unsubAdmin();
-      unsubLawyer();
+      unsubs.forEach(unsub => unsub());
+      unsubs = [];
 
       if (firebaseUser) {
         setLoading(true);
         
-        // Listen to Admin Role (pointing to 'admins' collection)
-        unsubAdmin = onSnapshot(doc(db, "admins", firebaseUser.uid), (docSnap) => {
-          if (docSnap.exists()) {
+        // Parallel role checking
+        let foundRole = false;
+
+        const checkAdmin = onSnapshot(doc(db, "admins", firebaseUser.uid), (snap) => {
+          if (snap.exists() && !foundRole) {
             setRole("admin");
+            foundRole = true;
             setLoading(false);
-          } else {
-            // If not admin, check lawyer
-            unsubLawyer = onSnapshot(doc(db, "roleLawyer", firebaseUser.uid), (lawyerSnap) => {
-              if (lawyerSnap.exists()) {
-                setRole("lawyer");
-                setLoading(false);
-              } else {
-                // If not lawyer, check client
-                unsubUser = onSnapshot(doc(db, "users", firebaseUser.uid), (userSnap) => {
-                  if (userSnap.exists()) {
-                    setRole("client");
-                  } else {
-                    setRole(null);
-                  }
-                  setLoading(false);
-                }, (err) => {
-                   setLoading(false);
-                });
-              }
-            }, (err) => {
-               setLoading(false);
-            });
           }
-        }, (err) => {
-           setLoading(false);
-        });
+        }, () => {});
+
+        const checkLawyer = onSnapshot(doc(db, "roleLawyer", firebaseUser.uid), (snap) => {
+          if (snap.exists() && !foundRole) {
+            setRole("lawyer");
+            foundRole = true;
+            setLoading(false);
+          }
+        }, () => {});
+
+        const checkClient = onSnapshot(doc(db, "users", firebaseUser.uid), (snap) => {
+          if (snap.exists() && !foundRole) {
+            setRole("client");
+            foundRole = true;
+            setLoading(false);
+          }
+        }, () => {});
+
+        unsubs = [checkAdmin, checkLawyer, checkClient];
+
+        // Fallback timeout to stop loading if no role is found within reasonable time
+        const timer = setTimeout(() => {
+          if (!foundRole) setLoading(false);
+        }, 3000);
+        unsubs.push(() => clearTimeout(timer));
+
       } else {
         setRole(null);
         setLoading(false);
@@ -88,10 +91,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => {
-      unsubscribeAuth();
-      unsubUser();
-      unsubAdmin();
-      unsubLawyer();
+      unsubAuth();
+      unsubs.forEach(unsub => unsub());
     };
   }, [auth, db]);
 
