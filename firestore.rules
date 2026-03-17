@@ -27,10 +27,18 @@ service cloud.firestore {
     }
 
     // Centralized Notification Rules
-    match /notifications/{notificationId} {
-      // Allow all signed-in users to write/read to support real-time dashboards
-      // isolation is handled at the query level in the dashboards
-      allow read, write: if isSignedIn();
+    match /notifications/{docId} {
+      allow create: if isSignedIn();
+      allow read: if isSignedIn() && (
+        isAdmin() || 
+        request.auth.uid == resource.data.get('targetUserId', '') ||
+        request.auth.uid == resource.data.get('lawyerId', '')
+      );
+      allow update: if isSignedIn() && (
+        isAdmin() || 
+        request.auth.uid == resource.data.get('targetUserId', '')
+      );
+      allow delete: if false;
     }
 
     match /appointments/{appointmentId} {

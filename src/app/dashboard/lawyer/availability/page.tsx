@@ -124,7 +124,7 @@ export default function LawyerAvailabilityPage() {
         id: notifId,
         type: "lawyer",
         userRole: "lawyer",
-        description: `Atty. ${user.email?.split('@')[0]} updated availability for ${format(selectedDate!, "MMM dd")} to ${formData.availabilityType} (${formData.leaveReason}).`,
+        description: `Atty. ${user.email?.split('@')[0]} modified schedule for ${format(selectedDate!, "MMM dd")} to ${formData.availabilityType} (${formData.leaveReason}).`,
         referenceId: user.uid,
         status: "unread",
         createdAt: new Date().toISOString()
@@ -132,7 +132,7 @@ export default function LawyerAvailabilityPage() {
 
       toast({
         title: "Availability Synchronized",
-        description: `Schedule for ${format(selectedDate!, "MMM dd")} has been updated in the registry.`
+        description: `Office registry updated for ${format(selectedDate!, "MMM dd")}.`
       });
     } catch (e: any) {
       toast({ variant: "destructive", title: "Sync Failed", description: e.message });
@@ -148,7 +148,7 @@ export default function LawyerAvailabilityPage() {
 
   return (
     <DashboardLayout role="lawyer">
-      <div className="space-y-8 max-w-6xl mx-auto">
+      <div className="space-y-8 max-w-6xl mx-auto pb-12">
         <div>
           <h1 className="text-3xl font-black text-secondary font-headline tracking-tight">Availability Management</h1>
           <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest mt-1">Official Office Schedule Registry</p>
@@ -179,7 +179,7 @@ export default function LawyerAvailabilityPage() {
               <div className="mt-6 p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                 <p className="text-[10px] text-amber-800 font-bold leading-relaxed">
-                  The office is closed on weekends. Availability can only be published for official working days (Mon-Fri).
+                  Availability updates are only permitted for official working days (Monday-Friday).
                 </p>
               </div>
             </CardContent>
@@ -190,33 +190,33 @@ export default function LawyerAvailabilityPage() {
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
                   <CardTitle className="text-xl font-bold text-secondary">
-                    {selectedDate ? format(selectedDate, "PPPP") : "Registry Settings"}
+                    {selectedDate ? format(selectedDate, "PPPP") : "Workstation Settings"}
                   </CardTitle>
                   <CardDescription className="text-[10px] font-black uppercase tracking-widest">
-                    Manage Professional Status
+                    Manage Duty Status
                   </CardDescription>
                 </div>
                 {availData ? (
-                  <Badge className="bg-secondary text-white border-none font-black px-4 py-1.5 rounded-xl uppercase text-[9px]">Sync Active</Badge>
+                  <Badge className="bg-secondary text-white border-none font-black px-4 py-1.5 rounded-xl uppercase text-[9px]">Live Sync Active</Badge>
                 ) : (
-                  <Badge variant="outline" className="border-dashed font-black px-4 py-1.5 rounded-xl uppercase text-[9px]">Default Office Hours</Badge>
+                  <Badge variant="outline" className="border-dashed font-black px-4 py-1.5 rounded-xl uppercase text-[9px]">Standard Hours</Badge>
                 )}
               </div>
             </CardHeader>
-            <CardContent className="p-8 md:p-10 space-y-8">
+            <CardContent className="p-8 md:p-10 space-y-10">
               {isDataLoading ? (
                 <div className="py-20 flex justify-center"><Loader2 className="animate-spin h-10 w-10 text-secondary/20" /></div>
               ) : (
                 <>
                   <div className="space-y-4">
                     <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Availability Classification</Label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {AVAILABILITY_TYPES.map((type) => (
                         <button
                           key={type.value}
                           onClick={() => setFormData({ ...formData, availabilityType: type.value })}
                           className={cn(
-                            "flex flex-col items-start p-4 rounded-2xl border-2 transition-all text-left group",
+                            "flex flex-col items-start p-5 rounded-[1.5rem] border-2 transition-all text-left group",
                             formData.availabilityType === type.value 
                               ? cn("border-secondary shadow-lg scale-[1.02]", type.color)
                               : "border-transparent bg-muted/30 hover:bg-muted/50"
@@ -231,17 +231,17 @@ export default function LawyerAvailabilityPage() {
 
                   {isLeave && (
                     <div className="space-y-4 animate-in slide-in-from-top-4 duration-500">
-                      <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Leave Reason / Assignment</Label>
+                      <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Specific Classification of Reason</Label>
                       <Select value={formData.leaveReason} onValueChange={(v) => setFormData({...formData, leaveReason: v})}>
-                        <SelectTrigger className="h-14 rounded-xl border-secondary/10 bg-white font-bold text-sm shadow-sm overflow-hidden">
-                          <SelectValue placeholder="Select choice of reason" />
+                        <SelectTrigger className="h-auto min-h-[3.5rem] py-3 rounded-xl border-secondary/10 bg-white font-bold text-sm shadow-sm overflow-hidden whitespace-normal text-left">
+                          <SelectValue placeholder="Choose Reason" />
                         </SelectTrigger>
-                        <SelectContent className="rounded-xl border-secondary/10">
+                        <SelectContent className="rounded-xl border-secondary/10 max-h-[300px]">
                           {REASON_CATEGORIES.map((cat) => (
                             <div key={cat.label}>
-                              <div className="px-2 py-2 text-[10px] font-black uppercase text-secondary/40 tracking-widest bg-secondary/5">{cat.label}</div>
+                              <div className="px-3 py-2 text-[9px] font-black uppercase text-secondary/40 tracking-widest bg-secondary/5 border-y">{cat.label}</div>
                               {cat.reasons.map((reason) => (
-                                <SelectItem key={reason} value={reason} className="font-bold text-xs py-3">
+                                <SelectItem key={reason} value={reason} className="font-bold text-xs py-3 px-4">
                                   {reason}
                                 </SelectItem>
                               ))}
@@ -256,7 +256,7 @@ export default function LawyerAvailabilityPage() {
                     <div className="grid grid-cols-2 gap-6 animate-in slide-in-from-top-4 duration-500">
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">
-                          {formData.availabilityType === 'PartialLeave' ? 'Unavailable From' : 'Available From'}
+                          {formData.availabilityType === 'PartialLeave' ? 'Start of Unavailability' : 'Available From'}
                         </Label>
                         <div className="relative">
                           <Clock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary/30" />
@@ -270,7 +270,7 @@ export default function LawyerAvailabilityPage() {
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">
-                          {formData.availabilityType === 'PartialLeave' ? 'To' : 'Until'}
+                          {formData.availabilityType === 'PartialLeave' ? 'End of Unavailability' : 'Until'}
                         </Label>
                         <div className="relative">
                           <Clock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary/30" />
@@ -286,10 +286,10 @@ export default function LawyerAvailabilityPage() {
                   )}
 
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Registry Notes (Audit/Internal)</Label>
+                    <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Registry Audit Notes</Label>
                     <Textarea 
-                      placeholder="Specify additional details or specific schedule constraints..." 
-                      className="rounded-2xl min-h-[100px] border-secondary/10"
+                      placeholder="Specify additional details or constraints for office records..." 
+                      className="rounded-[1.5rem] min-h-[100px] border-secondary/10 focus-visible:ring-secondary/20"
                       value={formData.notes}
                       onChange={e => setFormData({ ...formData, notes: e.target.value })}
                     />
@@ -302,7 +302,7 @@ export default function LawyerAvailabilityPage() {
                       className="w-full h-16 bg-secondary hover:bg-secondary/90 text-white font-black text-lg rounded-2xl shadow-xl hover:scale-[1.02] transition-transform"
                     >
                       {isSaving ? <Loader2 className="animate-spin mr-2 h-6 w-6" /> : <Save className="mr-2 h-6 w-6" />}
-                      Publish Availability to Registry
+                      Publish Schedule Update
                     </Button>
                   </div>
                 </>

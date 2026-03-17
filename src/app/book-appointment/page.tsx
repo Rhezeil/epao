@@ -504,7 +504,7 @@ function BookAppointmentContent() {
 
                 <div className="space-y-6">
                   <div className="space-y-2">
-                    <Label className="text-xs font-black uppercase tracking-widest text-primary/60 ml-1">Access Code</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary/60 ml-1">Access Code</Label>
                     <Input 
                       className="h-20 text-center text-5xl font-black tracking-[0.5em] rounded-3xl border-secondary/30 text-secondary bg-secondary/5 focus-visible:ring-secondary/20"
                       maxLength={6}

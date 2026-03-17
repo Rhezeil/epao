@@ -5,7 +5,7 @@ import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { useAuth } from "@/components/auth-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase";
 import { collection, query, orderBy, doc, limit } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { 
@@ -92,7 +92,7 @@ export default function AdminDashboard() {
     return {
       summary: [
         { name: 'Eligible', value: eligible.length, fill: '#10B981' },
-        { name: 'Not Eligible', value: ineligible.length, fill: '#EF4444' }
+        { name: 'Ineligible', value: ineligible.length, fill: '#EF4444' }
       ],
       reasons: reasonsData,
       total: total,
@@ -148,14 +148,14 @@ export default function AdminDashboard() {
               <Target className="h-8 w-8" />
             </div>
             <div>
-              <h1 className="text-3xl font-black text-primary font-headline tracking-tight">System Diagnostic Dashboard</h1>
+              <h1 className="text-3xl font-black text-primary font-headline tracking-tight">System Command Center</h1>
               <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest mt-1">Real-time Platform Activity & Operational Analysis</p>
             </div>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 max-w-md bg-white/50 p-1 rounded-2xl border-2 border-primary/5 h-14 mb-8">
-              <TabsTrigger value="analysis" className="rounded-xl font-bold">Screening Analytics</TabsTrigger>
+              <TabsTrigger value="analysis" className="rounded-xl font-bold">Intake Analysis</TabsTrigger>
               <TabsTrigger value="workload" className="rounded-xl font-bold">Staff Activity</TabsTrigger>
             </TabsList>
 
@@ -205,7 +205,7 @@ export default function AdminDashboard() {
                   <CardHeader className="bg-primary/5 pb-6 border-b border-primary/5">
                     <div className="flex justify-between items-center">
                       <CardTitle className="text-xs font-black uppercase text-primary flex items-center gap-2">
-                        <FileSearch className="h-4 w-4" /> Root Causes of Denial
+                        <FileSearch className="h-4 w-4" /> Root Causes of Ineligibility
                       </CardTitle>
                       <Badge variant="outline" className="border-rose-200 text-rose-700 bg-rose-50 font-black text-[9px]">TOP: {screeningAnalysis.topReason}</Badge>
                     </div>
@@ -236,7 +236,7 @@ export default function AdminDashboard() {
                 <CardHeader className="bg-primary/5 px-10 pt-8 border-b">
                   <div className="flex flex-col md:flex-row justify-between items-start gap-6">
                     <div className="flex-1 w-full space-y-4">
-                      <CardTitle className="text-xl font-bold text-primary flex items-center gap-2"><Briefcase className="h-6 w-6" /> Lawyer Operational Status</CardTitle>
+                      <CardTitle className="text-xl font-bold text-primary flex items-center gap-2"><Briefcase className="h-6 w-6" /> Staff Operational Status</CardTitle>
                       <div className="flex gap-4">
                         <Input placeholder="Search Attorney..." className="max-w-xs h-11 rounded-xl" value={lawyerSearch} onChange={e => setLawyerSearch(e.target.value)} />
                         <Select value={performanceRange} onValueChange={setPerformanceRange}>
@@ -252,7 +252,7 @@ export default function AdminDashboard() {
                     <TableHeader className="bg-muted/30">
                       <TableRow>
                         <TableHead className="px-10 text-[10px] font-black uppercase tracking-widest text-primary/40">Attorney Profile</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Visits Handled</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Intakes Handled</TableHead>
                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Active Cases</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -301,8 +301,8 @@ export default function AdminDashboard() {
                     <SelectItem value="all" className="font-bold">All Activities</SelectItem>
                     <SelectItem value="appointment" className="font-bold text-blue-600">Appointments</SelectItem>
                     <SelectItem value="case" className="font-bold text-green-600">Cases</SelectItem>
-                    <SelectItem value="lawyer" className="font-bold text-purple-600">Lawyer Action</SelectItem>
-                    <SelectItem value="client" className="font-bold text-amber-600">Client Action</SelectItem>
+                    <SelectItem value="lawyer" className="font-bold text-purple-600">Staff Actions</SelectItem>
+                    <SelectItem value="client" className="font-bold text-amber-600">Client Actions</SelectItem>
                     <SelectItem value="system" className="font-bold text-slate-600">System Logs</SelectItem>
                   </SelectContent>
                 </Select>
@@ -340,7 +340,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex items-center gap-1 text-secondary">
                         <ArrowRight className="h-3 w-3" />
-                        <span className="text-[9px] font-black">{notif.referenceCode || "View Record"}</span>
+                        <span className="text-[9px] font-black">{notif.referenceCode || "View Detail"}</span>
                       </div>
                     </div>
                   </div>
@@ -348,7 +348,7 @@ export default function AdminDashboard() {
               ) : (
                 <div className="py-20 text-center space-y-4">
                   <Inbox className="h-12 w-12 text-primary/5 mx-auto" />
-                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">No activities logged</p>
+                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">No activities recorded</p>
                 </div>
               )}
             </CardContent>
