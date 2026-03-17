@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { format, startOfToday, isWeekend, isBefore } from "date-fns";
-import { Clock, CalendarDays, Loader2, Save, CheckCircle2, AlertCircle, Ban, MessageSquare } from "lucide-react";
+import { Clock, CalendarDays, Loader2, Save, CheckCircle2, AlertCircle, Ban, MessageSquare, Briefcase, User, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -37,9 +37,27 @@ const AVAILABILITY_TYPES = [
   { value: "PartialDayAvailable", label: "Available Only During Specific Hours", color: "text-blue-600 bg-blue-50 border-blue-100" },
 ];
 
-const LEAVE_REASONS = [
-  { value: "Work Related", label: "Work Related (Court, Meeting, Field Duty)" },
-  { value: "Personal", label: "Personal (Medical, Family, Official Leave)" }
+const REASON_CATEGORIES = [
+  { 
+    label: "Work Related Duties", 
+    reasons: [
+      "Court Hearing / Litigation",
+      "Jail / Prison Visit",
+      "Field Investigation",
+      "Official Meeting / Seminar",
+      "Barangay Conciliation / Mediation",
+      "Office Administrative Work"
+    ]
+  },
+  { 
+    label: "Personal Leave", 
+    reasons: [
+      "Sick Leave / Medical Appointment",
+      "Vacation / Privilege Leave",
+      "Family Emergency",
+      "Personal Matters"
+    ]
+  }
 ];
 
 export default function LawyerAvailabilityPage() {
@@ -62,7 +80,7 @@ export default function LawyerAvailabilityPage() {
     availabilityType: "Available",
     startTime: "08:00",
     endTime: "17:00",
-    leaveReason: "Work Related",
+    leaveReason: "Court Hearing / Litigation",
     notes: ""
   });
 
@@ -73,7 +91,7 @@ export default function LawyerAvailabilityPage() {
         availabilityType: availData.availabilityType || "Available",
         startTime: availData.startTime || "08:00",
         endTime: availData.endTime || "17:00",
-        leaveReason: availData.leaveReason || "Work Related",
+        leaveReason: availData.leaveReason || "Court Hearing / Litigation",
         notes: availData.notes || ""
       });
     } else {
@@ -81,7 +99,7 @@ export default function LawyerAvailabilityPage() {
         availabilityType: "Available",
         startTime: "08:00",
         endTime: "17:00",
-        leaveReason: "Work Related",
+        leaveReason: "Court Hearing / Litigation",
         notes: ""
       });
     }
@@ -126,7 +144,7 @@ export default function LawyerAvailabilityPage() {
   if (loading) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin text-secondary" /></div>;
   if (!user || role !== 'lawyer') return null;
 
-  const isLeave = formData.availabilityType === 'FullDayLeave' || formData.availabilityType === 'PartialLeave';
+  const isLeave = formData.availabilityType !== 'Available';
 
   return (
     <DashboardLayout role="lawyer">
@@ -213,16 +231,21 @@ export default function LawyerAvailabilityPage() {
 
                   {isLeave && (
                     <div className="space-y-4 animate-in slide-in-from-top-4 duration-500">
-                      <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Leave Category</Label>
+                      <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Leave Reason / Assignment</Label>
                       <Select value={formData.leaveReason} onValueChange={(v) => setFormData({...formData, leaveReason: v})}>
-                        <SelectTrigger className="h-12 rounded-xl border-secondary/10 bg-white font-bold">
-                          <SelectValue placeholder="Select Reason for Leave" />
+                        <SelectTrigger className="h-14 rounded-xl border-secondary/10 bg-white font-bold text-sm shadow-sm">
+                          <SelectValue placeholder="Select choice of reason" />
                         </SelectTrigger>
-                        <SelectContent>
-                          {LEAVE_REASONS.map(reason => (
-                            <SelectItem key={reason.value} value={reason.value} className="font-bold">
-                              {reason.label}
-                            </SelectItem>
+                        <SelectContent className="rounded-xl border-secondary/10">
+                          {REASON_CATEGORIES.map((cat) => (
+                            <div key={cat.label}>
+                              <div className="px-2 py-2 text-[10px] font-black uppercase text-secondary/40 tracking-widest bg-secondary/5">{cat.label}</div>
+                              {cat.reasons.map((reason) => (
+                                <SelectItem key={reason} value={reason} className="font-bold text-xs py-3">
+                                  {reason}
+                                </SelectItem>
+                              ))}
+                            </div>
                           ))}
                         </SelectContent>
                       </Select>
@@ -263,9 +286,9 @@ export default function LawyerAvailabilityPage() {
                   )}
 
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Registry Notes (Audit/Internal)</Label>
+                    <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Additional Internal Notes</Label>
                     <Textarea 
-                      placeholder="Specify reason for leave or specific schedule constraints..." 
+                      placeholder="Specify additional details or specific schedule constraints..." 
                       className="rounded-2xl min-h-[100px] border-secondary/10"
                       value={formData.notes}
                       onChange={e => setFormData({ ...formData, notes: e.target.value })}

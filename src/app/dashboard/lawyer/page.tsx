@@ -110,7 +110,13 @@ export default function LawyerDashboard() {
 
   const notifsQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'lawyer') return null;
-    return query(collection(db, "notifications"), where("lawyerId", "==", user.uid), orderBy("createdAt", "desc"), limit(20));
+    // Public Attorneys only see visit alerts specific to their assigned clients
+    return query(
+      collection(db, "notifications"), 
+      where("lawyerId", "==", user.uid), 
+      orderBy("createdAt", "desc"), 
+      limit(20)
+    );
   }, [db, user, role]);
 
   const { data: apptsData, isLoading: isApptsLoading } = useCollection(apptsQuery);
@@ -148,7 +154,7 @@ export default function LawyerDashboard() {
       updatedAt: new Date().toISOString()
     });
     
-    // Notification
+    // Notification for Admin Audit
     const notifId = crypto.randomUUID();
     setDocumentNonBlocking(doc(db, "notifications", notifId), {
       id: notifId,
@@ -187,6 +193,7 @@ export default function LawyerDashboard() {
         id: notifId,
         type: "appointment",
         userRole: "lawyer",
+        lawyerId: user.uid,
         description: `Official Legal Consultation for ${activeConsultation.referenceCode} completed. Outcome: ${isAccepted ? 'Accepted' : 'Denied'}.`,
         referenceId: activeConsultation.id,
         referenceCode: activeConsultation.referenceCode,
@@ -230,7 +237,7 @@ export default function LawyerDashboard() {
       setDocumentNonBlocking(doc(db, "users", clientId), { id: clientId, mobileNumber: appt.guestMobile || appt.clientMobile || "", email: citizenEmail, fullName: appt.guestName || appt.clientName || "", role: "client", status: "Active Case", createdAt: new Date().toISOString() }, { merge: true });
 
       const notifId = crypto.randomUUID();
-      setDocumentNonBlocking(doc(db, "notifications", notifId), { id: notifId, type: "case", userRole: "lawyer", description: `New Official Case ${caseId} activated for ${appt.guestName || appt.clientName}.`, referenceId: caseId, status: "unread", createdAt: new Date().toISOString() }, { merge: true });
+      setDocumentNonBlocking(doc(db, "notifications", notifId), { id: notifId, type: "case", userRole: "lawyer", lawyerId: user.uid, description: `New Official Case ${caseId} activated for ${appt.guestName || appt.clientName}.`, referenceId: caseId, status: "unread", createdAt: new Date().toISOString() }, { merge: true });
 
       toast({ title: "Legal Case Activated", description: `Case ${caseId} is now live.` });
     } catch (e: any) {

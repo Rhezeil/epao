@@ -26,7 +26,10 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    // Centralized Notification Rules
     match /notifications/{notificationId} {
+      // Allow list/read/write for all signed-in users to support real-time dashboards
+      // and audit triggers across all portals.
       allow read, write: if isSignedIn();
     }
 

@@ -22,7 +22,9 @@ import {
   ArrowRight,
   ShieldCheck,
   User,
-  Inbox
+  Inbox,
+  CheckCircle2,
+  Filter
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -132,6 +134,7 @@ export default function AdminDashboard() {
     if (notif.type === 'case') router.push('/dashboard/admin/users');
     if (notif.type === 'lawyer') router.push('/dashboard/admin/lawyers');
     if (notif.type === 'client') router.push('/dashboard/admin/users');
+    if (notif.type === 'system') router.push('/dashboard/admin/triage');
   };
 
   if (loading) return <div className="flex items-center justify-center min-h-screen"><Activity className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -283,21 +286,25 @@ export default function AdminDashboard() {
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
                   <Bell className="h-6 w-6 text-white/60" />
-                  <CardTitle className="text-xl font-black">System Activity</CardTitle>
+                  <CardTitle className="text-xl font-black">System Audit</CardTitle>
                 </div>
                 <Badge className="bg-white/20 text-white border-none font-black text-[10px]">{notifications?.filter(n => n.status === 'unread').length || 0} NEW</Badge>
               </div>
               <div className="mt-6">
                 <Select value={notifFilter} onValueChange={setNotifFilter}>
                   <SelectTrigger className="h-10 bg-white/10 border-none text-white text-xs font-black rounded-xl focus:ring-0 uppercase tracking-widest">
-                    <SelectValue placeholder="All Activities" />
+                    <div className="flex items-center gap-2">
+                      <Filter className="h-3 w-3" />
+                      <SelectValue placeholder="All Activities" />
+                    </div>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all" className="font-bold">All Activities</SelectItem>
-                    <SelectItem value="appointment" className="font-bold">Appointments</SelectItem>
-                    <SelectItem value="case" className="font-bold">Cases</SelectItem>
-                    <SelectItem value="lawyer" className="font-bold">Lawyer Action</SelectItem>
-                    <SelectItem value="client" className="font-bold">Client Action</SelectItem>
+                    <SelectItem value="appointment" className="font-bold text-blue-600">Appointments</SelectItem>
+                    <SelectItem value="case" className="font-bold text-green-600">Cases</SelectItem>
+                    <SelectItem value="lawyer" className="font-bold text-purple-600">Lawyer Action</SelectItem>
+                    <SelectItem value="client" className="font-bold text-amber-600">Client Action</SelectItem>
+                    <SelectItem value="system" className="font-bold text-slate-600">System Logs</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -316,10 +323,11 @@ export default function AdminDashboard() {
                     {notif.status === 'unread' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500" />}
                     <div className="flex justify-between items-start mb-2">
                       <Badge className={cn(
-                        "text-[8px] font-black uppercase px-2 py-0.5 border-none",
+                        "text-[8px] font-black uppercase px-2 py-0.5 border-none shadow-sm",
                         notif.type === 'appointment' ? 'bg-blue-100 text-blue-700' :
                         notif.type === 'case' ? 'bg-green-100 text-green-700' :
-                        notif.type === 'lawyer' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'
+                        notif.type === 'lawyer' ? 'bg-purple-100 text-purple-700' :
+                        notif.type === 'client' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-700'
                       )}>
                         {notif.type}
                       </Badge>
@@ -327,7 +335,10 @@ export default function AdminDashboard() {
                     </div>
                     <p className="text-sm font-bold text-primary leading-snug group-hover:underline">{notif.description}</p>
                     <div className="flex justify-between items-center mt-3">
-                      <p className="text-[9px] font-black text-primary/40 uppercase tracking-widest">{notif.userRole}</p>
+                      <div className="flex items-center gap-1.5">
+                        <div className="h-1.5 w-1.5 rounded-full bg-primary/20" />
+                        <p className="text-[9px] font-black text-primary/40 uppercase tracking-widest">{notif.userRole}</p>
+                      </div>
                       <div className="flex items-center gap-1 text-secondary">
                         <ArrowRight className="h-3 w-3" />
                         <span className="text-[9px] font-black">{notif.referenceCode || "View Record"}</span>
