@@ -7,17 +7,21 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function getEmail() {
+      return request.auth.token.get('email', '');
+    }
+
     function isAdmin() {
       return isSignedIn() && (
-        request.auth.token.email == "admin@epao.com" ||
+        getEmail() == "admin@epao.com" ||
         exists(/databases/$(database)/documents/admins/$(request.auth.uid))
       );
     }
 
     function isLawyer() {
       return isSignedIn() && (
-        request.auth.token.email.matches(".*@lawyers.com$") || 
-        request.auth.token.email.matches(".*@lawyers.mobile$") ||
+        getEmail().matches(".*@lawyers.com$") || 
+        getEmail().matches(".*@lawyers.mobile$") ||
         exists(/databases/$(database)/documents/roleLawyer/$(request.auth.uid))
       );
     }
@@ -31,8 +35,7 @@ service cloud.firestore {
       allow create: if isSignedIn();
       allow read: if isSignedIn() && (
         isAdmin() || 
-        request.auth.uid == resource.data.get('targetUserId', '') ||
-        request.auth.uid == resource.data.get('lawyerId', '')
+        request.auth.uid == resource.data.get('targetUserId', '')
       );
       allow update: if isSignedIn() && (
         isAdmin() || 
@@ -51,13 +54,13 @@ service cloud.firestore {
     match /lawyerDuties/{dutyId} {
       allow read, list: if isSignedIn();
       allow create: if isAdmin();
-      allow update: if isAdmin() || (isSignedIn() && resource.data.lawyerId == request.auth.uid);
+      allow update: if isAdmin() || (isSignedIn() && resource.data.get('lawyerId', '') == request.auth.uid);
       allow delete: if isAdmin();
     }
 
     match /admins/{userId} {
       allow read, list: if isSignedIn();
-      allow create: if isSignedIn() && (request.auth.token.email == "admin@epao.com" || isAdmin());
+      allow create: if isSignedIn() && (getEmail() == "admin@epao.com" || isAdmin());
       allow update, delete: if isAdmin();
     }
 
@@ -84,11 +87,11 @@ service cloud.firestore {
     match /cases/{caseId} {
       allow read, list: if isSignedIn();
       allow create: if isAdmin() || isLawyer();
-      allow update: if isAdmin() || (isSignedIn() && (resource.data.lawyerId == request.auth.uid || isAdmin()));
+      allow update: if isAdmin() || (isSignedIn() && (resource.data.get('lawyerId', '') == request.auth.uid || isAdmin()));
       allow delete: if isAdmin();
 
       match /documents/{docId} {
-        allow read, list, write: if isAdmin() || (isSignedIn() && (get(/databases/$(database)/documents/cases/$(caseId)).data.lawyerId == request.auth.uid || get(/databases/$(database)/documents/cases/$(caseId)).data.clientId == request.auth.uid));
+        allow read, list, write: if isAdmin() || (isSignedIn() && (get(/databases/$(database)/documents/cases/$(caseId)).data.get('lawyerId', '') == request.auth.uid || get(/databases/$(database)/documents/cases/$(caseId)).data.get('clientId', '') == request.auth.uid));
       }
     }
 

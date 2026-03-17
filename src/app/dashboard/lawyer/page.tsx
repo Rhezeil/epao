@@ -26,7 +26,8 @@ import {
   Hash,
   Phone,
   Mail,
-  Bell
+  Bell,
+  CheckCheck
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -108,9 +109,20 @@ export default function LawyerDashboard() {
     return query(collection(db, "lawyerDuties"), where("lawyerId", "==", user.uid));
   }, [db, user, role]);
 
+  const notifsQuery = useMemoFirebase(() => {
+    if (!db || !user || role !== 'lawyer') return null;
+    return query(
+      collection(db, "notifications"), 
+      where("targetUserId", "==", user.uid),
+      orderBy("createdAt", "desc"),
+      limit(20)
+    );
+  }, [db, user, role]);
+
   const { data: apptsData, isLoading: isApptsLoading } = useCollection(apptsQuery);
   const { data: activeCases } = useCollection(casesQuery);
   const { data: dutiesData } = useCollection(dutiesQuery);
+  const { data: notifications } = useCollection(notifsQuery);
 
   const pendingConsultations = useMemo(() => {
     if (!apptsData) return [];
@@ -142,7 +154,6 @@ export default function LawyerDashboard() {
       updatedAt: new Date().toISOString()
     });
     
-    // Notification for Admin Audit
     const notifId = crypto.randomUUID();
     setDocumentNonBlocking(doc(db, "notifications", notifId), {
       id: notifId,
@@ -205,7 +216,7 @@ export default function LawyerDashboard() {
       const caseId = `CASE-${year}-${Math.floor(1000 + Math.random() * 9000)}`;
       
       let clientId = appt.clientId;
-      const citizenEmail = appt.guestEmail || appt.clientEmail || `${appt.guestMobile || appt.clientMobile}@epao.mobile`;
+      const citizenEmail = appt.guestEmail || appt.clientEmail || `${appt.guestMobile || appt.clientMobile || appt.mobileNumber}@epao.mobile`;
 
       if (!clientId) {
         try {
@@ -221,7 +232,20 @@ export default function LawyerDashboard() {
 
       updateDocumentNonBlocking(doc(db, "appointments", appt.id), { status: "completed", caseId, clientId, updatedAt: new Date().toISOString() });
       setDocumentNonBlocking(doc(db, "cases", caseId), { id: caseId, clientId, lawyerId: user.uid, caseType: appt.caseType, status: "Active", description: appt.assessment || "Case activated post-consultation.", consultationRef: appt.referenceCode, createdAt: new Date().toISOString() }, { merge: true });
-      setDocumentNonBlocking(doc(db, "users", clientId), { id: clientId, mobileNumber: appt.guestMobile || appt.clientMobile || "", email: citizenEmail, fullName: appt.guestName || appt.clientName || "", role: "client", status: "Active Case", createdAt: new Date().toISOString() }, { merge: true });
+      
+      const finalAddress = appt.guestAddress || appt.clientAddress || appt.address || "";
+      const finalMobile = appt.guestMobile || appt.clientMobile || appt.mobileNumber || "";
+
+      setDocumentNonBlocking(doc(db, "users", clientId), { 
+        id: clientId, 
+        mobileNumber: finalMobile, 
+        email: citizenEmail, 
+        fullName: appt.guestName || appt.clientName || "", 
+        address: finalAddress,
+        role: "client", 
+        status: "Active Case", 
+        createdAt: new Date().toISOString() 
+      }, { merge: true });
 
       const notifId = crypto.randomUUID();
       setDocumentNonBlocking(doc(db, "notifications", notifId), { id: notifId, type: "case", userRole: "lawyer", description: `New Official Case ${caseId} activated for citizen registry.`, referenceId: caseId, status: "unread", createdAt: new Date().toISOString() }, { merge: true });
@@ -234,87 +258,144 @@ export default function LawyerDashboard() {
     }
   };
 
+  const handleAcknowledge = (id: string) => {
+    if (!db) return;
+    updateDocumentNonBlocking(doc(db, "notifications", id), { status: "read" });
+    toast({ title: "Alert Acknowledged", description: "Notification cleared from workstation." });
+  };
+
   if (loading) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin text-secondary" /></div>;
   if (!user || role !== 'lawyer') return null;
 
   return (
     <DashboardLayout role="lawyer">
-      <div className="max-w-6xl mx-auto space-y-12 pb-12">
-        <div className="flex items-center gap-6">
-          <Avatar className="h-24 w-24 border-4 border-white shadow-xl">
-            <AvatarImage src={lawyerData?.photoUrl} className="object-cover" />
-            <AvatarFallback className="bg-secondary/10 text-3xl font-black text-secondary">{lawyerData?.firstName?.[0] || "?"}</AvatarFallback>
-          </Avatar>
-          <div>
-            <h1 className="text-4xl font-black text-secondary font-headline tracking-tight">Workstation: Atty. {lawyerData?.firstName} {lawyerData?.lastName}</h1>
-            <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-[0.2em] mt-1">Official Legal Command Home</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-8">
-          {pendingConsultations.map(appt => (
-            <Card key={appt.id} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden border-l-8 border-red-500 animate-in slide-in-from-left-4 duration-500">
-              <CardContent className="p-8 flex flex-col md:flex-row md:items-center justify-between gap-8">
-                <div className="flex items-start gap-6">
-                  <div className="p-4 bg-red-50 rounded-3xl text-red-600 shrink-0"><User className="h-8 w-8" /></div>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3"><h3 className="text-2xl font-black text-secondary">{appt.guestName || appt.clientName}</h3><Badge className="bg-red-500 text-white text-[9px] font-black uppercase px-3 py-1 border-none shadow-sm">IN PROGRESS</Badge></div>
-                    <div className="flex flex-wrap gap-4 text-muted-foreground font-bold text-xs uppercase tracking-wider"><span>Ref: {appt.referenceCode}</span><span>Matter: {appt.serviceType || appt.purpose || appt.caseType}</span></div>
-                  </div>
-                </div>
-                <Button onClick={() => { setActiveConsultation(appt); setConsultationForm({ ...consultationForm, caseType: appt.caseType || "" }); }} className="h-16 rounded-2xl bg-secondary hover:bg-secondary/90 text-white font-black px-10 shadow-xl text-lg">Finalize Intake <ArrowRight className="ml-2 h-6 w-6" /></Button>
-              </CardContent>
-            </Card>
-          ))}
-
-          {filterAcceptedPendingActivation.map(appt => (
-            <Card key={appt.id} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden border-l-8 border-primary animate-in slide-in-from-left-4 duration-500">
-              <CardContent className="p-8 flex flex-col md:flex-row md:items-center justify-between gap-8">
-                <div className="flex items-start gap-6">
-                  <div className="p-4 bg-primary/5 rounded-3xl text-primary shrink-0"><CheckCircle2 className="h-8 w-8" /></div>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3"><h3 className="text-2xl font-black text-primary">{appt.guestName || appt.clientName}</h3><Badge className="bg-primary text-white text-[9px] font-black uppercase px-3 py-1 border-none shadow-sm">ACCEPTED</Badge></div>
-                    <div className="flex flex-wrap gap-4 text-muted-foreground font-bold text-xs uppercase tracking-wider"><span>Ref: {appt.referenceCode}</span><span>Matter: {appt.caseType}</span></div>
-                  </div>
-                </div>
-                <Button onClick={() => handleActivateCase(appt)} disabled={isSubmitting} className="h-16 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black px-10 shadow-xl text-lg">Initialize Case File <Scale className="ml-2 h-6 w-6" /></Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Card className="border-none shadow-xl rounded-[2.5rem] bg-secondary text-white overflow-hidden relative"><div className="absolute top-0 right-0 p-4 opacity-10"><Briefcase className="h-24 w-24" /></div><CardContent className="p-10"><p className="text-[10px] font-black uppercase tracking-widest opacity-60">Total Active Caseload</p><p className="text-6xl font-black">{activeCases?.length || 0}</p></CardContent></Card>
-          <Card className="border-none shadow-xl rounded-[2.5rem] bg-white text-secondary border-2 border-secondary/5 overflow-hidden"><CardContent className="p-10 flex justify-between items-start"><div><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Daily Session Load</p><p className="text-6xl font-black">{filteredSchedule.length}</p></div><div className="p-4 bg-secondary/5 rounded-2xl"><Clock className="h-8 w-8 text-secondary" /></div></CardContent></Card>
-        </div>
-
-        <Card className="border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden">
-          <CardHeader className="bg-secondary/5 p-10 border-b border-secondary/10"><CardTitle className="text-xl font-bold text-secondary flex items-center gap-3"><CalendarIcon className="h-6 w-6" /> Office Schedule & Workstation Registry</CardTitle></CardHeader>
-          <CardContent className="p-0">
-            <div className="grid grid-cols-1 lg:grid-cols-12">
-              <div className="lg:col-span-4 p-10 border-r border-secondary/5 bg-secondary/[0.02]"><Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} className="mx-auto" /></div>
-              <div className="lg:col-span-8 divide-y divide-secondary/5">
-                {filteredSchedule.length > 0 ? filteredSchedule.map((item, idx) => (
-                  <div key={idx} className="p-10 flex items-center justify-between hover:bg-secondary/5 transition-colors group">
-                    <div className="flex items-center gap-8">
-                      <div className="h-20 w-20 rounded-2xl bg-secondary/5 flex flex-col items-center justify-center border border-secondary/10 shadow-sm"><span className="text-[10px] font-black text-secondary uppercase leading-none">{format(new Date(item.data.date), "MMM")}</span><span className="text-3xl font-black text-secondary leading-none mt-1">{format(new Date(item.data.date), "dd")}</span></div>
-                      <div>
-                        <h4 className="text-2xl font-black text-secondary">{item.type === 'appt' ? (item.data.guestName || item.data.clientName) : item.data.title}</h4>
-                        <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground mt-2 uppercase tracking-widest"><span><Clock className="h-4 w-4 inline mr-1.5" /> {item.time}</span><span><MapPin className="h-4 w-4 inline mr-1.5" /> {item.type === 'appt' ? "Main Office" : item.data.location}</span></div>
-                      </div>
-                    </div>
-                    {item.type === 'appt' && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-12 w-12 rounded-xl group-hover:bg-secondary/10"><MoreVertical className="h-5 w-5 text-secondary" /></Button></DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="rounded-2xl w-56"><DropdownMenuItem onClick={() => { setActiveConsultation(item.data); setConsultationForm({ ...consultationForm, caseType: item.data.caseType || "" }); }} className="font-bold"><CheckCircle2 className="mr-2 h-4 w-4" /> Start Assessment</DropdownMenuItem><DropdownMenuItem onClick={() => handleMarkStatus(item.data.id, 'No Show')} className="text-red-600 font-bold"><XCircle className="mr-2 h-4 w-4" /> Record No Show</DropdownMenuItem></DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
-                  </div>
-                )) : <div className="py-32 text-center space-y-4"><Inbox className="h-20 w-20 text-secondary/5 mx-auto" /><p className="text-xs font-black uppercase text-muted-foreground tracking-widest">No workstation entries for this date</p></div>}
-              </div>
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 pb-12">
+        <div className="xl:col-span-3 space-y-12">
+          <div className="flex items-center gap-6">
+            <Avatar className="h-24 w-24 border-4 border-white shadow-xl">
+              <AvatarImage src={lawyerData?.photoUrl} className="object-cover" />
+              <AvatarFallback className="bg-secondary/10 text-3xl font-black text-secondary">{lawyerData?.firstName?.[0] || "?"}</AvatarFallback>
+            </Avatar>
+            <div>
+              <h1 className="text-4xl font-black text-secondary font-headline tracking-tight">Workstation: Atty. {lawyerData?.firstName} {lawyerData?.lastName}</h1>
+              <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-[0.2em] mt-1">Official Legal Command Home</p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+
+          <div className="grid grid-cols-1 gap-8">
+            {pendingConsultations.map(appt => (
+              <Card key={appt.id} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden border-l-8 border-red-500 animate-in slide-in-from-left-4 duration-500">
+                <CardContent className="p-8 flex flex-col md:flex-row md:items-center justify-between gap-8">
+                  <div className="flex items-start gap-6">
+                    <div className="p-4 bg-red-50 rounded-3xl text-red-600 shrink-0"><User className="h-8 w-8" /></div>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3"><h3 className="text-2xl font-black text-secondary">{appt.guestName || appt.clientName}</h3><Badge className="bg-red-500 text-white text-[9px] font-black uppercase px-3 py-1 border-none shadow-sm">IN PROGRESS</Badge></div>
+                      <div className="flex flex-wrap gap-4 text-muted-foreground font-bold text-xs uppercase tracking-wider"><span>Ref: {appt.referenceCode}</span><span>Matter: {appt.serviceType || appt.purpose || appt.caseType}</span></div>
+                    </div>
+                  </div>
+                  <Button onClick={() => { setActiveConsultation(appt); setConsultationForm({ ...consultationForm, caseType: appt.caseType || "" }); }} className="h-16 rounded-2xl bg-secondary hover:bg-secondary/90 text-white font-black px-10 shadow-xl text-lg">Finalize Intake <ArrowRight className="ml-2 h-6 w-6" /></Button>
+                </CardContent>
+              </Card>
+            ))}
+
+            {filterAcceptedPendingActivation.map(appt => (
+              <Card key={appt.id} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden border-l-8 border-primary animate-in slide-in-from-left-4 duration-500">
+                <CardContent className="p-8 flex flex-col md:flex-row md:items-center justify-between gap-8">
+                  <div className="flex items-start gap-6">
+                    <div className="p-4 bg-primary/5 rounded-3xl text-primary shrink-0"><CheckCircle2 className="h-8 w-8" /></div>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3"><h3 className="text-2xl font-black text-primary">{appt.guestName || appt.clientName}</h3><Badge className="bg-primary text-white text-[9px] font-black uppercase px-3 py-1 border-none shadow-sm">ACCEPTED</Badge></div>
+                      <div className="flex flex-wrap gap-4 text-muted-foreground font-bold text-xs uppercase tracking-wider"><span>Ref: {appt.referenceCode}</span><span>Matter: {appt.caseType}</span></div>
+                    </div>
+                  </div>
+                  <Button onClick={() => handleActivateCase(appt)} disabled={isSubmitting} className="h-16 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black px-10 shadow-xl text-lg">Initialize Case File <Scale className="ml-2 h-6 w-6" /></Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card className="border-none shadow-xl rounded-[2.5rem] bg-secondary text-white overflow-hidden relative">
+              <div className="absolute top-0 right-0 p-4 opacity-10"><Briefcase className="h-24 w-24" /></div>
+              <CardContent className="p-10"><p className="text-[10px] font-black uppercase tracking-widest opacity-60">Total Active Caseload</p><p className="text-6xl font-black">{activeCases?.length || 0}</p></CardContent>
+            </Card>
+            <Card className="border-none shadow-xl rounded-[2.5rem] bg-white text-secondary border-2 border-secondary/5 overflow-hidden">
+              <CardContent className="p-10 flex justify-between items-start">
+                <div><p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Daily Session Load</p><p className="text-6xl font-black">{filteredSchedule.length}</p></div>
+                <div className="p-4 bg-secondary/5 rounded-2xl"><Clock className="h-8 w-8 text-secondary" /></div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden">
+            <CardHeader className="bg-secondary/5 p-10 border-b border-secondary/10"><CardTitle className="text-xl font-bold text-secondary flex items-center gap-3"><CalendarIcon className="h-6 w-6" /> Office Schedule & Workstation Registry</CardTitle></CardHeader>
+            <CardContent className="p-0">
+              <div className="grid grid-cols-1 lg:grid-cols-12">
+                <div className="lg:col-span-4 p-10 border-r border-secondary/5 bg-secondary/[0.02]"><Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} className="mx-auto" /></div>
+                <div className="lg:col-span-8 divide-y divide-secondary/5">
+                  {filteredSchedule.length > 0 ? filteredSchedule.map((item, idx) => (
+                    <div key={idx} className="p-10 flex items-center justify-between hover:bg-secondary/5 transition-colors group">
+                      <div className="flex items-center gap-8">
+                        <div className="h-20 w-20 rounded-2xl bg-secondary/5 flex flex-col items-center justify-center border border-secondary/10 shadow-sm"><span className="text-[10px] font-black text-secondary uppercase leading-none">{format(new Date(item.data.date), "MMM")}</span><span className="text-3xl font-black text-secondary leading-none mt-1">{format(new Date(item.data.date), "dd")}</span></div>
+                        <div>
+                          <h4 className="text-2xl font-black text-secondary">{item.type === 'appt' ? (item.data.guestName || item.data.clientName) : item.data.title}</h4>
+                          <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground mt-2 uppercase tracking-widest"><span><Clock className="h-4 w-4 inline mr-1.5" /> {item.time}</span><span><MapPin className="h-4 w-4 inline mr-1.5" /> {item.type === 'appt' ? "Main Office" : item.data.location}</span></div>
+                        </div>
+                      </div>
+                      {item.type === 'appt' && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-12 w-12 rounded-xl group-hover:bg-secondary/10"><MoreVertical className="h-5 w-5 text-secondary" /></Button></DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="rounded-2xl w-56"><DropdownMenuItem onClick={() => { setActiveConsultation(item.data); setConsultationForm({ ...consultationForm, caseType: item.data.caseType || "" }); }} className="font-bold"><CheckCircle2 className="mr-2 h-4 w-4" /> Start Assessment</DropdownMenuItem><DropdownMenuItem onClick={() => handleMarkStatus(item.data.id, 'No Show')} className="text-red-600 font-bold"><XCircle className="mr-2 h-4 w-4" /> Record No Show</DropdownMenuItem></DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
+                  )) : <div className="py-32 text-center space-y-4"><Inbox className="h-20 w-20 text-secondary/5 mx-auto" /><p className="text-xs font-black uppercase text-muted-foreground tracking-widest">No workstation entries for this date</p></div>}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="xl:col-span-1">
+          <Card className="border-none shadow-2xl bg-white rounded-[2.5rem] overflow-hidden flex flex-col h-[calc(100vh-12rem)] sticky top-24">
+            <CardHeader className="bg-secondary p-8 text-white shrink-0">
+              <div className="flex items-center gap-3">
+                <Bell className="h-6 w-6 text-white/60" />
+                <CardTitle className="text-xl font-black">Workstation Alerts</CardTitle>
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mt-2">Assignments & Follow-ups</p>
+            </CardHeader>
+            <CardContent className="p-0 overflow-y-auto flex-1 divide-y divide-secondary/5">
+              {notifications?.filter(n => n.status === 'unread').length ? (
+                notifications.filter(n => n.status === 'unread').map((notif) => (
+                  <div key={notif.id} className="p-6 bg-amber-50/30 relative group hover:bg-amber-50 transition-colors">
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500" />
+                    <div className="flex justify-between items-start mb-2">
+                      <Badge className="bg-amber-100 text-amber-700 text-[8px] font-black uppercase border-none px-2 py-0.5">NEW ALERT</Badge>
+                      <span className="text-[9px] font-black text-muted-foreground">{format(new Date(notif.createdAt), "HH:mm")}</span>
+                    </div>
+                    <p className="text-sm font-bold text-secondary leading-snug">{notif.description}</p>
+                    <div className="mt-4 flex justify-end">
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={() => handleAcknowledge(notif.id)}
+                        className="h-8 rounded-xl font-black text-[10px] uppercase text-amber-700 hover:bg-amber-100"
+                      >
+                        <CheckCheck className="h-3 w-3 mr-1.5" /> Acknowledge
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="py-20 text-center space-y-4">
+                  <CheckCheck className="h-12 w-12 text-secondary/5 mx-auto" />
+                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest px-8">No unread alerts in queue</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <Dialog open={!!activeConsultation} onOpenChange={() => setActiveConsultation(null)}>

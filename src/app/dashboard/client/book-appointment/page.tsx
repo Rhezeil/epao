@@ -182,7 +182,7 @@ function BookAppointmentContent() {
 
     setDocumentNonBlocking(apptRef, appointmentData, { merge: true });
 
-    // --- NOTIFICATION ---
+    // Admin Audit
     const notifId = crypto.randomUUID();
     setDocumentNonBlocking(doc(db, "notifications", notifId), {
       id: notifId,
@@ -194,6 +194,22 @@ function BookAppointmentContent() {
       status: "unread",
       createdAt: new Date().toISOString()
     }, { merge: true });
+
+    // Lawyer Alert
+    if (activeCase?.lawyerId) {
+      const lawyerNotifId = crypto.randomUUID();
+      setDocumentNonBlocking(doc(db, "notifications", lawyerNotifId), {
+        id: lawyerNotifId,
+        type: "appointment",
+        userRole: "client",
+        description: `Existing Client ${clientName} booked a Follow-up Consultation with you for ${format(selectedDate, "MMM dd")}.`,
+        referenceId: appointmentId,
+        referenceCode: refCode,
+        targetUserId: activeCase.lawyerId,
+        status: "unread",
+        createdAt: new Date().toISOString()
+      }, { merge: true });
+    }
     
     setTimeout(() => {
       setBookedRef(refCode);

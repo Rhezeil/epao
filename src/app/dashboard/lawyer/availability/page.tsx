@@ -118,7 +118,6 @@ export default function LawyerAvailabilityPage() {
 
       setDocumentNonBlocking(availRef!, data, { merge: true });
       
-      // --- NOTIFICATION ---
       const notifId = crypto.randomUUID();
       setDocumentNonBlocking(doc(db, "notifications", notifId), {
         id: notifId,

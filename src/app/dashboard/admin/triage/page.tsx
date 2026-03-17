@@ -169,13 +169,15 @@ export default function AdminIntakeAssessmentPage() {
       });
 
       const notifId = crypto.randomUUID();
+      const lawyer = lawyers?.find(l => l.id === assignedLawyer);
       setDocumentNonBlocking(doc(db, "notifications", notifId), {
         id: notifId,
         type: "appointment",
         userRole: "admin",
-        description: `Citizen assigned to Atty. ${lawyers?.find(l => l.id === assignedLawyer)?.lastName} for consultation.`,
+        description: `Admin assigned a new Consultation (${selectedAppt.referenceCode}) to your workstation.`,
         referenceId: selectedAppt.id,
         referenceCode: selectedAppt.referenceCode,
+        targetUserId: assignedLawyer,
         status: "unread",
         createdAt: new Date().toISOString()
       }, { merge: true });
@@ -245,6 +247,7 @@ export default function AdminIntakeAssessmentPage() {
         createdAt: new Date().toISOString()
       }, { merge: true });
 
+      // Admin Audit
       const notifId = crypto.randomUUID();
       setDocumentNonBlocking(doc(db, "notifications", notifId), {
         id: notifId,
@@ -252,6 +255,19 @@ export default function AdminIntakeAssessmentPage() {
         userRole: "admin",
         description: `Admin activated Official Case ${caseId} for registry indexing.`,
         referenceId: caseId,
+        status: "unread",
+        createdAt: new Date().toISOString()
+      }, { merge: true });
+
+      // Lawyer Alert
+      const lawyerNotifId = crypto.randomUUID();
+      setDocumentNonBlocking(doc(db, "notifications", lawyerNotifId), {
+        id: lawyerNotifId,
+        type: "case",
+        userRole: "admin",
+        description: `Admin activated and assigned Official Case ${caseId} to your registry.`,
+        referenceId: caseId,
+        targetUserId: appt.lawyerId,
         status: "unread",
         createdAt: new Date().toISOString()
       }, { merge: true });
