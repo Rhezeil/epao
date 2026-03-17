@@ -7,6 +7,7 @@ import { useAuth } from "@/components/auth-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
 import { collection, query, orderBy, doc, limit } from "firebase/firestore";
+import { useRouter } from "next/navigation";
 import { 
   BarChart, Bar, Cell, PieChart, Pie, Tooltip, ResponsiveContainer, CartesianGrid, XAxis, YAxis
 } from "recharts";
@@ -16,7 +17,12 @@ import {
   Microscope,
   FileSearch,
   Bell,
-  Target
+  Target,
+  Clock,
+  ArrowRight,
+  ShieldCheck,
+  User,
+  Inbox
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,6 +36,7 @@ import { format, startOfToday, subDays, isAfter } from "date-fns";
 export default function AdminDashboard() {
   const db = useFirestore();
   const { user, role, loading } = useAuth();
+  const router = useRouter();
   
   // Dashboard State
   const [activeTab, setActiveTab] = useState("analysis");
@@ -55,7 +62,7 @@ export default function AdminDashboard() {
 
   const notifsQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'admin') return null;
-    return query(collection(db, "notifications"), orderBy("createdAt", "desc"), limit(50));
+    return query(collection(db, "notifications"), orderBy("createdAt", "desc"), limit(100));
   }, [db, user, role]);
 
   const { data: cases } = useCollection(casesQuery);
@@ -63,7 +70,6 @@ export default function AdminDashboard() {
   const { data: lawyers } = useCollection(lawyersQuery);
   const { data: notifications } = useCollection(notifsQuery);
 
-  // Diagnostic Analysis Logic
   const screeningAnalysis = useMemo(() => {
     if (!appointments) return { summary: [], reasons: [], total: 0, eligible: 0, ineligible: 0, topReason: "", eligiblePct: "0", ineligiblePct: "0" };
     
@@ -97,17 +103,6 @@ export default function AdminDashboard() {
     };
   }, [appointments]);
 
-  const getDiagnosticInsight = () => {
-    const analysis = screeningAnalysis;
-    if (analysis.total === 0) return "Insufficient screening data to generate diagnostic insights. Continue processing intakes to populate this report.";
-    
-    if (analysis.ineligible > analysis.eligible) {
-      return `Significant denial rate detected (${analysis.ineligiblePct}%). The primary cause is "${analysis.topReason}". This diagnostic pattern suggests that walk-in applicants are frequently failing basic statutory criteria. Recommendation: Update the Public Portal Case Navigator to emphasize these specific documentation requirements before booking.`;
-    }
-    
-    return `Healthy intake distribution. ${analysis.eligiblePct}% of applicants meet PAO eligibility standards. "${analysis.topReason}" remains the most frequent reason for rejection among those disqualified. Existing guidance is effective, but monitoring "${analysis.topReason}" patterns may help further refine initial document checklists.`;
-  };
-
   const filteredNotifs = useMemo(() => {
     if (!notifications) return [];
     if (notifFilter === "all") return notifications;
@@ -131,6 +126,14 @@ export default function AdminDashboard() {
     updateDocumentNonBlocking(doc(db, "notifications", id), { status: "read" });
   };
 
+  const handleNotifClick = (notif: any) => {
+    markNotifRead(notif.id);
+    if (notif.type === 'appointment') router.push('/dashboard/admin/appointments');
+    if (notif.type === 'case') router.push('/dashboard/admin/users');
+    if (notif.type === 'lawyer') router.push('/dashboard/admin/lawyers');
+    if (notif.type === 'client') router.push('/dashboard/admin/users');
+  };
+
   if (loading) return <div className="flex items-center justify-center min-h-screen"><Activity className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!user || role !== 'admin') return null;
 
@@ -138,34 +141,28 @@ export default function AdminDashboard() {
     <DashboardLayout role="admin">
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 pb-20">
         <div className="xl:col-span-3 space-y-12">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-primary text-white rounded-2xl shadow-lg">
-                <Target className="h-8 w-8" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Diagnostic Analysis</h1>
-                <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest mt-1">Eligibility Patterns & Intake Oversight</p>
-              </div>
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-primary text-white rounded-2xl shadow-lg">
+              <Target className="h-8 w-8" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-black text-primary font-headline tracking-tight">System Diagnostic Dashboard</h1>
+              <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest mt-1">Real-time Platform Activity & Operational Analysis</p>
             </div>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 max-w-md bg-white/50 p-1 rounded-2xl border-2 border-primary/5 h-14 mb-8">
-              <TabsTrigger value="analysis" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
-                <Microscope className="h-4 w-4 mr-2" /> Screening Summary
-              </TabsTrigger>
-              <TabsTrigger value="workload" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
-                <Activity className="h-4 w-4 mr-2" /> Lawyer Activity
-              </TabsTrigger>
+              <TabsTrigger value="analysis" className="rounded-xl font-bold">Screening Analytics</TabsTrigger>
+              <TabsTrigger value="workload" className="rounded-xl font-bold">Staff Activity</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="analysis" className="space-y-12 animate-in fade-in duration-500">
+            <TabsContent value="analysis" className="space-y-12">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden lg:col-span-1">
                   <CardHeader className="bg-primary/5 pb-6">
-                    <CardTitle className="text-sm font-black uppercase text-primary flex items-center gap-2">
-                      <PieIcon className="h-4 w-4" /> Screening Result Summary
+                    <CardTitle className="text-xs font-black uppercase text-primary flex items-center gap-2">
+                      <PieIcon className="h-4 w-4" /> Eligibility Breakdown
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-8 flex flex-col items-center">
@@ -195,7 +192,7 @@ export default function AdminDashboard() {
                         <p className="text-2xl font-black text-emerald-700">{screeningAnalysis.eligiblePct}%</p>
                       </div>
                       <div className="text-center p-4 bg-rose-50 rounded-2xl">
-                        <p className="text-[10px] font-black text-rose-600 uppercase">Not Eligible</p>
+                        <p className="text-[10px] font-black text-rose-600 uppercase">Ineligible</p>
                         <p className="text-2xl font-black text-rose-700">{screeningAnalysis.ineligiblePct}%</p>
                       </div>
                     </div>
@@ -205,10 +202,10 @@ export default function AdminDashboard() {
                 <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden lg:col-span-2">
                   <CardHeader className="bg-primary/5 pb-6 border-b border-primary/5">
                     <div className="flex justify-between items-center">
-                      <CardTitle className="text-sm font-black uppercase text-primary flex items-center gap-2">
-                        <FileSearch className="h-4 w-4" /> Denial Reason Breakdown
+                      <CardTitle className="text-xs font-black uppercase text-primary flex items-center gap-2">
+                        <FileSearch className="h-4 w-4" /> Root Causes of Denial
                       </CardTitle>
-                      <Badge variant="outline" className="border-rose-200 text-rose-700 bg-rose-50">TOP: {screeningAnalysis.topReason}</Badge>
+                      <Badge variant="outline" className="border-rose-200 text-rose-700 bg-rose-50 font-black text-[9px]">TOP: {screeningAnalysis.topReason}</Badge>
                     </div>
                   </CardHeader>
                   <CardContent className="p-10">
@@ -230,34 +227,14 @@ export default function AdminDashboard() {
                   </CardContent>
                 </Card>
               </div>
-
-              <Card className="border-none shadow-2xl rounded-[3rem] bg-primary text-white overflow-hidden">
-                <CardContent className="p-12">
-                  <div className="flex flex-col md:flex-row items-center gap-10">
-                    <div className="p-6 bg-white/10 rounded-[2.5rem] shadow-inner">
-                      <Lightbulb className="h-16 w-16 text-amber-400" />
-                    </div>
-                    <div className="space-y-4 flex-1">
-                      <h3 className="text-2xl font-black font-headline">Diagnostic Insight: Main Cause of Rejection</h3>
-                      <p className="text-lg font-medium leading-relaxed opacity-90 italic">
-                        "{getDiagnosticInsight()}"
-                      </p>
-                      <div className="flex gap-4 pt-4">
-                        <Badge className="bg-white/20 hover:bg-white/30 text-white border-none py-2 px-4 rounded-xl font-bold">Most Common: {screeningAnalysis.topReason}</Badge>
-                        <Badge className="bg-white/20 hover:bg-white/30 text-white border-none py-2 px-4 rounded-xl font-bold">Total Evaluated: {screeningAnalysis.total}</Badge>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             </TabsContent>
 
-            <TabsContent value="workload" className="animate-in slide-in-from-bottom-4 duration-500">
+            <TabsContent value="workload">
               <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
                 <CardHeader className="bg-primary/5 px-10 pt-8 border-b">
                   <div className="flex flex-col md:flex-row justify-between items-start gap-6">
                     <div className="flex-1 w-full space-y-4">
-                      <CardTitle className="text-xl font-bold text-primary flex items-center gap-2"><Briefcase className="h-6 w-6" /> Lawyer Activity Registry</CardTitle>
+                      <CardTitle className="text-xl font-bold text-primary flex items-center gap-2"><Briefcase className="h-6 w-6" /> Lawyer Operational Status</CardTitle>
                       <div className="flex gap-4">
                         <Input placeholder="Search Attorney..." className="max-w-xs h-11 rounded-xl" value={lawyerSearch} onChange={e => setLawyerSearch(e.target.value)} />
                         <Select value={performanceRange} onValueChange={setPerformanceRange}>
@@ -273,8 +250,8 @@ export default function AdminDashboard() {
                     <TableHeader className="bg-muted/30">
                       <TableRow>
                         <TableHead className="px-10 text-[10px] font-black uppercase tracking-widest text-primary/40">Attorney Profile</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Appointments Handled</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Cases Active</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Visits Handled</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Active Cases</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -285,7 +262,7 @@ export default function AdminDashboard() {
                           <TableRow key={lawyer.id} className="hover:bg-primary/5 transition-colors">
                             <TableCell className="px-10 py-6">
                               <p className="font-black text-primary leading-none">Atty. {lawyer.firstName} {lawyer.lastName}</p>
-                              <p className="text-[10px] text-muted-foreground">{lawyer.email}</p>
+                              <p className="text-[10px] text-muted-foreground mt-1">{lawyer.email}</p>
                             </TableCell>
                             <TableCell className="text-center font-black text-lg">{lAppts.length}</TableCell>
                             <TableCell className="text-center font-black text-lg text-secondary">{lCases.length}</TableCell>
@@ -312,7 +289,7 @@ export default function AdminDashboard() {
               </div>
               <div className="mt-6">
                 <Select value={notifFilter} onValueChange={setNotifFilter}>
-                  <SelectTrigger className="h-9 bg-white/10 border-none text-white text-xs font-bold rounded-lg focus:ring-0">
+                  <SelectTrigger className="h-10 bg-white/10 border-none text-white text-xs font-black rounded-xl focus:ring-0 uppercase tracking-widest">
                     <SelectValue placeholder="All Activities" />
                   </SelectTrigger>
                   <SelectContent>
@@ -326,7 +303,7 @@ export default function AdminDashboard() {
               </div>
             </CardHeader>
             <CardContent className="p-0 overflow-y-auto flex-1 divide-y divide-primary/5">
-              {filteredNotifs && filteredNotifs.length > 0 ? (
+              {filteredNotifs.length > 0 ? (
                 filteredNotifs.map((notif) => (
                   <div 
                     key={notif.id} 
@@ -334,7 +311,7 @@ export default function AdminDashboard() {
                       "p-6 transition-all cursor-pointer hover:bg-primary/[0.02] relative group",
                       notif.status === 'unread' && "bg-amber-50/30"
                     )}
-                    onClick={() => markNotifRead(notif.id)}
+                    onClick={() => handleNotifClick(notif)}
                   >
                     {notif.status === 'unread' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500" />}
                     <div className="flex justify-between items-start mb-2">
@@ -346,19 +323,22 @@ export default function AdminDashboard() {
                       )}>
                         {notif.type}
                       </Badge>
-                      <span className="text-[9px] font-bold text-muted-foreground uppercase">{notif.createdAt ? format(new Date(notif.createdAt), "HH:mm") : '---'}</span>
+                      <span className="text-[9px] font-black text-muted-foreground uppercase">{notif.createdAt ? format(new Date(notif.createdAt), "HH:mm") : '---'}</span>
                     </div>
-                    <p className="text-sm font-bold text-primary leading-snug">{notif.description}</p>
+                    <p className="text-sm font-bold text-primary leading-snug group-hover:underline">{notif.description}</p>
                     <div className="flex justify-between items-center mt-3">
                       <p className="text-[9px] font-black text-primary/40 uppercase tracking-widest">{notif.userRole}</p>
-                      {notif.referenceId && <p className="text-[9px] font-black text-secondary">{notif.referenceCode || notif.referenceId.slice(0, 8)}</p>}
+                      <div className="flex items-center gap-1 text-secondary">
+                        <ArrowRight className="h-3 w-3" />
+                        <span className="text-[9px] font-black">{notif.referenceCode || "View Record"}</span>
+                      </div>
                     </div>
                   </div>
                 ))
               ) : (
                 <div className="py-20 text-center space-y-4">
-                  <Activity className="h-12 w-12 text-primary/5 mx-auto" />
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">No activities logged</p>
+                  <Inbox className="h-12 w-12 text-primary/5 mx-auto" />
+                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">No activities logged</p>
                 </div>
               )}
             </CardContent>

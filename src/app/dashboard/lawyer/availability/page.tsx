@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { format, startOfToday, isWeekend, isBefore } from "date-fns";
-import { Clock, CalendarDays, Loader2, Save, CheckCircle2, AlertCircle, Ban } from "lucide-react";
+import { Clock, CalendarDays, Loader2, Save, CheckCircle2, AlertCircle, Ban, MessageSquare } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +35,11 @@ const AVAILABILITY_TYPES = [
   { value: "FullDayLeave", label: "Official Leave (Full Day)", color: "text-red-600 bg-red-50 border-red-100" },
   { value: "PartialLeave", label: "Unavailable During Specific Hours", color: "text-amber-600 bg-amber-50 border-amber-100" },
   { value: "PartialDayAvailable", label: "Available Only During Specific Hours", color: "text-blue-600 bg-blue-50 border-blue-100" },
+];
+
+const LEAVE_REASONS = [
+  { value: "Work Related", label: "Work Related (Court, Meeting, Field Duty)" },
+  { value: "Personal", label: "Personal (Medical, Family, Official Leave)" }
 ];
 
 export default function LawyerAvailabilityPage() {
@@ -57,6 +62,7 @@ export default function LawyerAvailabilityPage() {
     availabilityType: "Available",
     startTime: "08:00",
     endTime: "17:00",
+    leaveReason: "Work Related",
     notes: ""
   });
 
@@ -67,6 +73,7 @@ export default function LawyerAvailabilityPage() {
         availabilityType: availData.availabilityType || "Available",
         startTime: availData.startTime || "08:00",
         endTime: availData.endTime || "17:00",
+        leaveReason: availData.leaveReason || "Work Related",
         notes: availData.notes || ""
       });
     } else {
@@ -74,6 +81,7 @@ export default function LawyerAvailabilityPage() {
         availabilityType: "Available",
         startTime: "08:00",
         endTime: "17:00",
+        leaveReason: "Work Related",
         notes: ""
       });
     }
@@ -92,6 +100,18 @@ export default function LawyerAvailabilityPage() {
 
       setDocumentNonBlocking(availRef!, data, { merge: true });
       
+      // --- NOTIFICATION ---
+      const notifId = crypto.randomUUID();
+      setDocumentNonBlocking(doc(db, "notifications", notifId), {
+        id: notifId,
+        type: "lawyer",
+        userRole: "lawyer",
+        description: `Atty. ${user.email?.split('@')[0]} updated availability for ${format(selectedDate!, "MMM dd")} to ${formData.availabilityType} (${formData.leaveReason}).`,
+        referenceId: user.uid,
+        status: "unread",
+        createdAt: new Date().toISOString()
+      }, { merge: true });
+
       toast({
         title: "Availability Synchronized",
         description: `Schedule for ${format(selectedDate!, "MMM dd")} has been updated in the registry.`
@@ -105,6 +125,8 @@ export default function LawyerAvailabilityPage() {
 
   if (loading) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin text-secondary" /></div>;
   if (!user || role !== 'lawyer') return null;
+
+  const isLeave = formData.availabilityType === 'FullDayLeave' || formData.availabilityType === 'PartialLeave';
 
   return (
     <DashboardLayout role="lawyer">
@@ -188,6 +210,24 @@ export default function LawyerAvailabilityPage() {
                       ))}
                     </div>
                   </div>
+
+                  {isLeave && (
+                    <div className="space-y-4 animate-in slide-in-from-top-4 duration-500">
+                      <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Leave Category</Label>
+                      <Select value={formData.leaveReason} onValueChange={(v) => setFormData({...formData, leaveReason: v})}>
+                        <SelectTrigger className="h-12 rounded-xl border-secondary/10 bg-white font-bold">
+                          <SelectValue placeholder="Select Reason for Leave" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {LEAVE_REASONS.map(reason => (
+                            <SelectItem key={reason.value} value={reason.value} className="font-bold">
+                              {reason.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
 
                   {(formData.availabilityType === 'PartialLeave' || formData.availabilityType === 'PartialDayAvailable') && (
                     <div className="grid grid-cols-2 gap-8 animate-in slide-in-from-top-4 duration-500">

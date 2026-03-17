@@ -103,6 +103,7 @@
         "description": { "type": "string" },
         "referenceId": { "type": "string" },
         "referenceCode": { "type": "string" },
+        "lawyerId": { "type": "string", "description": "Target lawyer for professional alerts." },
         "status": { "type": "string", "enum": ["unread", "read"] },
         "createdAt": { "type": "string", "format": "date-time" }
       }
