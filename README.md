@@ -8,9 +8,9 @@ LexConnect operates as a centralized digital ecosystem powered by **Next.js 15**
 
 ### Core Technical Pillars:
 *   **Real-time Synchronization**: Using Firestore listeners, workstations update instantly when a booking is made or a case is assigned.
-*   **Mandatory Accountability**: Lawyers must "Acknowledge" new tasks, and every administrative action is logged in a non-deletable System Audit.
-*   **Performance Engineering**: Parallelized role-checking and single-pass data grouping ensure the Admin Dashboard remains responsive under heavy loads.
+*   **Entity-Driven Alerts**: Notifications for lawyers are pulled directly from `appointments` and `cases` to ensure workstation integrity and mandatory accountability.
 *   **Security Isolation**: Strict role-based access control (RBAC) ensures client confidentiality and professional boundary management.
+*   **Performance Engineering**: Parallelized role-checking and single-pass data grouping ensure the dashboards remain responsive under heavy loads.
 
 ## 👥 Detailed Feature Roadmap
 
@@ -22,8 +22,8 @@ LexConnect operates as a centralized digital ecosystem powered by **Next.js 15**
 *   **Statutory Standards Manager**: Tools to seed and update the documentary requirements and roadmaps for various legal jurisdictions.
 
 ### ⚖️ Public Attorney (Professional Workstation)
-*   **Workstation Home**: A focused dashboard highlighting the daily session load and unread "Workstation Alerts."
-*   **Assignment Alerts**: Immediate real-time notifications for new case assignments or client follow-ups with a required "Acknowledge" flow.
+*   **Workstation Home**: A focused dashboard highlighting the daily session load and workstation alerts.
+*   **Assignment Alerts**: Immediate real-time notifications for new case assignments or client follow-ups with a required "Acknowledge" flow that updates the source record.
 *   **Legal Case Registry**: Direct access to assigned client profiles, full visit history, and case status controls.
 *   **Availability Registry**: Granular schedule management allowing lawyers to log Court Duty, Jail Visits, or Leave with categorized reasons and an overlap-free UI.
 
@@ -45,7 +45,7 @@ LexConnect operates as a centralized digital ecosystem powered by **Next.js 15**
     *   **Firestore**: Real-time NoSQL database with complex indexing for audit logs and workload analytics.
     *   **Authentication**: Firebase Auth with multi-channel support (Email and Simulated SMS).
 *   **AI Layer**: Genkit integration for automated SMS gateway simulation and message formatting.
-*   **Optimization**: Custom `useMemoFirebase` and parallel `Promise.all` logic for high-speed dashboard rendering.
+*   **Security**: Hardened Firestore Security Rules for cross-role data isolation.
 
 ## 🔒 Security & Privacy
 *   **Confidentiality**: Professional profiles and client details are shielded via Security Rules.
