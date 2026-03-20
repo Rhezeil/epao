@@ -60,9 +60,12 @@ const OUTCOME_OPTIONS = [
 ];
 
 const DENIAL_REASONS = [
-  "Client not eligible for PAO services (Income limit)",
-  "Case not covered by PAO (Jurisdictional exclusion)",
-  "Insufficient legal merit"
+  "Non-Indigent (Failed Means Test)",
+  "Case Not Covered / Not Qualified",
+  "Incomplete Requirements",
+  "Conflict of Interest",
+  "Misrepresentation / False Information",
+  "Procedural Disqualification"
 ];
 
 export default function LawyerDashboard() {

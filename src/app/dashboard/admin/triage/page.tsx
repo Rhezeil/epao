@@ -43,15 +43,12 @@ const OUTCOME_OPTIONS = [
 ];
 
 const REJECTION_REASONS = [
-  "Failure to Provide Proof of Indigency: Clients often fail to bring required documentation, such as the latest Income Tax Return (ITR), pay slips, or a Certificate of Indigency from the Barangay or the Department of Social Welfare and Development (DSWD).",
-  "Missing Case-Specific Documents: Clients frequently arrive without essential documents related to their case, such as subpoenas, contracts, complaints, or affidavits.",
-  "Issues with Barangay Certification: There may be delays in obtaining or submitting the required Barangay Certificate of Indigency.",
-  "Lack of Proper Identification: Failure to bring valid, government-issued IDs.",
-  "Misunderstanding of Requirements: Some clients may not realize the extent of the documentation needed to prove financial eligibility (net income vs. gross income) or that a case-specific document is essential for the initial consultation.",
-  "Unpreparedness in Gathering Information",
-  "Income exceeds statutory limit",
-  "Conflict of interest",
-  "Outside legal jurisdiction"
+  "Non-Indigent (Failed Means Test)",
+  "Case Not Covered / Not Qualified",
+  "Incomplete Requirements",
+  "Conflict of Interest",
+  "Misrepresentation / False Information",
+  "Procedural Disqualification"
 ];
 
 export default function AdminIntakeAssessmentPage() {
