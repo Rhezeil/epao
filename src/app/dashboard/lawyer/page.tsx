@@ -112,7 +112,7 @@ export default function LawyerDashboard() {
     return query(collection(db, "lawyerDuties"), where("lawyerId", "==", user.uid));
   }, [db, user, role]);
 
-  // NEW: Entity-driven alerts for Lawyers (Acknowledgeable)
+  // Entity-driven alerts for Lawyers (Acknowledgeable)
   const unreadApptsQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'lawyer') return null;
     return query(collection(db, "appointments"), where("lawyerId", "==", user.uid), where("lawyerNotified", "==", false));
@@ -123,22 +123,32 @@ export default function LawyerDashboard() {
     return query(collection(db, "cases"), where("lawyerId", "==", user.uid), where("lawyerNotified", "==", false));
   }, [db, user, role]);
 
+  // System Notifications targeting the lawyer
+  const lawyerNotificationsQuery = useMemoFirebase(() => {
+    if (!db || !user || role !== 'lawyer') return null;
+    return query(collection(db, "notifications"), where("targetUserId", "==", user.uid), where("status", "==", "unread"), limit(50));
+  }, [db, user, role]);
+
   const { data: apptsData } = useCollection(apptsQuery);
   const { data: activeCases } = useCollection(casesQuery);
   const { data: dutiesData } = useCollection(dutiesQuery);
   const { data: unreadAppts } = useCollection(unreadApptsQuery);
   const { data: unreadCases } = useCollection(unreadCasesQuery);
+  const { data: lawyerNotifications } = useCollection(lawyerNotificationsQuery);
 
   const workstationAlerts = useMemo(() => {
-    const alerts = [];
+    const alerts: any[] = [];
     if (unreadAppts) {
-      unreadAppts.forEach(a => alerts.push({ ...a, alertType: 'appointment' }));
+      unreadAppts.forEach(a => alerts.push({ ...a, alertType: 'appointment', alertSource: 'entity' }));
     }
     if (unreadCases) {
-      unreadCases.forEach(c => alerts.push({ ...c, alertType: 'case' }));
+      unreadCases.forEach(c => alerts.push({ ...c, alertType: 'case', alertSource: 'entity' }));
+    }
+    if (lawyerNotifications) {
+      lawyerNotifications.forEach(n => alerts.push({ ...n, alertType: n.type, alertSource: 'notification' }));
     }
     return alerts.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-  }, [unreadAppts, unreadCases]);
+  }, [unreadAppts, unreadCases, lawyerNotifications]);
 
   const pendingConsultations = useMemo(() => {
     if (!apptsData) return [];
@@ -163,30 +173,53 @@ export default function LawyerDashboard() {
     ].sort((a, b) => a.time.localeCompare(b.time));
   }, [apptsData, dutiesData, selectedDate]);
 
-  const handleAcknowledge = (id: string, type: 'appointment' | 'case') => {
+  const handleAcknowledge = (id: string, type: string, source: 'entity' | 'notification') => {
     if (!db) return;
-    const ref = doc(db, type === 'appointment' ? "appointments" : "cases", id);
-    updateDocumentNonBlocking(ref, { lawyerNotified: true, updatedAt: new Date().toISOString() });
+    if (source === 'entity') {
+      const ref = doc(db, type === 'case' ? "cases" : "appointments", id);
+      updateDocumentNonBlocking(ref, { lawyerNotified: true, updatedAt: new Date().toISOString() });
+    } else {
+      updateDocumentNonBlocking(doc(db, "notifications", id), { status: "read" });
+    }
     toast({ title: "Alert Cleared", description: "Record acknowledged in your workstation." });
   };
 
-  const handleMarkStatus = (apptId: string, status: string) => {
+  const handleMarkStatus = (appt: any, status: string) => {
     if (!db) return;
-    updateDocumentNonBlocking(doc(db, "appointments", apptId), {
+    updateDocumentNonBlocking(doc(db, "appointments", appt.id), {
       status: status,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      clientNotified: false // Trigger client alert
     });
     
-    const notifId = crypto.randomUUID();
-    setDocumentNonBlocking(doc(db, "notifications", notifId), {
-      id: notifId,
+    // Admin Notification (Global Audit)
+    const adminNotifId = crypto.randomUUID();
+    setDocumentNonBlocking(doc(db, "notifications", adminNotifId), {
+      id: adminNotifId,
       type: "appointment",
       userRole: "lawyer",
-      description: `Appointment marked as ${status} by Atty. ${lawyerData?.lastName || 'Staff'}.`,
-      referenceId: apptId,
+      description: `Atty. ${lawyerData?.lastName || 'Staff'} marked ${appt.referenceCode} as ${status}.`,
+      referenceId: appt.id,
+      referenceCode: appt.referenceCode,
       status: "unread",
       createdAt: new Date().toISOString()
     }, { merge: true });
+
+    // Client Notification
+    if (appt.clientId) {
+      const clientNotifId = crypto.randomUUID();
+      setDocumentNonBlocking(doc(db, "notifications", clientNotifId), {
+        id: clientNotifId,
+        type: "appointment",
+        userRole: "lawyer",
+        description: `Office Update: Your visit ${appt.referenceCode} was recorded as ${status}.`,
+        referenceId: appt.id,
+        referenceCode: appt.referenceCode,
+        targetUserId: appt.clientId,
+        status: "unread",
+        createdAt: new Date().toISOString()
+      }, { merge: true });
+    }
 
     toast({ title: "Status Updated", description: `Appointment marked as ${status}.` });
   };
@@ -207,20 +240,38 @@ export default function LawyerDashboard() {
         outcome: consultationForm.outcome,
         denialReason: isAccepted ? null : consultationForm.denialReason,
         completedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        clientNotified: false // For client portal alert
       });
 
-      const notifId = crypto.randomUUID();
-      setDocumentNonBlocking(doc(db, "notifications", notifId), {
-        id: notifId,
+      // Admin Audit
+      const adminNotifId = crypto.randomUUID();
+      setDocumentNonBlocking(doc(db, "notifications", adminNotifId), {
+        id: adminNotifId,
         type: "appointment",
         userRole: "lawyer",
-        description: `Consultation for ${activeConsultation.referenceCode} finalized. Outcome: ${isAccepted ? 'Accepted' : 'Denied'}.`,
+        description: `Consultation finalized for ${activeConsultation.referenceCode}. Result: ${isAccepted ? 'Accepted' : 'Denied'}.`,
         referenceId: activeConsultation.id,
         referenceCode: activeConsultation.referenceCode,
         status: "unread",
         createdAt: new Date().toISOString()
       }, { merge: true });
+
+      // Client Alert
+      if (activeConsultation.clientId) {
+        const clientNotifId = crypto.randomUUID();
+        setDocumentNonBlocking(doc(db, "notifications", clientNotifId), {
+          id: clientNotifId,
+          type: "appointment",
+          userRole: "lawyer",
+          description: `Your legal aid application (${activeConsultation.referenceCode}) has been ${isAccepted ? 'ACCEPTED' : 'DENIED'}.`,
+          referenceId: activeConsultation.id,
+          referenceCode: activeConsultation.referenceCode,
+          targetUserId: activeConsultation.clientId,
+          status: "unread",
+          createdAt: new Date().toISOString()
+        }, { merge: true });
+      }
 
       toast({ title: "Consultation Concluded", description: isAccepted ? "Citizen accepted for legal aid." : "Consultation finalized with denial." });
       setActiveConsultation(null);
@@ -372,7 +423,14 @@ export default function LawyerDashboard() {
                       {item.type === 'appt' && (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-12 w-12 rounded-xl group-hover:bg-secondary/10"><MoreVertical className="h-5 w-5 text-secondary" /></Button></DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="rounded-2xl w-56"><DropdownMenuItem onClick={() => { setActiveConsultation(item.data); setConsultationForm({ ...consultationForm, caseType: item.data.caseType || "" }); }} className="font-bold"><CheckCircle2 className="mr-2 h-4 w-4" /> Start Assessment</DropdownMenuItem><DropdownMenuItem onClick={() => handleMarkStatus(item.data.id, 'No Show')} className="text-red-600 font-bold"><XCircle className="mr-2 h-4 w-4" /> Record No Show</DropdownMenuItem></DropdownMenuContent>
+                          <DropdownMenuContent align="end" className="rounded-2xl w-56">
+                            <DropdownMenuItem onClick={() => { setActiveConsultation(item.data); setConsultationForm({ ...consultationForm, caseType: item.data.caseType || "" }); }} className="font-bold">
+                              <CheckCircle2 className="mr-2 h-4 w-4" /> Start Assessment
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleMarkStatus(item.data, 'No Show')} className="text-red-600 font-bold">
+                              <XCircle className="mr-2 h-4 w-4" /> Record No Show
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
                         </DropdownMenu>
                       )}
                     </div>
@@ -397,7 +455,7 @@ export default function LawyerDashboard() {
                   </Badge>
                 )}
               </div>
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mt-2">New Assignments & Bookings</p>
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mt-2">Assignments & System Logs</p>
             </CardHeader>
             <CardContent className="p-0 overflow-y-auto flex-1 divide-y divide-secondary/5">
               {workstationAlerts.length > 0 ? (
@@ -405,23 +463,26 @@ export default function LawyerDashboard() {
                   <div key={alert.id} className="p-6 bg-amber-50/30 relative group hover:bg-amber-50 transition-colors">
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500" />
                     <div className="flex justify-between items-start mb-2">
-                      <Badge className="bg-amber-100 text-amber-700 text-[8px] font-black uppercase border-none px-2 py-0.5">
-                        {alert.alertType === 'case' ? 'CASE ASSIGNMENT' : 'NEW BOOKING'}
+                      <Badge className={cn(
+                        "text-[8px] font-black uppercase border-none px-2 py-0.5 shadow-sm",
+                        alert.alertSource === 'notification' ? 'bg-secondary/10 text-secondary' : 'bg-amber-100 text-amber-700'
+                      )}>
+                        {alert.alertType === 'case' ? 'CASE ASSIGNMENT' : alert.alertSource === 'notification' ? 'SYSTEM UPDATE' : 'NEW BOOKING'}
                       </Badge>
                       <span className="text-[9px] font-black text-muted-foreground">
                         {alert.createdAt ? format(new Date(alert.createdAt), "HH:mm") : '---'}
                       </span>
                     </div>
                     <p className="text-sm font-bold text-secondary leading-snug">
-                      {alert.alertType === 'case' 
+                      {alert.description || (alert.alertType === 'case' 
                         ? `New Case Assignment: ${alert.caseType} for ${alert.id}` 
-                        : `New Consultation Booked: ${alert.caseType} (${alert.referenceCode})`}
+                        : `New Consultation Booked: ${alert.caseType} (${alert.referenceCode})`)}
                     </p>
                     <div className="mt-4 flex justify-end">
                       <Button 
                         size="sm" 
                         variant="ghost" 
-                        onClick={() => handleAcknowledge(alert.id, alert.alertType)}
+                        onClick={() => handleAcknowledge(alert.id, alert.alertType, alert.alertSource)}
                         className="h-8 rounded-xl font-black text-[10px] uppercase text-amber-700 hover:bg-amber-100"
                       >
                         <CheckCheck className="h-3 w-3 mr-1.5" /> Acknowledge

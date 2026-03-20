@@ -131,11 +131,18 @@ export default function ClientDashboard() {
       .sort((a, b) => b.date.localeCompare(a.date));
   }, [appts, today]);
 
-  // Office Notifications (Schedules created or modified by the lawyer)
+  // Office Notifications (Schedules created or modified by the lawyer, or final assessments)
   const officeNotifications = useMemo(() => {
     if (!appts) return [];
+    const significantStatuses = [
+      'rescheduled', 
+      'cancelled', 
+      'No Show', 
+      'Completed Consultation – Accept Legal Assistance', 
+      'Completed Consultation – Denial of Legal Assistance'
+    ];
     return appts.filter(a => 
-      (a.bookedBy === 'lawyer' || a.status === 'rescheduled' || a.status === 'cancelled') && 
+      (a.bookedBy === 'lawyer' || significantStatuses.includes(a.status || '')) && 
       a.clientNotified === false
     ).sort((a, b) => (b.updatedAt || b.createdAt).localeCompare(a.updatedAt || a.createdAt));
   }, [appts]);
@@ -286,23 +293,31 @@ export default function ClientDashboard() {
             {officeNotifications.map(n => (
               <Card key={n.id} className={cn(
                 "border-none shadow-xl rounded-[2.5rem] overflow-hidden",
-                n.status === 'cancelled' ? "bg-red-50 border-l-8 border-red-500" : "bg-amber-50 border-l-8 border-amber-500"
+                n.status === 'cancelled' || n.status === 'No Show' || n.status?.includes('Denial') ? "bg-red-50 border-l-8 border-red-500" : "bg-amber-50 border-l-8 border-amber-500"
               )}>
                 <CardContent className="p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div className="flex items-start gap-5">
-                    <div className={cn("p-3 rounded-2xl bg-white shadow-sm shrink-0", n.status === 'cancelled' ? "text-red-600" : "text-amber-600")}>
-                      {n.status === 'cancelled' ? <ShieldAlert className="h-6 w-6" /> : <Bell className="h-6 w-6" />}
+                    <div className={cn("p-3 rounded-2xl bg-white shadow-sm shrink-0", n.status === 'cancelled' || n.status === 'No Show' || n.status?.includes('Denial') ? "text-red-600" : "text-amber-600")}>
+                      {n.status === 'cancelled' || n.status === 'No Show' ? <ShieldAlert className="h-6 w-6" /> : <Bell className="h-6 w-6" />}
                     </div>
                     <div>
-                      <h3 className="text-lg font-black text-primary">Office Update: {n.status === 'cancelled' ? 'Appointment Cancelled' : 'New/Updated Schedule'}</h3>
-                      <p className="text-sm font-bold text-muted-foreground mt-1">Your assigned lawyer has modified a session:</p>
+                      <h3 className="text-lg font-black text-primary">Office Update: {n.status}</h3>
+                      <p className="text-sm font-bold text-muted-foreground mt-1">
+                        {n.status === 'No Show' 
+                          ? "Your absence for the scheduled visit has been recorded." 
+                          : n.status?.includes('Accept') 
+                          ? "Congratulations! Your legal aid application has been accepted." 
+                          : n.status?.includes('Denial') 
+                          ? "The office has completed its assessment and denied your request for legal aid." 
+                          : "The office has modified your session schedule:"}
+                      </p>
                       <div className="mt-3 flex flex-wrap gap-3">
                         <Badge variant="outline" className="bg-white/50 border-primary/10 text-[10px] font-black uppercase px-3 py-1"><Calendar className="h-3 w-3 mr-1.5" /> {format(new Date(n.date), "PPP")}</Badge>
                         <Badge variant="outline" className="bg-white/50 border-primary/10 text-[10px] font-black uppercase px-3 py-1"><Clock className="h-3 w-3 mr-1.5" /> {n.time}</Badge>
                       </div>
                     </div>
                   </div>
-                  <Button onClick={() => acknowledgeNotification(n.id)} className={cn("h-12 rounded-2xl font-black text-xs px-8 shadow-lg", n.status === 'cancelled' ? "bg-red-600 hover:bg-red-700 text-white" : "bg-amber-600 hover:bg-amber-700 text-white")}>Acknowledge</Button>
+                  <Button onClick={() => acknowledgeNotification(n.id)} className={cn("h-12 rounded-2xl font-black text-xs px-8 shadow-lg", n.status === 'cancelled' || n.status === 'No Show' || n.status?.includes('Denial') ? "bg-red-600 hover:bg-red-700 text-white" : "bg-amber-600 hover:bg-amber-700 text-white")}>Acknowledge</Button>
                 </CardContent>
               </Card>
             ))}
