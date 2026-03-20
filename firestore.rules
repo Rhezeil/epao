@@ -32,7 +32,8 @@ service cloud.firestore {
 
     // Centralized Notification Rules
     match /notifications/{docId} {
-      allow create: if isSignedIn();
+      // Allow create for guests so they can trigger system alerts (e.g. booking appointments)
+      allow create: if true;
       allow read: if isSignedIn() && (
         isAdmin() || 
         request.auth.uid == resource.data.get('targetUserId', '')
