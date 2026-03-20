@@ -123,6 +123,9 @@ export default function AdminAppointmentsRegistry() {
 
   const handleUpdateStatus = (id: string, ref: string, status: string) => {
     if (!db) return;
+    const appt = appts?.find(a => a.id === id);
+    const clientName = appt?.guestName || appt?.clientName || "Citizen";
+    
     updateDocumentNonBlocking(doc(db, "appointments", id), { status, updatedAt: new Date().toISOString() });
     
     // --- NOTIFICATION ---
@@ -131,7 +134,7 @@ export default function AdminAppointmentsRegistry() {
       id: notifId,
       type: "appointment",
       userRole: "admin",
-      description: `Admin updated status of ${ref} to ${status}.`,
+      description: `Admin updated status of Visit ${ref} for ${clientName} to ${status}.`,
       referenceId: id,
       referenceCode: ref,
       status: "unread",
@@ -144,6 +147,7 @@ export default function AdminAppointmentsRegistry() {
   const handleRescheduleSubmit = () => {
     if (!db || !selectedAppt || !resDate || !resTime) return;
     setIsProcessing(true);
+    const clientName = selectedAppt.guestName || selectedAppt.clientName || "Citizen";
     
     updateDocumentNonBlocking(doc(db, "appointments", selectedAppt.id), {
       date: resDate.toISOString(),
@@ -158,7 +162,7 @@ export default function AdminAppointmentsRegistry() {
       id: notifId,
       type: "appointment",
       userRole: "admin",
-      description: `Admin rescheduled ${selectedAppt.referenceCode} to ${format(resDate, "MMM dd")} @ ${resTime}.`,
+      description: `Admin rescheduled Visit ${selectedAppt.referenceCode} for ${clientName} to ${format(resDate, "MMM dd")} @ ${resTime}.`,
       referenceId: selectedAppt.id,
       referenceCode: selectedAppt.referenceCode,
       status: "unread",

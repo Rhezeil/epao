@@ -240,6 +240,8 @@ export default function LawyerDashboard() {
     try {
       const apptId = apptToCancel.id || apptToCancel.referenceId;
       const apptRef = doc(db, "appointments", apptId);
+      const clientName = apptToCancel.guestName || apptToCancel.clientName || "Citizen";
+      const refCode = apptToCancel.referenceCode || apptId;
       
       updateDocumentNonBlocking(apptRef, {
         status: "cancelled",
@@ -256,9 +258,9 @@ export default function LawyerDashboard() {
         id: adminNotifId,
         type: "appointment",
         userRole: "lawyer",
-        description: `Atty. ${lawyerData?.lastName || 'Staff'} cancelled appointment ${apptToCancel.referenceCode || apptId}. Reason: ${cancellationReason}`,
+        description: `Atty. ${lawyerData?.lastName || 'Staff'} cancelled Visit ${refCode} for ${clientName}. Reason: ${cancellationReason}`,
         referenceId: apptId,
-        referenceCode: apptToCancel.referenceCode,
+        referenceCode: refCode,
         status: "unread",
         createdAt: new Date().toISOString()
       }, { merge: true });
@@ -271,9 +273,9 @@ export default function LawyerDashboard() {
           id: clientNotifId,
           type: "appointment",
           userRole: "lawyer",
-          description: `Office Alert: Your session has been cancelled by Atty. ${lawyerData?.lastName}. Reason: ${cancellationReason}`,
+          description: `Office Alert: Visit ${refCode} for ${clientName} has been cancelled by Atty. ${lawyerData?.lastName}. Reason: ${cancellationReason}`,
           referenceId: apptId,
-          referenceCode: apptToCancel.referenceCode,
+          referenceCode: refCode,
           targetUserId: clientId,
           status: "unread",
           createdAt: new Date().toISOString()
@@ -297,14 +299,17 @@ export default function LawyerDashboard() {
       clientNotified: false // Trigger client alert
     });
     
+    const clientName = appt.guestName || appt.clientName || "Citizen";
+    const refCode = appt.referenceCode;
+
     const adminNotifId = crypto.randomUUID();
     setDocumentNonBlocking(doc(db, "notifications", adminNotifId), {
       id: adminNotifId,
       type: "appointment",
       userRole: "lawyer",
-      description: `Atty. ${lawyerData?.lastName || 'Staff'} marked ${appt.referenceCode} as ${status}.`,
+      description: `Atty. ${lawyerData?.lastName || 'Staff'} marked ${refCode} for ${clientName} as ${status}.`,
       referenceId: appt.id,
-      referenceCode: appt.referenceCode,
+      referenceCode: refCode,
       status: "unread",
       createdAt: new Date().toISOString()
     }, { merge: true });
@@ -315,9 +320,9 @@ export default function LawyerDashboard() {
         id: clientNotifId,
         type: "appointment",
         userRole: "lawyer",
-        description: `Office Update: Your visit ${appt.referenceCode} was recorded as ${status}.`,
+        description: `Office Update: Visit ${refCode} for ${clientName} was recorded as ${status}.`,
         referenceId: appt.id,
-        referenceCode: appt.referenceCode,
+        referenceCode: refCode,
         targetUserId: appt.clientId,
         status: "unread",
         createdAt: new Date().toISOString()
@@ -334,6 +339,8 @@ export default function LawyerDashboard() {
     try {
       const apptRef = doc(db, "appointments", activeConsultation.id);
       const isAccepted = consultationForm.outcome === OUTCOME_OPTIONS[0];
+      const clientName = activeConsultation.guestName || activeConsultation.clientName || "Citizen";
+      const refCode = activeConsultation.referenceCode;
 
       updateDocumentNonBlocking(apptRef, {
         status: consultationForm.outcome,
@@ -352,9 +359,9 @@ export default function LawyerDashboard() {
         id: adminNotifId,
         type: "appointment",
         userRole: "lawyer",
-        description: `Consultation finalized for ${activeConsultation.referenceCode}. Result: ${isAccepted ? 'Accepted' : 'Denied'}.`,
+        description: `Consultation ${refCode} for ${clientName} finalized. Result: ${isAccepted ? 'Accepted' : 'Denied'}.`,
         referenceId: activeConsultation.id,
-        referenceCode: activeConsultation.referenceCode,
+        referenceCode: refCode,
         status: "unread",
         createdAt: new Date().toISOString()
       }, { merge: true });
@@ -365,9 +372,9 @@ export default function LawyerDashboard() {
           id: clientNotifId,
           type: "appointment",
           userRole: "lawyer",
-          description: `Your legal aid application (${activeConsultation.referenceCode}) has been ${isAccepted ? 'ACCEPTED' : 'DENIED'}.`,
+          description: `Legal aid application ${refCode} for ${clientName} has been ${isAccepted ? 'ACCEPTED' : 'DENIED'}.`,
           referenceId: activeConsultation.id,
-          referenceCode: activeConsultation.referenceCode,
+          referenceCode: refCode,
           targetUserId: activeConsultation.clientId,
           status: "unread",
           createdAt: new Date().toISOString()
@@ -389,6 +396,7 @@ export default function LawyerDashboard() {
     try {
       const year = new Date().getFullYear();
       const caseId = `CASE-${year}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const clientName = appt.guestName || appt.clientName || "Citizen";
       
       let clientId = appt.clientId;
       const citizenEmail = appt.guestEmail || appt.clientEmail || `${appt.guestMobile || appt.clientMobile || appt.mobileNumber}@epao.mobile`;
@@ -425,7 +433,7 @@ export default function LawyerDashboard() {
         id: clientId, 
         mobileNumber: finalMobile, 
         email: citizenEmail, 
-        fullName: appt.guestName || appt.clientName || "", 
+        fullName: clientName, 
         address: finalAddress,
         role: "client", 
         status: "Active Case", 
@@ -433,7 +441,7 @@ export default function LawyerDashboard() {
       }, { merge: true });
 
       const notifId = crypto.randomUUID();
-      setDocumentNonBlocking(doc(db, "notifications", notifId), { id: notifId, type: "case", userRole: "lawyer", description: `New Official Case ${caseId} activated for citizen registry.`, referenceId: caseId, status: "unread", createdAt: new Date().toISOString() }, { merge: true });
+      setDocumentNonBlocking(doc(db, "notifications", notifId), { id: notifId, type: "case", userRole: "lawyer", description: `New Official Case ${caseId} for ${clientName} activated for citizen registry.`, referenceId: caseId, status: "unread", createdAt: new Date().toISOString() }, { merge: true });
 
       toast({ title: "Legal Case Activated", description: `Case ${caseId} initialized.` });
     } catch (e: any) {

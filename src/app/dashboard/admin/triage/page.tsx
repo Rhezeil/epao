@@ -136,7 +136,7 @@ export default function AdminIntakeAssessmentPage() {
       id: notifId,
       type: "system",
       userRole: "admin",
-      description: `Assessment complete for ${selectedAppt.referenceCode}: Marked as ${result}.`,
+      description: `Assessment complete for ${selectedAppt.referenceCode} (${selectedAppt.guestName || selectedAppt.clientName}): Marked as ${result}.`,
       referenceId: selectedAppt.id,
       referenceCode: selectedAppt.referenceCode,
       status: "unread",
@@ -159,20 +159,20 @@ export default function AdminIntakeAssessmentPage() {
 
     try {
       const apptRef = doc(db, "appointments", selectedAppt.id);
+      const clientName = selectedAppt.guestName || selectedAppt.clientName || "Citizen";
       updateDocumentNonBlocking(apptRef, {
         status: "Consultation in Progress",
         lawyerId: assignedLawyer,
-        lawyerNotified: false, // NEW: Entity-driven alert for lawyer
+        lawyerNotified: false, 
         updatedAt: new Date().toISOString()
       });
 
       const notifId = crypto.randomUUID();
-      const lawyer = lawyers?.find(l => l.id === assignedLawyer);
       setDocumentNonBlocking(doc(db, "notifications", notifId), {
         id: notifId,
         type: "appointment",
         userRole: "admin",
-        description: `Admin assigned a new Consultation (${selectedAppt.referenceCode}) to your workstation.`,
+        description: `Admin assigned a new Consultation (${selectedAppt.referenceCode}) for ${clientName} to workstation.`,
         referenceId: selectedAppt.id,
         referenceCode: selectedAppt.referenceCode,
         targetUserId: assignedLawyer,
@@ -195,6 +195,7 @@ export default function AdminIntakeAssessmentPage() {
     try {
       const year = new Date().getFullYear();
       const caseId = `CASE-${year}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const clientName = appt.guestName || appt.clientName || "Citizen";
       
       let clientId = appt.clientId;
       const citizenEmail = appt.guestEmail || appt.clientEmail || `${appt.guestMobile || appt.clientMobile || appt.mobileNumber}@epao.mobile`;
@@ -228,7 +229,7 @@ export default function AdminIntakeAssessmentPage() {
         status: "Active",
         description: appt.assessment || "Official case activated by Admin workstation.",
         consultationRef: appt.referenceCode,
-        lawyerNotified: false, // NEW: Entity-driven alert for lawyer
+        lawyerNotified: false, 
         createdAt: new Date().toISOString()
       }, { merge: true });
 
@@ -239,7 +240,7 @@ export default function AdminIntakeAssessmentPage() {
         id: clientId,
         mobileNumber: finalMobile,
         email: citizenEmail,
-        fullName: appt.guestName || appt.clientName || "",
+        fullName: clientName,
         address: finalAddress,
         role: "client",
         status: "Active Case",
@@ -252,7 +253,7 @@ export default function AdminIntakeAssessmentPage() {
         id: notifId,
         type: "case",
         userRole: "admin",
-        description: `Admin activated Official Case ${caseId} for registry indexing.`,
+        description: `Admin activated Official Case ${caseId} for ${clientName} for registry indexing.`,
         referenceId: caseId,
         status: "unread",
         createdAt: new Date().toISOString()
@@ -264,7 +265,7 @@ export default function AdminIntakeAssessmentPage() {
         id: lawyerNotifId,
         type: "case",
         userRole: "admin",
-        description: `Admin activated and assigned Official Case ${caseId} to your registry.`,
+        description: `Admin activated and assigned Official Case ${caseId} for ${clientName} to registry.`,
         referenceId: caseId,
         targetUserId: appt.lawyerId,
         status: "unread",
