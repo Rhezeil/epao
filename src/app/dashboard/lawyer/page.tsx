@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/components/auth-provider";
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc, setDocumentNonBlocking } from "@/firebase";
 import { collection, query, where, doc, orderBy, limit } from "firebase/firestore";
-import { format, isWeekend } from "date-fns";
+import { format, isWeekend, parseISO } from "date-fns";
 import { 
   Calendar as CalendarIcon, 
   Clock, 
@@ -137,6 +137,21 @@ export default function LawyerDashboard() {
     if (!db || !user || role !== 'lawyer') return null;
     return query(collection(db, "lawyerDuties"), where("lawyerId", "==", user.uid));
   }, [db, user, role]);
+
+  // Fetch all availability for the calendar highlighting
+  const allAvailQuery = useMemoFirebase(() => {
+    if (!db || !user || role !== 'lawyer') return null;
+    return collection(db, "roleLawyer", user.uid, "availability");
+  }, [db, user, role]);
+
+  const { data: allAvail } = useCollection(allAvailQuery);
+
+  const leaveDates = useMemo(() => {
+    if (!allAvail) return [];
+    return allAvail
+      .filter(a => a.availabilityType === 'FullDayLeave' || a.availabilityType === 'PartialLeave')
+      .map(a => parseISO(a.date));
+  }, [allAvail]);
 
   // Leave status for selected date
   const dateStr = selectedDate ? format(selectedDate, "yyyy-MM-dd") : null;
@@ -508,8 +523,16 @@ export default function LawyerDashboard() {
                       setSelectedDate(date);
                     }} 
                     disabled={isWeekendDisabled}
+                    modifiers={{ leave: leaveDates }}
+                    modifiersClassNames={{
+                      leave: "bg-red-500 text-white rounded-xl shadow-md border-red-600"
+                    }}
                     className="mx-auto" 
                   />
+                  <div className="mt-6 flex items-center gap-2 px-2">
+                    <div className="h-3 w-3 rounded-full bg-red-500" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Filed Leave / Unavailable</span>
+                  </div>
                 </div>
                 <div className="lg:col-span-8 p-0 flex flex-col min-h-[400px]">
                   {availData && availData.availabilityType !== 'Available' && (
@@ -668,7 +691,13 @@ export default function LawyerDashboard() {
               </div>
             </div>
           </div>
-          <DialogFooter className="p-10 bg-muted/30 flex gap-4"><Button variant="outline" onClick={() => setActiveConsultation(null)} className="flex-1 h-16 rounded-2xl font-black border-2 border-secondary/10">Cancel</Button><Button onClick={handleCompleteConsultation} disabled={isSubmitting || !consultationForm.outcome || (consultationForm.outcome === OUTCOME_OPTIONS[1] && !consultationForm.denialReason)} className="flex-1 h-16 rounded-2xl font-black text-white shadow-xl bg-secondary">{isSubmitting ? <Loader2 className="animate-spin h-6 w-6" /> : <CheckCircle2 className="mr-2 h-6 w-6" />}Commit Final Assessment</Button></DialogFooter>
+          <DialogFooter className="p-10 bg-muted/30 flex gap-4">
+            <Button variant="outline" onClick={() => setActiveConsultation(null)} className="flex-1 h-16 rounded-2xl font-black border-2 border-secondary/10">Cancel</Button>
+            <Button onClick={handleCompleteConsultation} disabled={isSubmitting || !consultationForm.outcome || (consultationForm.outcome === OUTCOME_OPTIONS[1] && !consultationForm.denialReason)} className="flex-1 h-16 rounded-2xl font-black text-white shadow-xl bg-secondary">
+              {isSubmitting ? <Loader2 className="animate-spin h-6 w-6" /> : <CheckCircle2 className="mr-2 h-6 w-6" />}
+              Commit Final Assessment
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
