@@ -613,7 +613,7 @@ export default function AdminDashboard() {
                 <p className="text-[9px] font-bold text-muted-foreground mt-2 uppercase">Total Applicants</p>
               </Card>
               <Card className="border-none bg-muted/30 rounded-[2rem] p-6 text-center">
-                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1">Percentage Share</p>
+                <p className="text-[10px) font-black uppercase text-muted-foreground tracking-widest mb-1">Percentage Share</p>
                 <p className="text-4xl font-black text-secondary">
                   {analyticsData ? (selectedInsight?.name === 'Eligible' ? analyticsData.screening.eligiblePct : analyticsData.screening.ineligiblePct) : '0'}%
                 </p>

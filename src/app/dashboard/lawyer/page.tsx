@@ -307,7 +307,7 @@ export default function LawyerDashboard() {
       id: adminNotifId,
       type: "appointment",
       userRole: "lawyer",
-      description: `Atty. ${lawyerData?.lastName || 'Staff'} marked ${refCode} for ${clientName} as ${status}.`,
+      description: `Atty. ${lawyerData?.lastName || 'Staff'} marked Visit ${refCode} for ${clientName} as ${status}.`,
       referenceId: appt.id,
       referenceCode: refCode,
       status: "unread",
