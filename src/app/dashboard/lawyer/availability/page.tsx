@@ -34,7 +34,6 @@ const AVAILABILITY_TYPES = [
   { value: "Available", label: "Office Standard (08:00 - 17:00)", color: "text-green-600 bg-green-50 border-green-100" },
   { value: "FullDayLeave", label: "Official Leave (Full Day)", color: "text-red-600 bg-red-50 border-red-100" },
   { value: "PartialLeave", label: "Unavailable During Specific Hours", color: "text-amber-600 bg-amber-50 border-amber-100" },
-  { value: "PartialDayAvailable", label: "Available Only During Specific Hours", color: "text-blue-600 bg-blue-50 border-blue-100" },
 ];
 
 const REASON_CATEGORIES = [
@@ -251,11 +250,11 @@ export default function LawyerAvailabilityPage() {
                     </div>
                   )}
 
-                  {(formData.availabilityType === 'PartialLeave' || formData.availabilityType === 'PartialDayAvailable') && (
+                  {(formData.availabilityType === 'PartialLeave') && (
                     <div className="grid grid-cols-2 gap-6 animate-in slide-in-from-top-4 duration-500">
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">
-                          {formData.availabilityType === 'PartialLeave' ? 'Start of Unavailability' : 'Available From'}
+                        <Label className="text-[10px) font-black uppercase text-secondary/40 ml-1">
+                          Start of Unavailability
                         </Label>
                         <div className="relative">
                           <Clock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary/30" />
@@ -269,7 +268,7 @@ export default function LawyerAvailabilityPage() {
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">
-                          {formData.availabilityType === 'PartialLeave' ? 'End of Unavailability' : 'Until'}
+                          End of Unavailability
                         </Label>
                         <div className="relative">
                           <Clock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary/30" />

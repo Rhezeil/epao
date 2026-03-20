@@ -183,12 +183,11 @@ export default function ClientDashboard() {
         let isLawyerOnLeave = false;
         if (lawyerAvail) {
           if (lawyerAvail.availabilityType === 'FullDayLeave') isLawyerOnLeave = true;
-          else if (lawyerAvail.availabilityType.includes('Partial')) {
+          else if (lawyerAvail.availabilityType === 'PartialLeave') {
             const slotVal = h + m / 60;
             const start = parseInt((lawyerAvail.startTime || "08:00").split(':')[0]);
             const end = parseInt((lawyerAvail.endTime || "17:00").split(':')[0]);
-            if (lawyerAvail.availabilityType === 'PartialLeave' && slotVal >= start && slotVal < end) isLawyerOnLeave = true;
-            if (lawyerAvail.availabilityType === 'PartialDayAvailable' && (slotVal < start || slotVal >= end)) isLawyerOnLeave = true;
+            if (slotVal >= start && slotVal < end) isLawyerOnLeave = true;
           }
         }
 

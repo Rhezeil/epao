@@ -67,7 +67,6 @@ const AVAILABILITY_TYPES = [
   { value: "Available", label: "Office Standard (08:00 - 17:00)" },
   { value: "FullDayLeave", label: "Official Leave (Full Day)" },
   { value: "PartialLeave", label: "Unavailable During Specific Hours" },
-  { value: "PartialDayAvailable", label: "Available Only During Specific Hours" },
 ];
 
 export default function LawyerScheduleWorkstation({ params }: { params: Promise<{ lawyerId: string }> }) {
@@ -407,7 +406,7 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
                           </SelectContent>
                         </Select>
                       </div>
-                      {(availForm.availabilityType.includes('Partial')) && (
+                      {(availForm.availabilityType === 'PartialLeave') && (
                         <div className="grid grid-cols-2 gap-4 animate-in fade-in">
                           <div className="space-y-2">
                             <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Start Time</Label>
