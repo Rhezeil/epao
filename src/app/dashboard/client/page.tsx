@@ -118,12 +118,32 @@ export default function ClientDashboard() {
     return () => unsub();
   }, [activeCase, db, role]);
 
-  // Lawyer Leave logic for today
-  const lawyerAvailTodayRef = useMemoFirebase(() => {
+  // Lawyer Leave Collection for red highlights and reasons
+  const lawyerAvailQuery = useMemoFirebase(() => {
     if (!db || !activeCase?.lawyerId) return null;
-    return doc(db, "roleLawyer", activeCase.lawyerId, "availability", todayStr);
-  }, [db, activeCase?.lawyerId, todayStr]);
-  const { data: lawyerAvailToday } = useDoc(lawyerAvailTodayRef);
+    return collection(db, "roleLawyer", activeCase.lawyerId, "availability");
+  }, [db, activeCase?.lawyerId]);
+  const { data: allLawyerAvail } = useCollection(lawyerAvailQuery);
+
+  const leaveDates = useMemo(() => {
+    if (!allLawyerAvail) return [];
+    return allLawyerAvail
+      .filter(a => a.availabilityType === 'FullDayLeave' || a.availabilityType === 'PartialLeave')
+      .map(a => parseISO(a.date));
+  }, [allLawyerAvail]);
+
+  // Lawyer status for selected reschedule date
+  const reschedDateStr = rescheduleDate ? format(rescheduleDate, "yyyy-MM-dd") : null;
+  const selectedReschedDateAvail = useMemo(() => {
+    if (!reschedDateStr || !allLawyerAvail) return null;
+    return allLawyerAvail.find(a => a.date === reschedDateStr);
+  }, [reschedDateStr, allLawyerAvail]);
+
+  // Lawyer Leave logic for today
+  const lawyerAvailToday = useMemo(() => {
+    if (!allLawyerAvail) return null;
+    return allLawyerAvail.find(a => a.date === todayStr);
+  }, [allLawyerAvail, todayStr]);
 
   // Derived Appointment Views
   const upcomingAppts = useMemo(() => {
@@ -156,32 +176,12 @@ export default function ClientDashboard() {
     ).sort((a, b) => (b.updatedAt || b.createdAt).localeCompare(a.updatedAt || a.createdAt));
   }, [appts]);
 
-  // Fetch Lawyer Leave Collection for red highlights
-  const lawyerAvailQuery = useMemoFirebase(() => {
-    if (!db || !activeCase?.lawyerId) return null;
-    return collection(db, "roleLawyer", activeCase.lawyerId, "availability");
-  }, [db, activeCase?.lawyerId]);
-  const { data: allLawyerAvail } = useCollection(lawyerAvailQuery);
-
-  const leaveDates = useMemo(() => {
-    if (!allLawyerAvail) return [];
-    return allLawyerAvail
-      .filter(a => a.availabilityType === 'FullDayLeave' || a.availabilityType === 'PartialLeave')
-      .map(a => parseISO(a.date));
-  }, [allLawyerAvail]);
-
   // Rescheduling Slot Logic
-  const reschedDateStr = rescheduleDate ? format(rescheduleDate, "yyyy-MM-dd") : null;
-  const globalApptsQuery = useMemoFirebase(() => {
+  const globalApptsQueryForSlot = useMemoFirebase(() => {
     if (!db || !reschedDateStr) return null;
     return query(collection(db, "appointments"), where("dateString", "==", reschedDateStr));
   }, [db, reschedDateStr]);
-  const { data: globalAppts } = useCollection(globalApptsQuery);
-
-  const selectedReschedDateAvail = useMemo(() => {
-    if (!reschedDateStr || !allLawyerAvail) return null;
-    return allLawyerAvail.find(a => a.date === reschedDateStr);
-  }, [reschedDateStr, allLawyerAvail]);
+  const { data: globalAppts } = useCollection(globalApptsQueryForSlot);
 
   const timeSlots = useMemo(() => {
     const slots = [];
@@ -203,13 +203,12 @@ export default function ClientDashboard() {
         );
 
         let isLawyerOnLeave = false;
-        const dayAvail = allLawyerAvail?.find(a => a.date === reschedDateStr);
-        if (dayAvail) {
-          if (dayAvail.availabilityType === 'FullDayLeave') isLawyerOnLeave = true;
-          else if (dayAvail.availabilityType === 'PartialLeave') {
+        if (selectedReschedDateAvail) {
+          if (selectedReschedDateAvail.availabilityType === 'FullDayLeave') isLawyerOnLeave = true;
+          else if (selectedReschedDateAvail.availabilityType === 'PartialLeave') {
             const slotVal = h + m / 60;
-            const start = parseInt((dayAvail.startTime || "08:00").split(':')[0]);
-            const end = parseInt((dayAvail.endTime || "17:00").split(':')[0]);
+            const start = parseInt((selectedReschedDateAvail.startTime || "08:00").split(':')[0]);
+            const end = parseInt((selectedReschedDateAvail.endTime || "17:00").split(':')[0]);
             if (slotVal >= start && slotVal < end) isLawyerOnLeave = true;
           }
         }
@@ -218,7 +217,7 @@ export default function ClientDashboard() {
       }
     }
     return slots;
-  }, [rescheduleDate, globalAppts, allLawyerAvail, reschedDateStr, activeCase?.lawyerId]);
+  }, [rescheduleDate, globalAppts, selectedReschedDateAvail, activeCase?.lawyerId]);
 
   const handleCancel = (apptId: string) => {
     if (!db) return;
@@ -363,7 +362,7 @@ export default function ClientDashboard() {
                       </div>
                       <div className="mt-3 flex flex-wrap gap-3">
                         <Badge variant="outline" className="bg-white/50 border-primary/10 text-[10px] font-black uppercase px-3 py-1"><Calendar className="h-3 w-3 mr-1.5" /> {format(new Date(n.date), "PPP")}</Badge>
-                        <Badge variant="outline" className="bg-white/50 border-primary/10 text-[10px] font-black uppercase px-3 py-1"><Clock className="h-3 w-3 mr-1.5" /> {n.time}</Clock>
+                        <Badge variant="outline" className="bg-white/50 border-primary/10 text-[10px] font-black uppercase px-3 py-1"><Clock className="h-3 w-3 mr-1.5" /> {n.time}</Badge>
                       </div>
                     </div>
                   </div>
@@ -450,9 +449,9 @@ export default function ClientDashboard() {
         </div>
 
         <Dialog open={!!selectedApptToReschedule} onOpenChange={() => setSelectedApptToReschedule(null)}>
-          <DialogContent className="rounded-[3rem] max-w-4xl p-0 overflow-hidden border-none shadow-2xl">
-            <DialogHeader className="p-8 bg-primary text-white"><DialogTitle className="text-3xl font-black">Reschedule Visit</DialogTitle></DialogHeader>
-            <div className="p-10 grid lg:grid-cols-2 gap-12 max-h-[70vh] overflow-y-auto">
+          <DialogContent className="rounded-[3rem] max-w-4xl p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[90vh]">
+            <DialogHeader className="p-8 bg-primary text-white shrink-0"><DialogTitle className="text-3xl font-black">Reschedule Visit</DialogTitle></DialogHeader>
+            <div className="p-10 grid lg:grid-cols-2 gap-12 flex-1 overflow-y-auto min-h-0">
               <div className="space-y-4">
                 <p className="text-[10px] font-black uppercase text-primary/40">1. New Date</p>
                 <div className="p-4 bg-primary/5 rounded-[2rem] border border-primary/10">
@@ -496,7 +495,7 @@ export default function ClientDashboard() {
                 ) : <div className="h-full flex items-center justify-center text-muted-foreground font-medium">Pick a date first</div>}
               </div>
             </div>
-            <DialogFooter className="p-8 bg-muted/30"><Button variant="outline" onClick={() => setSelectedApptToReschedule(null)} className="rounded-xl h-14 px-8 font-bold">Cancel</Button><Button onClick={handleRescheduleSubmit} disabled={!rescheduleDate || !rescheduleTime || isRescheduling || (selectedReschedDateAvail?.availabilityType === 'FullDayLeave')} className="rounded-xl h-14 bg-primary text-white font-black px-12 shadow-xl">{isRescheduling ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : "Confirm Update"}</Button></DialogFooter>
+            <DialogFooter className="p-8 bg-muted/30 shrink-0"><Button variant="outline" onClick={() => setSelectedApptToReschedule(null)} className="rounded-xl h-14 px-8 font-bold">Cancel</Button><Button onClick={handleRescheduleSubmit} disabled={!rescheduleDate || !rescheduleTime || isRescheduling || (selectedReschedDateAvail?.availabilityType === 'FullDayLeave')} className="rounded-xl h-14 bg-primary text-white font-black px-12 shadow-xl">{isRescheduling ? <Loader2 className="animate-spin h-6 w-6 mr-2" /> : "Confirm Update"}</Button></DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
