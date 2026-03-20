@@ -72,7 +72,7 @@ service cloud.firestore {
       allow create, delete: if isAdmin();
       
       match /availability/{dateId} {
-        allow read, list: if true;
+        allow read, list: if true; // Publicly readable for scheduling transparency
         allow write: if isOwner(userId) || isAdmin();
       }
     }

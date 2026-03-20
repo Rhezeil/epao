@@ -43,7 +43,10 @@
         "caseType": { "type": "string" },
         "consultationNotes": { "type": "string" },
         "recommendation": { "type": "string" },
-        "assessment": { "type": "string" }
+        "assessment": { "type": "string" },
+        "lawyerNotified": { "type": "boolean" },
+        "clientNotified": { "type": "boolean" },
+        "cancellationReason": { "type": "string" }
       }
     },
     "LegalCase": {
@@ -57,6 +60,7 @@
         "caseType": { "type": "string" },
         "status": { "type": "string" },
         "description": { "type": "string" },
+        "lawyerNotified": { "type": "boolean" },
         "createdAt": { "type": "string", "format": "date-time" }
       }
     },
@@ -92,6 +96,20 @@
         "notified": { "type": "boolean" }
       }
     },
+    "LawyerAvailability": {
+      "title": "LawyerAvailability",
+      "description": "Daily professional schedule overrides or official leave records.",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string" },
+        "availabilityType": { "type": "string", "enum": ["Available", "FullDayLeave", "PartialLeave"] },
+        "startTime": { "type": "string" },
+        "endTime": { "type": "string" },
+        "leaveReason": { "type": "string" },
+        "notes": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
     "SystemNotification": {
       "title": "SystemNotification",
       "description": "A system-wide event alert for administrative tracking.",
@@ -120,6 +138,10 @@
     "/roleLawyer/{userId}": {
       "schema": "#/backend/entities/User",
       "description": "Public attorney professional profiles."
+    },
+    "/roleLawyer/{userId}/availability/{dateId}": {
+      "schema": "#/backend/entities/LawyerAvailability",
+      "description": "Professional schedule and leave registry."
     },
     "/users/{userId}": {
       "schema": "#/backend/entities/User",
