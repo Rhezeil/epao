@@ -302,15 +302,25 @@ export default function ClientDashboard() {
                     </div>
                     <div>
                       <h3 className="text-lg font-black text-primary">Office Update: {n.status}</h3>
-                      <p className="text-sm font-bold text-muted-foreground mt-1">
-                        {n.status === 'No Show' 
-                          ? "Your absence for the scheduled visit has been recorded." 
-                          : n.status?.includes('Accept') 
-                          ? "Congratulations! Your legal aid application has been accepted." 
-                          : n.status?.includes('Denial') 
-                          ? "The office has completed its assessment and denied your request for legal aid." 
-                          : "The office has modified your session schedule:"}
-                      </p>
+                      <div className="text-sm font-bold text-muted-foreground mt-1 space-y-2">
+                        <p>
+                          {n.status === 'No Show' 
+                            ? "Your absence for the scheduled visit has been recorded." 
+                            : n.status === 'cancelled'
+                            ? `Your appointment was cancelled by the office.`
+                            : n.status?.includes('Accept') 
+                            ? "Congratulations! Your legal aid application has been accepted." 
+                            : n.status?.includes('Denial') 
+                            ? "The office has completed its assessment and denied your request for legal aid." 
+                            : "The office has modified your session schedule:"}
+                        </p>
+                        {n.status === 'cancelled' && n.cancellationReason && (
+                          <div className="p-3 bg-white/50 rounded-xl border border-red-100 mt-2">
+                            <span className="text-[10px] uppercase font-black text-red-600 block mb-1">Reason provided by Atty.</span>
+                            <p className="italic text-red-900">"{n.cancellationReason}"</p>
+                          </div>
+                        )}
+                      </div>
                       <div className="mt-3 flex flex-wrap gap-3">
                         <Badge variant="outline" className="bg-white/50 border-primary/10 text-[10px] font-black uppercase px-3 py-1"><Calendar className="h-3 w-3 mr-1.5" /> {format(new Date(n.date), "PPP")}</Badge>
                         <Badge variant="outline" className="bg-white/50 border-primary/10 text-[10px] font-black uppercase px-3 py-1"><Clock className="h-3 w-3 mr-1.5" /> {n.time}</Badge>

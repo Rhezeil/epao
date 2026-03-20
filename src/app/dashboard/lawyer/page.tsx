@@ -27,7 +27,8 @@ import {
   Phone,
   Mail,
   Bell,
-  CheckCheck
+  CheckCheck,
+  AlertTriangle
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -87,6 +88,12 @@ export default function LawyerDashboard() {
     outcome: "",
     denialReason: ""
   });
+
+  // Cancellation State
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [apptToCancel, setApptToCancel] = useState<any>(null);
+  const [cancellationReason, setCancellationReason] = useState("");
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Queries
@@ -182,6 +189,62 @@ export default function LawyerDashboard() {
       updateDocumentNonBlocking(doc(db, "notifications", id), { status: "read" });
     }
     toast({ title: "Alert Cleared", description: "Record acknowledged in your workstation." });
+  };
+
+  const handleCancelAppointment = async () => {
+    if (!db || !apptToCancel || !cancellationReason) return;
+    setIsSubmitting(true);
+
+    try {
+      const apptId = apptToCancel.id || apptToCancel.referenceId;
+      const apptRef = doc(db, "appointments", apptId);
+      
+      updateDocumentNonBlocking(apptRef, {
+        status: "cancelled",
+        cancellationReason: cancellationReason,
+        cancelledBy: "lawyer",
+        lawyerNotified: true,
+        clientNotified: false,
+        updatedAt: new Date().toISOString()
+      });
+
+      // Admin Audit
+      const adminNotifId = crypto.randomUUID();
+      setDocumentNonBlocking(doc(db, "notifications", adminNotifId), {
+        id: adminNotifId,
+        type: "appointment",
+        userRole: "lawyer",
+        description: `Atty. ${lawyerData?.lastName || 'Staff'} cancelled appointment ${apptToCancel.referenceCode || apptId}. Reason: ${cancellationReason}`,
+        referenceId: apptId,
+        referenceCode: apptToCancel.referenceCode,
+        status: "unread",
+        createdAt: new Date().toISOString()
+      }, { merge: true });
+
+      // Client Alert
+      const clientId = apptToCancel.clientId || apptToCancel.targetUserId;
+      if (clientId) {
+        const clientNotifId = crypto.randomUUID();
+        setDocumentNonBlocking(doc(db, "notifications", clientNotifId), {
+          id: clientNotifId,
+          type: "appointment",
+          userRole: "lawyer",
+          description: `Office Alert: Your session has been cancelled by Atty. ${lawyerData?.lastName}. Reason: ${cancellationReason}`,
+          referenceId: apptId,
+          referenceCode: apptToCancel.referenceCode,
+          targetUserId: clientId,
+          status: "unread",
+          createdAt: new Date().toISOString()
+        }, { merge: true });
+      }
+
+      toast({ title: "Appointment Cancelled", description: "Citizen and Admin registries have been updated." });
+      setIsCancelDialogOpen(false);
+      setApptToCancel(null);
+      setCancellationReason("");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleMarkStatus = (appt: any, status: string) => {
@@ -436,7 +499,7 @@ export default function LawyerDashboard() {
                           <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-12 w-12 rounded-xl group-hover:bg-secondary/10"><MoreVertical className="h-5 w-5 text-secondary" /></Button></DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="rounded-2xl w-56">
                             <DropdownMenuItem onClick={() => { setActiveConsultation(item.data); setConsultationForm({ ...consultationForm, caseType: item.data.caseType || "" }); }} className="font-bold">
-                              <CheckCircle2 className="mr-2 h-4 w-4" /> Start Assessment
+                              <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" /> Start Assessment
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleMarkStatus(item.data, 'No Show')} className="text-red-600 font-bold">
                               <XCircle className="mr-2 h-4 w-4" /> Record No Show
@@ -489,15 +552,25 @@ export default function LawyerDashboard() {
                         ? `New Case Assignment: ${alert.caseType} for ${alert.id}` 
                         : `New Consultation Booked: ${alert.caseType} (${alert.referenceCode})`)}
                     </p>
-                    <div className="mt-4 flex justify-end">
+                    <div className="mt-4 flex flex-col gap-2">
                       <Button 
                         size="sm" 
                         variant="ghost" 
                         onClick={() => handleAcknowledge(alert.id, alert.alertType, alert.alertSource)}
-                        className="h-8 rounded-xl font-black text-[10px] uppercase text-amber-700 hover:bg-amber-100"
+                        className="h-8 rounded-xl font-black text-[10px] uppercase text-emerald-700 hover:bg-emerald-100"
                       >
                         <CheckCheck className="h-3 w-3 mr-1.5" /> Acknowledge
                       </Button>
+                      {(alert.alertType === 'appointment' || alert.type === 'appointment') && (
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => { setApptToCancel(alert); setIsCancelDialogOpen(true); }}
+                          className="h-8 rounded-xl font-black text-[10px] uppercase text-rose-700 hover:bg-rose-100"
+                        >
+                          <XCircle className="h-3 w-3 mr-1.5" /> Cancel Visit
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))
@@ -533,11 +606,48 @@ export default function LawyerDashboard() {
                   <Select value={consultationForm.outcome} onValueChange={(v) => setConsultationForm({...consultationForm, outcome: v})}><SelectTrigger className="h-14 rounded-xl border-secondary/10"><SelectValue placeholder="Select Final Result" /></SelectTrigger><SelectContent>{OUTCOME_OPTIONS.map(opt => <SelectItem key={opt} value={opt} className="font-bold">{opt}</SelectItem>)}</SelectContent></Select>
                 </div>
                 {consultationForm.outcome === OUTCOME_OPTIONS[1] && <div className="space-y-2 animate-in fade-in"><Label className="text-[10px] font-black uppercase text-red-600/60 ml-1">Reason for Denial</Label><Select value={consultationForm.denialReason} onValueChange={(v) => setConsultationForm({...consultationForm, denialReason: v})}><SelectTrigger className="h-14 rounded-xl border-red-100 bg-red-50/30"><SelectValue placeholder="Select Statutory Reason" /></SelectTrigger><SelectContent>{DENIAL_REASONS.map(r => <SelectItem key={r} value={r} className="font-bold">{r}</SelectItem>)}</SelectContent></Select></div>}
-                <div className="space-y-2"><Label className="text-[10px) font-black uppercase text-secondary/40 ml-1">Confidential Audit Notes</Label><Textarea placeholder="Internal reference only..." className="rounded-[2rem] h-32" value={consultationForm.notes} onChange={e => setConsultationForm({...consultationForm, notes: e.target.value})} /></div>
+                <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Confidential Audit Notes</Label><Textarea placeholder="Internal reference only..." className="rounded-[2rem] h-32" value={consultationForm.notes} onChange={e => setConsultationForm({...consultationForm, notes: e.target.value})} /></div>
               </div>
             </div>
           </div>
           <DialogFooter className="p-10 bg-muted/30 flex gap-4"><Button variant="outline" onClick={() => setActiveConsultation(null)} className="flex-1 h-16 rounded-2xl font-black border-2 border-secondary/10">Cancel</Button><Button onClick={handleCompleteConsultation} disabled={isSubmitting || !consultationForm.outcome || (consultationForm.outcome === OUTCOME_OPTIONS[1] && !consultationForm.denialReason)} className="flex-1 h-16 rounded-2xl font-black text-white shadow-xl bg-secondary">{isSubmitting ? <Loader2 className="animate-spin h-6 w-6" /> : <CheckCircle2 className="mr-2 h-6 w-6" />}Commit Final Assessment</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* --- CANCELLATION DIALOG --- */}
+      <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+        <DialogContent className="rounded-[3rem] max-w-lg p-0 overflow-hidden border-none shadow-2xl">
+          <DialogHeader className="p-8 bg-rose-600 text-white shrink-0">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-white/20 rounded-2xl"><AlertTriangle className="h-6 w-6" /></div>
+              <div>
+                <DialogTitle className="text-2xl font-black">Cancel Appointment</DialogTitle>
+                <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">Atty. Cancellation Registry</DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          <div className="p-10 space-y-6">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase text-rose-600/60 ml-1">Mandatory Reason for Cancellation</Label>
+              <Textarea 
+                placeholder="Specify the administrative or legal reason for cancelling this session..." 
+                className="rounded-[1.5rem] min-h-[120px] border-rose-100 focus-visible:ring-rose-200"
+                value={cancellationReason}
+                onChange={e => setCancellationReason(e.target.value)}
+              />
+              <p className="text-[9px] text-muted-foreground italic mt-2 px-1">Note: This reason will be visible to both the Client and the Administrator.</p>
+            </div>
+          </div>
+          <DialogFooter className="p-8 bg-muted/30 flex gap-3">
+            <Button variant="outline" onClick={() => setIsCancelDialogOpen(false)} className="flex-1 h-14 rounded-xl font-bold">Close</Button>
+            <Button 
+              onClick={handleCancelAppointment} 
+              disabled={!cancellationReason || isSubmitting} 
+              className="flex-1 h-14 rounded-xl bg-rose-600 text-white font-black shadow-xl"
+            >
+              {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : "Confirm Cancellation"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </DashboardLayout>

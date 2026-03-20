@@ -25,7 +25,8 @@ import {
   XCircle,
   CalendarCheck,
   Clock,
-  ArrowRight
+  ArrowRight,
+  AlertTriangle
 } from "lucide-react";
 import { format, isWeekend, startOfToday, isBefore, setHours, setMinutes } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -243,15 +244,22 @@ export default function AdminAppointmentsRegistry() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge className={cn(
-                          "font-black text-[9px] uppercase px-3",
-                          a.status === 'Eligible' ? 'bg-green-500' : 
-                          a.status === 'Not Eligible' ? 'bg-red-500' : 
-                          a.status === 'For Screening' ? 'bg-amber-500' : 
-                          a.status === 'scheduled' || a.status === 'rescheduled' ? 'bg-blue-500' : 'bg-gray-500'
-                        )}>
-                          {a.status}
-                        </Badge>
+                        <div className="flex flex-col gap-1">
+                          <Badge className={cn(
+                            "font-black text-[9px] uppercase px-3 w-fit",
+                            a.status === 'Eligible' ? 'bg-green-500' : 
+                            a.status === 'Not Eligible' ? 'bg-red-500' : 
+                            a.status === 'For Screening' ? 'bg-amber-500' : 
+                            a.status === 'scheduled' || a.status === 'rescheduled' ? 'bg-blue-500' : 'bg-gray-500'
+                          )}>
+                            {a.status}
+                          </Badge>
+                          {a.status === 'cancelled' && a.cancellationReason && (
+                            <p className="text-[8px] font-bold text-red-600 uppercase max-w-[150px] truncate" title={a.cancellationReason}>
+                              Reason: {a.cancellationReason}
+                            </p>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="space-y-0.5">
