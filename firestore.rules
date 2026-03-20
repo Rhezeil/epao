@@ -45,6 +45,7 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Appointment Rules: Publicly queryable for status check via reference code
     match /appointments/{appointmentId} {
       allow read, list: if true; 
       allow create: if true;
@@ -71,8 +72,9 @@ service cloud.firestore {
       allow update: if isOwner(userId) || isAdmin();
       allow create, delete: if isAdmin();
       
+      // Professional availability is public for scheduling transparency (red highlights/reasons)
       match /availability/{dateId} {
-        allow read, list: if true; // Publicly readable for scheduling transparency
+        allow read, list: if true;
         allow write: if isOwner(userId) || isAdmin();
       }
     }

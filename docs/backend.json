@@ -14,7 +14,8 @@
         "role": { "type": "string", "enum": ["admin", "lawyer", "client"] },
         "status": { "type": "string" },
         "incomeClassification": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       }
     },
     "CaseRequirement": {
@@ -37,17 +38,36 @@
         "referenceCode": { "type": "string" },
         "clientId": { "type": "string" },
         "lawyerId": { "type": "string" },
+        "guestName": { "type": "string" },
+        "guestMobile": { "type": "string" },
+        "guestEmail": { "type": "string" },
+        "guestAddress": { "type": "string" },
+        "clientName": { "type": "string" },
+        "clientMobile": { "type": "string" },
+        "clientEmail": { "type": "string" },
+        "clientAddress": { "type": "string" },
         "date": { "type": "string", "format": "date-time" },
+        "dateString": { "type": "string" },
         "time": { "type": "string" },
         "status": { "type": "string" },
         "caseType": { "type": "string" },
+        "purpose": { "type": "string" },
+        "serviceType": { "type": "string" },
         "consultationNotes": { "type": "string" },
         "recommendation": { "type": "string" },
         "assessment": { "type": "string" },
+        "outcome": { "type": "string" },
+        "denialReason": { "type": "string" },
         "lawyerNotified": { "type": "boolean" },
         "clientNotified": { "type": "boolean" },
         "cancellationReason": { "type": "string" },
-        "cancelledBy": { "type": "string", "enum": ["client", "lawyer", "admin"] }
+        "cancelledBy": { "type": "string", "enum": ["client", "lawyer", "admin"] },
+        "bookedBy": { "type": "string" },
+        "caseId": { "type": "string" },
+        "screeningDetails": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "completedAt": { "type": "string", "format": "date-time" }
       }
     },
     "LegalCase": {
@@ -61,8 +81,11 @@
         "caseType": { "type": "string" },
         "status": { "type": "string" },
         "description": { "type": "string" },
+        "consultationRef": { "type": "string" },
         "lawyerNotified": { "type": "boolean" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "closedAt": { "type": "string", "format": "date-time" }
       }
     },
     "CaseDocument": {
@@ -108,6 +131,7 @@
         "endTime": { "type": "string" },
         "leaveReason": { "type": "string" },
         "notes": { "type": "string" },
+        "adminId": { "type": "string" },
         "updatedAt": { "type": "string", "format": "date-time" }
       }
     },
