@@ -31,7 +31,7 @@ import {
   Inbox,
   Info
 } from "lucide-react";
-import { Badge } from "@/badge";
+import { Badge } from "@/components/ui/badge";
 import { useEffect, useState, useMemo } from "react";
 import { format, isBefore, startOfToday, isWeekend, setHours, setMinutes, parseISO } from "date-fns";
 import { useRouter } from "next/navigation";
@@ -168,7 +168,7 @@ export default function ClientDashboard() {
     return allLawyerAvail
       .filter(a => a.availabilityType === 'FullDayLeave' || a.availabilityType === 'PartialLeave')
       .map(a => parseISO(a.date));
-  }, [allAvail]);
+  }, [allLawyerAvail]);
 
   // Rescheduling Slot Logic
   const reschedDateStr = rescheduleDate ? format(rescheduleDate, "yyyy-MM-dd") : null;
@@ -453,7 +453,7 @@ export default function ClientDashboard() {
                 <CalendarComponent 
                   mode="single" 
                   selected={rescheduleDate} 
-                  onSelect={(d) => { if (d && !isWeekend(d) && !isHoliday(d) && !isBefore(d, startOfToday())) setRescheduleDate(d); setRescheduleTime(""); }} 
+                  onSelect={(d) => { if (d && !isWeekend(d) && !isHoliday(d) && !isBefore(d, startOfToday())) { setRescheduleDate(d); setRescheduleTime(""); } }} 
                   disabled={[{ before: startOfToday() }, { dayOfWeek: [0, 6] }, (d) => isHoliday(d)]} 
                   modifiers={{ leave: leaveDates }}
                   modifiersClassNames={{
