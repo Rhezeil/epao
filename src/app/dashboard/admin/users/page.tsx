@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking, useDoc } from "@/firebase";
@@ -323,7 +322,7 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <DashboardLayout role="admin">
+    <DashboardLayout role={currentRole}>
       <div className="space-y-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
@@ -343,7 +342,7 @@ export default function AdminUsersPage() {
                 placeholder="Search citizens..." 
                 className="pl-9 h-11 rounded-xl border-primary/10 bg-white"
                 value={searchQuery}
-                onChange={(e) => searchQuery(e.target.value)}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
           </CardHeader>
@@ -454,7 +453,7 @@ export default function AdminUsersPage() {
                   </div>
                   <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Email (Optional)</Label><Input value={newClient.email ?? ""} onChange={e => setNewClient({...newClient, email: e.target.value})} className="h-12 rounded-xl" placeholder="name@email.com" /></div>
                 </div>
-                <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Home Address</Label><Input value={newClient.address ?? ""} onChange={e => setNewClient({...newClient, address: e.target.value})} className="h-12 rounded-xl" placeholder="Street, Barangay, City" /></div>
+                <div className="space-y-2"><Label className="text-[10px) font-black uppercase text-primary/40 ml-1">Home Address</Label><Input value={newClient.address ?? ""} onChange={e => setNewClient({...newClient, address: e.target.value})} className="h-12 rounded-xl" placeholder="Street, Barangay, City" /></div>
                 <div className="pt-6 border-t border-primary/5 space-y-6">
                   <div className="flex items-center gap-2"><Scale className="h-4 w-4 text-primary" /><span className="text-[10px] font-black uppercase text-primary tracking-[0.2em]">Initialize Legal Record (Optional)</span></div>
                   <div className="grid md:grid-cols-2 gap-6">
