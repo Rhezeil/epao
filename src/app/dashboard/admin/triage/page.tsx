@@ -131,12 +131,13 @@ export default function AdminIntakeAssessmentPage() {
       updatedAt: new Date().toISOString()
     });
 
+    const clientName = selectedAppt.guestName || selectedAppt.clientName || "Citizen";
     const notifId = crypto.randomUUID();
     setDocumentNonBlocking(doc(db, "notifications", notifId), {
       id: notifId,
       type: "system",
       userRole: "admin",
-      description: `Assessment complete for ${selectedAppt.referenceCode} (${selectedAppt.guestName || selectedAppt.clientName}): Marked as ${result}.`,
+      description: `Assessment complete for Visit ${selectedAppt.referenceCode} for ${clientName}: Marked as ${result}.`,
       referenceId: selectedAppt.id,
       referenceCode: selectedAppt.referenceCode,
       status: "unread",
@@ -172,7 +173,7 @@ export default function AdminIntakeAssessmentPage() {
         id: notifId,
         type: "appointment",
         userRole: "admin",
-        description: `Admin assigned a new Consultation (${selectedAppt.referenceCode}) for ${clientName} to workstation.`,
+        description: `Admin assigned Visit ${selectedAppt.referenceCode} for ${clientName} to workstation for Consultation.`,
         referenceId: selectedAppt.id,
         referenceCode: selectedAppt.referenceCode,
         targetUserId: assignedLawyer,
@@ -312,7 +313,7 @@ export default function AdminIntakeAssessmentPage() {
                   <TableHeader className="bg-muted/30">
                     <TableRow>
                       <TableHead className="px-8 font-black text-[10px] uppercase tracking-widest text-primary/40">Filing Ref</TableHead>
-                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40">Citizen Name</TableHead>
+                      <TableHead className="text-[10px) font-black uppercase tracking-widest text-primary/40">Citizen Name</TableHead>
                       <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Intake Category</TableHead>
                       <TableHead className="text-right px-8 text-[10px] font-black uppercase tracking-widest text-primary/40">Action</TableHead>
                     </TableRow>
@@ -436,7 +437,7 @@ export default function AdminIntakeAssessmentPage() {
             </DialogHeader>
             <div className="p-10 space-y-8 flex-1 overflow-y-auto">
               <div className="p-6 bg-primary/5 rounded-[2rem] border-2 border-dashed border-primary/10 space-y-4">
-                <div className="flex items-center gap-2 mb-2"><ClipboardCheck className="h-4 w-4 text-primary" /><span className="text-[10px) font-black uppercase tracking-widest">Assessment Criteria Checklist</span></div>
+                <div className="flex items-center gap-2 mb-2"><ClipboardCheck className="h-4 w-4 text-primary" /><span className="text-[10px] font-black uppercase tracking-widest">Assessment Criteria Checklist</span></div>
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3 bg-white p-3 rounded-xl border">
                     <Checkbox id="ind" checked={screening.indigency} onCheckedChange={c => setScreening({...screening, indigency: !!c})} />

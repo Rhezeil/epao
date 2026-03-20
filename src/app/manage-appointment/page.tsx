@@ -145,12 +145,13 @@ export default function ManageAppointmentPage() {
     const apptRef = doc(db, "appointments", appointment.id);
     updateDocumentNonBlocking(apptRef, { status: "cancelled", updatedAt: new Date().toISOString() });
 
+    const clientName = appointment.guestName || appointment.clientName || "Citizen";
     const notifId = crypto.randomUUID();
     setDocumentNonBlocking(doc(db, "notifications", notifId), {
       id: notifId,
       type: "appointment",
       userRole: "guest",
-      description: `Appointment ${appointment.referenceCode} cancelled by guest user.`,
+      description: `Visit ${appointment.referenceCode} for ${clientName} cancelled by guest user.`,
       referenceId: appointment.id,
       referenceCode: appointment.referenceCode,
       status: "unread",
@@ -175,12 +176,13 @@ export default function ManageAppointmentPage() {
       updatedAt: new Date().toISOString()
     });
 
+    const clientName = appointment.guestName || appointment.clientName || "Citizen";
     const notifId = crypto.randomUUID();
     setDocumentNonBlocking(doc(db, "notifications", notifId), {
       id: notifId,
       type: "appointment",
       userRole: "guest",
-      description: `Appointment ${appointment.referenceCode} rescheduled by guest to ${format(rescheduleDate, "MMM dd")} @ ${rescheduleTime}.`,
+      description: `Visit ${appointment.referenceCode} for ${clientName} rescheduled by guest to ${format(rescheduleDate, "MMM dd")} @ ${rescheduleTime}.`,
       referenceId: appointment.id,
       referenceCode: appointment.referenceCode,
       status: "unread",
