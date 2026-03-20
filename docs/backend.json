@@ -46,7 +46,8 @@
         "assessment": { "type": "string" },
         "lawyerNotified": { "type": "boolean" },
         "clientNotified": { "type": "boolean" },
-        "cancellationReason": { "type": "string" }
+        "cancellationReason": { "type": "string" },
+        "cancelledBy": { "type": "string", "enum": ["client", "lawyer", "admin"] }
       }
     },
     "LegalCase": {
