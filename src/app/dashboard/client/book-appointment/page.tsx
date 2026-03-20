@@ -21,7 +21,9 @@ import {
   User, 
   Phone, 
   MapPin,
-  AlertCircle
+  AlertCircle,
+  ShieldAlert,
+  Info
 } from "lucide-react";
 import { useFirestore, setDocumentNonBlocking, useCollection, useMemoFirebase, useDoc } from "@/firebase";
 import { doc, collection, query, where, onSnapshot } from "firebase/firestore";
@@ -118,6 +120,12 @@ function BookAppointmentContent() {
   }, [db, dateStr]);
 
   const { data: existingAppts } = useCollection(existingApptsQuery);
+
+  const selectedDateAvail = useMemo(() => {
+    if (!selectedDate || !allLawyerAvail) return null;
+    const ds = format(selectedDate, "yyyy-MM-dd");
+    return allLawyerAvail.find(a => a.date === ds);
+  }, [selectedDate, allLawyerAvail]);
 
   const timeSlots = useMemo(() => {
     const slots = [];
@@ -293,6 +301,22 @@ function BookAppointmentContent() {
                         className="w-full rounded-md border-none" 
                       />
                     </div>
+                    
+                    {selectedDateAvail && selectedDateAvail.availabilityType !== 'Available' && (
+                      <div className="p-5 bg-red-50 rounded-[2rem] border border-red-100 flex items-start gap-4 animate-in slide-in-from-top-2">
+                        <div className="p-2.5 bg-white rounded-xl shadow-sm text-red-600 shrink-0 mt-0.5">
+                          <ShieldAlert className="h-5 w-5" />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-black text-red-900 uppercase tracking-widest leading-none">Lawyer Status Alert</p>
+                          <p className="text-sm font-bold text-red-800">Reason: {selectedDateAvail.leaveReason}</p>
+                          {selectedDateAvail.notes && (
+                            <p className="text-xs italic text-red-700/70 font-medium">"{selectedDateAvail.notes}"</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     <div className="flex items-center gap-2 px-2">
                       <div className="h-2 w-2 rounded-full bg-red-500" />
                       <span className="text-[9px] font-black uppercase text-muted-foreground">Lawyer Filed Leave</span>
@@ -328,7 +352,7 @@ function BookAppointmentContent() {
                   </div>
                   <Button 
                     className="w-full h-16 bg-primary text-white text-lg font-black rounded-2xl shadow-xl hover:scale-[1.02] transition-transform" 
-                    disabled={!selectedDate || !selectedTime} 
+                    disabled={!selectedDate || !selectedTime || (selectedDateAvail?.availabilityType === 'FullDayLeave')} 
                     onClick={() => setStep(2)}
                   >
                     Proceed to Verification <ArrowRight className="ml-2 h-5 w-5" />

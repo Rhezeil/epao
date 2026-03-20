@@ -178,6 +178,11 @@ export default function ClientDashboard() {
   }, [db, reschedDateStr]);
   const { data: globalAppts } = useCollection(globalApptsQuery);
 
+  const selectedReschedDateAvail = useMemo(() => {
+    if (!reschedDateStr || !allLawyerAvail) return null;
+    return allLawyerAvail.find(a => a.date === reschedDateStr);
+  }, [reschedDateStr, allLawyerAvail]);
+
   const timeSlots = useMemo(() => {
     const slots = [];
     const now = new Date();
@@ -358,7 +363,7 @@ export default function ClientDashboard() {
                       </div>
                       <div className="mt-3 flex flex-wrap gap-3">
                         <Badge variant="outline" className="bg-white/50 border-primary/10 text-[10px] font-black uppercase px-3 py-1"><Calendar className="h-3 w-3 mr-1.5" /> {format(new Date(n.date), "PPP")}</Badge>
-                        <Badge variant="outline" className="bg-white/50 border-primary/10 text-[10px] font-black uppercase px-3 py-1"><Clock className="h-3 w-3 mr-1.5" /> {n.time}</Badge>
+                        <Badge variant="outline" className="bg-white/50 border-primary/10 text-[10px] font-black uppercase px-3 py-1"><Clock className="h-3 w-3 mr-1.5" /> {n.time}</Clock>
                       </div>
                     </div>
                   </div>
@@ -450,17 +455,35 @@ export default function ClientDashboard() {
             <div className="p-10 grid lg:grid-cols-2 gap-12 max-h-[70vh] overflow-y-auto">
               <div className="space-y-4">
                 <p className="text-[10px] font-black uppercase text-primary/40">1. New Date</p>
-                <CalendarComponent 
-                  mode="single" 
-                  selected={rescheduleDate} 
-                  onSelect={(d) => { if (d && !isWeekend(d) && !isHoliday(d) && !isBefore(d, startOfToday())) { setRescheduleDate(d); setRescheduleTime(""); } }} 
-                  disabled={[{ before: startOfToday() }, { dayOfWeek: [0, 6] }, (d) => isHoliday(d)]} 
-                  modifiers={{ leave: leaveDates }}
-                  modifiersClassNames={{
-                    leave: "bg-red-500 text-white rounded-xl shadow-md border-red-600"
-                  }}
-                  className="border rounded-2xl p-4 mx-auto" 
-                />
+                <div className="p-4 bg-primary/5 rounded-[2rem] border border-primary/10">
+                  <CalendarComponent 
+                    mode="single" 
+                    selected={rescheduleDate} 
+                    onSelect={(d) => { if (d && !isWeekend(d) && !isHoliday(d) && !isBefore(d, startOfToday())) { setRescheduleDate(d); setRescheduleTime(""); } }} 
+                    disabled={[{ before: startOfToday() }, { dayOfWeek: [0, 6] }, (d) => isHoliday(d)]} 
+                    modifiers={{ leave: leaveDates }}
+                    modifiersClassNames={{
+                      leave: "bg-red-500 text-white rounded-xl shadow-md border-red-600"
+                    }}
+                    className="mx-auto" 
+                  />
+                </div>
+                
+                {selectedReschedDateAvail && selectedReschedDateAvail.availabilityType !== 'Available' && (
+                  <div className="p-5 bg-red-50 rounded-[2rem] border border-red-100 flex items-start gap-4 animate-in slide-in-from-top-2">
+                    <div className="p-2.5 bg-white rounded-xl shadow-sm text-red-600 shrink-0 mt-0.5">
+                      <ShieldAlert className="h-5 w-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black text-red-900 uppercase tracking-widest leading-none">Lawyer Status Alert</p>
+                      <p className="text-sm font-bold text-red-800">Reason: {selectedReschedDateAvail.leaveReason}</p>
+                      {selectedReschedDateAvail.notes && (
+                        <p className="text-xs italic text-red-700/70 font-medium">"{selectedReschedDateAvail.notes}"</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-2 px-2 mt-2">
                   <div className="h-2 w-2 rounded-full bg-red-500" />
                   <span className="text-[9px] font-black uppercase text-muted-foreground">Attorney Leave / Unavailable</span>
@@ -473,7 +496,7 @@ export default function ClientDashboard() {
                 ) : <div className="h-full flex items-center justify-center text-muted-foreground font-medium">Pick a date first</div>}
               </div>
             </div>
-            <DialogFooter className="p-8 bg-muted/30"><Button variant="outline" onClick={() => setSelectedApptToReschedule(null)} className="rounded-xl h-14 px-8 font-bold">Cancel</Button><Button onClick={handleRescheduleSubmit} disabled={!rescheduleDate || !rescheduleTime || isRescheduling} className="rounded-xl h-14 bg-primary text-white font-black px-12 shadow-xl">{isRescheduling ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : "Confirm Update"}</Button></DialogFooter>
+            <DialogFooter className="p-8 bg-muted/30"><Button variant="outline" onClick={() => setSelectedApptToReschedule(null)} className="rounded-xl h-14 px-8 font-bold">Cancel</Button><Button onClick={handleRescheduleSubmit} disabled={!rescheduleDate || !rescheduleTime || isRescheduling || (selectedReschedDateAvail?.availabilityType === 'FullDayLeave')} className="rounded-xl h-14 bg-primary text-white font-black px-12 shadow-xl">{isRescheduling ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : "Confirm Update"}</Button></DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
