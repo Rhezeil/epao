@@ -48,6 +48,23 @@ import {
   DialogFooter 
 } from "@/components/ui/dialog";
 
+/**
+ * Utility to shorten long rejection reason strings for chart labels.
+ */
+const shortenReason = (reason: string) => {
+  if (!reason) return "Unspecified";
+  // If it has a colon (like in PAO standard reasons), take the part before it
+  const colonIndex = reason.indexOf(':');
+  if (colonIndex !== -1) {
+    return reason.substring(0, colonIndex);
+  }
+  // Otherwise truncate if too long
+  if (reason.length > 25) {
+    return reason.substring(0, 22) + "...";
+  }
+  return reason;
+};
+
 export default function AdminDashboard() {
   const db = useFirestore();
   const { user, role, loading } = useAuth();
@@ -117,12 +134,14 @@ export default function AdminDashboard() {
     
     const reasonsMap: Record<string, number> = {};
     ineligible.forEach(a => {
-      const reason = a.screeningDetails?.rejectionReason || a.denialReason || "Unspecified Requirement";
-      reasonsMap[reason] = (reasonsMap[reason] || 0) + 1;
+      const fullReason = a.screeningDetails?.rejectionReason || a.denialReason || "Unspecified Requirement";
+      // We keep the original for the map to ensure uniqueness, but we'll display shortened versions
+      reasonsMap[fullReason] = (reasonsMap[fullReason] || 0) + 1;
     });
     
     const reasonsData = Object.entries(reasonsMap).map(([name, value]) => ({ 
-      name, 
+      name: shortenReason(name),
+      fullName: name,
       value,
       percentage: ineligible.length > 0 ? ((value / ineligible.length) * 100).toFixed(1) : "0"
     }));
@@ -296,11 +315,22 @@ export default function AdminDashboard() {
                     {!analyticsData ? <Loader2 className="animate-spin h-10 w-10 text-primary/20 my-20" /> : (
                       <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={analyticsData.screening.reasons} layout="vertical" margin={{ left: 40 }}>
+                          <BarChart data={analyticsData.screening.reasons} layout="vertical" margin={{ left: 40, right: 20 }}>
                             <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#F1F5F9" />
                             <XAxis type="number" hide />
-                            <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 8, fontWeight: 700, fill: '#1A237E' }} width={120} />
-                            <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} />
+                            <YAxis 
+                              dataKey="name" 
+                              type="category" 
+                              axisLine={false} 
+                              tickLine={false} 
+                              tick={{ fontSize: 8, fontWeight: 700, fill: '#1A237E' }} 
+                              width={150} 
+                            />
+                            <Tooltip 
+                              cursor={{ fill: 'transparent' }} 
+                              contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} 
+                              labelStyle={{ fontWeight: 'black', color: '#1A237E' }}
+                            />
                             <Bar dataKey="value" fill="#EF4444" radius={[0, 10, 10, 0]} barSize={20}>
                               {analyticsData.screening.reasons.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={index === 0 ? '#B91C1C' : '#EF4444'} />
