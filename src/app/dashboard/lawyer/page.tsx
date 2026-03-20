@@ -653,7 +653,7 @@ export default function LawyerDashboard() {
                 <SelectTrigger className="h-14 rounded-xl border-rose-100 bg-rose-50/30 font-bold shadow-sm">
                   <SelectValue placeholder="Select Reason" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[300px] overflow-y-auto" position="popper">
                   <SelectGroup>
                     <SelectLabel className="text-[10px] font-black uppercase text-primary/40 tracking-widest px-2 py-2 border-b">Work-Related Reasons</SelectLabel>
                     {CANCELLATION_REASONS.work.map(r => (
