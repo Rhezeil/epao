@@ -152,12 +152,30 @@ export default function AdminUsersPage() {
 
   const filteredUsers = useMemo(() => {
     if (!users) return [];
-    return users.filter(u => 
-      u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.mobileNumber?.includes(searchQuery) ||
-      u.fullName?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [users, searchQuery]);
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return users;
+
+    return users.filter(u => {
+      // 1. Basic Info Match
+      const matchesBasic = 
+        u.fullName?.toLowerCase().includes(q) ||
+        u.email?.toLowerCase().includes(q) ||
+        u.mobileNumber?.includes(searchQuery) ||
+        u.id?.toLowerCase().includes(q);
+
+      // 2. Case ID Match
+      const userCase = cases?.find(c => c.clientId === u.id);
+      const matchesCaseId = userCase?.id?.toLowerCase().includes(q);
+
+      // 3. Appointment REF ID Match
+      const matchesVisitRef = allAppointments?.some(a => 
+        (a.clientId === u.id || a.guestEmail === u.email || a.guestMobile === u.mobileNumber) &&
+        a.referenceCode?.toLowerCase().includes(q)
+      );
+
+      return matchesBasic || matchesCaseId || matchesVisitRef;
+    });
+  }, [users, searchQuery, cases, allAppointments]);
 
   useEffect(() => {
     if (selectedProfile) {
@@ -225,7 +243,7 @@ export default function AdminUsersPage() {
           caseType: newClient.caseType ?? "General Assistance",
           status: "Active",
           description: "Record initialized during manual citizen registration.",
-          lawyerNotified: false, // Alert lawyer
+          lawyerNotified: false,
           createdAt: new Date().toISOString()
         }, { merge: true });
       }
@@ -290,7 +308,7 @@ export default function AdminUsersPage() {
       caseType: newCaseData.caseType ?? "General Legal Matter",
       status: "Active",
       description: "Direct assignment from directory workstation.",
-      lawyerNotified: false, // NEW: Entity alert
+      lawyerNotified: false,
       createdAt: new Date().toISOString()
     }, { merge: true });
     updateDocumentNonBlocking(doc(db, "users", selectedClientId), { status: "Active Case" });
@@ -310,7 +328,7 @@ export default function AdminUsersPage() {
     if (!db || !caseId) return;
     updateDocumentNonBlocking(doc(db, "cases", caseId), { 
       lawyerId: newLawyerId,
-      lawyerNotified: false // NEW: Entity alert for new lawyer
+      lawyerNotified: false 
     });
     toast({ title: "Attorney Assigned", description: "Caseload redirected." });
   };
@@ -339,7 +357,7 @@ export default function AdminUsersPage() {
             <div className="relative max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/30" />
               <Input 
-                placeholder="Search citizens..." 
+                placeholder="Search by Name, REF ID, or Case ID..." 
                 className="pl-9 h-11 rounded-xl border-primary/10 bg-white"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -453,7 +471,7 @@ export default function AdminUsersPage() {
                   </div>
                   <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Email (Optional)</Label><Input value={newClient.email ?? ""} onChange={e => setNewClient({...newClient, email: e.target.value})} className="h-12 rounded-xl" placeholder="name@email.com" /></div>
                 </div>
-                <div className="space-y-2"><Label className="text-[10px) font-black uppercase text-primary/40 ml-1">Home Address</Label><Input value={newClient.address ?? ""} onChange={e => setNewClient({...newClient, address: e.target.value})} className="h-12 rounded-xl" placeholder="Street, Barangay, City" /></div>
+                <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Home Address</Label><Input value={newClient.address ?? ""} onChange={e => setNewClient({...newClient, address: e.target.value})} className="h-12 rounded-xl" placeholder="Street, Barangay, City" /></div>
                 <div className="pt-6 border-t border-primary/5 space-y-6">
                   <div className="flex items-center gap-2"><Scale className="h-4 w-4 text-primary" /><span className="text-[10px] font-black uppercase text-primary tracking-[0.2em]">Initialize Legal Record (Optional)</span></div>
                   <div className="grid md:grid-cols-2 gap-6">
@@ -530,7 +548,7 @@ export default function AdminUsersPage() {
                       </Select>
                     </div>
                   </div> : <div className="p-10 bg-primary/5 rounded-[2.5rem] border-2 border-dashed text-center space-y-6"><Scale className="h-12 w-12 text-primary/20 mx-auto" /><div><h4 className="text-lg font-black text-primary">Initialize Legal Record</h4><p className="text-xs text-muted-foreground">Citizen is currently registered but has no active case file.</p></div><div className="max-w-xs mx-auto space-y-4 text-left"><div className="space-y-1"><Label className="text-[10px] font-black uppercase text-primary/40">Classification</Label><Input value={newCaseData.caseType ?? ""} onChange={e => setNewCaseData({...newCaseData, caseType: e.target.value})} className="h-10 rounded-lg" /></div><div className="space-y-1"><Label className="text-[10px] font-black uppercase text-primary/40">Assign Attorney</Label>
-                    <Select value={newCaseData.lawyerId} onValueChange={v => setNewCaseData({...newCaseData, lawyerId: v})}><SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Select Attorney" /></SelectTrigger><SelectContent>{lawyers?.map(l => <SelectItem key={l.id} value={l.id} className="font-bold">{l.firstName ? `Atty. ${l.firstName} ${l.lastName}` : l.email}</SelectItem>)}</SelectContent></Select></div><Button className="w-full bg-primary text-white font-black rounded-xl" disabled={!newCaseData.lawyerId || isSubmitting} onClick={handleCreateInitialCase}>Initialize & Assign Case</Button></div></div>}
+                    <Select value={newCaseData.lawyerId} onValueChange={v => setNewCaseData({...newCaseData, lawyerId: v})}><SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Select Attorney" /></SelectTrigger><SelectContent>{lawyers?.map(l => <SelectItem key={l.id} value={l.id} className="font-bold">{l.firstName ? `Atty. ${l.firstName} ${l.lastName}` : l.email}</SelectItem></SelectContent></Select></div><Button className="w-full bg-primary text-white font-black rounded-xl" disabled={!newCaseData.lawyerId || isSubmitting} onClick={handleCreateInitialCase}>Initialize & Assign Case</Button></div></div>}
                 </TabsContent>
                 <TabsContent value="history" className="pt-6 space-y-4"><h4 className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Chronological History</h4>{clientHistory?.length ? <div className="space-y-3">{clientHistory.map(h => <div key={h.id} className="p-4 bg-muted/20 rounded-2xl flex items-center justify-between border border-transparent hover:border-primary/10"><div><p className="text-sm font-bold text-primary">{h.caseType}</p><p className="text-[9px] text-muted-foreground uppercase font-black">{h.date ? format(new Date(h.date), "PPP") : "---"} • {h.status}</p></div><Badge variant="outline" className="text-[8px] font-black uppercase">{h.referenceCode}</Badge></div>)}</div> : <p className="text-center py-10 text-xs italic text-muted-foreground">No synchronized visit history found.</p>}</TabsContent>
               </Tabs>
