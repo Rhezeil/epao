@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { useFirestore, setDocumentNonBlocking, useCollection, useMemoFirebase, useDoc } from "@/firebase";
 import { doc, collection, query, where, onSnapshot } from "firebase/firestore";
-import { format, isWeekend, startOfToday, setHours, setMinutes, isBefore } from "date-fns";
+import { format, isWeekend, startOfToday, setHours, setMinutes, isBefore, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { sendOtpSms } from "@/ai/flows/sms-service";
@@ -82,6 +82,20 @@ function BookAppointmentContent() {
     }
     return () => unsub();
   }, [activeCase, db]);
+
+  // Fetch all availability for highlighting red dates
+  const lawyerAvailQuery = useMemoFirebase(() => {
+    if (!db || !activeCase?.lawyerId) return null;
+    return collection(db, "roleLawyer", activeCase.lawyerId, "availability");
+  }, [db, activeCase?.lawyerId]);
+  const { data: allLawyerAvail } = useCollection(lawyerAvailQuery);
+
+  const leaveDates = useMemo(() => {
+    if (!allLawyerAvail) return [];
+    return allLawyerAvail
+      .filter(a => a.availabilityType === 'FullDayLeave' || a.availabilityType === 'PartialLeave')
+      .map(a => parseISO(a.date));
+  }, [allLawyerAvail]);
   
   const caseTypeParam = searchParams.get("caseType") || "Follow-up Consultation";
   const categoryParam = searchParams.get("category") || "General";
@@ -117,12 +131,26 @@ function BookAppointmentContent() {
         const timeString = `${displayHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
         const slotDate = selectedDate ? setMinutes(setHours(new Date(selectedDate), h), m) : null;
         const isPast = slotDate ? isBefore(slotDate, now) : false;
+        
         const isLawyerAssignedToThisSlot = existingAppts?.some(a => a.time === timeString && a.status !== 'cancelled' && a.lawyerId === activeCase?.lawyerId);
-        slots.push({ time: timeString, isBooked: isLawyerAssignedToThisSlot, isPast });
+        
+        let isLawyerOnLeave = false;
+        const dayAvail = allLawyerAvail?.find(a => a.date === dateStr);
+        if (dayAvail) {
+          if (dayAvail.availabilityType === 'FullDayLeave') isLawyerOnLeave = true;
+          else if (dayAvail.availabilityType === 'PartialLeave') {
+            const slotVal = h + m / 60;
+            const start = parseInt((dayAvail.startTime || "08:00").split(':')[0]);
+            const end = parseInt((dayAvail.endTime || "17:00").split(':')[0]);
+            if (slotVal >= start && slotVal < end) isLawyerOnLeave = true;
+          }
+        }
+
+        slots.push({ time: timeString, isBooked: isLawyerAssignedToThisSlot || isLawyerOnLeave, isPast });
       }
     }
     return slots;
-  }, [selectedDate, existingAppts, activeCase?.lawyerId]);
+  }, [selectedDate, existingAppts, activeCase?.lawyerId, allLawyerAvail, dateStr]);
 
   const handleTriggerOtp = async () => {
     const mobile = userData?.mobileNumber || profile?.phoneNumber || userData?.guestMobile;
@@ -177,13 +205,12 @@ function BookAppointmentContent() {
       dateString: format(selectedDate, "yyyy-MM-dd"),
       time: selectedTime,
       status: "scheduled",
-      lawyerNotified: false, // NEW: Entity alert for lawyer
+      lawyerNotified: false,
       createdAt: new Date().toISOString()
     };
 
     setDocumentNonBlocking(apptRef, appointmentData, { merge: true });
 
-    // Admin Audit
     const notifId = crypto.randomUUID();
     setDocumentNonBlocking(doc(db, "notifications", notifId), {
       id: notifId,
@@ -196,7 +223,6 @@ function BookAppointmentContent() {
       createdAt: new Date().toISOString()
     }, { merge: true });
 
-    // Lawyer Alert
     if (activeCase?.lawyerId) {
       const lawyerNotifId = crypto.randomUUID();
       setDocumentNonBlocking(doc(db, "notifications", lawyerNotifId), {
@@ -260,8 +286,16 @@ function BookAppointmentContent() {
                           } 
                         }} 
                         disabled={[{ before: startOfToday() }, { dayOfWeek: [0, 6] }, (date) => isHoliday(date)]} 
+                        modifiers={{ leave: leaveDates }}
+                        modifiersClassNames={{
+                          leave: "bg-red-500 text-white rounded-xl shadow-md border-red-600"
+                        }}
                         className="w-full rounded-md border-none" 
                       />
+                    </div>
+                    <div className="flex items-center gap-2 px-2">
+                      <div className="h-2 w-2 rounded-full bg-red-500" />
+                      <span className="text-[9px] font-black uppercase text-muted-foreground">Lawyer Filed Leave</span>
                     </div>
                   </div>
                 </div>

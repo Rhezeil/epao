@@ -32,7 +32,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState, useMemo } from "react";
-import { format, isBefore, startOfToday, isWeekend, setHours, setMinutes } from "date-fns";
+import { format, isBefore, startOfToday, isWeekend, setHours, setMinutes, parseISO } from "date-fns";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -131,7 +131,7 @@ export default function ClientDashboard() {
       .sort((a, b) => b.date.localeCompare(a.date));
   }, [appts, today]);
 
-  // Office Notifications (Schedules created or modified by the lawyer, or final assessments)
+  // Office Notifications
   const officeNotifications = useMemo(() => {
     if (!appts) return [];
     const significantStatuses = [
@@ -147,14 +147,22 @@ export default function ClientDashboard() {
     ).sort((a, b) => (b.updatedAt || b.createdAt).localeCompare(a.updatedAt || a.createdAt));
   }, [appts]);
 
+  // Fetch Lawyer Leave Collection for red highlights
+  const lawyerAvailQuery = useMemoFirebase(() => {
+    if (!db || !activeCase?.lawyerId) return null;
+    return collection(db, "roleLawyer", activeCase.lawyerId, "availability");
+  }, [db, activeCase?.lawyerId]);
+  const { data: allLawyerAvail } = useCollection(lawyerAvailQuery);
+
+  const leaveDates = useMemo(() => {
+    if (!allLawyerAvail) return [];
+    return allLawyerAvail
+      .filter(a => a.availabilityType === 'FullDayLeave' || a.availabilityType === 'PartialLeave')
+      .map(a => parseISO(a.date));
+  }, [allLawyerAvail]);
+
   // Rescheduling Slot Logic
   const reschedDateStr = rescheduleDate ? format(rescheduleDate, "yyyy-MM-dd") : null;
-  const lawyerAvailRef = useMemoFirebase(() => {
-    if (!db || !activeCase?.lawyerId || !reschedDateStr) return null;
-    return doc(db, "roleLawyer", activeCase.lawyerId, "availability", reschedDateStr);
-  }, [db, activeCase?.lawyerId, reschedDateStr]);
-  const { data: lawyerAvail } = useDoc(lawyerAvailRef);
-
   const globalApptsQuery = useMemoFirebase(() => {
     if (!db || !reschedDateStr) return null;
     return query(collection(db, "appointments"), where("dateString", "==", reschedDateStr));
@@ -181,12 +189,13 @@ export default function ClientDashboard() {
         );
 
         let isLawyerOnLeave = false;
-        if (lawyerAvail) {
-          if (lawyerAvail.availabilityType === 'FullDayLeave') isLawyerOnLeave = true;
-          else if (lawyerAvail.availabilityType === 'PartialLeave') {
+        const dayAvail = allLawyerAvail?.find(a => a.date === reschedDateStr);
+        if (dayAvail) {
+          if (dayAvail.availabilityType === 'FullDayLeave') isLawyerOnLeave = true;
+          else if (dayAvail.availabilityType === 'PartialLeave') {
             const slotVal = h + m / 60;
-            const start = parseInt((lawyerAvail.startTime || "08:00").split(':')[0]);
-            const end = parseInt((lawyerAvail.endTime || "17:00").split(':')[0]);
+            const start = parseInt((dayAvail.startTime || "08:00").split(':')[0]);
+            const end = parseInt((dayAvail.endTime || "17:00").split(':')[0]);
             if (slotVal >= start && slotVal < end) isLawyerOnLeave = true;
           }
         }
@@ -195,7 +204,7 @@ export default function ClientDashboard() {
       }
     }
     return slots;
-  }, [rescheduleDate, globalAppts, lawyerAvail, activeCase?.lawyerId]);
+  }, [rescheduleDate, globalAppts, allLawyerAvail, reschedDateStr, activeCase?.lawyerId]);
 
   const handleCancel = (apptId: string) => {
     if (!db) return;
@@ -206,7 +215,6 @@ export default function ClientDashboard() {
       updatedAt: new Date().toISOString()
     });
 
-    // --- NOTIFICATION ---
     const notifId = crypto.randomUUID();
     setDocumentNonBlocking(doc(db, "notifications", notifId), {
       id: notifId,
@@ -234,7 +242,6 @@ export default function ClientDashboard() {
       updatedAt: new Date().toISOString()
     });
 
-    // --- NOTIFICATION ---
     const notifId = crypto.randomUUID();
     setDocumentNonBlocking(doc(db, "notifications", notifId), {
       id: notifId,
@@ -414,7 +421,21 @@ export default function ClientDashboard() {
             <div className="p-10 grid lg:grid-cols-2 gap-12 max-h-[70vh] overflow-y-auto">
               <div className="space-y-4">
                 <p className="text-[10px] font-black uppercase text-primary/40">1. New Date</p>
-                <CalendarComponent mode="single" selected={rescheduleDate} onSelect={(d) => { if (d && !isWeekend(d) && !isHoliday(d) && !isBefore(d, startOfToday())) setRescheduleDate(d); setRescheduleTime(""); }} disabled={[{ before: startOfToday() }, { dayOfWeek: [0, 6] }, (d) => isHoliday(d)]} className="border rounded-2xl p-4 mx-auto" />
+                <CalendarComponent 
+                  mode="single" 
+                  selected={rescheduleDate} 
+                  onSelect={(d) => { if (d && !isWeekend(d) && !isHoliday(d) && !isBefore(d, startOfToday())) setRescheduleDate(d); setRescheduleTime(""); }} 
+                  disabled={[{ before: startOfToday() }, { dayOfWeek: [0, 6] }, (d) => isHoliday(d)]} 
+                  modifiers={{ leave: leaveDates }}
+                  modifiersClassNames={{
+                    leave: "bg-red-500 text-white rounded-xl shadow-md border-red-600"
+                  }}
+                  className="border rounded-2xl p-4 mx-auto" 
+                />
+                <div className="flex items-center gap-2 px-2 mt-2">
+                  <div className="h-2 w-2 rounded-full bg-red-500" />
+                  <span className="text-[9px] font-black uppercase text-muted-foreground">Attorney Leave / Unavailable</span>
+                </div>
               </div>
               <div className="space-y-4">
                 <p className="text-[10px] font-black uppercase text-primary/40">2. Select Time</p>

@@ -4,8 +4,8 @@
 import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { useAuth } from "@/components/auth-provider";
-import { useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking } from "@/firebase";
-import { doc } from "firebase/firestore";
+import { useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking, useCollection } from "@/firebase";
+import { doc, collection } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -14,8 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { format, startOfToday, isWeekend, isBefore } from "date-fns";
-import { Clock, CalendarDays, Loader2, Save, CheckCircle2, AlertCircle, Info } from "lucide-react";
+import { format, startOfToday, isWeekend, isBefore, parseISO } from "date-fns";
+import { Clock, CalendarDays, Loader2, Save, AlertCircle, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -74,7 +74,14 @@ export default function LawyerAvailabilityPage() {
     return doc(db, "roleLawyer", user.uid, "availability", primaryDateStr);
   }, [db, user, primaryDateStr]);
 
+  // Fetch ALL availability to highlight leave dates in red
+  const allAvailQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return collection(db, "roleLawyer", user.uid, "availability");
+  }, [db, user]);
+
   const { data: availData, isLoading: isDataLoading } = useDoc(availRef);
+  const { data: allAvail } = useCollection(allAvailQuery);
 
   const [formData, setFormData] = useState({
     availabilityType: "Available",
@@ -84,7 +91,15 @@ export default function LawyerAvailabilityPage() {
     notes: ""
   });
 
-  // Sync form when data for the primary date loads (only if exactly 1 date is selected to avoid mass-override confusion)
+  // Highlight leave dates
+  const leaveDates = useMemo(() => {
+    if (!allAvail) return [];
+    return allAvail
+      .filter(a => a.availabilityType === 'FullDayLeave' || a.availabilityType === 'PartialLeave')
+      .map(a => parseISO(a.date));
+  }, [allAvail]);
+
+  // Sync form when data for the primary date loads
   useMemo(() => {
     if (availData && selectedDates?.length === 1) {
       setFormData({
@@ -110,7 +125,6 @@ export default function LawyerAvailabilityPage() {
     setIsSaving(true);
 
     try {
-      // Loop through all selected dates for bulk update
       selectedDates.forEach(date => {
         const ds = format(date, "yyyy-MM-dd");
         const ref = doc(db, "roleLawyer", user.uid, "availability", ds);
@@ -179,7 +193,6 @@ export default function LawyerAvailabilityPage() {
                     setSelectedDates([]);
                     return;
                   }
-                  // Prevent selecting weekends, past dates, or holidays
                   const filtered = dates.filter(d => 
                     !isWeekend(d) && 
                     !isHoliday(d) && 
@@ -192,13 +205,23 @@ export default function LawyerAvailabilityPage() {
                   { dayOfWeek: [0, 6] },
                   (date) => isHoliday(date)
                 ]}
+                modifiers={{ leave: leaveDates }}
+                modifiersClassNames={{
+                  leave: "bg-red-500 text-white rounded-xl hover:bg-red-600 shadow-md border-red-600 border-2"
+                }}
                 className="mx-auto border rounded-2xl p-4"
               />
-              <div className="mt-6 p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-                <p className="text-[10px] text-amber-800 font-bold leading-relaxed">
-                  Bulk updates are permitted for official working days (Monday-Friday). Click multiple dates to select a range.
-                </p>
+              <div className="mt-6 space-y-3">
+                <div className="flex items-center gap-2 px-2">
+                  <div className="h-3 w-3 rounded-full bg-red-500 shadow-sm" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Filed Leave / Unavailable</span>
+                </div>
+                <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                  <p className="text-[10px] text-amber-800 font-bold leading-relaxed">
+                    Bulk updates are permitted for official working days (Monday-Friday). Click multiple dates to select a range.
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>

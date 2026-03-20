@@ -31,7 +31,7 @@ import {
   Save
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { format, startOfToday, isBefore, isWeekend, setHours, setMinutes } from "date-fns";
+import { format, startOfToday, isBefore, isWeekend, setHours, setMinutes, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -111,6 +111,12 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
     return query(collection(db, "cases"), where("lawyerId", "==", lawyerId), where("status", "==", "Active"));
   }, [db, lawyerId]);
 
+  // Fetch all availability for highlighting red dates
+  const allAvailQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return collection(db, "roleLawyer", lawyerId, "availability");
+  }, [db, lawyerId]);
+
   const dateStr = selectedDate ? format(selectedDate, "yyyy-MM-dd") : null;
   const availRef = useMemoFirebase(() => {
     if (!db || !dateStr) return null;
@@ -122,6 +128,14 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
   const { data: duties } = useCollection(dutiesQuery);
   const { data: activeCases } = useCollection(casesQuery);
   const { data: availData, isLoading: isAvailLoading } = useDoc(availRef);
+  const { data: allAvail } = useCollection(allAvailQuery);
+
+  const leaveDates = useMemo(() => {
+    if (!allAvail) return [];
+    return allAvail
+      .filter(a => a.availabilityType === 'FullDayLeave' || a.availabilityType === 'PartialLeave')
+      .map(a => parseISO(a.date));
+  }, [allAvail]);
 
   useEffect(() => {
     if (availData) {
@@ -219,7 +233,6 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
 
     setDocumentNonBlocking(dutyRef, data, { merge: true });
 
-    // --- NOTIFICATION ---
     const notifId = crypto.randomUUID();
     setDocumentNonBlocking(doc(db, "notifications", notifId), {
       id: notifId,
@@ -311,8 +324,16 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
                     { dayOfWeek: [0, 6] },
                     (date) => isHoliday(date)
                   ]}
+                  modifiers={{ leave: leaveDates }}
+                  modifiersClassNames={{
+                    leave: "bg-red-500 text-white rounded-xl shadow-sm"
+                  }}
                   className="mx-auto border rounded-xl p-2" 
                 />
+                <div className="mt-4 flex items-center gap-2 px-2">
+                  <div className="h-2 w-2 rounded-full bg-red-500" />
+                  <span className="text-[9px] font-black uppercase text-muted-foreground">Attorney Filed Leave</span>
+                </div>
               </CardContent>
             </Card>
 
@@ -413,7 +434,7 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
                             <Input type="time" value={availForm.startTime} onChange={e => setAvailForm({...availForm, startTime: e.target.value})} className="h-12 rounded-xl" />
                           </div>
                           <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">End Time</Label>
+                            <Label className="text-[10px) font-black uppercase text-primary/40 ml-1">End Time</Label>
                             <Input type="time" value={availForm.endTime} onChange={e => setAvailForm({...availForm, endTime: e.target.value})} className="h-12 rounded-xl" />
                           </div>
                         </div>
