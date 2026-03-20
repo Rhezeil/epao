@@ -157,14 +157,19 @@ export default function AdminDashboard() {
     ineligible.forEach(a => {
       const fullReason = a.screeningDetails?.rejectionReason || a.denialReason || "Procedural Disqualification";
       const standardCategory = mapToStandardCategory(fullReason);
-      reasonsMap[standardCategory] = (reasonsMap[standardCategory] || 0) + 1;
+      if (standardCategories.includes(standardCategory)) {
+        reasonsMap[standardCategory]++;
+      } else {
+        reasonsMap["Procedural Disqualification"]++;
+      }
     });
     
-    const reasonsData = Object.entries(reasonsMap).map(([name, value]) => ({ 
+    const reasonsData = standardCategories.map(name => ({ 
       name,
-      value,
-      percentage: ineligible.length > 0 ? ((value / ineligible.length) * 100).toFixed(1) : "0"
+      value: reasonsMap[name],
+      percentage: ineligible.length > 0 ? ((reasonsMap[name] / ineligible.length) * 100).toFixed(1) : "0"
     }));
+    
     // Sort so top reason is first
     reasonsData.sort((a, b) => b.value - a.value);
 
@@ -260,14 +265,14 @@ export default function AdminDashboard() {
 
             <TabsContent value="analysis" className="space-y-12">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden lg:col-span-1">
+                <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden lg:col-span-1 flex flex-col">
                   <CardHeader className="bg-primary/5 pb-6">
                     <CardTitle className="text-xs font-black uppercase text-primary flex items-center gap-2">
                       <PieIcon className="h-4 w-4" /> Eligibility Breakdown
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-8 flex flex-col items-center">
-                    {!analyticsData ? <Loader2 className="animate-spin h-10 w-10 text-primary/20 my-20" /> : (
+                  <CardContent className="p-8 flex flex-col items-center justify-center flex-1">
+                    {!analyticsData ? <div className="py-20"><Loader2 className="animate-spin h-10 w-10 text-primary/20" /></div> : (
                       <>
                         <div className="h-[250px] w-full cursor-pointer">
                           <ResponsiveContainer width="100%" height="100%">
@@ -324,7 +329,7 @@ export default function AdminDashboard() {
                   </CardContent>
                 </Card>
 
-                <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden lg:col-span-2">
+                <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden lg:col-span-2 flex flex-col">
                   <CardHeader className="bg-primary/5 pb-6 border-b border-primary/5">
                     <div className="flex justify-between items-center">
                       <CardTitle className="text-xs font-black uppercase text-primary flex items-center gap-2">
@@ -333,8 +338,8 @@ export default function AdminDashboard() {
                       <Badge variant="outline" className="border-rose-200 text-rose-700 bg-rose-50 font-black text-[9px]">TOP: {analyticsData?.screening.topReason || '---'}</Badge>
                     </div>
                   </CardHeader>
-                  <CardContent className="p-10">
-                    {!analyticsData ? <Loader2 className="animate-spin h-10 w-10 text-primary/20 my-20" /> : (
+                  <CardContent className="p-10 flex flex-col justify-center flex-1">
+                    {!analyticsData ? <div className="py-20 flex justify-center"><Loader2 className="animate-spin h-10 w-10 text-primary/20" /></div> : (
                       <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart 
