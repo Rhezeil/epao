@@ -28,7 +28,9 @@ import {
   Mail,
   Bell,
   CheckCheck,
-  AlertTriangle
+  AlertTriangle,
+  Info,
+  ShieldAlert
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -136,6 +138,14 @@ export default function LawyerDashboard() {
     return query(collection(db, "lawyerDuties"), where("lawyerId", "==", user.uid));
   }, [db, user, role]);
 
+  // Leave status for selected date
+  const dateStr = selectedDate ? format(selectedDate, "yyyy-MM-dd") : null;
+  const availRef = useMemoFirebase(() => {
+    if (!db || !user || !dateStr) return null;
+    return doc(db, "roleLawyer", user.uid, "availability", dateStr);
+  }, [db, user, dateStr]);
+  const { data: availData } = useDoc(availRef);
+
   // Entity-driven alerts for Lawyers (Acknowledgeable)
   const unreadApptsQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'lawyer') return null;
@@ -186,10 +196,10 @@ export default function LawyerDashboard() {
 
   const filteredSchedule = useMemo(() => {
     if (!selectedDate) return [];
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    const ds = format(selectedDate, "yyyy-MM-dd");
     
-    const dayAppts = apptsData?.filter(a => a.dateString === dateStr && a.status !== 'cancelled') || [];
-    const dayDuties = dutiesData?.filter(d => d.date.startsWith(dateStr)) || [];
+    const dayAppts = apptsData?.filter(a => a.dateString === ds && a.status !== 'cancelled') || [];
+    const dayDuties = dutiesData?.filter(d => d.date.startsWith(ds)) || [];
 
     return [
       ...dayAppts.map(a => ({ type: 'appt', data: a, time: a.time })),
@@ -272,7 +282,6 @@ export default function LawyerDashboard() {
       clientNotified: false // Trigger client alert
     });
     
-    // Admin Notification (Global Audit)
     const adminNotifId = crypto.randomUUID();
     setDocumentNonBlocking(doc(db, "notifications", adminNotifId), {
       id: adminNotifId,
@@ -285,7 +294,6 @@ export default function LawyerDashboard() {
       createdAt: new Date().toISOString()
     }, { merge: true });
 
-    // Client Notification
     if (appt.clientId) {
       const clientNotifId = crypto.randomUUID();
       setDocumentNonBlocking(doc(db, "notifications", clientNotifId), {
@@ -321,10 +329,9 @@ export default function LawyerDashboard() {
         denialReason: isAccepted ? null : consultationForm.denialReason,
         completedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        clientNotified: false // For client portal alert
+        clientNotified: false 
       });
 
-      // Admin Audit
       const adminNotifId = crypto.randomUUID();
       setDocumentNonBlocking(doc(db, "notifications", adminNotifId), {
         id: adminNotifId,
@@ -337,7 +344,6 @@ export default function LawyerDashboard() {
         createdAt: new Date().toISOString()
       }, { merge: true });
 
-      // Client Alert
       if (activeConsultation.clientId) {
         const clientNotifId = crypto.randomUUID();
         setDocumentNonBlocking(doc(db, "notifications", clientNotifId), {
@@ -393,7 +399,7 @@ export default function LawyerDashboard() {
         status: "Active", 
         description: appt.assessment || "Case activated post-consultation.", 
         consultationRef: appt.referenceCode, 
-        lawyerNotified: true, // They did it themselves
+        lawyerNotified: true,
         createdAt: new Date().toISOString() 
       }, { merge: true });
       
@@ -505,31 +511,48 @@ export default function LawyerDashboard() {
                     className="mx-auto" 
                   />
                 </div>
-                <div className="lg:col-span-8 divide-y divide-secondary/5">
-                  {filteredSchedule.length > 0 ? filteredSchedule.map((item, idx) => (
-                    <div key={idx} className="p-10 flex items-center justify-between hover:bg-secondary/5 transition-colors group">
-                      <div className="flex items-center gap-8">
-                        <div className="h-20 w-20 rounded-2xl bg-secondary/5 flex flex-col items-center justify-center border border-secondary/10 shadow-sm"><span className="text-[10px] font-black text-secondary uppercase leading-none">{format(new Date(item.data.date), "MMM")}</span><span className="text-3xl font-black text-secondary leading-none mt-1">{format(new Date(item.data.date), "dd")}</span></div>
-                        <div>
-                          <h4 className="text-2xl font-black text-secondary">{item.type === 'appt' ? (item.data.guestName || item.data.clientName) : item.data.title}</h4>
-                          <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground mt-2 uppercase tracking-widest"><span><Clock className="h-4 w-4 inline mr-1.5" /> {item.time}</span><span><MapPin className="h-4 w-4 inline mr-1.5" /> {item.type === 'appt' ? "Main Office" : item.data.location}</span></div>
+                <div className="lg:col-span-8 p-0 flex flex-col min-h-[400px]">
+                  {availData && availData.availabilityType !== 'Available' && (
+                    <div className="p-8 bg-amber-50 border-b border-amber-100 animate-in fade-in duration-500">
+                      <div className="flex items-start gap-4">
+                        <div className="p-3 bg-amber-100 rounded-2xl text-amber-700">
+                          <ShieldAlert className="h-6 w-6" />
+                        </div>
+                        <div className="space-y-1">
+                          <h4 className="text-sm font-black text-amber-900 uppercase tracking-widest">Professional Status: Filed Leave</h4>
+                          <p className="text-base font-bold text-amber-800">Reason: {availData.leaveReason}</p>
+                          {availData.notes && <p className="text-xs italic text-amber-700 mt-2 font-medium">"{availData.notes}"</p>}
                         </div>
                       </div>
-                      {item.type === 'appt' && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-12 w-12 rounded-xl group-hover:bg-secondary/10"><MoreVertical className="h-5 w-5 text-secondary" /></Button></DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="rounded-2xl w-56">
-                            <DropdownMenuItem onClick={() => { setActiveConsultation(item.data); setConsultationForm({ ...consultationForm, caseType: item.data.caseType || "" }); }} className="font-bold">
-                              <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" /> Start Assessment
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleMarkStatus(item.data, 'No Show')} className="text-red-600 font-bold">
-                              <XCircle className="mr-2 h-4 w-4" /> Record No Show
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
                     </div>
-                  )) : <div className="py-32 text-center space-y-4"><Inbox className="h-20 w-20 text-secondary/5 mx-auto" /><p className="text-xs font-black uppercase text-muted-foreground tracking-widest">No workstation entries for this date</p></div>}
+                  )}
+                  
+                  <div className="divide-y divide-secondary/5 flex-1">
+                    {filteredSchedule.length > 0 ? filteredSchedule.map((item, idx) => (
+                      <div key={idx} className="p-10 flex items-center justify-between hover:bg-secondary/5 transition-colors group">
+                        <div className="flex items-center gap-8">
+                          <div className="h-20 w-20 rounded-2xl bg-secondary/5 flex flex-col items-center justify-center border border-secondary/10 shadow-sm"><span className="text-[10px] font-black text-secondary uppercase leading-none">{format(new Date(item.data.date), "MMM")}</span><span className="text-3xl font-black text-secondary leading-none mt-1">{format(new Date(item.data.date), "dd")}</span></div>
+                          <div>
+                            <h4 className="text-2xl font-black text-secondary">{item.type === 'appt' ? (item.data.guestName || item.data.clientName) : item.data.title}</h4>
+                            <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground mt-2 uppercase tracking-widest"><span><Clock className="h-4 w-4 inline mr-1.5" /> {item.time}</span><span><MapPin className="h-4 w-4 inline mr-1.5" /> {item.type === 'appt' ? "Main Office" : item.data.location}</span></div>
+                          </div>
+                        </div>
+                        {item.type === 'appt' && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-12 w-12 rounded-xl group-hover:bg-secondary/10"><MoreVertical className="h-5 w-5 text-secondary" /></Button></DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="rounded-2xl w-56">
+                              <DropdownMenuItem onClick={() => { setActiveConsultation(item.data); setConsultationForm({ ...consultationForm, caseType: item.data.caseType || "" }); }} className="font-bold">
+                                <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" /> Start Assessment
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleMarkStatus(item.data, 'No Show')} className="text-red-600 font-bold">
+                                <XCircle className="mr-2 h-4 w-4" /> Record No Show
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </div>
+                    )) : <div className="py-32 text-center space-y-4 flex-1 flex flex-col justify-center"><Inbox className="h-20 w-20 text-secondary/5 mx-auto" /><p className="text-xs font-black uppercase text-muted-foreground tracking-widest">No workstation entries for this date</p></div>}
+                  </div>
                 </div>
               </div>
             </CardContent>

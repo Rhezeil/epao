@@ -28,7 +28,8 @@ import {
   FileText,
   User,
   History,
-  Save
+  Save,
+  ShieldAlert
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { format, startOfToday, isBefore, isWeekend, setHours, setMinutes, parseISO } from "date-fns";
@@ -93,7 +94,8 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
     availabilityType: "Available",
     startTime: "08:00",
     endTime: "17:00",
-    notes: ""
+    notes: "",
+    leaveReason: "Court Hearing / Litigation"
   });
 
   // Queries
@@ -143,14 +145,16 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
         availabilityType: availData.availabilityType || "Available",
         startTime: availData.startTime || "08:00",
         endTime: availData.endTime || "17:00",
-        notes: availData.notes || ""
+        notes: availData.notes || "",
+        leaveReason: availData.leaveReason || "Court Hearing / Litigation"
       });
     } else {
       setAvailForm({
         availabilityType: "Available",
         startTime: "08:00",
         endTime: "17:00",
-        notes: ""
+        notes: "",
+        leaveReason: "Court Hearing / Litigation"
       });
     }
   }, [availData]);
@@ -162,11 +166,22 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
     const dayAppts = appts?.filter(a => a.dateString === ds && a.status !== 'cancelled') || [];
     const dayDuties = duties?.filter(d => d.date.startsWith(ds)) || [];
 
-    return [
+    const items = [
       ...dayAppts.map(a => ({ type: 'appt', data: a, time: a.time })),
       ...dayDuties.map(d => ({ type: 'duty', data: d, time: d.startTime }))
     ].sort((a, b) => a.time.localeCompare(b.time));
-  }, [selectedDate, appts, duties]);
+
+    // Inject leave as a persistent entry at the top if active
+    if (availData && availData.availabilityType !== 'Available') {
+      items.unshift({
+        type: 'leave',
+        data: availData,
+        time: availData.startTime || "00:00"
+      } as any);
+    }
+
+    return items;
+  }, [selectedDate, appts, duties, availData]);
 
   const hasConflict = (date: string, start: string, end: string) => {
     const startVal = parseInt(start.replace(':', ''));
@@ -371,32 +386,51 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
                     {selectedDayItems.length > 0 ? (
                       <div className="divide-y divide-primary/5">
                         {selectedDayItems.map((item, idx) => (
-                          <div key={idx} className="p-8 flex items-center justify-between hover:bg-muted/10 transition-colors group">
+                          <div key={idx} className={cn(
+                            "p-8 flex items-center justify-between hover:bg-muted/10 transition-colors group",
+                            item.type === 'leave' && "bg-amber-50/50"
+                          )}>
                             <div className="flex items-center gap-8">
                               <div className="w-24 text-right">
                                 <p className="text-lg font-black text-primary">{item.time}</p>
-                                <p className="text-[10px] font-bold text-muted-foreground uppercase">Scheduled</p>
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase">{item.type === 'leave' ? 'Registry' : 'Scheduled'}</p>
                               </div>
-                              <div className="h-12 w-1 bg-primary/10 rounded-full group-hover:bg-primary transition-colors" />
+                              <div className={cn(
+                                "h-12 w-1 rounded-full transition-colors",
+                                item.type === 'leave' ? "bg-amber-500" : "bg-primary/10 group-hover:bg-primary"
+                              )} />
                               <div>
                                 <div className="flex items-center gap-3 mb-1">
                                   <h4 className="text-lg font-black text-primary">
-                                    {item.type === 'appt' ? (item.data.guestName || item.data.clientName) : item.data.title}
+                                    {item.type === 'appt' ? (item.data.guestName || item.data.clientName) : 
+                                     item.type === 'leave' ? `Filed Leave: ${item.data.leaveReason}` : item.data.title}
                                   </h4>
                                   <Badge variant="outline" className={cn(
                                     "text-[9px] font-black uppercase px-2 py-0.5",
-                                    item.type === 'appt' ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-blue-50 text-blue-700 border-blue-200"
+                                    item.type === 'appt' ? "bg-amber-50 text-amber-700 border-amber-200" : 
+                                    item.type === 'leave' ? "bg-red-50 text-red-700 border-red-200" : "bg-blue-50 text-blue-700 border-blue-200"
                                   )}>
-                                    {item.type === 'appt' ? "Citizen Visit" : item.data.category}
+                                    {item.type === 'appt' ? "Citizen Visit" : item.type === 'leave' ? "Unavailable" : item.data.category}
                                   </Badge>
                                 </div>
                                 <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground">
-                                  <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {item.type === 'appt' ? "PAO Main Office" : item.data.location}</span>
-                                  <span className="flex items-center gap-1"><ShieldCheck className="h-3 w-3" /> Ref: {item.type === 'appt' ? item.data.referenceCode : item.data.id.slice(0, 8)}</span>
+                                  {item.type === 'leave' ? (
+                                    <span className="flex items-center gap-1 italic"><ShieldAlert className="h-3 w-3" /> Note: {item.data.notes || "Official Registry Entry"}</span>
+                                  ) : (
+                                    <>
+                                      <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {item.type === 'appt' ? "PAO Main Office" : item.data.location}</span>
+                                      <span className="flex items-center gap-1"><ShieldCheck className="h-3 w-3" /> Ref: {item.type === 'appt' ? item.data.referenceCode : item.data.id.slice(0, 8)}</span>
+                                    </>
+                                  )}
                                 </div>
                               </div>
                             </div>
-                            <Badge className="bg-primary/5 text-primary border-none font-black text-[10px] px-4 py-1 rounded-full uppercase">Scheduled</Badge>
+                            <Badge className={cn(
+                              "border-none font-black text-[10px] px-4 py-1 rounded-full uppercase",
+                              item.type === 'leave' ? "bg-red-100 text-red-700" : "bg-primary/5 text-primary"
+                            )}>
+                              {item.type === 'leave' ? "ON LEAVE" : "Scheduled"}
+                            </Badge>
                           </div>
                         ))}
                       </div>

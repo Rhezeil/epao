@@ -28,9 +28,10 @@ import {
   AlertCircle,
   ShieldAlert,
   Bell,
-  Inbox
+  Inbox,
+  Info
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/badge";
 import { useEffect, useState, useMemo } from "react";
 import { format, isBefore, startOfToday, isWeekend, setHours, setMinutes, parseISO } from "date-fns";
 import { useRouter } from "next/navigation";
@@ -81,6 +82,7 @@ export default function ClientDashboard() {
   const [isRescheduling, setIsRescheduling] = useState(false);
 
   const today = startOfToday();
+  const todayStr = format(today, "yyyy-MM-dd");
 
   // Queries
   const casesQuery = useMemoFirebase(() => {
@@ -115,6 +117,13 @@ export default function ClientDashboard() {
     }
     return () => unsub();
   }, [activeCase, db, role]);
+
+  // Lawyer Leave logic for today
+  const lawyerAvailTodayRef = useMemoFirebase(() => {
+    if (!db || !activeCase?.lawyerId) return null;
+    return doc(db, "roleLawyer", activeCase.lawyerId, "availability", todayStr);
+  }, [db, activeCase?.lawyerId, todayStr]);
+  const { data: lawyerAvailToday } = useDoc(lawyerAvailTodayRef);
 
   // Derived Appointment Views
   const upcomingAppts = useMemo(() => {
@@ -159,7 +168,7 @@ export default function ClientDashboard() {
     return allLawyerAvail
       .filter(a => a.availabilityType === 'FullDayLeave' || a.availabilityType === 'PartialLeave')
       .map(a => parseISO(a.date));
-  }, [allLawyerAvail]);
+  }, [allAvail]);
 
   // Rescheduling Slot Logic
   const reschedDateStr = rescheduleDate ? format(rescheduleDate, "yyyy-MM-dd") : null;
@@ -293,6 +302,26 @@ export default function ClientDashboard() {
           </div>
           <Badge className="bg-primary/10 text-primary border-none px-4 py-2 rounded-full font-bold">REGISTERED</Badge>
         </div>
+
+        {lawyerAvailToday && lawyerAvailToday.availabilityType !== 'Available' && (
+          <Card className="border-none shadow-xl rounded-[2.5rem] bg-indigo-50 border-l-8 border-indigo-500 animate-in slide-in-from-top-4 duration-500">
+            <CardContent className="p-8 flex items-start gap-6">
+              <div className="p-3 bg-white rounded-2xl text-indigo-600 shadow-sm shrink-0">
+                <ShieldAlert className="h-6 w-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-lg font-black text-primary">Atty. {assignedLawyer?.lastName} Professional Status</h3>
+                <p className="text-sm font-bold text-muted-foreground leading-relaxed">
+                  Your assigned attorney is currently **On Leave** today for: <span className="text-indigo-700 uppercase font-black">{lawyerAvailToday.leaveReason}</span>.
+                </p>
+                <div className="p-3 bg-white/50 rounded-xl border border-indigo-100 mt-2 flex items-start gap-2">
+                  <Info className="h-4 w-4 text-indigo-400 shrink-0 mt-0.5" />
+                  <p className="text-xs italic text-indigo-900 font-medium">Standard PAO registry update for professional transparency.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {officeNotifications.length > 0 && (
           <div className="space-y-4 animate-in slide-in-from-top-4 duration-500">
