@@ -39,7 +39,7 @@ import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { caseCategories } from "@/app/lib/case-data";
@@ -68,6 +68,22 @@ const DENIAL_REASONS = [
   "Misrepresentation / False Information",
   "Procedural Disqualification"
 ];
+
+const CANCELLATION_REASONS = {
+  work: [
+    "Conflict of Interest (Statutory)",
+    "Emergency Court Hearing",
+    "Jail / Prison Visit",
+    "Field Investigation / Coordination",
+    "Official Meeting / Seminar",
+    "Office Administrative Duty"
+  ],
+  personal: [
+    "Medical / Sick Leave",
+    "Family Emergency",
+    "Personal Matters"
+  ]
+};
 
 export default function LawyerDashboard() {
   const { user, role, loading } = useAuth();
@@ -405,6 +421,10 @@ export default function LawyerDashboard() {
     }
   };
 
+  const isWeekendDisabled = (date: Date) => {
+    return date.getDay() === 0 || date.getDay() === 6;
+  };
+
   if (loading) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin text-secondary" /></div>;
   if (!user || role !== 'lawyer') return null;
 
@@ -477,10 +497,10 @@ export default function LawyerDashboard() {
                     mode="single" 
                     selected={selectedDate} 
                     onSelect={(date) => {
-                      if (date && isWeekend(date)) return;
+                      if (date && isWeekendDisabled(date)) return;
                       setSelectedDate(date);
                     }} 
-                    disabled={{ dayOfWeek: [0, 6] }}
+                    disabled={isWeekendDisabled}
                     className="mx-auto" 
                   />
                 </div>
@@ -629,12 +649,25 @@ export default function LawyerDashboard() {
           <div className="p-10 space-y-6">
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase text-rose-600/60 ml-1">Mandatory Reason for Cancellation</Label>
-              <Textarea 
-                placeholder="Specify the administrative or legal reason for cancelling this session..." 
-                className="rounded-[1.5rem] min-h-[120px] border-rose-100 focus-visible:ring-rose-200"
-                value={cancellationReason}
-                onChange={e => setCancellationReason(e.target.value)}
-              />
+              <Select value={cancellationReason} onValueChange={setCancellationReason}>
+                <SelectTrigger className="h-14 rounded-xl border-rose-100 bg-rose-50/30 font-bold shadow-sm">
+                  <SelectValue placeholder="Select Reason" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel className="text-[10px] font-black uppercase text-primary/40 tracking-widest px-2 py-2 border-b">Work-Related Reasons</SelectLabel>
+                    {CANCELLATION_REASONS.work.map(r => (
+                      <SelectItem key={r} value={r} className="font-bold">{r}</SelectItem>
+                    ))}
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel className="text-[10px] font-black uppercase text-primary/40 tracking-widest px-2 py-2 border-b mt-2">Personal Reasons</SelectLabel>
+                    {CANCELLATION_REASONS.personal.map(r => (
+                      <SelectItem key={r} value={r} className="font-bold">{r}</SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
               <p className="text-[9px] text-muted-foreground italic mt-2 px-1">Note: This reason will be visible to both the Client and the Administrator.</p>
             </div>
           </div>
