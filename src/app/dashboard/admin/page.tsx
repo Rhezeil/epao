@@ -49,20 +49,28 @@ import {
 } from "@/components/ui/dialog";
 
 /**
- * Utility to shorten long rejection reason strings for chart labels.
+ * Maps raw rejection reasons to standardized statutory categories for the bar chart.
  */
-const shortenReason = (reason: string) => {
-  if (!reason) return "Unspecified";
-  // If it has a colon (like in PAO standard reasons), take the part before it
-  const colonIndex = reason.indexOf(':');
-  if (colonIndex !== -1) {
-    return reason.substring(0, colonIndex);
+const mapToStandardCategory = (reason: string) => {
+  if (!reason) return "Procedural Disqualification";
+  const r = reason.toLowerCase();
+  
+  if (r.includes("income") || r.includes("indigency") || r.includes("means test") || r.includes("threshold")) {
+    return "Non-Indigent (Failed Means Test)";
   }
-  // Otherwise truncate if too long
-  if (reason.length > 25) {
-    return reason.substring(0, 22) + "...";
+  if (r.includes("jurisdiction") || r.includes("not covered") || r.includes("merit") || r.includes("scope")) {
+    return "Case Not Covered / Not Qualified";
   }
-  return reason;
+  if (r.includes("document") || r.includes("identification") || r.includes("proof") || r.includes("requirements") || r.includes("id")) {
+    return "Incomplete Requirements";
+  }
+  if (r.includes("conflict")) {
+    return "Conflict of Interest";
+  }
+  if (r.includes("false") || r.includes("misrepresentation") || r.includes("fraud") || r.includes("deceit")) {
+    return "Misrepresentation / False Information";
+  }
+  return "Procedural Disqualification";
 };
 
 export default function AdminDashboard() {
@@ -119,7 +127,7 @@ export default function AdminDashboard() {
 
     // 1. Intake Analysis - Broadened criteria to include all successful outcomes
     const intakeResults = appointments.filter(a => 
-      ['Eligible', 'Not Eligible', 'Consultation in Progress', 'Completed Consultation – Accept Legal Assistance', 'Completed Consultation – Denial of Legal Assistance', 'completed'].includes(a.status) || 
+      ['Eligible', 'Not Eligible', 'Consultation in Progress', 'Completed Consultation – Accept Legal Assistance', 'Completed Consultation – Denial of Legal Assistance', 'completed', 'For Screening'].includes(a.status) || 
       a.caseId
     );
     
@@ -134,14 +142,13 @@ export default function AdminDashboard() {
     
     const reasonsMap: Record<string, number> = {};
     ineligible.forEach(a => {
-      const fullReason = a.screeningDetails?.rejectionReason || a.denialReason || "Unspecified Requirement";
-      // We keep the original for the map to ensure uniqueness, but we'll display shortened versions
-      reasonsMap[fullReason] = (reasonsMap[fullReason] || 0) + 1;
+      const fullReason = a.screeningDetails?.rejectionReason || a.denialReason || "Procedural Disqualification";
+      const standardCategory = mapToStandardCategory(fullReason);
+      reasonsMap[standardCategory] = (reasonsMap[standardCategory] || 0) + 1;
     });
     
     const reasonsData = Object.entries(reasonsMap).map(([name, value]) => ({ 
-      name: shortenReason(name),
-      fullName: name,
+      name,
       value,
       percentage: ineligible.length > 0 ? ((value / ineligible.length) * 100).toFixed(1) : "0"
     }));
@@ -166,6 +173,7 @@ export default function AdminDashboard() {
     });
 
     const eligiblePct = intakeResults.length > 0 ? ((eligible.length / intakeResults.length) * 100).toFixed(1) : "0";
+    const ineligiblePct = intakeResults.length > 0 ? ((ineligible.length / intakeResults.length) * 100).toFixed(1) : "0";
     
     // Auto-generated Insights
     const dynamicInsight = parseFloat(eligiblePct) > 70 
@@ -183,7 +191,7 @@ export default function AdminDashboard() {
         reasons: reasonsData,
         total: intakeResults.length,
         eligiblePct,
-        ineligiblePct: intakeResults.length > 0 ? ((ineligible.length / intakeResults.length) * 100).toFixed(1) : "0",
+        ineligiblePct,
         topReason: reasonsData[0]?.name || "N/A"
       },
       workload: {

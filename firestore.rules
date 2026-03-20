@@ -61,12 +61,14 @@ service cloud.firestore {
     match /admins/{userId} {
       allow read, list: if isSignedIn();
       allow create: if isSignedIn() && (getEmail() == "admin@epao.com" || isAdmin());
-      allow update, delete: if isAdmin();
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
     }
 
     match /roleLawyer/{userId} {
       allow read, list: if isSignedIn();
-      allow write: if isAdmin();
+      allow update: if isOwner(userId) || isAdmin();
+      allow create, delete: if isAdmin();
       
       match /availability/{dateId} {
         allow read, list: if true;
