@@ -245,260 +245,267 @@ export default function AdminDashboard() {
 
   return (
     <DashboardLayout role="admin">
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 pb-20">
-        <div className="xl:col-span-3 space-y-12">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-primary text-white rounded-2xl shadow-lg">
-              <Target className="h-8 w-8" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-black text-primary font-headline tracking-tight">System Command Center</h1>
-              <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest mt-1">Real-time Platform Activity & Operational Analysis</p>
-            </div>
+      <div className="max-w-7xl mx-auto space-y-12 pb-20">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-primary text-white rounded-2xl shadow-lg">
+            <Target className="h-8 w-8" />
           </div>
+          <div>
+            <h1 className="text-3xl font-black text-primary font-headline tracking-tight">System Command Center</h1>
+            <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest mt-1">Real-time Platform Activity & Operational Analysis</p>
+          </div>
+        </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 max-w-md bg-white/50 p-1 rounded-2xl border-2 border-primary/5 h-14 mb-8">
-              <TabsTrigger value="analysis" className="rounded-xl font-bold">Intake Analysis</TabsTrigger>
-              <TabsTrigger value="workload" className="rounded-xl font-bold">Staff Activity</TabsTrigger>
-            </TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 max-w-2xl bg-white/50 p-1 rounded-2xl border-2 border-primary/5 h-14 mb-8">
+            <TabsTrigger value="analysis" className="rounded-xl font-bold">Intake Analysis</TabsTrigger>
+            <TabsTrigger value="workload" className="rounded-xl font-bold">Staff Activity</TabsTrigger>
+            <TabsTrigger value="notifications" className="rounded-xl font-bold flex items-center gap-2">
+              System Audit
+              {notifications?.some(n => n.status === 'unread') && (
+                <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+              )}
+            </TabsTrigger>
+          </TabsList>
 
-            <TabsContent value="analysis" className="space-y-12">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden lg:col-span-1 flex flex-col">
-                  <CardHeader className="bg-primary/5 pb-6">
-                    <CardTitle className="text-xs font-black uppercase text-primary flex items-center gap-2">
-                      <PieIcon className="h-4 w-4" /> Eligibility Breakdown
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-8 flex flex-col items-center justify-center flex-1">
-                    {!analyticsData ? <div className="py-20"><Loader2 className="animate-spin h-10 w-10 text-primary/20" /></div> : (
-                      <>
-                        <div className="h-[250px] w-full cursor-pointer">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                              <Pie
-                                data={analyticsData.screening.summary}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={60}
-                                outerRadius={80}
-                                paddingAngle={5}
-                                dataKey="value"
-                                stroke="none"
-                                onClick={(data) => {
-                                  setSelectedInsight(data);
-                                  setIsInsightOpen(true);
-                                }}
-                              >
-                                {analyticsData.screening.summary.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={entry.fill} className="hover:opacity-80 transition-opacity" />
-                                ))}
-                              </Pie>
-                              <Tooltip 
-                                content={({ active, payload }) => {
-                                  if (active && payload && payload.length) {
-                                    const data = payload[0].payload;
-                                    return (
-                                      <div className="bg-white p-4 rounded-2xl shadow-2xl border border-primary/5 space-y-1">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">{data.name}</p>
-                                        <p className="text-xl font-black text-primary">{data.value} Clients</p>
-                                        <p className="text-[9px] font-bold text-muted-foreground max-w-[150px] leading-tight italic">"{data.insight}"</p>
-                                      </div>
-                                    );
-                                  }
-                                  return null;
-                                }}
-                              />
-                            </PieChart>
-                          </ResponsiveContainer>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4 w-full mt-4">
-                          <div className="text-center p-4 bg-emerald-50 rounded-2xl border border-emerald-100 shadow-sm transition-transform hover:scale-105">
-                            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Eligible</p>
-                            <p className="text-2xl font-black text-emerald-700">{analyticsData.screening.eligiblePct}%</p>
-                          </div>
-                          <div className="text-center p-4 bg-rose-50 rounded-2xl border border-rose-100 shadow-sm transition-transform hover:scale-105">
-                            <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest">Ineligible</p>
-                            <p className="text-2xl font-black text-rose-700">{analyticsData.screening.ineligiblePct}%</p>
-                          </div>
-                        </div>
-                        <p className="mt-6 text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] animate-pulse">Click segments for detailed factors</p>
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
-
-                <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden lg:col-span-2 flex flex-col">
-                  <CardHeader className="bg-primary/5 pb-6 border-b border-primary/5">
-                    <div className="flex justify-between items-center">
-                      <CardTitle className="text-xs font-black uppercase text-primary flex items-center gap-2">
-                        <FileSearch className="h-4 w-4" /> Root Causes of Ineligibility
-                      </CardTitle>
-                      <Badge variant="outline" className="border-rose-200 text-rose-700 bg-rose-50 font-black text-[9px]">TOP: {analyticsData?.screening.topReason || '---'}</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-10 flex flex-col justify-center flex-1">
-                    {!analyticsData ? <div className="py-20 flex justify-center"><Loader2 className="animate-spin h-10 w-10 text-primary/20" /></div> : (
-                      <div className="h-[300px] w-full">
+          <TabsContent value="analysis" className="space-y-12">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden lg:col-span-1 flex flex-col">
+                <CardHeader className="bg-primary/5 pb-6">
+                  <CardTitle className="text-xs font-black uppercase text-primary flex items-center gap-2">
+                    <PieIcon className="h-4 w-4" /> Eligibility Breakdown
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-8 flex flex-col items-center justify-center flex-1">
+                  {!analyticsData ? <div className="py-20"><Loader2 className="animate-spin h-10 w-10 text-primary/20" /></div> : (
+                    <>
+                      <div className="h-[250px] w-full cursor-pointer">
                         <ResponsiveContainer width="100%" height="100%">
-                          <BarChart 
-                            data={analyticsData.screening.reasons} 
-                            layout="vertical" 
-                            margin={{ left: 20, right: 40, top: 10, bottom: 10 }}
-                          >
-                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#F1F5F9" />
-                            <XAxis type="number" hide />
-                            <YAxis 
-                              dataKey="name" 
-                              type="category" 
-                              axisLine={false} 
-                              tickLine={false} 
-                              tick={{ fontSize: 9, fontWeight: 700, fill: '#1A237E' }} 
-                              width={180} 
-                            />
-                            <Tooltip 
-                              cursor={{ fill: 'rgba(26, 35, 126, 0.05)' }} 
-                              contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} 
-                              labelStyle={{ fontWeight: 'black', color: '#1A237E' }}
-                            />
-                            <Bar dataKey="value" fill="#EF4444" radius={[0, 10, 10, 0]} barSize={24}>
-                              {analyticsData.screening.reasons.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.value > 0 ? (index === 0 ? '#B91C1C' : '#EF4444') : '#F1F5F9'} />
+                          <PieChart>
+                            <Pie
+                              data={analyticsData.screening.summary}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={80}
+                              paddingAngle={5}
+                              dataKey="value"
+                              stroke="none"
+                              onClick={(data) => {
+                                setSelectedInsight(data);
+                                setIsInsightOpen(true);
+                              }}
+                            >
+                              {analyticsData.screening.summary.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.fill} className="hover:opacity-80 transition-opacity" />
                               ))}
-                            </Bar>
-                          </BarChart>
+                            </Pie>
+                            <Tooltip 
+                              content={({ active, payload }) => {
+                                if (active && payload && payload.length) {
+                                  const data = payload[0].payload;
+                                  return (
+                                    <div className="bg-white p-4 rounded-2xl shadow-2xl border border-primary/5 space-y-1">
+                                      <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">{data.name}</p>
+                                      <p className="text-xl font-black text-primary">{data.value} Clients</p>
+                                      <p className="text-[9px] font-bold text-muted-foreground max-w-[150px] leading-tight italic">"{data.insight}"</p>
+                                    </div>
+                                  );
+                                }
+                                return null;
+                              }}
+                            />
+                          </PieChart>
                         </ResponsiveContainer>
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="workload">
-              <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
-                <CardHeader className="bg-primary/5 px-10 pt-8 border-b">
-                  <div className="flex flex-col md:flex-row justify-between items-start gap-6">
-                    <div className="flex-1 w-full space-y-4">
-                      <CardTitle className="text-xl font-bold text-primary flex items-center gap-2"><Briefcase className="h-6 w-6" /> Staff Operational Status</CardTitle>
-                      <div className="flex gap-4">
-                        <Input placeholder="Search Attorney..." className="max-w-xs h-11 rounded-xl" value={lawyerSearch} onChange={e => setLawyerSearch(e.target.value)} />
-                        <Select value={performanceRange} onValueChange={setPerformanceRange}>
-                          <SelectTrigger className="h-11 w-[180px] rounded-xl"><SelectValue /></SelectTrigger>
-                          <SelectContent><SelectItem value="day" className="font-bold">Today</SelectItem><SelectItem value="week" className="font-bold">Last 7 Days</SelectItem><SelectItem value="month" className="font-bold">Last 30 Days</SelectItem></SelectContent>
-                        </Select>
+                      <div className="grid grid-cols-2 gap-4 w-full mt-4">
+                        <div className="text-center p-4 bg-emerald-50 rounded-2xl border border-emerald-100 shadow-sm transition-transform hover:scale-105">
+                          <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Eligible</p>
+                          <p className="text-2xl font-black text-emerald-700">{analyticsData.screening.eligiblePct}%</p>
+                        </div>
+                        <div className="text-center p-4 bg-rose-50 rounded-2xl border border-rose-100 shadow-sm transition-transform hover:scale-105">
+                          <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest">Ineligible</p>
+                          <p className="text-2xl font-black text-rose-700">{analyticsData.screening.ineligiblePct}%</p>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader className="bg-muted/30">
-                      <TableRow>
-                        <TableHead className="px-10 text-[10px] font-black uppercase tracking-widest text-primary/40">Attorney Profile</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Intakes Handled</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Active Cases</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {lawyers?.filter(l => (l.firstName + ' ' + l.lastName).toLowerCase().includes(lawyerSearch.toLowerCase())).map((lawyer) => {
-                        const apptCount = analyticsData?.workload.appts[lawyer.id] || 0;
-                        const caseCount = analyticsData?.workload.cases[lawyer.id] || 0;
-                        return (
-                          <TableRow key={lawyer.id} className="hover:bg-primary/5 transition-colors">
-                            <TableCell className="px-10 py-6">
-                              <p className="font-black text-primary leading-none">Atty. {lawyer.firstName} {lawyer.lastName}</p>
-                              <p className="text-[10px] text-muted-foreground mt-1">{lawyer.email}</p>
-                            </TableCell>
-                            <TableCell className="text-center font-black text-lg">{apptCount}</TableCell>
-                            <TableCell className="text-center font-black text-lg text-secondary">{caseCount}</TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
+                      <p className="mt-6 text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] animate-pulse">Click segments for detailed factors</p>
+                    </>
+                  )}
                 </CardContent>
               </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
 
-        <div className="xl:col-span-1 space-y-6">
-          <Card className="border-none shadow-2xl bg-white rounded-[2.5rem] overflow-hidden flex flex-col h-[calc(100vh-12rem)] sticky top-24">
-            <CardHeader className="bg-primary p-8 text-white shrink-0">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <Bell className="h-6 w-6 text-white/60" />
-                  <CardTitle className="text-xl font-black">System Audit</CardTitle>
-                </div>
-                <Badge className="bg-white/20 text-white border-none font-black text-[10px]">{notifications?.filter(n => n.status === 'unread').length || 0} NEW</Badge>
-              </div>
-              <div className="mt-6">
-                <Select value={notifFilter} onValueChange={setNotifFilter}>
-                  <SelectTrigger className="h-10 bg-white/10 border-none text-white text-xs font-black rounded-xl focus:ring-0 uppercase tracking-widest">
-                    <div className="flex items-center gap-2">
-                      <Filter className="h-3 w-3" />
-                      <SelectValue placeholder="All Activities" />
+              <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden lg:col-span-2 flex flex-col">
+                <CardHeader className="bg-primary/5 pb-6 border-b border-primary/5">
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="text-xs font-black uppercase text-primary flex items-center gap-2">
+                      <FileSearch className="h-4 w-4" /> Root Causes of Ineligibility
+                    </CardTitle>
+                    <Badge variant="outline" className="border-rose-200 text-rose-700 bg-rose-50 font-black text-[9px]">TOP: {analyticsData?.screening.topReason || '---'}</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-10 flex flex-col justify-center flex-1">
+                  {!analyticsData ? <div className="py-20 flex justify-center"><Loader2 className="animate-spin h-10 w-10 text-primary/20" /></div> : (
+                    <div className="h-[300px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart 
+                          data={analyticsData.screening.reasons} 
+                          layout="vertical" 
+                          margin={{ left: 20, right: 40, top: 10, bottom: 10 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#F1F5F9" />
+                          <XAxis type="number" hide />
+                          <YAxis 
+                            dataKey="name" 
+                            type="category" 
+                            axisLine={false} 
+                            tickLine={false} 
+                            tick={{ fontSize: 9, fontWeight: 700, fill: '#1A237E' }} 
+                            width={180} 
+                          />
+                          <Tooltip 
+                            cursor={{ fill: 'rgba(26, 35, 126, 0.05)' }} 
+                            contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} 
+                            labelStyle={{ fontWeight: 'black', color: '#1A237E' }}
+                          />
+                          <Bar dataKey="value" fill="#EF4444" radius={[0, 10, 10, 0]} barSize={24}>
+                            {analyticsData.screening.reasons.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.value > 0 ? (index === 0 ? '#B91C1C' : '#EF4444') : '#F1F5F9'} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
                     </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all" className="font-bold">All Activities</SelectItem>
-                    <SelectItem value="appointment" className="font-bold text-blue-600">Appointments</SelectItem>
-                    <SelectItem value="case" className="font-bold text-green-600">Cases</SelectItem>
-                    <SelectItem value="lawyer" className="font-bold text-purple-600">Staff Actions</SelectItem>
-                    <SelectItem value="client" className="font-bold text-amber-600">Client Actions</SelectItem>
-                    <SelectItem value="system" className="font-bold text-slate-600">System Logs</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0 overflow-y-auto flex-1 divide-y divide-primary/5">
-              {filteredNotifs.length > 0 ? (
-                filteredNotifs.map((notif) => (
-                  <div 
-                    key={notif.id} 
-                    className={cn(
-                      "p-6 transition-all cursor-pointer hover:bg-primary/[0.02] relative group",
-                      notif.status === 'unread' && "bg-amber-50/30"
-                    )}
-                    onClick={() => handleNotifClick(notif)}
-                  >
-                    {notif.status === 'unread' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500" />}
-                    <div className="flex justify-between items-start mb-2">
-                      <Badge className={cn(
-                        "text-[8px] font-black uppercase px-2 py-0.5 border-none shadow-sm",
-                        notif.type === 'appointment' ? 'bg-blue-100 text-blue-700' :
-                        notif.type === 'case' ? 'bg-green-100 text-green-700' :
-                        notif.type === 'lawyer' ? 'bg-purple-100 text-purple-700' :
-                        notif.type === 'client' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-700'
-                      )}>
-                        {notif.type}
-                      </Badge>
-                      <span className="text-[9px] font-black text-muted-foreground uppercase">{notif.createdAt ? format(new Date(notif.createdAt), "HH:mm") : '---'}</span>
-                    </div>
-                    <p className="text-sm font-bold text-primary leading-snug group-hover:underline">{notif.description}</p>
-                    <div className="flex justify-between items-center mt-3">
-                      <div className="flex items-center gap-1.5">
-                        <div className="h-1.5 w-1.5 rounded-full bg-primary/20" />
-                        <p className="text-[9px] font-black text-primary/40 uppercase tracking-widest">{notif.userRole}</p>
-                      </div>
-                      <div className="flex items-center gap-1 text-secondary">
-                        <ArrowRight className="h-3 w-3" />
-                        <span className="text-[9px] font-black">{notif.referenceCode || "View Detail"}</span>
-                      </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="workload">
+            <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
+              <CardHeader className="bg-primary/5 px-10 pt-8 border-b">
+                <div className="flex flex-col md:flex-row justify-between items-start gap-6">
+                  <div className="flex-1 w-full space-y-4">
+                    <CardTitle className="text-xl font-bold text-primary flex items-center gap-2"><Briefcase className="h-6 w-6" /> Staff Operational Status</CardTitle>
+                    <div className="flex gap-4">
+                      <Input placeholder="Search Attorney..." className="max-w-xs h-11 rounded-xl" value={lawyerSearch} onChange={e => setLawyerSearch(e.target.value)} />
+                      <Select value={performanceRange} onValueChange={setPerformanceRange}>
+                        <SelectTrigger className="h-11 w-[180px] rounded-xl"><SelectValue /></SelectTrigger>
+                        <SelectContent><SelectItem value="day" className="font-bold">Today</SelectItem><SelectItem value="week" className="font-bold">Last 7 Days</SelectItem><SelectItem value="month" className="font-bold">Last 30 Days</SelectItem></SelectContent>
+                      </Select>
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className="py-20 text-center space-y-4">
-                  <Inbox className="h-12 w-12 text-primary/5 mx-auto" />
-                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">No activities recorded</p>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader className="bg-muted/30">
+                    <TableRow>
+                      <TableHead className="px-10 text-[10px] font-black uppercase tracking-widest text-primary/40">Attorney Profile</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Intakes Handled</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">Active Cases</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {lawyers?.filter(l => (l.firstName + ' ' + l.lastName).toLowerCase().includes(lawyerSearch.toLowerCase())).map((lawyer) => {
+                      const apptCount = analyticsData?.workload.appts[lawyer.id] || 0;
+                      const caseCount = analyticsData?.workload.cases[lawyer.id] || 0;
+                      return (
+                        <TableRow key={lawyer.id} className="hover:bg-primary/5 transition-colors">
+                          <TableCell className="px-10 py-6">
+                            <p className="font-black text-primary leading-none">Atty. {lawyer.firstName} {lawyer.lastName}</p>
+                            <p className="text-[10px] text-muted-foreground mt-1">{lawyer.email}</p>
+                          </TableCell>
+                          <TableCell className="text-center font-black text-lg">{apptCount}</TableCell>
+                          <TableCell className="text-center font-black text-lg text-secondary">{caseCount}</TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="notifications">
+            <Card className="border-none shadow-2xl bg-white rounded-[2.5rem] overflow-hidden">
+              <CardHeader className="bg-primary p-8 text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div className="flex items-center gap-3">
+                  <Bell className="h-8 w-8 text-white/60" />
+                  <div>
+                    <CardTitle className="text-2xl font-black">System Audit Logs</CardTitle>
+                    <CardDescription className="text-white/60 font-bold uppercase tracking-widest text-[10px] mt-1">Real-time platform activity tracking</CardDescription>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <Badge className="bg-white/20 text-white border-none font-black text-xs px-4 py-1.5 rounded-full">{notifications?.filter(n => n.status === 'unread').length || 0} UNREAD</Badge>
+                  <Select value={notifFilter} onValueChange={setNotifFilter}>
+                    <SelectTrigger className="h-11 w-[200px] bg-white/10 border-none text-white font-bold rounded-xl focus:ring-0">
+                      <div className="flex items-center gap-2">
+                        <Filter className="h-4 w-4" />
+                        <SelectValue placeholder="All Activities" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all" className="font-bold">All Activities</SelectItem>
+                      <SelectItem value="appointment" className="font-bold text-blue-600">Appointments</SelectItem>
+                      <SelectItem value="case" className="font-bold text-green-600">Cases</SelectItem>
+                      <SelectItem value="lawyer" className="font-bold text-purple-600">Staff Actions</SelectItem>
+                      <SelectItem value="client" className="font-bold text-amber-600">Client Actions</SelectItem>
+                      <SelectItem value="system" className="font-bold text-slate-600">System Logs</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y divide-primary/5">
+                  {filteredNotifs.length > 0 ? (
+                    filteredNotifs.map((notif) => (
+                      <div 
+                        key={notif.id} 
+                        className={cn(
+                          "p-8 transition-all cursor-pointer hover:bg-primary/[0.02] relative group flex flex-col md:flex-row md:items-center justify-between gap-6",
+                          notif.status === 'unread' && "bg-amber-50/30"
+                        )}
+                        onClick={() => handleNotifClick(notif)}
+                      >
+                        {notif.status === 'unread' && <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500" />}
+                        <div className="flex gap-6 items-start flex-1">
+                          <Badge className={cn(
+                            "text-[10px] font-black uppercase px-4 py-1.5 border-none shadow-sm rounded-xl shrink-0 h-fit",
+                            notif.type === 'appointment' ? 'bg-blue-100 text-blue-700' :
+                            notif.type === 'case' ? 'bg-green-100 text-green-700' :
+                            notif.type === 'lawyer' ? 'bg-purple-100 text-purple-700' :
+                            notif.type === 'client' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-700'
+                          )}>
+                            {notif.type}
+                          </Badge>
+                          <div className="space-y-1">
+                            <p className="text-base font-bold text-primary leading-snug group-hover:underline">{notif.description}</p>
+                            <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-primary/40">
+                              <span className="flex items-center gap-1.5"><User className="h-3 w-3" /> {notif.userRole}</span>
+                              <span>•</span>
+                              <span>{notif.createdAt ? format(new Date(notif.createdAt), "PPP HH:mm") : '---'}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 text-secondary font-black uppercase text-[10px] tracking-widest shrink-0">
+                          {notif.referenceCode || "View Detail"}
+                          <ArrowRight className="h-4 w-4" />
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-32 text-center space-y-4">
+                      <Inbox className="h-16 w-16 text-primary/5 mx-auto" />
+                      <p className="text-xs font-black uppercase text-muted-foreground tracking-widest">No activities recorded in this category</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* --- INTERACTIVE ANALYTICS DRILL-DOWN --- */}
