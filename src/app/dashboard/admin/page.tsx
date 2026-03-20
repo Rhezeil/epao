@@ -4,7 +4,7 @@
 import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { useAuth } from "@/components/auth-provider";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase";
 import { collection, query, orderBy, doc, limit } from "firebase/firestore";
 import { useRouter } from "next/navigation";
@@ -24,7 +24,12 @@ import {
   Inbox,
   CheckCircle2,
   Filter,
-  Loader2
+  Loader2,
+  XCircle,
+  TrendingUp,
+  AlertTriangle,
+  Lightbulb,
+  ArrowUpRight
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,6 +39,14 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { format, startOfToday, subDays, isAfter } from "date-fns";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription, 
+  DialogFooter 
+} from "@/components/ui/dialog";
 
 export default function AdminDashboard() {
   const db = useFirestore();
@@ -45,6 +58,10 @@ export default function AdminDashboard() {
   const [lawyerSearch, setLawyerSearch] = useState("");
   const [performanceRange, setPerformanceRange] = useState("month");
   const [notifFilter, setNotifFilter] = useState("all");
+
+  // Interactive Analytics State
+  const [selectedInsight, setSelectedInsight] = useState<any>(null);
+  const [isInsightOpen, setIsInsightOpen] = useState(false);
 
   // Database Queries
   const casesQuery = useMemoFirebase(() => {
@@ -83,18 +100,32 @@ export default function AdminDashboard() {
   const analyticsData = useMemo(() => {
     if (!appointments || !cases || !lawyers) return null;
 
-    // 1. Intake Analysis
-    const screeningAppts = appointments.filter(a => a.status === 'Eligible' || a.status === 'Not Eligible');
-    const eligible = screeningAppts.filter(a => a.status === 'Eligible');
-    const ineligible = screeningAppts.filter(a => a.status === 'Not Eligible');
+    // 1. Intake Analysis - Broadened criteria to include all successful outcomes
+    const intakeResults = appointments.filter(a => 
+      ['Eligible', 'Not Eligible', 'Consultation in Progress', 'Completed Consultation – Accept Legal Assistance', 'Completed Consultation – Denial of Legal Assistance', 'completed'].includes(a.status) || 
+      a.caseId
+    );
+    
+    const eligible = intakeResults.filter(a => 
+      ['Eligible', 'Consultation in Progress', 'Completed Consultation – Accept Legal Assistance', 'completed'].includes(a.status) || 
+      a.caseId
+    );
+    
+    const ineligible = intakeResults.filter(a => 
+      ['Not Eligible', 'Completed Consultation – Denial of Legal Assistance'].includes(a.status)
+    );
     
     const reasonsMap: Record<string, number> = {};
     ineligible.forEach(a => {
-      const reason = a.screeningDetails?.rejectionReason || "Unspecified";
-      reasonsMap[reason] = (reason === 'Unspecified') ? 0 : (reasonsMap[reason] || 0) + 1;
+      const reason = a.screeningDetails?.rejectionReason || a.denialReason || "Unspecified Requirement";
+      reasonsMap[reason] = (reasonsMap[reason] || 0) + 1;
     });
     
-    const reasonsData = Object.entries(reasonsMap).map(([name, value]) => ({ name, value }));
+    const reasonsData = Object.entries(reasonsMap).map(([name, value]) => ({ 
+      name, 
+      value,
+      percentage: ineligible.length > 0 ? ((value / ineligible.length) * 100).toFixed(1) : "0"
+    }));
     reasonsData.sort((a, b) => b.value - a.value);
 
     // 2. Lawyer Workload (Single Pass)
@@ -115,16 +146,25 @@ export default function AdminDashboard() {
       activeCaseByLawyer[c.lawyerId] = (activeCaseByLawyer[c.lawyerId] || 0) + 1;
     });
 
+    const eligiblePct = intakeResults.length > 0 ? ((eligible.length / intakeResults.length) * 100).toFixed(1) : "0";
+    
+    // Auto-generated Insights
+    const dynamicInsight = parseFloat(eligiblePct) > 70 
+      ? "Strong qualification trend: Public outreach matches office mandate."
+      : parseFloat(eligiblePct) < 40 
+      ? "High rejection rate: Possible public misinformation on requirements."
+      : "Standard intake distribution observed.";
+
     return {
       screening: {
         summary: [
-          { name: 'Eligible', value: eligible.length, fill: '#10B981' },
-          { name: 'Ineligible', value: ineligible.length, fill: '#EF4444' }
+          { name: 'Eligible', value: eligible.length, fill: '#10B981', insight: dynamicInsight },
+          { name: 'Ineligible', value: ineligible.length, fill: '#EF4444', insight: "Root cause analysis recommended for denials." }
         ],
         reasons: reasonsData,
-        total: screeningAppts.length,
-        eligiblePct: screeningAppts.length > 0 ? ((eligible.length / screeningAppts.length) * 100).toFixed(1) : "0",
-        ineligiblePct: screeningAppts.length > 0 ? ((ineligible.length / screeningAppts.length) * 100).toFixed(1) : "0",
+        total: intakeResults.length,
+        eligiblePct,
+        ineligiblePct: intakeResults.length > 0 ? ((ineligible.length / intakeResults.length) * 100).toFixed(1) : "0",
         topReason: reasonsData[0]?.name || "N/A"
       },
       workload: {
@@ -188,7 +228,7 @@ export default function AdminDashboard() {
                   <CardContent className="p-8 flex flex-col items-center">
                     {!analyticsData ? <Loader2 className="animate-spin h-10 w-10 text-primary/20 my-20" /> : (
                       <>
-                        <div className="h-[250px] w-full">
+                        <div className="h-[250px] w-full cursor-pointer">
                           <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                               <Pie
@@ -199,25 +239,45 @@ export default function AdminDashboard() {
                                 outerRadius={80}
                                 paddingAngle={5}
                                 dataKey="value"
+                                stroke="none"
+                                onClick={(data) => {
+                                  setSelectedInsight(data);
+                                  setIsInsightOpen(true);
+                                }}
                               >
                                 {analyticsData.screening.summary.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                                  <Cell key={`cell-${index}`} fill={entry.fill} className="hover:opacity-80 transition-opacity" />
                                 ))}
                               </Pie>
-                              <Tooltip />
+                              <Tooltip 
+                                content={({ active, payload }) => {
+                                  if (active && payload && payload.length) {
+                                    const data = payload[0].payload;
+                                    return (
+                                      <div className="bg-white p-4 rounded-2xl shadow-2xl border border-primary/5 space-y-1">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">{data.name}</p>
+                                        <p className="text-xl font-black text-primary">{data.value} Clients</p>
+                                        <p className="text-[9px] font-bold text-muted-foreground max-w-[150px] leading-tight italic">"{data.insight}"</p>
+                                      </div>
+                                    );
+                                  }
+                                  return null;
+                                }}
+                              />
                             </PieChart>
                           </ResponsiveContainer>
                         </div>
                         <div className="grid grid-cols-2 gap-4 w-full mt-4">
-                          <div className="text-center p-4 bg-emerald-50 rounded-2xl">
-                            <p className="text-[10px] font-black text-emerald-600 uppercase">Eligible</p>
+                          <div className="text-center p-4 bg-emerald-50 rounded-2xl border border-emerald-100 shadow-sm transition-transform hover:scale-105">
+                            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Eligible</p>
                             <p className="text-2xl font-black text-emerald-700">{analyticsData.screening.eligiblePct}%</p>
                           </div>
-                          <div className="text-center p-4 bg-rose-50 rounded-2xl">
-                            <p className="text-[10px] font-black text-rose-600 uppercase">Ineligible</p>
+                          <div className="text-center p-4 bg-rose-50 rounded-2xl border border-rose-100 shadow-sm transition-transform hover:scale-105">
+                            <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest">Ineligible</p>
                             <p className="text-2xl font-black text-rose-700">{analyticsData.screening.ineligiblePct}%</p>
                           </div>
                         </div>
+                        <p className="mt-6 text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] animate-pulse">Click segments for detailed factors</p>
                       </>
                     )}
                   </CardContent>
@@ -379,6 +439,110 @@ export default function AdminDashboard() {
           </Card>
         </div>
       </div>
+
+      {/* --- INTERACTIVE ANALYTICS DRILL-DOWN --- */}
+      <Dialog open={isInsightOpen} onOpenChange={setIsInsightOpen}>
+        <DialogContent className="rounded-[3rem] max-w-4xl p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[90vh]">
+          <DialogHeader className={cn(
+            "p-10 text-white flex flex-row items-center justify-between",
+            selectedInsight?.name === 'Eligible' ? "bg-emerald-600" : "bg-rose-600"
+          )}>
+            <div className="space-y-1">
+              <DialogTitle className="text-4xl font-black tracking-tighter">
+                {selectedInsight?.name} Segment Analysis
+              </DialogTitle>
+              <DialogDescription className="text-white/60 font-black uppercase tracking-[0.2em] text-xs">
+                Diagnostic Factors & Supporting Statistics
+              </DialogDescription>
+            </div>
+            <div className="p-4 bg-white/20 rounded-[2rem]">
+              {selectedInsight?.name === 'Eligible' ? <ShieldCheck className="h-10 w-10" /> : <XCircle className="h-10 w-10" />}
+            </div>
+          </DialogHeader>
+          <div className="p-10 space-y-10 flex-1 overflow-y-auto">
+            <div className="grid md:grid-cols-3 gap-6">
+              <Card className="border-none bg-muted/30 rounded-[2rem] p-6 text-center">
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1">Raw Volume</p>
+                <p className="text-4xl font-black text-primary">{selectedInsight?.value}</p>
+                <p className="text-[9px] font-bold text-muted-foreground mt-2 uppercase">Total Applicants</p>
+              </Card>
+              <Card className="border-none bg-muted/30 rounded-[2rem] p-6 text-center">
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1">Percentage Share</p>
+                <p className="text-4xl font-black text-secondary">
+                  {analyticsData ? (selectedInsight?.name === 'Eligible' ? analyticsData.screening.eligiblePct : analyticsData.screening.ineligiblePct) : '0'}%
+                </p>
+                <p className="text-[9px] font-bold text-muted-foreground mt-2 uppercase">Of Screened Intakes</p>
+              </Card>
+              <Card className="border-none bg-muted/30 rounded-[2rem] p-6 text-center flex flex-col justify-center">
+                <div className="flex items-center justify-center gap-2 text-primary font-black uppercase text-[10px] mb-2 tracking-widest">
+                  <TrendingUp className="h-3 w-3" /> Trend
+                </div>
+                <p className="text-xs font-bold leading-tight px-4">{selectedInsight?.insight}</p>
+              </Card>
+            </div>
+
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 border-b border-primary/5 pb-4">
+                <div className="p-2 bg-primary/5 rounded-xl text-primary"><AlertTriangle className="h-5 w-5" /></div>
+                <h4 className="text-sm font-black uppercase tracking-widest text-primary">Contributing Factors</h4>
+              </div>
+              
+              {selectedInsight?.name === 'Ineligible' ? (
+                <div className="grid gap-4">
+                  {analyticsData?.screening.reasons.map((reason, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-5 bg-rose-50 rounded-2xl border border-rose-100 group transition-all hover:bg-rose-100/50">
+                      <div className="space-y-1">
+                        <p className="text-sm font-black text-rose-900 leading-none">{reason.name}</p>
+                        <p className="text-[10px] text-rose-700 font-bold uppercase tracking-widest">{reason.value} Occurrences</p>
+                      </div>
+                      <Badge className="bg-rose-600 text-white border-none font-black text-xs px-4 py-1.5 rounded-xl shadow-sm">
+                        {reason.percentage}%
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  <div className="p-6 bg-emerald-50 rounded-[2rem] border border-emerald-100 space-y-2">
+                    <p className="font-black text-emerald-900 text-base">Verified Merit & Indigency</p>
+                    <p className="text-xs text-emerald-700 font-medium leading-relaxed italic">The majority of applicants in this segment successfully satisfied the statutory income threshold and presented cases within PAO's legal jurisdiction.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="p-8 bg-primary/5 rounded-[2.5rem] border-2 border-dashed border-primary/10 space-y-4">
+              <div className="flex items-center gap-3">
+                <Lightbulb className="h-6 w-6 text-primary" />
+                <h4 className="text-sm font-black uppercase tracking-widest text-primary">Administrative Recommendations</h4>
+              </div>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3">
+                  <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5"><ArrowUpRight className="h-3 w-3 text-primary" /></div>
+                  <p className="text-xs text-muted-foreground font-bold">
+                    {selectedInsight?.name === 'Ineligible' 
+                      ? "Enhance public awareness campaigns detailing required documents to reduce 'Missing Proof' rejections." 
+                      : "Allocate additional paralegal staff to speed up the transition from eligibility to consultation."}
+                  </p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5"><ArrowUpRight className="h-3 w-3 text-primary" /></div>
+                  <p className="text-xs text-muted-foreground font-bold">
+                    {selectedInsight?.name === 'Ineligible' 
+                      ? "Audit the 'Income Threshold' denials to determine if regional minimum wage adjustments are reflected in screening guidelines." 
+                      : "Scale up legal standards seeding for dominant case classifications observed this month."}
+                  </p>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <DialogFooter className="p-8 bg-muted/30">
+            <Button onClick={() => setIsInsightOpen(false)} className="w-full h-14 bg-primary text-white font-black rounded-2xl shadow-xl hover:scale-[1.02] transition-transform">
+              Close Segment Analysis
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
