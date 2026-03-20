@@ -64,14 +64,15 @@ export default function LawyerAvailabilityPage() {
   const db = useFirestore();
   const { toast } = useToast();
 
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedDates, setSelectedDates] = useState<Date[] | undefined>([new Date()]);
   const [isSaving, setIsSaving] = useState(false);
 
-  const dateStr = selectedDate ? format(selectedDate, "yyyy-MM-dd") : null;
+  // For real-time sync, we only listen to the first selected date's data to populate the form
+  const primaryDateStr = selectedDates?.[0] ? format(selectedDates[0], "yyyy-MM-dd") : null;
   const availRef = useMemoFirebase(() => {
-    if (!db || !user || !dateStr) return null;
-    return doc(db, "roleLawyer", user.uid, "availability", dateStr);
-  }, [db, user, dateStr]);
+    if (!db || !user || !primaryDateStr) return null;
+    return doc(db, "roleLawyer", user.uid, "availability", primaryDateStr);
+  }, [db, user, primaryDateStr]);
 
   const { data: availData, isLoading: isDataLoading } = useDoc(availRef);
 
@@ -83,9 +84,9 @@ export default function LawyerAvailabilityPage() {
     notes: ""
   });
 
-  // Sync form when data loads
+  // Sync form when data for the primary date loads (only if exactly 1 date is selected to avoid mass-override confusion)
   useMemo(() => {
-    if (availData) {
+    if (availData && selectedDates?.length === 1) {
       setFormData({
         availabilityType: availData.availabilityType || "Available",
         startTime: availData.startTime || "08:00",
@@ -93,7 +94,7 @@ export default function LawyerAvailabilityPage() {
         leaveReason: availData.leaveReason || "Court Hearing / Litigation",
         notes: availData.notes || ""
       });
-    } else {
+    } else if (!availData && selectedDates?.length === 1) {
       setFormData({
         availabilityType: "Available",
         startTime: "08:00",
@@ -102,27 +103,37 @@ export default function LawyerAvailabilityPage() {
         notes: ""
       });
     }
-  }, [availData]);
+  }, [availData, selectedDates?.length]);
 
   const handleSave = async () => {
-    if (!db || !user || !dateStr) return;
+    if (!db || !user || !selectedDates || selectedDates.length === 0) return;
     setIsSaving(true);
 
     try {
-      const data = {
-        date: dateStr,
-        ...formData,
-        updatedAt: new Date().toISOString()
-      };
+      // Loop through all selected dates for bulk update
+      selectedDates.forEach(date => {
+        const ds = format(date, "yyyy-MM-dd");
+        const ref = doc(db, "roleLawyer", user.uid, "availability", ds);
+        
+        const data = {
+          date: ds,
+          ...formData,
+          updatedAt: new Date().toISOString()
+        };
 
-      setDocumentNonBlocking(availRef!, data, { merge: true });
+        setDocumentNonBlocking(ref, data, { merge: true });
+      });
       
       const notifId = crypto.randomUUID();
+      const dateSummary = selectedDates.length === 1 
+        ? format(selectedDates[0], "MMM dd")
+        : `${selectedDates.length} dates starting ${format(selectedDates[0], "MMM dd")}`;
+
       setDocumentNonBlocking(doc(db, "notifications", notifId), {
         id: notifId,
         type: "lawyer",
         userRole: "lawyer",
-        description: `Atty. ${user.email?.split('@')[0]} modified schedule for ${format(selectedDate!, "MMM dd")} to ${formData.availabilityType} (${formData.leaveReason}).`,
+        description: `Atty. ${user.email?.split('@')[0]} modified schedule for ${dateSummary} to ${formData.availabilityType} (${formData.leaveReason}).`,
         referenceId: user.uid,
         status: "unread",
         createdAt: new Date().toISOString()
@@ -130,7 +141,7 @@ export default function LawyerAvailabilityPage() {
 
       toast({
         title: "Availability Synchronized",
-        description: `Office registry updated for ${format(selectedDate!, "MMM dd")}.`
+        description: `Office registry updated for ${selectedDates.length} selected date(s).`
       });
     } catch (e: any) {
       toast({ variant: "destructive", title: "Sync Failed", description: e.message });
@@ -156,16 +167,25 @@ export default function LawyerAvailabilityPage() {
           <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden lg:col-span-1">
             <CardHeader className="bg-secondary/5 border-b border-secondary/10">
               <CardTitle className="text-sm font-black uppercase text-secondary flex items-center gap-2">
-                <CalendarDays className="h-4 w-4" /> Select Date
+                <CalendarDays className="h-4 w-4" /> Select Date(s)
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
               <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={(date) => {
-                  if (date && (isWeekend(date) || isHoliday(date) || isBefore(date, startOfToday()))) return;
-                  setSelectedDate(date);
+                mode="multiple"
+                selected={selectedDates}
+                onSelect={(dates) => {
+                  if (!dates) {
+                    setSelectedDates([]);
+                    return;
+                  }
+                  // Prevent selecting weekends, past dates, or holidays
+                  const filtered = dates.filter(d => 
+                    !isWeekend(d) && 
+                    !isHoliday(d) && 
+                    !isBefore(d, startOfToday())
+                  );
+                  setSelectedDates(filtered);
                 }}
                 disabled={[
                   { before: startOfToday() },
@@ -177,7 +197,7 @@ export default function LawyerAvailabilityPage() {
               <div className="mt-6 p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                 <p className="text-[10px] text-amber-800 font-bold leading-relaxed">
-                  Availability updates are only permitted for official working days (Monday-Friday).
+                  Bulk updates are permitted for official working days (Monday-Friday). Click multiple dates to select a range.
                 </p>
               </div>
             </CardContent>
@@ -188,21 +208,23 @@ export default function LawyerAvailabilityPage() {
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
                   <CardTitle className="text-xl font-bold text-secondary">
-                    {selectedDate ? format(selectedDate, "PPPP") : "Workstation Settings"}
+                    {selectedDates && selectedDates.length > 1 
+                      ? `${selectedDates.length} Dates Selected` 
+                      : (selectedDates?.[0] ? format(selectedDates[0], "PPPP") : "Workstation Settings")}
                   </CardTitle>
                   <CardDescription className="text-[10px] font-black uppercase tracking-widest">
                     Manage Duty Status
                   </CardDescription>
                 </div>
-                {availData ? (
-                  <Badge className="bg-secondary text-white border-none font-black px-4 py-1.5 rounded-xl uppercase text-[9px]">Live Sync Active</Badge>
-                ) : (
-                  <Badge variant="outline" className="border-dashed font-black px-4 py-1.5 rounded-xl uppercase text-[9px]">Standard Hours</Badge>
+                {selectedDates && selectedDates.length > 0 && (
+                  <Badge className="bg-secondary text-white border-none font-black px-4 py-1.5 rounded-xl uppercase text-[9px]">
+                    {selectedDates.length === 1 ? "Live Sync Active" : "Bulk Update Mode"}
+                  </Badge>
                 )}
               </div>
             </CardHeader>
             <CardContent className="p-8 md:p-10 space-y-10">
-              {isDataLoading ? (
+              {isDataLoading && selectedDates?.length === 1 ? (
                 <div className="py-20 flex justify-center"><Loader2 className="animate-spin h-10 w-10 text-secondary/20" /></div>
               ) : (
                 <>
@@ -234,7 +256,7 @@ export default function LawyerAvailabilityPage() {
                         <SelectTrigger className="h-auto min-h-[3.5rem] py-3 rounded-xl border-secondary/10 bg-white font-bold text-sm shadow-sm overflow-hidden whitespace-normal text-left">
                           <SelectValue placeholder="Choose Reason" />
                         </SelectTrigger>
-                        <SelectContent className="rounded-xl border-secondary/10 max-h-[300px]">
+                        <SelectContent position="popper" sideOffset={4} className="rounded-xl border-secondary/10 max-h-[300px] overflow-y-auto">
                           {REASON_CATEGORIES.map((cat) => (
                             <div key={cat.label}>
                               <div className="px-3 py-2 text-[9px] font-black uppercase text-secondary/40 tracking-widest bg-secondary/5 border-y">{cat.label}</div>
@@ -253,7 +275,7 @@ export default function LawyerAvailabilityPage() {
                   {(formData.availabilityType === 'PartialLeave') && (
                     <div className="grid grid-cols-2 gap-6 animate-in slide-in-from-top-4 duration-500">
                       <div className="space-y-2">
-                        <Label className="text-[10px) font-black uppercase text-secondary/40 ml-1">
+                        <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">
                           Start of Unavailability
                         </Label>
                         <div className="relative">
@@ -296,11 +318,11 @@ export default function LawyerAvailabilityPage() {
                   <div className="pt-6 border-t border-secondary/5">
                     <Button 
                       onClick={handleSave} 
-                      disabled={isSaving}
+                      disabled={isSaving || !selectedDates || selectedDates.length === 0}
                       className="w-full h-16 bg-secondary hover:bg-secondary/90 text-white font-black text-lg rounded-2xl shadow-xl hover:scale-[1.02] transition-transform"
                     >
                       {isSaving ? <Loader2 className="animate-spin mr-2 h-6 w-6" /> : <Save className="mr-2 h-6 w-6" />}
-                      Publish Schedule Update
+                      Publish {selectedDates && selectedDates.length > 1 ? `${selectedDates.length} Schedule Updates` : "Schedule Update"}
                     </Button>
                   </div>
                 </>
