@@ -617,15 +617,29 @@ export default function LawyerDashboard() {
             <div className="grid md:grid-cols-2 gap-10">
               <div className="space-y-6">
                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Statutory Category</Label>
-                  <Select value={consultationForm.caseType} onValueChange={(v) => setConsultationForm({...consultationForm, caseType: v})}><SelectTrigger className="h-14 rounded-xl border-secondary/10"><SelectValue placeholder="Select Category" /></SelectTrigger><SelectContent>{Object.keys(caseCategories).map(cat => <SelectItem key={cat} value={cat} className="font-bold">{cat}</SelectItem>)}</SelectContent></Select>
+                  <Select value={consultationForm.caseType} onValueChange={(v) => setConsultationForm({...consultationForm, caseType: v})}>
+                    <SelectTrigger className="h-14 rounded-xl border-secondary/10"><SelectValue placeholder="Select Category" /></SelectTrigger>
+                    <SelectContent position="popper" sideOffset={4} className="max-h-[300px] overflow-y-auto">{Object.keys(caseCategories).map(cat => <SelectItem key={cat} value={cat} className="font-bold">{cat}</SelectItem>)}</SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Legal Assessment Summary</Label><Textarea placeholder="Document the core legal findings..." className="rounded-[2rem] h-32" value={consultationForm.assessment} onChange={e => setConsultationForm({...consultationForm, assessment: e.target.value})} /></div>
               </div>
               <div className="space-y-6">
                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Registry Outcome</Label>
-                  <Select value={consultationForm.outcome} onValueChange={(v) => setConsultationForm({...consultationForm, outcome: v})}><SelectTrigger className="h-14 rounded-xl border-secondary/10"><SelectValue placeholder="Select Final Result" /></SelectTrigger><SelectContent>{OUTCOME_OPTIONS.map(opt => <SelectItem key={opt} value={opt} className="font-bold">{opt}</SelectItem>)}</SelectContent></Select>
+                  <Select value={consultationForm.outcome} onValueChange={(v) => setConsultationForm({...consultationForm, outcome: v})}>
+                    <SelectTrigger className="h-14 rounded-xl border-secondary/10"><SelectValue placeholder="Select Final Result" /></SelectTrigger>
+                    <SelectContent position="popper" sideOffset={4} className="max-h-[300px] overflow-y-auto">{OUTCOME_OPTIONS.map(opt => <SelectItem key={opt} value={opt} className="font-bold">{opt}</SelectItem>)}</SelectContent>
+                  </Select>
                 </div>
-                {consultationForm.outcome === OUTCOME_OPTIONS[1] && <div className="space-y-2 animate-in fade-in"><Label className="text-[10px] font-black uppercase text-red-600/60 ml-1">Reason for Denial</Label><Select value={consultationForm.denialReason} onValueChange={(v) => setConsultationForm({...consultationForm, denialReason: v})}><SelectTrigger className="h-14 rounded-xl border-red-100 bg-red-50/30"><SelectValue placeholder="Select Statutory Reason" /></SelectTrigger><SelectContent>{DENIAL_REASONS.map(r => <SelectItem key={r} value={r} className="font-bold">{r}</SelectItem>)}</SelectContent></Select></div>}
+                {consultationForm.outcome === OUTCOME_OPTIONS[1] && (
+                  <div className="space-y-2 animate-in fade-in">
+                    <Label className="text-[10px] font-black uppercase text-red-600/60 ml-1">Reason for Denial</Label>
+                    <Select value={consultationForm.denialReason} onValueChange={(v) => setConsultationForm({...consultationForm, denialReason: v})}>
+                      <SelectTrigger className="h-14 rounded-xl border-red-100 bg-red-50/30"><SelectValue placeholder="Select Statutory Reason" /></SelectTrigger>
+                      <SelectContent position="popper" sideOffset={4} className="max-h-[300px] overflow-y-auto">{DENIAL_REASONS.map(r => <SelectItem key={r} value={r} className="font-bold">{r}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Confidential Audit Notes</Label><Textarea placeholder="Internal reference only..." className="rounded-[2rem] h-32" value={consultationForm.notes} onChange={e => setConsultationForm({...consultationForm, notes: e.target.value})} /></div>
               </div>
             </div>
@@ -653,7 +667,7 @@ export default function LawyerDashboard() {
                 <SelectTrigger className="h-14 rounded-xl border-rose-100 bg-rose-50/30 font-bold shadow-sm">
                   <SelectValue placeholder="Select Reason" />
                 </SelectTrigger>
-                <SelectContent className="max-h-[300px] overflow-y-auto" position="popper">
+                <SelectContent className="max-h-[300px] overflow-y-auto" position="popper" sideOffset={4}>
                   <SelectGroup>
                     <SelectLabel className="text-[10px] font-black uppercase text-primary/40 tracking-widest px-2 py-2 border-b">Work-Related Reasons</SelectLabel>
                     {CANCELLATION_REASONS.work.map(r => (
