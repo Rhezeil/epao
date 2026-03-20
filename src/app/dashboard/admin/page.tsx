@@ -47,6 +47,7 @@ import {
   DialogDescription, 
   DialogFooter 
 } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 /**
  * Maps raw rejection reasons to standardized statutory categories for the bar chart.
@@ -140,7 +141,19 @@ export default function AdminDashboard() {
       ['Not Eligible', 'Completed Consultation – Denial of Legal Assistance'].includes(a.status)
     );
     
+    // Standard 6 Categories
+    const standardCategories = [
+      "Non-Indigent (Failed Means Test)",
+      "Case Not Covered / Not Qualified",
+      "Incomplete Requirements",
+      "Conflict of Interest",
+      "Misrepresentation / False Information",
+      "Procedural Disqualification"
+    ];
+
     const reasonsMap: Record<string, number> = {};
+    standardCategories.forEach(cat => reasonsMap[cat] = 0);
+
     ineligible.forEach(a => {
       const fullReason = a.screeningDetails?.rejectionReason || a.denialReason || "Procedural Disqualification";
       const standardCategory = mapToStandardCategory(fullReason);
@@ -152,6 +165,7 @@ export default function AdminDashboard() {
       value,
       percentage: ineligible.length > 0 ? ((value / ineligible.length) * 100).toFixed(1) : "0"
     }));
+    // Sort so top reason is first
     reasonsData.sort((a, b) => b.value - a.value);
 
     // 2. Lawyer Workload (Single Pass)
@@ -192,7 +206,7 @@ export default function AdminDashboard() {
         total: intakeResults.length,
         eligiblePct,
         ineligiblePct,
-        topReason: reasonsData[0]?.name || "N/A"
+        topReason: reasonsData[0]?.value > 0 ? reasonsData[0].name : "N/A"
       },
       workload: {
         appts: apptCountByLawyer,
@@ -323,7 +337,11 @@ export default function AdminDashboard() {
                     {!analyticsData ? <Loader2 className="animate-spin h-10 w-10 text-primary/20 my-20" /> : (
                       <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={analyticsData.screening.reasons} layout="vertical" margin={{ left: 40, right: 20 }}>
+                          <BarChart 
+                            data={analyticsData.screening.reasons} 
+                            layout="vertical" 
+                            margin={{ left: 20, right: 40, top: 10, bottom: 10 }}
+                          >
                             <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#F1F5F9" />
                             <XAxis type="number" hide />
                             <YAxis 
@@ -331,17 +349,17 @@ export default function AdminDashboard() {
                               type="category" 
                               axisLine={false} 
                               tickLine={false} 
-                              tick={{ fontSize: 8, fontWeight: 700, fill: '#1A237E' }} 
-                              width={150} 
+                              tick={{ fontSize: 9, fontWeight: 700, fill: '#1A237E' }} 
+                              width={180} 
                             />
                             <Tooltip 
-                              cursor={{ fill: 'transparent' }} 
+                              cursor={{ fill: 'rgba(26, 35, 126, 0.05)' }} 
                               contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} 
                               labelStyle={{ fontWeight: 'black', color: '#1A237E' }}
                             />
-                            <Bar dataKey="value" fill="#EF4444" radius={[0, 10, 10, 0]} barSize={20}>
+                            <Bar dataKey="value" fill="#EF4444" radius={[0, 10, 10, 0]} barSize={24}>
                               {analyticsData.screening.reasons.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={index === 0 ? '#B91C1C' : '#EF4444'} />
+                                <Cell key={`cell-${index}`} fill={entry.value > 0 ? (index === 0 ? '#B91C1C' : '#EF4444') : '#F1F5F9'} />
                               ))}
                             </Bar>
                           </BarChart>
@@ -533,7 +551,10 @@ export default function AdminDashboard() {
                         <p className="text-sm font-black text-rose-900 leading-none">{reason.name}</p>
                         <p className="text-[10px] text-rose-700 font-bold uppercase tracking-widest">{reason.value} Occurrences</p>
                       </div>
-                      <Badge className="bg-rose-600 text-white border-none font-black text-xs px-4 py-1.5 rounded-xl shadow-sm">
+                      <Badge className={cn(
+                        "border-none font-black text-xs px-4 py-1.5 rounded-xl shadow-sm",
+                        reason.value > 0 ? "bg-rose-600 text-white" : "bg-muted text-muted-foreground"
+                      )}>
                         {reason.percentage}%
                       </Badge>
                     </div>
