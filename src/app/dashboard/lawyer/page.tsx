@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/components/auth-provider";
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc, setDocumentNonBlocking } from "@/firebase";
 import { collection, query, where, doc, orderBy, limit } from "firebase/firestore";
-import { format } from "date-fns";
+import { format, isWeekend } from "date-fns";
 import { 
   Calendar as CalendarIcon, 
   Clock, 
@@ -409,7 +409,18 @@ export default function LawyerDashboard() {
             <CardHeader className="bg-secondary/5 p-10 border-b border-secondary/10"><CardTitle className="text-xl font-bold text-secondary flex items-center gap-3"><CalendarIcon className="h-6 w-6" /> Office Schedule & Workstation Registry</CardTitle></CardHeader>
             <CardContent className="p-0">
               <div className="grid grid-cols-1 lg:grid-cols-12">
-                <div className="lg:col-span-4 p-10 border-r border-secondary/5 bg-secondary/[0.02]"><Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} className="mx-auto" /></div>
+                <div className="lg:col-span-4 p-10 border-r border-secondary/5 bg-secondary/[0.02]">
+                  <Calendar 
+                    mode="single" 
+                    selected={selectedDate} 
+                    onSelect={(date) => {
+                      if (date && isWeekend(date)) return;
+                      setSelectedDate(date);
+                    }} 
+                    disabled={{ dayOfWeek: [0, 6] }}
+                    className="mx-auto" 
+                  />
+                </div>
                 <div className="lg:col-span-8 divide-y divide-secondary/5">
                   {filteredSchedule.length > 0 ? filteredSchedule.map((item, idx) => (
                     <div key={idx} className="p-10 flex items-center justify-between hover:bg-secondary/5 transition-colors group">
@@ -522,7 +533,7 @@ export default function LawyerDashboard() {
                   <Select value={consultationForm.outcome} onValueChange={(v) => setConsultationForm({...consultationForm, outcome: v})}><SelectTrigger className="h-14 rounded-xl border-secondary/10"><SelectValue placeholder="Select Final Result" /></SelectTrigger><SelectContent>{OUTCOME_OPTIONS.map(opt => <SelectItem key={opt} value={opt} className="font-bold">{opt}</SelectItem>)}</SelectContent></Select>
                 </div>
                 {consultationForm.outcome === OUTCOME_OPTIONS[1] && <div className="space-y-2 animate-in fade-in"><Label className="text-[10px] font-black uppercase text-red-600/60 ml-1">Reason for Denial</Label><Select value={consultationForm.denialReason} onValueChange={(v) => setConsultationForm({...consultationForm, denialReason: v})}><SelectTrigger className="h-14 rounded-xl border-red-100 bg-red-50/30"><SelectValue placeholder="Select Statutory Reason" /></SelectTrigger><SelectContent>{DENIAL_REASONS.map(r => <SelectItem key={r} value={r} className="font-bold">{r}</SelectItem>)}</SelectContent></Select></div>}
-                <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Confidential Audit Notes</Label><Textarea placeholder="Internal reference only..." className="rounded-[2rem] h-32" value={consultationForm.notes} onChange={e => setConsultationForm({...consultationForm, notes: e.target.value})} /></div>
+                <div className="space-y-2"><Label className="text-[10px) font-black uppercase text-secondary/40 ml-1">Confidential Audit Notes</Label><Textarea placeholder="Internal reference only..." className="rounded-[2rem] h-32" value={consultationForm.notes} onChange={e => setConsultationForm({...consultationForm, notes: e.target.value})} /></div>
               </div>
             </div>
           </div>
