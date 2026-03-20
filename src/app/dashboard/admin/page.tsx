@@ -239,14 +239,6 @@ export default function AdminDashboard() {
     setViewingAuditLog(notif);
   };
 
-  const handleGoToRegistry = (notif: any) => {
-    if (notif.type === 'appointment') router.push('/dashboard/admin/appointments');
-    if (notif.type === 'case') router.push('/dashboard/admin/users');
-    if (notif.type === 'lawyer') router.push('/dashboard/admin/lawyers');
-    if (notif.type === 'client') router.push('/dashboard/admin/users');
-    if (notif.type === 'system') router.push('/dashboard/admin/triage');
-  };
-
   if (loading) return <div className="flex items-center justify-center min-h-screen"><Activity className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!user || role !== 'admin') return null;
 
@@ -500,14 +492,6 @@ export default function AdminDashboard() {
                               <p className="text-sm font-black text-primary">{viewingAuditLog.referenceCode || 'N/A'}</p>
                               <p className="text-[9px] text-muted-foreground font-bold uppercase">Database ID: {viewingAuditLog.referenceId || 'N/A'}</p>
                             </div>
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              className="rounded-xl font-black text-[10px] uppercase border-primary/20 text-primary"
-                              onClick={() => handleGoToRegistry(viewingAuditLog)}
-                            >
-                              Go to Registry <ChevronRight className="ml-1 h-3 w-3" />
-                            </Button>
                           </div>
                         </div>
                       </div>
