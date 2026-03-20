@@ -19,6 +19,7 @@ import {
   Target,
   Clock,
   ArrowRight,
+  ArrowLeft,
   ShieldCheck,
   User,
   Inbox,
@@ -29,7 +30,8 @@ import {
   TrendingUp,
   AlertTriangle,
   Lightbulb,
-  ArrowUpRight
+  ArrowUpRight,
+  ChevronRight
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -89,6 +91,9 @@ export default function AdminDashboard() {
   const [selectedInsight, setSelectedInsight] = useState<any>(null);
   const [isInsightOpen, setIsInsightOpen] = useState(false);
 
+  // Audit Detail State
+  const [viewingAuditLog, setViewingAuditLog] = useState<any>(null);
+
   // Database Queries
   const casesQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'admin') return null;
@@ -126,7 +131,7 @@ export default function AdminDashboard() {
   const analyticsData = useMemo(() => {
     if (!appointments || !cases || !lawyers) return null;
 
-    // 1. Intake Analysis - Broadened criteria to include all successful outcomes
+    // 1. Intake Analysis
     const intakeResults = appointments.filter(a => 
       ['Eligible', 'Not Eligible', 'Consultation in Progress', 'Completed Consultation – Accept Legal Assistance', 'Completed Consultation – Denial of Legal Assistance', 'completed', 'For Screening'].includes(a.status) || 
       a.caseId
@@ -170,10 +175,9 @@ export default function AdminDashboard() {
       percentage: ineligible.length > 0 ? ((reasonsMap[name] / ineligible.length) * 100).toFixed(1) : "0"
     }));
     
-    // Sort so top reason is first
     reasonsData.sort((a, b) => b.value - a.value);
 
-    // 2. Lawyer Workload (Single Pass)
+    // 2. Lawyer Workload
     const apptCountByLawyer: Record<string, number> = {};
     const activeCaseByLawyer: Record<string, number> = {};
 
@@ -194,7 +198,6 @@ export default function AdminDashboard() {
     const eligiblePct = intakeResults.length > 0 ? ((eligible.length / intakeResults.length) * 100).toFixed(1) : "0";
     const ineligiblePct = intakeResults.length > 0 ? ((ineligible.length / intakeResults.length) * 100).toFixed(1) : "0";
     
-    // Auto-generated Insights
     const dynamicInsight = parseFloat(eligiblePct) > 70 
       ? "Strong qualification trend: Public outreach matches office mandate."
       : parseFloat(eligiblePct) < 40 
@@ -233,6 +236,10 @@ export default function AdminDashboard() {
 
   const handleNotifClick = (notif: any) => {
     markNotifRead(notif.id);
+    setViewingAuditLog(notif);
+  };
+
+  const handleGoToRegistry = (notif: any) => {
     if (notif.type === 'appointment') router.push('/dashboard/admin/appointments');
     if (notif.type === 'case') router.push('/dashboard/admin/users');
     if (notif.type === 'lawyer') router.push('/dashboard/admin/lawyers');
@@ -256,7 +263,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); setViewingAuditLog(null); }} className="w-full">
           <TabsList className="grid w-full grid-cols-3 max-w-2xl bg-white/50 p-1 rounded-2xl border-2 border-primary/5 h-14 mb-8">
             <TabsTrigger value="analysis" className="rounded-xl font-bold">Intake Analysis</TabsTrigger>
             <TabsTrigger value="workload" className="rounded-xl font-bold">Staff Activity</TabsTrigger>
@@ -328,7 +335,6 @@ export default function AdminDashboard() {
                           <p className="text-2xl font-black text-rose-700">{analyticsData.screening.ineligiblePct}%</p>
                         </div>
                       </div>
-                      <p className="mt-6 text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] animate-pulse">Click segments for detailed factors</p>
                     </>
                   )}
                 </CardContent>
@@ -429,80 +435,168 @@ export default function AdminDashboard() {
 
           <TabsContent value="notifications">
             <Card className="border-none shadow-2xl bg-white rounded-[2.5rem] overflow-hidden">
-              <CardHeader className="bg-primary p-8 text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                <div className="flex items-center gap-3">
-                  <Bell className="h-8 w-8 text-white/60" />
-                  <div>
-                    <CardTitle className="text-2xl font-black">System Audit Logs</CardTitle>
-                    <CardDescription className="text-white/60 font-bold uppercase tracking-widest text-[10px] mt-1">Real-time platform activity tracking</CardDescription>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <Badge className="bg-white/20 text-white border-none font-black text-xs px-4 py-1.5 rounded-full">{notifications?.filter(n => n.status === 'unread').length || 0} UNREAD</Badge>
-                  <Select value={notifFilter} onValueChange={setNotifFilter}>
-                    <SelectTrigger className="h-11 w-[200px] bg-white/10 border-none text-white font-bold rounded-xl focus:ring-0">
-                      <div className="flex items-center gap-2">
-                        <Filter className="h-4 w-4" />
-                        <SelectValue placeholder="All Activities" />
+              {viewingAuditLog ? (
+                <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+                  <CardHeader className="bg-primary p-8 text-white flex flex-row items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <Button variant="ghost" size="icon" onClick={() => setViewingAuditLog(null)} className="text-white hover:bg-white/10 rounded-full">
+                        <ArrowLeft className="h-6 w-6" />
+                      </Button>
+                      <div>
+                        <CardTitle className="text-2xl font-black">Audit Record Detail</CardTitle>
+                        <CardDescription className="text-white/60 font-bold uppercase tracking-widest text-[10px] mt-1">
+                          Full metadata for Event ID: {viewingAuditLog.id}
+                        </CardDescription>
                       </div>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all" className="font-bold">All Activities</SelectItem>
-                      <SelectItem value="appointment" className="font-bold text-blue-600">Appointments</SelectItem>
-                      <SelectItem value="case" className="font-bold text-green-600">Cases</SelectItem>
-                      <SelectItem value="lawyer" className="font-bold text-purple-600">Staff Actions</SelectItem>
-                      <SelectItem value="client" className="font-bold text-amber-600">Client Actions</SelectItem>
-                      <SelectItem value="system" className="font-bold text-slate-600">System Logs</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="divide-y divide-primary/5">
-                  {filteredNotifs.length > 0 ? (
-                    filteredNotifs.map((notif) => (
-                      <div 
-                        key={notif.id} 
-                        className={cn(
-                          "p-8 transition-all cursor-pointer hover:bg-primary/[0.02] relative group flex flex-col md:flex-row md:items-center justify-between gap-6",
-                          notif.status === 'unread' && "bg-amber-50/30"
-                        )}
-                        onClick={() => handleNotifClick(notif)}
-                      >
-                        {notif.status === 'unread' && <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500" />}
-                        <div className="flex gap-6 items-start flex-1">
-                          <Badge className={cn(
-                            "text-[10px] font-black uppercase px-4 py-1.5 border-none shadow-sm rounded-xl shrink-0 h-fit",
-                            notif.type === 'appointment' ? 'bg-blue-100 text-blue-700' :
-                            notif.type === 'case' ? 'bg-green-100 text-green-700' :
-                            notif.type === 'lawyer' ? 'bg-purple-100 text-purple-700' :
-                            notif.type === 'client' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-700'
-                          )}>
-                            {notif.type}
-                          </Badge>
-                          <div className="space-y-1">
-                            <p className="text-base font-bold text-primary leading-snug group-hover:underline">{notif.description}</p>
-                            <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-primary/40">
-                              <span className="flex items-center gap-1.5"><User className="h-3 w-3" /> {notif.userRole}</span>
-                              <span>•</span>
-                              <span>{notif.createdAt ? format(new Date(notif.createdAt), "PPP HH:mm") : '---'}</span>
+                    </div>
+                    <Badge className="bg-white/20 text-white border-none font-black text-xs px-4 py-1.5 rounded-full uppercase">
+                      {viewingAuditLog.status}
+                    </Badge>
+                  </CardHeader>
+                  <CardContent className="p-10 space-y-10">
+                    <div className="grid md:grid-cols-2 gap-12">
+                      <div className="space-y-8">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Event Type</Label>
+                          <div className="flex items-center gap-3">
+                            <Badge className={cn(
+                              "text-xs font-black uppercase px-4 py-1.5 border-none shadow-sm rounded-xl",
+                              viewingAuditLog.type === 'appointment' ? 'bg-blue-100 text-blue-700' :
+                              viewingAuditLog.type === 'case' ? 'bg-green-100 text-green-700' :
+                              viewingAuditLog.type === 'lawyer' ? 'bg-purple-100 text-purple-700' :
+                              viewingAuditLog.type === 'client' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-700'
+                            )}>
+                              {viewingAuditLog.type}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Description</Label>
+                          <p className="text-xl font-bold text-primary leading-snug">{viewingAuditLog.description}</p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Timestamp</Label>
+                          <p className="font-bold text-secondary flex items-center gap-2">
+                            <Clock className="h-4 w-4" />
+                            {viewingAuditLog.createdAt ? format(new Date(viewingAuditLog.createdAt), "PPPP HH:mm:ss") : '---'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="space-y-8">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Initiating Actor</Label>
+                          <div className="flex items-center gap-3 bg-muted/30 p-4 rounded-2xl border">
+                            <User className="h-5 w-5 text-primary/40" />
+                            <div className="space-y-0.5">
+                              <p className="font-black text-primary uppercase text-xs">{viewingAuditLog.userRole}</p>
+                              <p className="text-[10px] text-muted-foreground font-medium">Actor UID: {viewingAuditLog.targetUserId || 'System/Guest'}</p>
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 text-secondary font-black uppercase text-[10px] tracking-widest shrink-0">
-                          {notif.referenceCode || "View Detail"}
-                          <ArrowRight className="h-4 w-4" />
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Registry Reference</Label>
+                          <div className="p-4 bg-primary/5 rounded-2xl border-2 border-dashed border-primary/10 flex items-center justify-between">
+                            <div className="space-y-1">
+                              <p className="text-sm font-black text-primary">{viewingAuditLog.referenceCode || 'N/A'}</p>
+                              <p className="text-[9px] text-muted-foreground font-bold uppercase">Database ID: {viewingAuditLog.referenceId || 'N/A'}</p>
+                            </div>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="rounded-xl font-black text-[10px] uppercase border-primary/20 text-primary"
+                              onClick={() => handleGoToRegistry(viewingAuditLog)}
+                            >
+                              Go to Registry <ChevronRight className="ml-1 h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                    ))
-                  ) : (
-                    <div className="py-32 text-center space-y-4">
-                      <Inbox className="h-16 w-16 text-primary/5 mx-auto" />
-                      <p className="text-xs font-black uppercase text-muted-foreground tracking-widest">No activities recorded in this category</p>
                     </div>
-                  )}
+                    <div className="pt-10 border-t flex justify-end">
+                      <Button onClick={() => setViewingAuditLog(null)} className="rounded-2xl h-14 bg-primary text-white font-black px-12 shadow-xl hover:scale-105 transition-transform">
+                        <ArrowLeft className="mr-2 h-5 w-5" /> Back to Logs
+                      </Button>
+                    </div>
+                  </CardContent>
                 </div>
-              </CardContent>
+              ) : (
+                <>
+                  <CardHeader className="bg-primary p-8 text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div className="flex items-center gap-3">
+                      <Bell className="h-8 w-8 text-white/60" />
+                      <div>
+                        <CardTitle className="text-2xl font-black">System Audit Logs</CardTitle>
+                        <CardDescription className="text-white/60 font-bold uppercase tracking-widest text-[10px] mt-1">Real-time platform activity tracking</CardDescription>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <Badge className="bg-white/20 text-white border-none font-black text-xs px-4 py-1.5 rounded-full">{notifications?.filter(n => n.status === 'unread').length || 0} UNREAD</Badge>
+                      <Select value={notifFilter} onValueChange={setNotifFilter}>
+                        <SelectTrigger className="h-11 w-[200px] bg-white/10 border-none text-white font-bold rounded-xl focus:ring-0">
+                          <div className="flex items-center gap-2">
+                            <Filter className="h-4 w-4" />
+                            <SelectValue placeholder="All Activities" />
+                          </div>
+                        </SelectTrigger>
+                        <SelectContent position="popper" sideOffset={4}>
+                          <SelectItem value="all" className="font-bold">All Activities</SelectItem>
+                          <SelectItem value="appointment" className="font-bold text-blue-600">Appointments</SelectItem>
+                          <SelectItem value="case" className="font-bold text-green-600">Cases</SelectItem>
+                          <SelectItem value="lawyer" className="font-bold text-purple-600">Staff Actions</SelectItem>
+                          <SelectItem value="client" className="font-bold text-amber-600">Client Actions</SelectItem>
+                          <SelectItem value="system" className="font-bold text-slate-600">System Logs</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="divide-y divide-primary/5">
+                      {filteredNotifs.length > 0 ? (
+                        filteredNotifs.map((notif) => (
+                          <div 
+                            key={notif.id} 
+                            className={cn(
+                              "p-8 transition-all cursor-pointer hover:bg-primary/[0.02] relative group flex flex-col md:flex-row md:items-center justify-between gap-6",
+                              notif.status === 'unread' && "bg-amber-50/30"
+                            )}
+                            onClick={() => handleNotifClick(notif)}
+                          >
+                            {notif.status === 'unread' && <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500" />}
+                            <div className="flex gap-6 items-start flex-1">
+                              <Badge className={cn(
+                                "text-[10px] font-black uppercase px-4 py-1.5 border-none shadow-sm rounded-xl shrink-0 h-fit",
+                                notif.type === 'appointment' ? 'bg-blue-100 text-blue-700' :
+                                notif.type === 'case' ? 'bg-green-100 text-green-700' :
+                                notif.type === 'lawyer' ? 'bg-purple-100 text-purple-700' :
+                                notif.type === 'client' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-700'
+                              )}>
+                                {notif.type}
+                              </Badge>
+                              <div className="space-y-1">
+                                <p className="text-base font-bold text-primary leading-snug group-hover:underline">{notif.description}</p>
+                                <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-primary/40">
+                                  <span className="flex items-center gap-1.5"><User className="h-3 w-3" /> {notif.userRole}</span>
+                                  <span>•</span>
+                                  <span>{notif.createdAt ? format(new Date(notif.createdAt), "PPP HH:mm") : '---'}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 text-secondary font-black uppercase text-[10px] tracking-widest shrink-0">
+                              {notif.referenceCode || "View Detail"}
+                              <ArrowRight className="h-4 w-4" />
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="py-32 text-center space-y-4">
+                          <Inbox className="h-16 w-16 text-primary/5 mx-auto" />
+                          <p className="text-xs font-black uppercase text-muted-foreground tracking-widest">No activities recorded in this category</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </>
+              )}
             </Card>
           </TabsContent>
         </Tabs>
