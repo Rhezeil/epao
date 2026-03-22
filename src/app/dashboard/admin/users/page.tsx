@@ -156,7 +156,7 @@ export default function AdminUsersPage() {
     if (!q) return users;
 
     return users.filter(u => {
-      // 1. Basic Info Match
+      // 1. Basic Info Match (Name, ID, Email, Mobile)
       const matchesBasic = 
         u.fullName?.toLowerCase().includes(q) ||
         u.email?.toLowerCase().includes(q) ||
@@ -514,7 +514,7 @@ export default function AdminUsersPage() {
                   <div className="grid md:grid-cols-2 gap-8">
                     {isEditingPersonal ? <>
                       <div className="space-y-2"><Label className="text-[10px] font-black uppercase">First Name</Label><Input value={editProfile.firstName ?? ""} onChange={e => setEditProfile({...editProfile, firstName: e.target.value})} /></div>
-                      <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Last Name</Label><Input value={editProfile.lastName ?? ""} onChange={e => setEditProfile({...editProfile, lastName: e.target.value})} /></div>
+                      <div className="space-y-2"><Label className="text-[10px) font-black uppercase">Last Name</Label><Input value={editProfile.lastName ?? ""} onChange={e => setEditProfile({...editProfile, lastName: e.target.value})} /></div>
                       <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Mobile</Label><Input value={editProfile.phoneNumber ?? ""} onChange={e => setEditProfile({...editProfile, phoneNumber: e.target.value})} /></div>
                       <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Address</Label><Input value={editProfile.address ?? ""} onChange={e => setEditProfile({...editProfile, address: e.target.value})} /></div>
                     </> : <>
@@ -548,7 +548,17 @@ export default function AdminUsersPage() {
                       </Select>
                     </div>
                   </div> : <div className="p-10 bg-primary/5 rounded-[2.5rem] border-2 border-dashed text-center space-y-6"><Scale className="h-12 w-12 text-primary/20 mx-auto" /><div><h4 className="text-lg font-black text-primary">Initialize Legal Record</h4><p className="text-xs text-muted-foreground">Citizen is currently registered but has no active case file.</p></div><div className="max-w-xs mx-auto space-y-4 text-left"><div className="space-y-1"><Label className="text-[10px] font-black uppercase text-primary/40">Classification</Label><Input value={newCaseData.caseType ?? ""} onChange={e => setNewCaseData({...newCaseData, caseType: e.target.value})} className="h-10 rounded-lg" /></div><div className="space-y-1"><Label className="text-[10px] font-black uppercase text-primary/40">Assign Attorney</Label>
-                    <Select value={newCaseData.lawyerId} onValueChange={v => setNewCaseData({...newCaseData, lawyerId: v})}><SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Select Attorney" /></SelectTrigger><SelectContent>{lawyers?.map(l => <SelectItem key={l.id} value={l.id} className="font-bold">{l.firstName ? `Atty. ${l.firstName} ${l.lastName}` : l.email}</SelectItem></SelectContent></Select></div><Button className="w-full bg-primary text-white font-black rounded-xl" disabled={!newCaseData.lawyerId || isSubmitting} onClick={handleCreateInitialCase}>Initialize & Assign Case</Button></div></div>}
+                    <Select value={newCaseData.lawyerId} onValueChange={v => setNewCaseData({...newCaseData, lawyerId: v})}>
+                      <SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Select Attorney" /></SelectTrigger>
+                      <SelectContent>
+                        {lawyers?.map(l => (
+                          <SelectItem key={l.id} value={l.id} className="font-bold">
+                            {l.firstName ? `Atty. ${l.firstName} ${l.lastName}` : l.email}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div><Button className="w-full bg-primary text-white font-black rounded-xl" disabled={!newCaseData.lawyerId || isSubmitting} onClick={handleCreateInitialCase}>Initialize & Assign Case</Button></div></div>}
                 </TabsContent>
                 <TabsContent value="history" className="pt-6 space-y-4"><h4 className="text-[10px] font-black uppercase text-primary/40 tracking-widest">Chronological History</h4>{clientHistory?.length ? <div className="space-y-3">{clientHistory.map(h => <div key={h.id} className="p-4 bg-muted/20 rounded-2xl flex items-center justify-between border border-transparent hover:border-primary/10"><div><p className="text-sm font-bold text-primary">{h.caseType}</p><p className="text-[9px] text-muted-foreground uppercase font-black">{h.date ? format(new Date(h.date), "PPP") : "---"} • {h.status}</p></div><Badge variant="outline" className="text-[8px] font-black uppercase">{h.referenceCode}</Badge></div>)}</div> : <p className="text-center py-10 text-xs italic text-muted-foreground">No synchronized visit history found.</p>}</TabsContent>
               </Tabs>
