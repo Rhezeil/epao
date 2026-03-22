@@ -237,7 +237,7 @@ function BookAppointmentContent() {
         id: lawyerNotifId,
         type: "appointment",
         userRole: "client",
-        description: `Existing Client ${clientName} booked a Follow-up Consultation with you for ${format(selectedDate, "MMM dd")}.`,
+        description: `Existing Client ${clientName} booked a Follow-up Consultation for ${format(selectedDate, "MMM dd")}.`,
         referenceId: appointmentId,
         referenceCode: refCode,
         targetUserId: activeCase.lawyerId,

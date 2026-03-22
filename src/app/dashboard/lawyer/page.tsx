@@ -359,7 +359,7 @@ export default function LawyerDashboard() {
         id: adminNotifId,
         type: "appointment",
         userRole: "lawyer",
-        description: `Consultation ${refCode} for ${clientName} finalized. Result: ${isAccepted ? 'Accepted' : 'Denied'}.`,
+        description: `Atty. ${lawyerData?.lastName} finalized Consultation ${refCode} for ${clientName}. Result: ${isAccepted ? 'Accepted' : 'Denied'}.`,
         referenceId: activeConsultation.id,
         referenceCode: refCode,
         status: "unread",
@@ -441,7 +441,15 @@ export default function LawyerDashboard() {
       }, { merge: true });
 
       const notifId = crypto.randomUUID();
-      setDocumentNonBlocking(doc(db, "notifications", notifId), { id: notifId, type: "case", userRole: "lawyer", description: `New Official Case ${caseId} for ${clientName} activated for citizen registry.`, referenceId: caseId, status: "unread", createdAt: new Date().toISOString() }, { merge: true });
+      setDocumentNonBlocking(doc(db, "notifications", notifId), { 
+        id: notifId, 
+        type: "case", 
+        userRole: "lawyer", 
+        description: `Atty. ${lawyerData?.lastName} activated Official Case ${caseId} for ${clientName} for citizen registry.`, 
+        referenceId: caseId, 
+        status: "unread", 
+        createdAt: new Date().toISOString() 
+      }, { merge: true });
 
       toast({ title: "Legal Case Activated", description: `Case ${caseId} initialized.` });
     } catch (e: any) {
@@ -677,7 +685,7 @@ export default function LawyerDashboard() {
                     <SelectContent position="popper" sideOffset={4} className="max-h-[300px] overflow-y-auto">{Object.keys(caseCategories).map(cat => <SelectItem key={cat} value={cat} className="font-bold">{cat}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Legal Assessment Summary</Label><Textarea placeholder="Document the core legal findings..." className="rounded-[2rem] h-32" value={consultationForm.assessment} onChange={e => setConsultationForm({...consultationForm, assessment: e.target.value})} /></div>
+                <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Legal Assessment Summary</Label><Textarea placeholder="Document the core legal findings..." className="rounded-[2rem] h-32" value={consultationForm.assessment} onChange={e => setconsultationForm({...consultationForm, assessment: e.target.value})} /></div>
               </div>
               <div className="space-y-6">
                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Registry Outcome</Label>
