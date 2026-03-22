@@ -24,6 +24,7 @@ import {
   User,
   Inbox,
   CheckCircle2,
+  CheckCheck,
   Filter,
   Loader2,
   XCircle,
@@ -50,6 +51,7 @@ import {
   DialogFooter 
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
 /**
  * Maps raw rejection reasons to standardized statutory categories for the bar chart.
@@ -79,6 +81,7 @@ const mapToStandardCategory = (reason: string) => {
 export default function AdminDashboard() {
   const db = useFirestore();
   const { user, role, loading } = useAuth();
+  const { toast } = useToast();
   const router = useRouter();
   
   // Dashboard State
@@ -237,6 +240,21 @@ export default function AdminDashboard() {
   const handleNotifClick = (notif: any) => {
     markNotifRead(notif.id);
     setViewingAuditLog(notif);
+  };
+
+  const handleMarkAllRead = () => {
+    if (!db || !notifications) return;
+    const unread = notifications.filter(n => n.status === 'unread');
+    if (unread.length === 0) return;
+
+    unread.forEach(n => {
+      updateDocumentNonBlocking(doc(db, "notifications", n.id), { status: "read" });
+    });
+
+    toast({ 
+      title: "Audit Synchronized", 
+      description: `All ${unread.length} pending notifications have been marked as read.` 
+    });
   };
 
   if (loading) return <div className="flex items-center justify-center min-h-screen"><Activity className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -514,7 +532,19 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <Badge className="bg-white/20 text-white border-none font-black text-xs px-4 py-1.5 rounded-full">{notifications?.filter(n => n.status === 'unread').length || 0} UNREAD</Badge>
+                      <div className="flex items-center gap-3">
+                        <Badge className="bg-white/20 text-white border-none font-black text-xs px-4 py-1.5 rounded-full">{notifications?.filter(n => n.status === 'unread').length || 0} UNREAD</Badge>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={handleMarkAllRead} 
+                          className="text-white/60 hover:text-white hover:bg-white/10 font-bold text-[10px] uppercase tracking-widest h-9 px-3 rounded-xl border border-white/10"
+                          disabled={!notifications?.some(n => n.status === 'unread')}
+                        >
+                          <CheckCheck className="h-3 w-3 mr-1.5" />
+                          Mark all as read
+                        </Button>
+                      </div>
                       <Select value={notifFilter} onValueChange={setNotifFilter}>
                         <SelectTrigger className="h-11 w-[200px] bg-white/10 border-none text-white font-bold rounded-xl focus:ring-0">
                           <div className="flex items-center gap-2">
