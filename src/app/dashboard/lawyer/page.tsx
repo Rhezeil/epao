@@ -500,7 +500,7 @@ export default function LawyerDashboard() {
             {filterAcceptedPendingActivation.map(appt => (
               <Card key={appt.id} className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden border-l-8 border-primary animate-in slide-in-from-left-4 duration-500">
                 <CardContent className="p-8 flex flex-col md:flex-row md:items-center justify-between gap-8">
-                  <div className="flex items-start gap-6">
+                  <div className="flex items-start gap-5">
                     <div className="p-4 bg-primary/5 rounded-3xl text-primary shrink-0"><CheckCircle2 className="h-8 w-8" /></div>
                     <div className="space-y-3">
                       <div className="flex items-center gap-3"><h3 className="text-2xl font-black text-primary">{appt.guestName || appt.clientName}</h3><Badge className="bg-primary text-white text-[9px] font-black uppercase px-3 py-1 border-none shadow-sm">ACCEPTED</Badge></div>
@@ -714,7 +714,7 @@ export default function LawyerDashboard() {
               Commit Final Assessment
             </Button>
           </DialogFooter>
-        </Dialog>
+        </DialogContent>
       </Dialog>
 
       {/* --- CANCELLATION DIALOG --- */}
