@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { useFirestore, setDocumentNonBlocking, useCollection, useMemoFirebase } from "@/firebase";
 import { doc, collection, query, where } from "firebase/firestore";
-import { format, isWeekend, startOfToday, setHours, setMinutes, isBefore } from "date-fns";
+import { format, isWeekend, startOfToday, setHours, setMinutes, isBefore, addHours } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { sendOtpSms } from "@/ai/flows/sms-service";
@@ -105,7 +105,8 @@ function BookAppointmentContent() {
         
         const slotDate = selectedDate ? setMinutes(setHours(new Date(selectedDate), h), m) : null;
         
-        const isPast = slotDate ? isBefore(slotDate, now) : false;
+        // Same-day booking must have at least 1 hour leeway
+        const isPast = slotDate ? isBefore(slotDate, addHours(now, 1)) : false;
         const isBooked = existingAppts?.some(a => a.time === timeString && a.status !== 'cancelled');
         
         slots.push({
@@ -295,7 +296,7 @@ function BookAppointmentContent() {
                       <Label className="text-xs font-black text-primary/60 uppercase tracking-widest">3. Select Interview Slot</Label>
                       <div className="flex gap-2 text-[8px] font-bold uppercase">
                         <span className="flex items-center gap-1"><div className="w-2 h-2 bg-green-500 rounded-full" /> Available</span>
-                        <span className="flex items-center gap-1"><div className="w-2 h-2 bg-red-500 rounded-full" /> Full</span>
+                        <span className="flex items-center gap-1"><div className="w-2 h-2 bg-red-500 rounded-full" /> Full / Passed</span>
                       </div>
                     </div>
                     

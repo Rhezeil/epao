@@ -28,7 +28,7 @@ import {
   ArrowRight,
   AlertTriangle
 } from "lucide-react";
-import { format, isWeekend, startOfToday, isBefore, setHours, setMinutes } from "date-fns";
+import { format, isWeekend, startOfToday, isBefore, setHours, setMinutes, addHours } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -100,7 +100,9 @@ export default function AdminAppointmentsRegistry() {
         const displayHour = h % 12 || 12;
         const timeString = `${displayHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
         const slotDate = resDate ? setMinutes(setHours(new Date(resDate), h), m) : null;
-        const isPast = slotDate ? isBefore(slotDate, now) : false;
+        
+        // 1-hour leeway for same-day reschedule
+        const isPast = slotDate ? isBefore(slotDate, addHours(now, 1)) : false;
         const isBooked = dayAppts?.some(a => a.time === timeString && a.status !== 'cancelled');
         slots.push({ time: timeString, isBooked, isPast });
       }

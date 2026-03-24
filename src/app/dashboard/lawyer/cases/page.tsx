@@ -6,7 +6,7 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
 import { collection, query, where, doc, orderBy } from "firebase/firestore";
-import { format, startOfToday, setHours, setMinutes, isBefore, isAfter } from "date-fns";
+import { format, startOfToday, setHours, setMinutes, isBefore, isAfter, addHours } from "date-fns";
 import { 
   Scale, 
   Search,
@@ -171,7 +171,9 @@ export default function LawyerCasesPage() {
         const displayHour = h % 12 || 12;
         const timeString = `${displayHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
         const slotDate = bookingForm.date ? setMinutes(setHours(new Date(bookingForm.date), h), m) : null;
-        const isPast = slotDate ? isBefore(slotDate, now) : false;
+        
+        // Same-day follow-up must have 1 hour leeway
+        const isPast = slotDate ? isBefore(slotDate, addHours(now, 1)) : false;
         const isBooked = globalApptsForSlot?.some(a => a.lawyerId === user?.uid && a.time === timeString && a.status !== 'cancelled');
         slots.push({ time: timeString, isBooked, isPast });
       }
@@ -207,6 +209,7 @@ export default function LawyerCasesPage() {
       const apptId = crypto.randomUUID();
       const refCode = `PAO-${Math.floor(100000 + Math.random() * 900000)}`;
       
+      const clientName = clientUser?.fullName || "Registered Client";
       const data = {
         id: apptId,
         lawyerId: user.uid,
@@ -215,7 +218,7 @@ export default function LawyerCasesPage() {
         caseId: selectedCaseForBooking.id,
         caseType: selectedCaseForBooking.caseType,
         purpose: bookingForm.purpose,
-        clientName: clientUser?.fullName || "Registered Client",
+        clientName: clientName,
         clientMobile: clientUser?.mobileNumber || "",
         clientEmail: clientUser?.email || "",
         date: bookingForm.date.toISOString(),
@@ -231,6 +234,18 @@ export default function LawyerCasesPage() {
 
       setDocumentNonBlocking(doc(db, "appointments", apptId), data, { merge: true });
       
+      const notifId = crypto.randomUUID();
+      setDocumentNonBlocking(doc(db, "notifications", notifId), {
+        id: notifId,
+        type: "appointment",
+        userRole: "lawyer",
+        description: `Atty. ${user.email?.split('@')[0]} scheduled follow-up Visit ${refCode} for ${clientName}.`,
+        referenceId: apptId,
+        referenceCode: refCode,
+        status: "unread",
+        createdAt: new Date().toISOString()
+      }, { merge: true });
+
       toast({ title: "Appointment Set", description: `Follow-up for ${selectedCaseForBooking.id} scheduled.` });
       setSelectedCaseForBooking(null);
       setBookingForm({ date: undefined, time: "", purpose: "consultation" });
