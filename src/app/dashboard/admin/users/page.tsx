@@ -159,6 +159,12 @@ export default function AdminUsersPage() {
   const handleAddClient = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!db) return;
+
+    if (!/^\d{11}$/.test(newClient.mobile)) {
+      toast({ variant: "destructive", title: "Invalid Mobile", description: "Mobile number must be exactly 11 digits." });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const email = newClient.email || `${newClient.mobile}@epao.mobile`;
@@ -176,6 +182,18 @@ export default function AdminUsersPage() {
         setDocumentNonBlocking(doc(db, "cases", caseId), { id: caseId, clientId: uid, lawyerId: newClient.lawyerId, caseType: newClient.caseType, status: "Active", description: "Manual registration record.", lawyerNotified: false, createdAt: new Date().toISOString() }, { merge: true });
       }
       await deleteApp(secondaryApp);
+      
+      const notifId = crypto.randomUUID();
+      setDocumentNonBlocking(doc(db, "notifications", notifId), {
+        id: notifId,
+        type: "system",
+        userRole: "admin",
+        description: `Office Alert: Official registration completed for citizen ${newClient.name}.`,
+        referenceId: uid,
+        status: "unread",
+        createdAt: new Date().toISOString()
+      }, { merge: true });
+
       toast({ title: "Registration Complete", description: `${newClient.name} added.` });
       setIsAddDialogOpen(false);
       setNewClient({ name: "", mobile: "", email: "", address: "", income: "Indigent", caseType: "Initial Consultation", lawyerId: "" });
@@ -292,7 +310,18 @@ export default function AdminUsersPage() {
               <div className="grid gap-6">
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Full Citizen Name</Label><Input value={newClient.name} onChange={e => setNewClient({...newClient, name: e.target.value})} className="h-12 rounded-xl" /></div>
-                  <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Mobile Number</Label><Input value={newClient.mobile} onChange={e => setNewClient({...newClient, mobile: e.target.value})} className="h-12 rounded-xl" /></div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Mobile Number (11 Digits)</Label>
+                    <Input 
+                      value={newClient.mobile} 
+                      maxLength={11}
+                      onChange={e => {
+                        const val = e.target.value.replace(/\D/g, "");
+                        setNewClient({...newClient, mobile: val.slice(0, 11)});
+                      }} 
+                      className="h-12 rounded-xl" 
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Home Address</Label><Input value={newClient.address} onChange={e => setNewClient({...newClient, address: e.target.value})} className="h-12 rounded-xl" /></div>
                 <div className="pt-6 border-t border-primary/5 space-y-6">

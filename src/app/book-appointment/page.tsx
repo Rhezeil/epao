@@ -129,8 +129,8 @@ function BookAppointmentContent() {
       toast({ variant: "destructive", title: "Invalid Email", description: "Please enter a valid email address." });
       return false;
     }
-    if (!/^\d{10,11}$/.test(mobile)) {
-      toast({ variant: "destructive", title: "Invalid Mobile", description: "Please enter a valid 10-11 digit mobile number." });
+    if (!/^\d{11}$/.test(mobile)) {
+      toast({ variant: "destructive", title: "Invalid Mobile", description: "Mobile number must be exactly 11 digits (e.g., 09123456789)." });
       return false;
     }
     return true;
@@ -191,7 +191,7 @@ function BookAppointmentContent() {
       id: notifId,
       type: "appointment",
       userRole: "guest",
-      description: `New screening appointment booked by ${guestInfo.name} for ${format(selectedDate, "MMM dd")} @ ${selectedTime}.`,
+      description: `New screening appointment booked by ${guestInfo.name} for ${format(selectedDate, "MMM dd")} @ ${selectedTime} (Ref: ${code}).`,
       referenceId: id,
       referenceCode: code,
       status: "unread",
@@ -367,7 +367,11 @@ function BookAppointmentContent() {
                         placeholder="09123456789"
                         className="h-14 pl-12 rounded-2xl border-primary/20 bg-white font-bold"
                         value={guestInfo.mobile}
-                        onChange={(e) => setGuestInfo({...guestInfo, mobile: e.target.value})}
+                        maxLength={11}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, "");
+                          setGuestInfo({...guestInfo, mobile: val.slice(0, 11)});
+                        }}
                       />
                     </div>
                   </div>

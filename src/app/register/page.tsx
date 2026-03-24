@@ -41,8 +41,8 @@ export default function RegisterPage() {
   const logo = PlaceHolderImages.find(img => img.id === 'pao-logo');
 
   const handleSendOtp = async () => {
-    if (!/^\d{10,11}$/.test(mobileNumber)) {
-      toast({ variant: "destructive", title: "Invalid Number", description: "Enter a valid 10-11 digit mobile number." });
+    if (!/^\d{11}$/.test(mobileNumber)) {
+      toast({ variant: "destructive", title: "Invalid Number", description: "Enter exactly 11 numeric digits." });
       return;
     }
 
@@ -188,13 +188,17 @@ export default function RegisterPage() {
 
                     {regMode === "client" ? (
                       <div className="space-y-2">
-                        <Label htmlFor="mobileNumber">Mobile Number</Label>
+                        <Label htmlFor="mobileNumber">Mobile Number (Exactly 11 Digits)</Label>
                         <Input 
                           id="mobileNumber" 
                           type="tel" 
                           placeholder="09123456789"
                           value={mobileNumber} 
-                          onChange={(e) => setMobileNumber(e.target.value)} 
+                          maxLength={11}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, "");
+                            setMobileNumber(val.slice(0, 11));
+                          }} 
                           required 
                         />
                         <Button 
