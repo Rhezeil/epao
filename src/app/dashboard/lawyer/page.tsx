@@ -468,8 +468,8 @@ export default function LawyerDashboard() {
 
   return (
     <DashboardLayout role="lawyer">
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 pb-12">
-        <div className="xl:col-span-3 space-y-12">
+      <div className="grid grid-cols-1 grid-cols-4 gap-8 pb-12">
+        <div className="col-span-3 space-y-12">
           <div className="flex items-center gap-6">
             <Avatar className="h-24 w-24 border-4 border-white shadow-xl">
               <AvatarImage src={lawyerData?.photoUrl} className="object-cover" />
@@ -598,7 +598,7 @@ export default function LawyerDashboard() {
           </Card>
         </div>
 
-        <div className="xl:col-span-1">
+        <div className="col-span-1">
           <Card className="border-none shadow-2xl bg-white rounded-[2.5rem] overflow-hidden flex flex-col h-[calc(100vh-12rem)] sticky top-24">
             <CardHeader className="bg-secondary p-8 text-white shrink-0">
               <div className="flex justify-between items-center">

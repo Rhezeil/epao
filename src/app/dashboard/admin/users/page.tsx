@@ -515,7 +515,7 @@ export default function AdminUsersPage() {
                   <div className="grid md:grid-cols-2 gap-8">
                     {isEditingPersonal ? <>
                       <div className="space-y-2"><Label className="text-[10px] font-black uppercase">First Name</Label><Input value={editProfile.firstName ?? ""} onChange={e => setEditProfile({...editProfile, firstName: e.target.value})} /></div>
-                      <div className="space-y-2"><Label className="text-[10px) font-black uppercase">Last Name</Label><Input value={editProfile.lastName ?? ""} onChange={e => setEditProfile({...editProfile, lastName: e.target.value})} /></div>
+                      <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Last Name</Label><Input value={editProfile.lastName ?? ""} onChange={e => setEditProfile({...editProfile, lastName: e.target.value})} /></div>
                       <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Mobile</Label><Input value={editProfile.phoneNumber ?? ""} onChange={e => setEditProfile({...editProfile, phoneNumber: e.target.value})} /></div>
                       <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Address</Label><Input value={editProfile.address ?? ""} onChange={e => setEditProfile({...editProfile, address: e.target.value})} /></div>
                     </> : <>
