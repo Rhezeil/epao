@@ -168,8 +168,8 @@ export default function AdminUsersPage() {
       const uid = userCredential.user.uid;
       const userRef = doc(db, "users", uid);
       setDocumentNonBlocking(userRef, { id: uid, mobileNumber: newClient.mobile, email, address: newClient.address, role: "client", status: newClient.lawyerId ? "Active Case" : "New Intake", fullName: newClient.name, incomeClassification: newClient.income, createdAt: new Date().toISOString() }, { merge: true });
-      const profileRef = doc(db, "users", uid, "profile", "profile");
-      setDocumentNonBlocking(profileRef, { id: "profile", firstName: newClient.name.split(' ')[0], lastName: newClient.name.split(' ').slice(1).join(' '), phoneNumber: newClient.mobile, address: newClient.address, createdAt: new Date().toISOString() }, { merge: true });
+      const profileRefSub = doc(db, "users", uid, "profile", "profile");
+      setDocumentNonBlocking(profileRefSub, { id: "profile", firstName: newClient.name.split(' ')[0], lastName: newClient.name.split(' ').slice(1).join(' '), phoneNumber: newClient.mobile, address: newClient.address, createdAt: new Date().toISOString() }, { merge: true });
       if (newClient.lawyerId) {
         const year = new Date().getFullYear();
         const caseId = `CASE-${year}-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -188,8 +188,8 @@ export default function AdminUsersPage() {
 
   const handleSaveProfile = () => {
     if (!db || !selectedClientId) return;
-    const profileDocRef = doc(db, "users", selectedClientId, "profile", "profile");
-    updateDocumentNonBlocking(profileDocRef, { ...editProfile, updatedAt: new Date().toISOString() });
+    const profileDocRefSub = doc(db, "users", selectedClientId, "profile", "profile");
+    updateDocumentNonBlocking(profileDocRefSub, { ...editProfile, updatedAt: new Date().toISOString() });
     updateDocumentNonBlocking(doc(db, "users", selectedClientId), { fullName: `${editProfile.firstName} ${editProfile.lastName}`.trim(), mobileNumber: editProfile.phoneNumber, address: editProfile.address });
     setIsEditingPersonal(false);
     toast({ title: "Profile Saved", description: "Details updated." });

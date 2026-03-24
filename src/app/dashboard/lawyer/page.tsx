@@ -196,14 +196,14 @@ export default function LawyerDashboard() {
 
   const handleMarkStatus = (appt: any, status: string) => {
     if (!db) return;
+    const clientName = appt.guestName || appt.clientName || "Citizen";
     updateDocumentNonBlocking(doc(db, "appointments", appt.id), { status, updatedAt: new Date().toISOString() });
     const auditId = crypto.randomUUID();
-    const clientName = appt.guestName || appt.clientName || "Citizen";
     setDocumentNonBlocking(doc(db, "notifications", auditId), {
       id: auditId,
       type: "appointment",
       userRole: "lawyer",
-      description: `Atty. ${lawyerData?.lastName} marked Visit ${appt.referenceCode} for ${clientName} as ${status}.`,
+      description: `Office Update: Visit ${appt.referenceCode} for ${clientName} recorded as ${status}.`,
       referenceId: appt.id,
       referenceCode: appt.referenceCode,
       status: "unread",
@@ -232,7 +232,7 @@ export default function LawyerDashboard() {
         id: auditId,
         type: "appointment",
         userRole: "lawyer",
-        description: `Atty. ${lawyerData?.lastName} finalized Intake for ${clientName} (${activeConsultation.referenceCode}). Result: ${isAccepted ? 'Accepted' : 'Denied'}.`,
+        description: `Intake Assessment: Visit ${activeConsultation.referenceCode} for ${clientName} finalized as ${isAccepted ? 'Accepted' : 'Denied'}.`,
         referenceId: activeConsultation.id,
         referenceCode: activeConsultation.referenceCode,
         status: "unread",
@@ -254,15 +254,27 @@ export default function LawyerDashboard() {
       <div className="grid grid-cols-4 gap-8 pb-12">
         <div className="col-span-3 space-y-12">
           <div className="flex items-center gap-6">
-            <Avatar className="h-20 w-20 border-4 border-white shadow-xl"><AvatarImage src={lawyerData?.photoUrl} /><AvatarFallback className="bg-secondary/10 text-secondary font-black">{lawyerData?.firstName?.[0]}</AvatarFallback></Avatar>
-            <div><h1 className="text-3xl font-black text-secondary">Atty. {lawyerData?.firstName} {lawyerData?.lastName}</h1><p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mt-1">Professional Workstation Registry</p></div>
+            <Avatar className="h-20 w-20 border-4 border-white shadow-xl">
+              <AvatarImage src={lawyerData?.photoUrl} />
+              <AvatarFallback className="bg-secondary/10 text-secondary font-black">{lawyerData?.firstName?.[0]}</AvatarFallback>
+            </Avatar>
+            <div>
+              <h1 className="text-3xl font-black text-secondary">Atty. {lawyerData?.firstName} {lawyerData?.lastName}</h1>
+              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mt-1">Professional Workstation Registry</p>
+            </div>
           </div>
 
           <div className="space-y-6">
             {apptsData?.filter(a => a.status === "Consultation in Progress").map(appt => (
               <Card key={appt.id} className="border-none shadow-xl rounded-[2.5rem] bg-white border-l-8 border-red-500">
                 <CardContent className="p-8 flex items-center justify-between">
-                  <div className="flex items-center gap-6"><div className="p-4 bg-red-50 text-red-600 rounded-3xl"><User className="h-8 w-8" /></div><div><h3 className="text-xl font-black">{appt.guestName || appt.clientName}</h3><p className="text-[9px] font-black uppercase text-muted-foreground">REF: {appt.referenceCode}</p></div></div>
+                  <div className="flex items-center gap-6">
+                    <div className="p-4 bg-red-50 text-red-600 rounded-3xl"><User className="h-8 w-8" /></div>
+                    <div>
+                      <h3 className="text-xl font-black">{appt.guestName || appt.clientName}</h3>
+                      <p className="text-[9px] font-black uppercase text-muted-foreground">REF: {appt.referenceCode}</p>
+                    </div>
+                  </div>
                   <Button onClick={() => setActiveConsultation(appt)} className="h-14 bg-secondary text-white font-black px-10 rounded-2xl shadow-xl">Complete Intake <ArrowRight className="ml-2 h-5 w-5" /></Button>
                 </CardContent>
               </Card>
@@ -270,23 +282,47 @@ export default function LawyerDashboard() {
           </div>
 
           <div className="grid grid-cols-2 gap-8">
-            <Card className="border-none shadow-xl rounded-[2.5rem] bg-secondary text-white"><CardContent className="p-10"><p className="text-[10px] font-black uppercase opacity-60">Active Cases</p><p className="text-6xl font-black">{activeCases?.length || 0}</p></CardContent></Card>
-            <Card className="border-none shadow-xl rounded-[2.5rem] bg-white border-2 border-secondary/5"><CardContent className="p-10"><p className="text-[10px] font-black uppercase text-muted-foreground">Daily Load</p><p className="text-6xl font-black text-secondary">{filteredSchedule.length}</p></CardContent></Card>
+            <Card className="border-none shadow-xl rounded-[2.5rem] bg-secondary text-white">
+              <CardContent className="p-10">
+                <p className="text-[10px] font-black uppercase opacity-60">Active Cases</p>
+                <p className="text-6xl font-black">{activeCases?.length || 0}</p>
+              </CardContent>
+            </Card>
+            <Card className="border-none shadow-xl rounded-[2.5rem] bg-white border-2 border-secondary/5">
+              <CardContent className="p-10">
+                <p className="text-[10px] font-black uppercase text-muted-foreground">Daily Load</p>
+                <p className="text-6xl font-black text-secondary">{filteredSchedule.length}</p>
+              </CardContent>
+            </Card>
           </div>
 
           <Card className="border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden">
             <CardHeader className="bg-secondary/5 p-10"><CardTitle className="text-xl font-bold flex items-center gap-3"><CalendarIcon className="h-6 w-6" /> Office Workstation Schedule</CardTitle></CardHeader>
             <CardContent className="p-0">
               <div className="grid grid-cols-12">
-                <div className="col-span-4 p-10 border-r border-secondary/5 bg-secondary/[0.02]"><Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} className="mx-auto" /></div>
+                <div className="col-span-4 p-10 border-r border-secondary/5 bg-secondary/[0.02]">
+                  <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} className="mx-auto" />
+                </div>
                 <div className="col-span-8 p-0 divide-y divide-secondary/5 min-h-[400px]">
                   {filteredSchedule.length > 0 ? filteredSchedule.map((item, idx) => (
                     <div key={idx} className="p-10 flex items-center justify-between group">
-                      <div className="flex items-center gap-8"><div className="h-16 w-16 bg-secondary/5 rounded-2xl flex flex-col items-center justify-center font-black text-secondary"><span className="text-[9px] uppercase">{format(new Date(item.data.date), "MMM")}</span><span className="text-2xl">{format(new Date(item.data.date), "dd")}</span></div><div><h4 className="text-xl font-black">{item.type === 'appt' ? (item.data.guestName || item.data.clientName) : item.data.title}</h4><p className="text-[10px] font-bold text-muted-foreground uppercase">{item.time} • {item.type === 'appt' ? 'Office Visit' : item.data.location}</p></div></div>
+                      <div className="flex items-center gap-8">
+                        <div className="h-16 w-16 bg-secondary/5 rounded-2xl flex flex-col items-center justify-center font-black text-secondary">
+                          <span className="text-[9px] uppercase">{format(new Date(item.data.date), "MMM")}</span>
+                          <span className="text-2xl">{format(new Date(item.data.date), "dd")}</span>
+                        </div>
+                        <div>
+                          <h4 className="text-xl font-black">{item.type === 'appt' ? (item.data.guestName || item.data.clientName) : item.data.title}</h4>
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase">{item.time} • {item.type === 'appt' ? 'Office Visit' : item.data.location}</p>
+                        </div>
+                      </div>
                       {item.type === 'appt' && (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-10 w-10"><MoreVertical className="h-5 w-5" /></Button></DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="rounded-xl"><DropdownMenuItem onClick={() => setActiveConsultation(item.data)} className="font-bold">Start Assessment</DropdownMenuItem><DropdownMenuItem onClick={() => handleMarkStatus(item.data, 'No Show')} className="text-red-600 font-bold">Record No Show</DropdownMenuItem></DropdownMenuContent>
+                          <DropdownMenuContent align="end" className="rounded-xl">
+                            <DropdownMenuItem onClick={() => setActiveConsultation(item.data)} className="font-bold">Start Assessment</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleMarkStatus(item.data, 'No Show')} className="text-red-600 font-bold">Record No Show</DropdownMenuItem>
+                          </DropdownMenuContent>
                         </DropdownMenu>
                       )}
                     </div>
@@ -318,13 +354,30 @@ export default function LawyerDashboard() {
 
       <Dialog open={!!activeConsultation} onOpenChange={() => setActiveConsultation(null)}>
         <DialogContent className="rounded-[3rem] max-w-4xl p-0 overflow-hidden border-none shadow-2xl">
-          <DialogHeader className="p-8 bg-secondary text-white"><DialogTitle className="text-2xl font-black">Intake Assessment: {activeConsultation?.guestName || activeConsultation?.clientName}</DialogTitle></DialogHeader>
+          <DialogHeader className="p-8 bg-secondary text-white">
+            <DialogTitle className="text-2xl font-black">Intake Assessment: {activeConsultation?.guestName || activeConsultation?.clientName}</DialogTitle>
+          </DialogHeader>
           <div className="p-10 space-y-8">
             <div className="grid md:grid-cols-2 gap-8">
-              <div className="space-y-4"><Label className="text-[10px] font-black uppercase">Statutory Category</Label><Select value={consultationForm.caseType} onValueChange={v => setConsultationForm({...consultationForm, caseType: v})}><SelectTrigger className="h-12"><SelectValue placeholder="Category" /></SelectTrigger><SelectContent>{Object.keys(caseCategories).map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}</SelectContent></Select></div>
-              <div className="space-y-4"><Label className="text-[10px] font-black uppercase">Registry Outcome</Label><Select value={consultationForm.outcome} onValueChange={v => setConsultationForm({...consultationForm, outcome: v})}><SelectTrigger className="h-12"><SelectValue placeholder="Outcome" /></SelectTrigger><SelectContent>{OUTCOME_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent></Select></div>
+              <div className="space-y-4">
+                <Label className="text-[10px] font-black uppercase">Statutory Category</Label>
+                <Select value={consultationForm.caseType} onValueChange={v => setConsultationForm({...consultationForm, caseType: v})}>
+                  <SelectTrigger className="h-12"><SelectValue placeholder="Category" /></SelectTrigger>
+                  <SelectContent>{Object.keys(caseCategories).map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-4">
+                <Label className="text-[10px] font-black uppercase">Registry Outcome</Label>
+                <Select value={consultationForm.outcome} onValueChange={v => setConsultationForm({...consultationForm, outcome: v})}>
+                  <SelectTrigger className="h-12"><SelectValue placeholder="Outcome" /></SelectTrigger>
+                  <SelectContent>{OUTCOME_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Findings & Assessment</Label><Textarea value={consultationForm.assessment} onChange={e => setConsultationForm({...consultationForm, assessment: e.target.value})} className="rounded-2xl min-h-[120px]" /></div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase">Findings & Assessment</Label>
+              <Textarea value={consultationForm.assessment} onChange={e => setConsultationForm({...consultationForm, assessment: e.target.value})} className="rounded-2xl min-h-[120px]" />
+            </div>
           </div>
           <DialogFooter className="p-8 bg-muted/30">
             <Button variant="outline" onClick={() => setActiveConsultation(null)} className="h-14 font-bold">Cancel</Button>
