@@ -192,7 +192,7 @@ function BookAppointmentContent() {
       id: notifId,
       type: "appointment",
       userRole: "guest",
-      description: `New screening appointment booked by ${guestInfo.name} for ${format(selectedDate, "MMM dd")} @ ${selectedTime} (Ref: ${code}).`,
+      description: `New screening appointment booked for citizen ${guestInfo.name} for ${format(selectedDate, "MMM dd")} @ ${selectedTime} (Ref: ${code}).`,
       referenceId: id,
       referenceCode: code,
       status: "unread",

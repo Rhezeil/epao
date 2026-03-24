@@ -161,7 +161,7 @@ export default function AdminUsersPage() {
     if (!db) return;
 
     if (!/^\d{11}$/.test(newClient.mobile)) {
-      toast({ variant: "destructive", title: "Invalid Mobile", description: "Mobile number must be exactly 11 digits." });
+      toast({ variant: "destructive", title: "Invalid Mobile", description: "Mobile number must be exactly 11 digits (e.g., 09123456789)." });
       return;
     }
 
@@ -188,7 +188,7 @@ export default function AdminUsersPage() {
         id: notifId,
         type: "system",
         userRole: "admin",
-        description: `Office Alert: Official registration completed for citizen ${newClient.name}.`,
+        description: `Office Alert: Official registration completed for citizen ${newClient.name} (ID: ${uid.slice(0,8)}).`,
         referenceId: uid,
         status: "unread",
         createdAt: new Date().toISOString()
@@ -311,7 +311,7 @@ export default function AdminUsersPage() {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Full Citizen Name</Label><Input value={newClient.name} onChange={e => setNewClient({...newClient, name: e.target.value})} className="h-12 rounded-xl" /></div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Mobile Number (11 Digits)</Label>
+                    <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Mobile Number (Exactly 11 Digits)</Label>
                     <Input 
                       value={newClient.mobile} 
                       maxLength={11}

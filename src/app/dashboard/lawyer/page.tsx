@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
@@ -45,9 +46,6 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { caseCategories } from "@/app/lib/case-data";
-import { initializeApp, deleteApp } from "firebase/app";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import { firebaseConfig } from "@/firebase/config";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -179,7 +177,7 @@ export default function LawyerDashboard() {
         id: auditId,
         type: "appointment",
         userRole: "lawyer",
-        description: `Atty. ${lawyerData?.lastName} cancelled Visit ${refCode} for ${clientName}. Reason: ${cancellationReason}`,
+        description: `Atty. ${lawyerData?.lastName || 'Counsel'} cancelled Visit ${refCode} for ${clientName}. Reason: ${cancellationReason}`,
         referenceId: apptId,
         referenceCode: refCode,
         status: "unread",
