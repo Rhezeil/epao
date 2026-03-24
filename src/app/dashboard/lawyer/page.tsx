@@ -246,21 +246,6 @@ export default function LawyerDashboard() {
     }
   };
 
-  const handleActivateCase = async (appt: any) => {
-    if (!db || !user || !appt) return;
-    setIsSubmitting(true);
-    try {
-      const year = new Date().getFullYear();
-      const caseId = `CASE-${year}-${Math.floor(1000 + Math.random() * 9000)}`;
-      const clientName = appt.guestName || appt.clientName || "Citizen";
-      updateDocumentNonBlocking(doc(db, "appointments", appt.id), { status: "completed", caseId, updatedAt: new Date().toISOString() });
-      setDocumentNonBlocking(doc(db, "cases", caseId), { id: caseId, clientId: appt.clientId || crypto.randomUUID(), lawyerId: user.uid, caseType: appt.caseType, status: "Active", consultationRef: appt.referenceCode, lawyerNotified: true, createdAt: new Date().toISOString() }, { merge: true });
-      const auditId = crypto.randomUUID();
-      setDocumentNonBlocking(doc(db, "notifications", auditId), { id: auditId, type: "case", userRole: "lawyer", description: `Atty. ${lawyerData?.lastName} activated Official Case ${caseId} for ${clientName}.`, referenceId: caseId, status: "unread", createdAt: new Date().toISOString() }, { merge: true });
-      toast({ title: "Case Indexing", description: `${caseId} is now live.` });
-    } finally { setIsSubmitting(false); }
-  };
-
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-secondary" /></div>;
   if (!user || role !== 'lawyer') return null;
 
@@ -341,7 +326,10 @@ export default function LawyerDashboard() {
             </div>
             <div className="space-y-2"><Label className="text-[10px] font-black uppercase">Findings & Assessment</Label><Textarea value={consultationForm.assessment} onChange={e => setConsultationForm({...consultationForm, assessment: e.target.value})} className="rounded-2xl min-h-[120px]" /></div>
           </div>
-          <DialogFooter className="p-8 bg-muted/30"><Button variant="outline" onClick={() => setActiveConsultation(null)} className="h-14 font-bold">Cancel</Button><Button onClick={handleCompleteConsultation} disabled={isSubmitting || !consultationForm.outcome} className="h-14 bg-secondary text-white font-black px-10 rounded-xl shadow-lg">Finalize Record</Button></DialogFooter>
+          <DialogFooter className="p-8 bg-muted/30">
+            <Button variant="outline" onClick={() => setActiveConsultation(null)} className="h-14 font-bold">Cancel</Button>
+            <Button onClick={handleCompleteConsultation} disabled={isSubmitting || !consultationForm.outcome} className="h-14 bg-secondary text-white font-black px-10 rounded-xl shadow-lg">Finalize Record</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -352,7 +340,10 @@ export default function LawyerDashboard() {
             <Label className="text-[10px] font-black uppercase text-rose-600/60">Reason for Cancellation</Label>
             <Input value={cancellationReason} onChange={e => setCancellationReason(e.target.value)} placeholder="Official reason for registry..." className="h-12 rounded-xl" />
           </div>
-          <DialogFooter className="p-8 bg-muted/30"><Button variant="outline" onClick={() => setIsCancelDialogOpen(false)} className="font-bold">Close</Button><Button onClick={handleCancelAppointment} disabled={!cancellationReason || isSubmitting} className="bg-rose-600 text-white font-black px-10 shadow-lg">Confirm</Button></DialogFooter>
+          <DialogFooter className="p-8 bg-muted/30">
+            <Button variant="outline" onClick={() => setIsCancelDialogOpen(false)} className="font-bold">Close</Button>
+            <Button onClick={handleCancelAppointment} disabled={!cancellationReason || isSubmitting} className="bg-rose-600 text-white font-black px-10 shadow-lg">Confirm</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </DashboardLayout>

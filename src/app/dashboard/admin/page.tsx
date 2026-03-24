@@ -423,7 +423,7 @@ export default function AdminDashboard() {
                       </Button>
                       <div>
                         <CardTitle className="text-2xl font-black">Audit Record Detail</CardTitle>
-                        <CardDescription className="text-white/60 font-bold uppercase tracking-widest text-[10px] mt-1">Metadate for Event: {viewingAuditLog.id}</CardDescription>
+                        <CardDescription className="text-white/60 font-bold uppercase tracking-widest text-[10px] mt-1">Metadata for Event: {viewingAuditLog.id}</CardDescription>
                       </div>
                     </div>
                     <Badge className="bg-white/20 text-white border-none font-black text-xs px-4 py-1.5 rounded-full uppercase">{viewingAuditLog.status}</Badge>
