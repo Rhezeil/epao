@@ -188,7 +188,7 @@ export default function ClientDashboard() {
     const now = new Date();
     for (let h = 8; h <= 16; h++) {
       for (let m = 0; m < 60; m += 30) {
-        if (h === 12) continue;
+        if (h === 12) continue; // Lunch
         if (h === 16 && m > 30) continue;
         const ampm = h >= 12 ? 'PM' : 'AM';
         const displayHour = h % 12 || 12;

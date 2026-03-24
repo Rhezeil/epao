@@ -703,7 +703,7 @@ export default function LawyerDashboard() {
                     </Select>
                   </div>
                 )}
-                <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Confidential Audit Notes</Label><Textarea placeholder="Internal reference only..." className="rounded-[2rem] h-32" value={consultationForm.notes} onChange={e => setConsultationForm({...consultationForm, notes: e.target.value})} /></div>
+                <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Confidential Audit Notes</Label><Textarea placeholder="Internal reference only..." className="rounded-[2rem] h-32" value={consultationForm.notes} onChange={e => setconsultationForm({...consultationForm, notes: e.target.value})} /></div>
               </div>
             </div>
           </div>
@@ -714,7 +714,7 @@ export default function LawyerDashboard() {
               Commit Final Assessment
             </Button>
           </DialogFooter>
-        </DialogContent>
+        </Dialog>
       </Dialog>
 
       {/* --- CANCELLATION DIALOG --- */}
