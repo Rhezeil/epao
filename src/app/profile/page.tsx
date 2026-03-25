@@ -74,7 +74,7 @@ export default function ProfilePage() {
         id: notifId,
         type: role === 'client' ? 'client' : 'lawyer',
         userRole: role,
-        description: `${role.toUpperCase()} profile information updated by ${formState.firstName}.`,
+        description: `${role.toUpperCase()} profile information updated for ${formState.firstName} ${formState.lastName}.`,
         referenceId: user.uid,
         status: "unread",
         createdAt: new Date().toISOString()
@@ -119,7 +119,10 @@ export default function ProfilePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">First Name</Label><Input className="h-12 rounded-xl" value={formState.firstName} onChange={(e) => setFormState({...formState, firstName: e.target.value})} /></div>
                 <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Last Name</Label><Input className="h-12 rounded-xl" value={formState.lastName} onChange={(e) => setFormState({...formState, lastName: e.target.value})} /></div>
-                <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Mobile</Label><Input className="h-12 rounded-xl" value={formState.phoneNumber} onChange={(e) => setFormState({...formState, phoneNumber: e.target.value})} /></div>
+                <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Mobile (Exactly 11 Digits)</Label><Input className="h-12 rounded-xl" maxLength={11} value={formState.phoneNumber} onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "");
+                  setFormState({...formState, phoneNumber: val.slice(0, 11)});
+                }} /></div>
                 <div className="col-span-2 space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Address</Label><Input className="h-12 rounded-xl" value={formState.address} onChange={(e) => setFormState({...formState, address: e.target.value})} /></div>
               </div>
               <Button type="submit" disabled={isSaving} className="h-12 px-10 rounded-2xl bg-primary text-white font-black shadow-lg">Commit Updates</Button>

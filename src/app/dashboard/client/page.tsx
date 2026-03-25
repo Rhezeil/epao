@@ -196,7 +196,7 @@ export default function ClientDashboard() {
         const timeString = `${displayHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
         const slotDate = rescheduleDate ? setMinutes(setHours(new Date(rescheduleDate), h), m) : null;
         
-        // 1 hour leeway for same-day
+        // High-fidelity requirement: 1 hour leeway for same-day
         const isPast = slotDate ? isBefore(slotDate, addHours(now, 1)) : false;
         
         const isLawyerBusy = globalAppts?.some(a => 
@@ -236,7 +236,7 @@ export default function ClientDashboard() {
       id: notifId,
       type: "appointment",
       userRole: "client",
-      description: `Client ${profile?.firstName} cancelled visit ${appt?.referenceCode}.`,
+      description: `Client ${profile?.firstName || 'Citizen'} cancelled visit ${appt?.referenceCode}.`,
       referenceId: apptId,
       referenceCode: appt?.referenceCode,
       status: "unread",
@@ -263,7 +263,7 @@ export default function ClientDashboard() {
       id: notifId,
       type: "appointment",
       userRole: "client",
-      description: `Client ${profile?.firstName} rescheduled visit ${selectedApptToReschedule.referenceCode} to ${format(rescheduleDate, "MMM dd")} @ ${rescheduleTime}.`,
+      description: `Client ${profile?.firstName || 'Citizen'} rescheduled visit ${selectedApptToReschedule.referenceCode} to ${format(rescheduleDate, "MMM dd")} @ ${rescheduleTime}.`,
       referenceId: selectedApptToReschedule.id,
       referenceCode: selectedApptToReschedule.referenceCode,
       status: "unread",

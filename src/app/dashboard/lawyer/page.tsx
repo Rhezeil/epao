@@ -119,32 +119,18 @@ export default function LawyerDashboard() {
   const { data: activeCases } = useCollection(casesQuery);
   const { data: dutiesData } = useCollection(dutiesQuery);
 
-  const unreadApptsQuery = useMemoFirebase(() => {
+  const workstationAlertsQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'lawyer') return null;
-    return query(collection(db, "appointments"), where("lawyerId", "==", user.uid), where("lawyerNotified", "==", false));
+    return query(
+      collection(db, "notifications"),
+      where("targetUserId", "==", user.uid),
+      where("status", "==", "unread"),
+      orderBy("createdAt", "desc"),
+      limit(50)
+    );
   }, [db, user, role]);
 
-  const unreadCasesQuery = useMemoFirebase(() => {
-    if (!db || !user || role !== 'lawyer') return null;
-    return query(collection(db, "cases"), where("lawyerId", "==", user.uid), where("lawyerNotified", "==", false));
-  }, [db, user, role]);
-
-  const unreadDutiesQuery = useMemoFirebase(() => {
-    if (!db || !user || role !== 'lawyer') return null;
-    return query(collection(db, "lawyerDuties"), where("lawyerId", "==", user.uid), where("notified", "==", false));
-  }, [db, user, role]);
-
-  const { data: unreadAppts } = useCollection(unreadApptsQuery);
-  const { data: unreadCases } = useCollection(unreadCasesQuery);
-  const { data: unreadDuties } = useCollection(unreadDutiesQuery);
-
-  const workstationAlerts = useMemo(() => {
-    const alerts: any[] = [];
-    if (unreadAppts) unreadAppts.forEach(a => alerts.push({ ...a, alertType: 'appointment' }));
-    if (unreadCases) unreadCases.forEach(c => alerts.push({ ...c, alertType: 'case' }));
-    if (unreadDuties) unreadDuties.forEach(d => alerts.push({ ...d, alertType: 'duty' }));
-    return alerts.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-  }, [unreadAppts, unreadCases, unreadDuties]);
+  const { data: workstationAlerts } = useCollection(workstationAlertsQuery);
 
   const filteredSchedule = useMemo(() => {
     if (!selectedDate) return [];
@@ -186,30 +172,28 @@ export default function LawyerDashboard() {
     return mods;
   }, [dutiesData]);
 
-  const handleAcknowledge = (id: string, type: string) => {
+  const handleAcknowledgeAlert = (alert: any) => {
     if (!db) return;
-    let collectionName = "appointments";
-    let fieldName = "lawyerNotified";
+    updateDocumentNonBlocking(doc(db, "notifications", alert.id), { status: "read" });
     
-    if (type === 'case') {
-      collectionName = "cases";
-    } else if (type === 'duty') {
-      collectionName = "lawyerDuties";
-      fieldName = "notified";
+    if (alert.type === 'lawyer' && alert.referenceId) {
+      updateDocumentNonBlocking(doc(db, "lawyerDuties", alert.referenceId), { notified: true });
+    } else if (alert.type === 'appointment' && alert.referenceId) {
+      updateDocumentNonBlocking(doc(db, "appointments", alert.referenceId), { lawyerNotified: true });
+    } else if (alert.type === 'case' && alert.referenceId) {
+      updateDocumentNonBlocking(doc(db, "cases", alert.referenceId), { lawyerNotified: true });
     }
-
-    const ref = doc(db, collectionName, id);
-    updateDocumentNonBlocking(ref, { [fieldName]: true, updatedAt: new Date().toISOString() });
-    toast({ title: "Acknowledge", description: "Record verified." });
+    
+    toast({ title: "Verified", description: "Workstation record synchronized." });
   };
 
   const handleCancelAppointment = async () => {
     if (!db || !apptToCancel || !cancellationReason) return;
     setIsSubmitting(true);
     try {
-      const apptId = apptToCancel.id;
+      const apptId = apptToCancel.id || apptToCancel.referenceId;
+      const refCode = apptToCancel.referenceCode || "N/A";
       const clientName = apptToCancel.guestName || apptToCancel.clientName || "Citizen";
-      const refCode = apptToCancel.referenceCode;
       
       updateDocumentNonBlocking(doc(db, "appointments", apptId), {
         status: "cancelled",
@@ -364,30 +348,18 @@ export default function LawyerDashboard() {
                       jail: dutyModifiers.jail
                     }}
                     modifiersClassNames={{
-                      office: "bg-blue-500 text-white font-black rounded-xl",
-                      field: "bg-emerald-500 text-white font-black rounded-xl",
-                      court: "bg-indigo-600 text-white font-black rounded-xl",
-                      jail: "bg-rose-600 text-white font-black rounded-xl"
+                      office: "bg-blue-500 text-white font-black rounded-xl shadow-md",
+                      field: "bg-emerald-500 text-white font-black rounded-xl shadow-md",
+                      court: "bg-indigo-600 text-white font-black rounded-xl shadow-md",
+                      jail: "bg-rose-600 text-white font-black rounded-xl shadow-md"
                     }}
                     className="mx-auto" 
                   />
                   <div className="mt-8 flex flex-wrap justify-center gap-4 border-t border-secondary/5 pt-6">
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full bg-blue-500" />
-                      <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Office Work</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full bg-indigo-600" />
-                      <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Court Work</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full bg-rose-600" />
-                      <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Jail Visits</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full bg-emerald-500" />
-                      <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Field Work</span>
-                    </div>
+                    <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full bg-blue-500" /><span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Office Work</span></div>
+                    <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full bg-indigo-600" /><span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Court Work</span></div>
+                    <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full bg-rose-600" /><span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Jail Visits</span></div>
+                    <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full bg-emerald-500" /><span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Field Work</span></div>
                   </div>
                 </div>
                 <div className="p-0 flex flex-col min-h-[300px]">
@@ -434,17 +406,13 @@ export default function LawyerDashboard() {
           <Card className="border-none shadow-2xl bg-white rounded-[2.5rem] overflow-hidden flex flex-col h-[calc(100vh-12rem)] sticky top-24">
             <CardHeader className="bg-secondary p-8 text-white"><CardTitle className="text-xl font-black flex items-center gap-2"><Bell className="h-5 w-5" /> Workstation Alerts</CardTitle></CardHeader>
             <CardContent className="p-0 overflow-y-auto divide-y divide-secondary/5">
-              {workstationAlerts.length > 0 ? workstationAlerts.map(alert => (
+              {workstationAlerts && workstationAlerts.length > 0 ? workstationAlerts.map(alert => (
                 <div key={alert.id} className="p-6 bg-amber-50/30 relative group">
                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500" />
-                  <p className="text-xs font-bold text-secondary">
-                    {alert.alertType === 'case' ? `New Case Assigned: ${alert.caseType}` : 
-                     alert.alertType === 'duty' ? `New Duty Assignment: ${alert.category}` :
-                     `Intake Booked: ${alert.caseType}`}
-                  </p>
+                  <p className="text-xs font-bold text-secondary">{alert.description}</p>
                   <div className="mt-4 flex flex-col gap-2">
-                    <Button size="sm" variant="ghost" onClick={() => handleAcknowledge(alert.id, alert.alertType)} className="h-8 rounded-xl font-black text-[9px] uppercase bg-emerald-100 text-emerald-700">Acknowledge</Button>
-                    {alert.alertType === 'appointment' && <Button size="sm" variant="ghost" onClick={() => { setApptToCancel(alert); setIsCancelDialogOpen(true); }} className="h-8 rounded-xl font-black text-[9px] uppercase bg-rose-100 text-rose-700">Cancel Visit</Button>}
+                    <Button size="sm" variant="ghost" onClick={() => handleAcknowledgeAlert(alert)} className="h-8 rounded-xl font-black text-[9px] uppercase bg-emerald-100 text-emerald-700">Acknowledge</Button>
+                    {alert.type === 'appointment' && <Button size="sm" variant="ghost" onClick={() => { setApptToCancel(alert); setIsCancelDialogOpen(true); }} className="h-8 rounded-xl font-black text-[9px] uppercase bg-rose-100 text-rose-700">Cancel Visit</Button>}
                   </div>
                 </div>
               )) : <div className="py-20 text-center text-muted-foreground font-black uppercase text-[10px]">No unread alerts</div>}

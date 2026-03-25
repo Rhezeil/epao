@@ -105,6 +105,8 @@ function BookAppointmentContent() {
         const timeString = `${displayHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
         
         const slotDate = selectedDate ? setMinutes(setHours(new Date(selectedDate), h), m) : null;
+        
+        // High-fidelity requirement: 1 hour leeway for same-day
         const isPast = slotDate ? isBefore(slotDate, addHours(now, 1)) : false;
         const isBooked = existingAppts?.some(a => a.time === timeString && a.status !== 'cancelled');
         
@@ -124,6 +126,7 @@ function BookAppointmentContent() {
       toast({ variant: "destructive", title: "Missing Information", description: "Please fill out all required fields." });
       return false;
     }
+    // High-fidelity requirement: Exactly 11 numeric digits
     if (!/^\d{11}$/.test(mobile)) {
       toast({ variant: "destructive", title: "Invalid Mobile", description: "Mobile number must be exactly 11 numeric digits (e.g., 09123456789)." });
       return false;
@@ -138,7 +141,7 @@ function BookAppointmentContent() {
       if (result.success) {
         setGeneratedOtp(result.code);
         setStep(4);
-        toast({ title: "Mock SMS Received", description: result.message });
+        toast({ title: "Verification Code Sent", description: result.message });
       }
     } catch (error) {
       toast({ variant: "destructive", title: "SMS Service Error", description: "Could not send verification code." });
@@ -185,7 +188,7 @@ function BookAppointmentContent() {
       id: notifId,
       type: "appointment",
       userRole: "guest",
-      description: `New screening appointment booked for citizen ${guestInfo.name} for ${format(selectedDate, "MMM dd")} @ ${selectedTime} (Reference: ${code}).`,
+      description: `New intake assessment booked for citizen ${guestInfo.name} for ${format(selectedDate, "MMM dd")} @ ${selectedTime} (Reference: ${code}).`,
       referenceId: id,
       referenceCode: code,
       status: "unread",
@@ -197,8 +200,8 @@ function BookAppointmentContent() {
       setStep(5);
       setIsSubmitting(false);
       toast({
-        title: "Screening Scheduled",
-        description: "Intake assessment for " + guestInfo.name + " has been synchronized."
+        title: "Intake Scheduled",
+        description: `Assessment for ${guestInfo.name} has been synchronized with the registry.`
       });
     }, 1500);
   };
@@ -218,7 +221,7 @@ function BookAppointmentContent() {
               <p className="text-muted-foreground font-medium">Your initial eligibility interview is now in the system queue.</p>
             </div>
             <div className="bg-primary/5 p-8 rounded-[2rem] space-y-2 border-2 border-dashed border-primary/20">
-              <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Screening Reference Code</p>
+              <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Registry Reference Code</p>
               <p className="text-5xl font-black text-primary tracking-tighter">{refCode}</p>
             </div>
             <Button className="w-full h-14 rounded-2xl font-bold text-lg bg-primary hover:bg-[#1A3B6B] text-white shadow-lg" onClick={() => router.push("/case-navigator")}>
@@ -349,6 +352,7 @@ function BookAppointmentContent() {
                       value={guestInfo.mobile}
                       maxLength={11}
                       onChange={(e) => {
+                        // High-fidelity requirement: Numeric only, max 11
                         const val = e.target.value.replace(/\D/g, "");
                         setGuestInfo({...guestInfo, mobile: val.slice(0, 11)});
                       }}
