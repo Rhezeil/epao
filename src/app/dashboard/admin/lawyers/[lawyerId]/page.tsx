@@ -139,6 +139,27 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
       .map(a => parseISO(a.date));
   }, [allAvail]);
 
+  const dutyModifiers = useMemo(() => {
+    const mods: Record<string, Date[]> = {
+      office: [],
+      field: [],
+      court: [],
+      jail: []
+    };
+
+    duties?.forEach(d => {
+      try {
+        const date = parseISO(d.date);
+        if (d.category === "Office Work") mods.office.push(date);
+        else if (d.category === "Field Work") mods.field.push(date);
+        else if (d.category === "Court Work") mods.court.push(date);
+        else if (d.category === "Prison and Jail Visits") mods.jail.push(date);
+      } catch (e) {}
+    });
+
+    return mods;
+  }, [duties]);
+
   useEffect(() => {
     if (availData) {
       setAvailForm({
@@ -171,7 +192,6 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
       ...dayDuties.map(d => ({ type: 'duty', data: d, time: d.startTime }))
     ].sort((a, b) => a.time.localeCompare(b.time));
 
-    // Inject leave as a persistent entry at the top if active
     if (availData && availData.availabilityType !== 'Available') {
       items.unshift({
         type: 'leave',
@@ -207,7 +227,6 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
     const endH = parseInt(endParts[0]);
     const endM = parseInt(endParts[1]);
 
-    // Office Hours: 07:00 AM - 06:00 PM
     if (startH < 7 || (endH > 18 || (endH === 18 && endM > 0))) {
       toast({ variant: "destructive", title: "Outside Office Hours", description: "Statutory office hours are restricted to 07:00 AM - 06:00 PM." });
       return;
@@ -340,15 +359,43 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
                     { dayOfWeek: [0, 5, 6] },
                     (date) => isHoliday(date)
                   ]}
-                  modifiers={{ leave: leaveDates }}
+                  modifiers={{ 
+                    leave: leaveDates,
+                    office: dutyModifiers.office,
+                    field: dutyModifiers.field,
+                    court: dutyModifiers.court,
+                    jail: dutyModifiers.jail
+                  }}
                   modifiersClassNames={{
-                    leave: "bg-red-500 text-white rounded-xl shadow-sm"
+                    leave: "bg-amber-500 text-white rounded-xl shadow-md border-amber-600 border-2",
+                    office: "bg-blue-500 text-white font-black rounded-xl",
+                    field: "bg-emerald-500 text-white font-black rounded-xl",
+                    court: "bg-indigo-600 text-white font-black rounded-xl",
+                    jail: "bg-rose-600 text-white font-black rounded-xl"
                   }}
                   className="mx-auto border rounded-xl p-2" 
                 />
-                <div className="mt-4 flex items-center gap-2 px-2">
-                  <div className="h-2 w-2 rounded-full bg-red-500" />
-                  <span className="text-[9px] font-black uppercase text-muted-foreground">Attorney Filed Leave</span>
+                <div className="mt-6 space-y-2 border-t pt-4">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-blue-500" />
+                    <span className="text-[8px] font-black uppercase text-muted-foreground">Office Work</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-indigo-600" />
+                    <span className="text-[8px] font-black uppercase text-muted-foreground">Court Work</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-rose-600" />
+                    <span className="text-[8px] font-black uppercase text-muted-foreground">Jail Visits</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                    <span className="text-[8px] font-black uppercase text-muted-foreground">Field Work</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-amber-500" />
+                    <span className="text-[8px] font-black uppercase text-muted-foreground">Leave / Unavailable</span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -409,7 +456,11 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
                                   <Badge variant="outline" className={cn(
                                     "text-[9px] font-black uppercase px-2 py-0.5",
                                     item.type === 'appt' ? "bg-amber-50 text-amber-700 border-amber-200" : 
-                                    item.type === 'leave' ? "bg-red-50 text-red-700 border-red-200" : "bg-blue-50 text-blue-700 border-blue-200"
+                                    item.type === 'leave' ? "bg-red-50 text-red-700 border-red-200" : 
+                                    item.data.category === 'Office Work' ? "bg-blue-50 text-blue-700 border-blue-200" :
+                                    item.data.category === 'Court Work' ? "bg-indigo-50 text-indigo-700 border-indigo-200" :
+                                    item.data.category === 'Prison and Jail Visits' ? "bg-rose-50 text-rose-700 border-rose-200" :
+                                    "bg-emerald-50 text-emerald-700 border-emerald-200"
                                   )}>
                                     {item.type === 'appt' ? "Citizen Visit" : item.type === 'leave' ? "Unavailable" : item.data.category}
                                   </Badge>

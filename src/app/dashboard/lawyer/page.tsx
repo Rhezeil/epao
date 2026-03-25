@@ -150,6 +150,27 @@ export default function LawyerDashboard() {
     ].sort((a, b) => a.time.localeCompare(b.time));
   }, [apptsData, dutiesData, selectedDate]);
 
+  const dutyModifiers = useMemo(() => {
+    const mods: Record<string, Date[]> = {
+      office: [],
+      field: [],
+      court: [],
+      jail: []
+    };
+
+    dutiesData?.forEach(d => {
+      try {
+        const date = parseISO(d.date);
+        if (d.category === "Office Work") mods.office.push(date);
+        else if (d.category === "Field Work") mods.field.push(date);
+        else if (d.category === "Court Work") mods.court.push(date);
+        else if (d.category === "Prison and Jail Visits") mods.jail.push(date);
+      } catch (e) {}
+    });
+
+    return mods;
+  }, [dutiesData]);
+
   const handleAcknowledge = (id: string, type: string) => {
     if (!db) return;
     const ref = doc(db, type === 'case' ? "cases" : "appointments", id);
@@ -309,8 +330,38 @@ export default function LawyerDashboard() {
                       { dayOfWeek: [0, 5, 6] },
                       (date) => isHoliday(date)
                     ]}
+                    modifiers={{
+                      office: dutyModifiers.office,
+                      field: dutyModifiers.field,
+                      court: dutyModifiers.court,
+                      jail: dutyModifiers.jail
+                    }}
+                    modifiersClassNames={{
+                      office: "bg-blue-500 text-white font-black rounded-xl",
+                      field: "bg-emerald-500 text-white font-black rounded-xl",
+                      court: "bg-indigo-600 text-white font-black rounded-xl",
+                      jail: "bg-rose-600 text-white font-black rounded-xl"
+                    }}
                     className="mx-auto" 
                   />
+                  <div className="mt-8 flex flex-wrap justify-center gap-4 border-t border-secondary/5 pt-6">
+                    <div className="flex items-center gap-2">
+                      <div className="h-3 w-3 rounded-full bg-blue-500" />
+                      <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Office Work</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="h-3 w-3 rounded-full bg-indigo-600" />
+                      <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Court Work</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="h-3 w-3 rounded-full bg-rose-600" />
+                      <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Jail Visits</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="h-3 w-3 rounded-full bg-emerald-500" />
+                      <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Field Work</span>
+                    </div>
+                  </div>
                 </div>
                 <div className="p-0 flex flex-col min-h-[300px]">
                   {filteredSchedule.length > 0 ? (
