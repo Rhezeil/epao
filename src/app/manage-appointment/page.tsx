@@ -6,6 +6,7 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc, setDocumentNonBlocking } from "@/firebase";
 import { collection, query, where, doc, getDoc, DocumentData } from "firebase/firestore";
 import { Search, Calendar as CalendarIcon, XCircle, Loader2, CheckCircle2, AlertCircle, Lock, ShieldCheck, User, Clock, Edit3, ChevronRight, ArrowRight, ShieldAlert, Info } from "lucide-react";
@@ -231,7 +232,7 @@ export default function ManageAppointmentPage() {
                 )}
               </div>
             </div>
-            <DialogFooter className="p-8 bg-muted/30 gap-3"><Button variant="outline" onClick={() => setIsRescheduleOpen(false)} className="flex-1 h-14 rounded-xl font-bold">Cancel</Button><Button onClick={handleReschedule} disabled={!rescheduleDate || !rescheduleTime || isRescheduling} className="flex-1 h-14 bg-primary text-white font-black rounded-xl shadow-xl">{isRescheduling ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : "Update Visit"}</Button></DialogFooter>
+            <DialogFooter className="p-8 bg-muted/30 gap-3"><Button variant="outline" onClick={() => setIsRescheduleOpen(false)} className="flex-1 h-14 rounded-xl font-bold">Cancel</Button><Button onClick={handleReschedule} disabled={!rescheduleDate || !rescheduleTime || isRescheduling} className="flex-1 h-14 bg-primary text-white font-black rounded-xl shadow-xl">{isRescheduling ? <Loader2 className="animate-spin h-6 w-6 mr-2" /> : "Update Visit"}</Button></DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
