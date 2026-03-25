@@ -247,6 +247,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* High-fidelity requirement: Dedicated audit isolation */}
         <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); setViewingAuditLog(null); }} className="w-full">
           <TabsList className="grid w-full grid-cols-3 max-w-2xl bg-white/50 p-1 rounded-2xl border-2 border-primary/5 h-14 mb-8">
             <TabsTrigger value="analysis" className="rounded-xl font-bold">Intake Analysis</TabsTrigger>

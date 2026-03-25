@@ -41,6 +41,7 @@ export default function RegisterPage() {
   const logo = PlaceHolderImages.find(img => img.id === 'pao-logo');
 
   const handleSendOtp = async () => {
+    // High-fidelity rule: Exactly 11 digits
     if (!/^\d{11}$/.test(mobileNumber)) {
       toast({ variant: "destructive", title: "Invalid Number", description: "Enter exactly 11 numeric digits." });
       return;
@@ -115,7 +116,7 @@ export default function RegisterPage() {
           updatedAt: new Date().toISOString(),
         }, { merge: true });
       } else {
-        // Initialize Top-level Client User Document with sync-ready fields
+        // Initialize Top-level Client User Document
         setDocumentNonBlocking(doc(db, "users", user.uid), {
           id: user.uid,
           mobileNumber: mobileNumber,
@@ -196,6 +197,7 @@ export default function RegisterPage() {
                           value={mobileNumber} 
                           maxLength={11}
                           onChange={(e) => {
+                            // High-fidelity requirement: Numeric only
                             const val = e.target.value.replace(/\D/g, "");
                             setMobileNumber(val.slice(0, 11));
                           }} 

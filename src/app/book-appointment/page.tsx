@@ -94,7 +94,7 @@ function BookAppointmentContent() {
     const slots = [];
     const now = new Date();
 
-    // Office Hours: 7 AM - 6 PM (Monday to Thursday)
+    // Updated Office Hours: 7 AM - 6 PM (Monday to Thursday)
     for (let h = 7; h <= 17; h++) {
       for (let m = 0; m < 60; m += 30) {
         if (h === 12) continue; // Lunch Break
@@ -106,7 +106,7 @@ function BookAppointmentContent() {
         
         const slotDate = selectedDate ? setMinutes(setHours(new Date(selectedDate), h), m) : null;
         
-        // Same-day booking must have at least 1 hour leeway
+        // High-fidelity requirement: Same-day booking must have at least 1 hour leeway
         const isPast = slotDate ? isBefore(slotDate, addHours(now, 1)) : false;
         const isBooked = existingAppts?.some(a => a.time === timeString && a.status !== 'cancelled');
         
@@ -131,6 +131,7 @@ function BookAppointmentContent() {
       toast({ variant: "destructive", title: "Invalid Email", description: "Please enter a valid email address." });
       return false;
     }
+    // High-fidelity requirement: Strict 11-digit mobile rule
     if (!/^\d{11}$/.test(mobile)) {
       toast({ variant: "destructive", title: "Invalid Mobile", description: "Mobile number must be exactly 11 numeric digits (e.g., 09123456789)." });
       return false;
@@ -187,6 +188,7 @@ function BookAppointmentContent() {
 
     setDocumentNonBlocking(apptRef, data, { merge: true });
 
+    // High-fidelity requirement: Objective audit log
     const notifId = crypto.randomUUID();
     setDocumentNonBlocking(doc(db, "notifications", notifId), {
       id: notifId,
@@ -260,6 +262,7 @@ function BookAppointmentContent() {
                         mode="single"
                         selected={selectedDate}
                         onSelect={(date) => {
+                          // High-fidelity requirement: Monday to Thursday only (0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat)
                           if (date && (getDay(date) === 0 || getDay(date) === 5 || getDay(date) === 6 || isHoliday(date) || isBefore(date, startOfToday()))) return;
                           setSelectedDate(date);
                           setSelectedTime("");
@@ -370,6 +373,7 @@ function BookAppointmentContent() {
                         value={guestInfo.mobile}
                         maxLength={11}
                         onChange={(e) => {
+                          // High-fidelity requirement: No alphabet, exactly 11 digits
                           const val = e.target.value.replace(/\D/g, "");
                           setGuestInfo({...guestInfo, mobile: val.slice(0, 11)});
                         }}

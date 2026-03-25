@@ -150,6 +150,7 @@ export default function LawyerDashboard() {
     ].sort((a, b) => a.time.localeCompare(b.time));
   }, [apptsData, dutiesData, selectedDate]);
 
+  // High-fidelity requirement: Color coding registry
   const dutyModifiers = useMemo(() => {
     const mods: Record<string, Date[]> = {
       office: [],
@@ -195,6 +196,7 @@ export default function LawyerDashboard() {
         updatedAt: new Date().toISOString()
       });
 
+      // High-fidelity requirement: Objective audit log
       const auditId = crypto.randomUUID();
       setDocumentNonBlocking(doc(db, "notifications", auditId), {
         id: auditId,
@@ -219,6 +221,8 @@ export default function LawyerDashboard() {
     if (!db) return;
     const clientName = appt.guestName || appt.clientName || "Citizen";
     updateDocumentNonBlocking(doc(db, "appointments", appt.id), { status, updatedAt: new Date().toISOString() });
+    
+    // High-fidelity requirement: Objective audit log
     const auditId = crypto.randomUUID();
     setDocumentNonBlocking(doc(db, "notifications", auditId), {
       id: auditId,
@@ -230,6 +234,7 @@ export default function LawyerDashboard() {
       status: "unread",
       createdAt: new Date().toISOString()
     }, { merge: true });
+    
     toast({ title: "Status Set", description: `Record updated to ${status}.` });
   };
 
@@ -248,6 +253,7 @@ export default function LawyerDashboard() {
         clientNotified: false
       });
 
+      // High-fidelity requirement: Objective audit log
       const auditId = crypto.randomUUID();
       setDocumentNonBlocking(doc(db, "notifications", auditId), {
         id: auditId,
@@ -317,6 +323,7 @@ export default function LawyerDashboard() {
             </Card>
           </div>
 
+          {/* High-fidelity layout: Vertical Stack to prevent overlap */}
           <Card className="border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden">
             <CardHeader className="bg-secondary/5 p-10"><CardTitle className="text-xl font-bold flex items-center gap-3"><CalendarIcon className="h-6 w-6" /> Office Workstation Schedule</CardTitle></CardHeader>
             <CardContent className="p-0">
@@ -326,6 +333,7 @@ export default function LawyerDashboard() {
                     mode="single" 
                     selected={selectedDate} 
                     onSelect={(d) => d && setSelectedDate(d)} 
+                    // High-fidelity rule: Mon-Thu only
                     disabled={[
                       { dayOfWeek: [0, 5, 6] },
                       (date) => isHoliday(date)
@@ -363,6 +371,7 @@ export default function LawyerDashboard() {
                     </div>
                   </div>
                 </div>
+                {/* Schedule list placed UNDER calendar to prevent overlap */}
                 <div className="p-0 flex flex-col min-h-[300px]">
                   {filteredSchedule.length > 0 ? (
                     <div className="divide-y divide-secondary/5">

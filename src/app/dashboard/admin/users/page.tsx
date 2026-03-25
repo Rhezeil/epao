@@ -138,6 +138,7 @@ export default function AdminUsersPage() {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return users;
 
+    // High-fidelity requirement: Universal Lookup (Name, ID, REF ID)
     return users.filter(u => {
       const matchesBasic = u.fullName?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q) || u.mobileNumber?.includes(q) || u.id?.toLowerCase().includes(q);
       const userCase = cases?.find(c => c.clientId === u.id);
@@ -160,8 +161,9 @@ export default function AdminUsersPage() {
     e.preventDefault();
     if (!db) return;
 
+    // High-fidelity requirement: Strict 11-digit numeric rule
     if (!/^\d{11}$/.test(newClient.mobile)) {
-      toast({ variant: "destructive", title: "Invalid Mobile", description: "Mobile number must be exactly 11 digits (e.g., 09123456789)." });
+      toast({ variant: "destructive", title: "Invalid Mobile", description: "Mobile number must be exactly 11 numeric digits (e.g., 09123456789)." });
       return;
     }
 
@@ -172,10 +174,13 @@ export default function AdminUsersPage() {
       const secondaryAuth = getAuth(secondaryApp);
       const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, "password123");
       const uid = userCredential.user.uid;
+      
       const userRef = doc(db, "users", uid);
       setDocumentNonBlocking(userRef, { id: uid, mobileNumber: newClient.mobile, email, address: newClient.address, role: "client", status: newClient.lawyerId ? "Active Case" : "New Intake", fullName: newClient.name, incomeClassification: newClient.income, createdAt: new Date().toISOString() }, { merge: true });
+      
       const profileRefSub = doc(db, "users", uid, "profile", "profile");
       setDocumentNonBlocking(profileRefSub, { id: "profile", firstName: newClient.name.split(' ')[0], lastName: newClient.name.split(' ').slice(1).join(' '), phoneNumber: newClient.mobile, address: newClient.address, createdAt: new Date().toISOString() }, { merge: true });
+      
       if (newClient.lawyerId) {
         const year = new Date().getFullYear();
         const caseId = `CASE-${year}-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -183,6 +188,7 @@ export default function AdminUsersPage() {
       }
       await deleteApp(secondaryApp);
       
+      // High-fidelity requirement: Objective audit log
       const notifId = crypto.randomUUID();
       setDocumentNonBlocking(doc(db, "notifications", notifId), {
         id: notifId,

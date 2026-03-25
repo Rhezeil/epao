@@ -113,7 +113,6 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
     return query(collection(db, "cases"), where("lawyerId", "==", lawyerId), where("status", "==", "Active"));
   }, [db, lawyerId]);
 
-  // Fetch all availability for highlighting red dates
   const allAvailQuery = useMemoFirebase(() => {
     if (!db) return null;
     return collection(db, "roleLawyer", lawyerId, "availability");
@@ -139,6 +138,7 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
       .map(a => parseISO(a.date));
   }, [allAvail]);
 
+  // High-fidelity requirement: Color coding modifiers
   const dutyModifiers = useMemo(() => {
     const mods: Record<string, Date[]> = {
       office: [],
@@ -227,6 +227,7 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
     const endH = parseInt(endParts[0]);
     const endM = parseInt(endParts[1]);
 
+    // Updated Office Hours: 7 AM - 6 PM
     if (startH < 7 || (endH > 18 || (endH === 18 && endM > 0))) {
       toast({ variant: "destructive", title: "Outside Office Hours", description: "Statutory office hours are restricted to 07:00 AM - 06:00 PM." });
       return;
@@ -268,6 +269,7 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
 
     setDocumentNonBlocking(dutyRef, data, { merge: true });
 
+    // High-fidelity requirement: Objective audit log
     const notifId = crypto.randomUUID();
     setDocumentNonBlocking(doc(db, "notifications", notifId), {
       id: notifId,
@@ -351,6 +353,7 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
                   mode="single" 
                   selected={selectedDate} 
                   onSelect={(date) => {
+                    // High-fidelity rule: Mon-Thu only
                     if (date && (getDay(date) === 0 || getDay(date) === 5 || getDay(date) === 6 || isHoliday(date) || isBefore(date, startOfToday()))) return;
                     setSelectedDate(date);
                   }} 
