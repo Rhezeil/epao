@@ -53,21 +53,18 @@ function BookAppointmentContent() {
 
   const [assignedLawyer, setAssignedLawyer] = useState<any>(null);
 
-  // Fetch Visitor Info from master User record
   const userDocRef = useMemoFirebase(() => {
     if (!db || !user) return null;
     return doc(db, "users", user.uid);
   }, [db, user]);
   const { data: userData } = useDoc(userDocRef);
 
-  // Fetch client profile sub-doc
   const profileDocRef = useMemoFirebase(() => {
     if (!db || !user) return null;
     return doc(db, "users", user.uid, "profile", "profile");
   }, [db, user]);
   const { data: profile } = useDoc(profileDocRef);
 
-  // Fetch client case to find the assigned lawyer
   const casesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(collection(db, "cases"), where("clientId", "==", user.uid));
@@ -85,7 +82,6 @@ function BookAppointmentContent() {
     return () => unsub();
   }, [activeCase, db]);
 
-  // Fetch all availability for highlighting red dates
   const lawyerAvailQuery = useMemoFirebase(() => {
     if (!db || !activeCase?.lawyerId) return null;
     return collection(db, "roleLawyer", activeCase.lawyerId, "availability");
@@ -108,7 +104,6 @@ function BookAppointmentContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookedRef, setBookedRef] = useState<string | null>(null);
 
-  // OTP State
   const [otpValue, setOtpValue] = useState("");
   const [generatedOtp, setGeneratedOtp] = useState("");
   const [isSmsSending, setIsSmsSending] = useState(false);
@@ -120,12 +115,6 @@ function BookAppointmentContent() {
   }, [db, dateStr]);
 
   const { data: existingAppts } = useCollection(existingApptsQuery);
-
-  const selectedDateAvail = useMemo(() => {
-    if (!selectedDate || !allLawyerAvail) return null;
-    const ds = format(selectedDate, "yyyy-MM-dd");
-    return allLawyerAvail.find(a => a.date === ds);
-  }, [selectedDate, allLawyerAvail]);
 
   const timeSlots = useMemo(() => {
     const slots = [];
@@ -164,9 +153,9 @@ function BookAppointmentContent() {
   }, [selectedDate, existingAppts, activeCase?.lawyerId, allLawyerAvail, dateStr]);
 
   const handleTriggerOtp = async () => {
-    const mobile = userData?.mobileNumber || profile?.phoneNumber || userData?.guestMobile;
+    const mobile = userData?.mobileNumber || profile?.phoneNumber;
     if (!mobile || !/^\d{11}$/.test(mobile)) {
-      toast({ variant: "destructive", title: "Registration Incomplete", description: "Your registered mobile number is missing or invalid. Please update your profile settings first with an 11-digit number." });
+      toast({ variant: "destructive", title: "Missing Mobile", description: "Please update your profile with an 11-digit mobile number." });
       return;
     }
 
@@ -209,9 +198,9 @@ function BookAppointmentContent() {
       purpose: "follow-up",
       serviceType: "Follow-up Consultation",
       clientName: clientName,
-      clientMobile: userData?.mobileNumber || profile?.phoneNumber || userData?.guestMobile || "",
+      clientMobile: userData?.mobileNumber || profile?.phoneNumber || "",
       clientEmail: user.email || "",
-      clientAddress: userData?.address || userData?.guestAddress || profile?.address || "",
+      clientAddress: userData?.address || profile?.address || "",
       date: selectedDate.toISOString(),
       dateString: format(selectedDate, "yyyy-MM-dd"),
       time: selectedTime,
@@ -305,26 +294,6 @@ function BookAppointmentContent() {
                         className="w-full rounded-md border-none" 
                       />
                     </div>
-                    
-                    {selectedDateAvail && selectedDateAvail.availabilityType !== 'Available' && (
-                      <div className="p-5 bg-red-50 rounded-[2rem] border border-red-100 flex items-start gap-4 animate-in slide-in-from-top-2">
-                        <div className="p-2.5 bg-white rounded-xl shadow-sm text-red-600 shrink-0 mt-0.5">
-                          <ShieldAlert className="h-5 w-5" />
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-[10px] font-black text-red-900 uppercase tracking-widest leading-none">Lawyer Status Alert</p>
-                          <p className="text-sm font-bold text-red-800">Reason: {selectedDateAvail.leaveReason}</p>
-                          {selectedDateAvail.notes && (
-                            <p className="text-xs italic text-red-700/70 font-medium">"{selectedDateAvail.notes}"</p>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex items-center gap-2 px-2">
-                      <div className="h-2 w-2 rounded-full bg-red-500" />
-                      <span className="text-[9px] font-black uppercase text-muted-foreground">Lawyer Filed Leave</span>
-                    </div>
                   </div>
                 </div>
                 <div className="space-y-6">
@@ -356,7 +325,7 @@ function BookAppointmentContent() {
                   </div>
                   <Button 
                     className="w-full h-16 bg-primary text-white text-lg font-black rounded-2xl shadow-xl hover:scale-[1.02] transition-transform" 
-                    disabled={!selectedDate || !selectedTime || (selectedDateAvail?.availabilityType === 'FullDayLeave')} 
+                    disabled={!selectedDate || !selectedTime} 
                     onClick={() => setStep(2)}
                   >
                     Proceed to Verification <ArrowRight className="ml-2 h-5 w-5" />
@@ -386,13 +355,13 @@ function BookAppointmentContent() {
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-white rounded-xl shadow-sm text-primary"><Phone className="h-4 w-4" /></div>
-                          <div><p className="text-[9px] font-bold text-muted-foreground uppercase">Mobile Number</p><p className="font-black text-primary">{userData?.mobileNumber || profile?.phoneNumber || userData?.guestMobile || 'Not Set'}</p></div>
+                          <div><p className="text-[9px] font-bold text-muted-foreground uppercase">Mobile Number</p><p className="font-black text-primary">{userData?.mobileNumber || profile?.phoneNumber || 'Not Set'}</p></div>
                         </div>
                       </div>
                       <div className="space-y-4">
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-white rounded-xl shadow-sm text-primary"><MapPin className="h-4 w-4" /></div>
-                          <div><p className="text-[9px] font-bold text-muted-foreground uppercase">Home Address</p><p className="text-[11px] font-bold text-primary leading-tight">{userData?.address || userData?.guestAddress || profile?.address || 'Not Set'}</p></div>
+                          <div><p className="text-[9px] font-bold text-muted-foreground uppercase">Home Address</p><p className="text-[11px] font-bold text-primary leading-tight">{userData?.address || profile?.address || 'Not Set'}</p></div>
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-white rounded-xl shadow-sm text-primary"><Clock className="h-4 w-4" /></div>
@@ -405,7 +374,7 @@ function BookAppointmentContent() {
                   <div className="p-6 bg-amber-50 rounded-[2rem] border border-amber-100 flex items-start gap-4">
                     <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                     <p className="text-xs text-amber-800 font-bold leading-relaxed">
-                      A 6-digit verification code will be sent to your registered mobile number ({userData?.mobileNumber || profile?.phoneNumber || userData?.guestMobile}) to authorize this follow-up booking.
+                      A 6-digit verification code will be sent to your registered mobile number ({userData?.mobileNumber || profile?.phoneNumber}) to authorize this follow-up booking.
                     </p>
                   </div>
                 </div>

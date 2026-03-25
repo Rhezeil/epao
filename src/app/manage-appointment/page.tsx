@@ -63,6 +63,10 @@ export default function ManageAppointmentPage() {
     setIsSmsSending(true);
     try {
       const mobileToUse = appointment.guestMobile || appointment.clientMobile;
+      if (!mobileToUse) {
+        toast({ variant: "destructive", title: "Missing Mobile", description: "No contact number found for this record." });
+        return;
+      }
       const result = await sendOtpSms(mobileToUse);
       if (result.success) {
         setGeneratedOtp(result.code);

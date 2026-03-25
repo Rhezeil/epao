@@ -67,14 +67,12 @@ export default function LawyerAvailabilityPage() {
   const [selectedDates, setSelectedDates] = useState<Date[] | undefined>([new Date()]);
   const [isSaving, setIsSaving] = useState(false);
 
-  // For real-time sync, we only listen to the first selected date's data to populate the form
   const primaryDateStr = selectedDates?.[0] ? format(selectedDates[0], "yyyy-MM-dd") : null;
   const availRef = useMemoFirebase(() => {
     if (!db || !user || !primaryDateStr) return null;
     return doc(db, "roleLawyer", user.uid, "availability", primaryDateStr);
   }, [db, user, primaryDateStr]);
 
-  // Fetch ALL availability to highlight leave dates in red
   const allAvailQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return collection(db, "roleLawyer", user.uid, "availability");
@@ -91,7 +89,6 @@ export default function LawyerAvailabilityPage() {
     notes: ""
   });
 
-  // Highlight leave dates
   const leaveDates = useMemo(() => {
     if (!allAvail) return [];
     return allAvail
@@ -99,7 +96,6 @@ export default function LawyerAvailabilityPage() {
       .map(a => parseISO(a.date));
   }, [allAvail]);
 
-  // Sync form when data for the primary date loads
   useMemo(() => {
     if (availData && selectedDates?.length === 1) {
       setFormData({

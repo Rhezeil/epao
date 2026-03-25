@@ -342,7 +342,7 @@ export default function AdminUsersPage() {
                 </div>
               </div>
             </div>
-            <DialogFooter className="p-8 bg-muted/30"><Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="rounded-xl h-14 font-bold">Cancel</Button><Button onClick={handleAddClient} disabled={isSubmitting || !newClient.name || !newClient.mobile} className="rounded-xl h-14 bg-primary font-black px-12">Complete Registration</Button></DialogFooter>
+            <DialogFooter className="p-8 bg-muted/30"><Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="rounded-xl h-14 font-bold">Cancel</Button><Button onClick={handleAddClient} disabled={isSubmitting || !newClient.name || !newClient.mobile || newClient.mobile.length < 11} className="rounded-xl h-14 bg-primary font-black px-12">Complete Registration</Button></DialogFooter>
           </DialogContent>
         </Dialog>
 

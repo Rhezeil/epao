@@ -187,7 +187,6 @@ function BookAppointmentContent() {
 
     setDocumentNonBlocking(apptRef, data, { merge: true });
 
-    // --- NOTIFICATION ---
     const notifId = crypto.randomUUID();
     setDocumentNonBlocking(doc(db, "notifications", notifId), {
       id: notifId,
@@ -246,7 +245,7 @@ function BookAppointmentContent() {
       <div className="max-w-6xl mx-auto space-y-8 py-4 px-4">
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Schedule Screening Appointment</h1>
-          <p className="text-sm text-muted-foreground font-medium">Office Hours: Mon-Thu, 07:00 AM - 06:00 PM</p>
+          <p className="text-sm text-muted-foreground font-medium uppercase tracking-widest">Office Hours: Mon-Thu, 07:00 AM - 06:00 PM</p>
         </div>
 
         <Card className="border-none shadow-xl bg-white/90 backdrop-blur-md rounded-[3rem] overflow-hidden">

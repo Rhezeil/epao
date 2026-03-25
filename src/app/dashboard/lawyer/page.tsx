@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/components/auth-provider";
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc, setDocumentNonBlocking } from "@/firebase";
 import { collection, query, where, doc, orderBy, limit } from "firebase/firestore";
-import { format, isWeekend, parseISO } from "date-fns";
+import { format, isWeekend, parseISO, getDay, isBefore, startOfToday } from "date-fns";
 import { 
   Calendar as CalendarIcon, 
   Clock, 
@@ -60,14 +60,16 @@ const OUTCOME_OPTIONS = [
   "Completed Consultation – Denial of Legal Assistance"
 ];
 
-const DENIAL_REASONS = [
-  "Non-Indigent (Failed Means Test)",
-  "Case Not Covered / Not Qualified",
-  "Incomplete Requirements",
-  "Conflict of Interest",
-  "Misrepresentation / False Information",
-  "Procedural Disqualification"
+const HOLIDAYS = [
+  "2024-01-01", "2024-04-09", "2024-05-01", "2024-06-12", "2024-08-26",
+  "2024-11-01", "2024-11-30", "2024-12-25", "2024-12-30", 
+  "2025-01-01", "2025-02-25", "2025-04-17", "2025-04-18", "2025-05-01"
 ];
+
+const isHoliday = (date: Date) => {
+  const ds = format(date, "yyyy-MM-dd");
+  return HOLIDAYS.includes(ds);
+};
 
 export default function LawyerDashboard() {
   const { user, role, loading } = useAuth();
@@ -249,8 +251,8 @@ export default function LawyerDashboard() {
 
   return (
     <DashboardLayout role="lawyer">
-      <div className="grid grid-cols-4 gap-8 pb-12">
-        <div className="col-span-3 space-y-12">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 pb-12">
+        <div className="lg:col-span-3 space-y-12">
           <div className="flex items-center gap-6">
             <Avatar className="h-20 w-20 border-4 border-white shadow-xl">
               <AvatarImage src={lawyerData?.photoUrl} />
@@ -279,7 +281,7 @@ export default function LawyerDashboard() {
             ))}
           </div>
 
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             <Card className="border-none shadow-xl rounded-[2.5rem] bg-secondary text-white">
               <CardContent className="p-10">
                 <p className="text-[10px] font-black uppercase opacity-60">Active Cases</p>
@@ -297,41 +299,59 @@ export default function LawyerDashboard() {
           <Card className="border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden">
             <CardHeader className="bg-secondary/5 p-10"><CardTitle className="text-xl font-bold flex items-center gap-3"><CalendarIcon className="h-6 w-6" /> Office Workstation Schedule</CardTitle></CardHeader>
             <CardContent className="p-0">
-              <div className="grid grid-cols-12">
-                <div className="col-span-4 p-10 border-r border-secondary/5 bg-secondary/[0.02]">
-                  <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} className="mx-auto" />
+              <div className="grid grid-cols-1 md:grid-cols-12">
+                <div className="md:col-span-4 p-10 border-r border-secondary/5 bg-secondary/[0.02]">
+                  <Calendar 
+                    mode="single" 
+                    selected={selectedDate} 
+                    onSelect={(d) => d && setSelectedDate(d)} 
+                    disabled={[
+                      { dayOfWeek: [0, 5, 6] },
+                      (date) => isHoliday(date)
+                    ]}
+                    className="mx-auto" 
+                  />
                 </div>
-                <div className="col-span-8 p-0 divide-y divide-secondary/5 min-h-[400px]">
-                  {filteredSchedule.length > 0 ? filteredSchedule.map((item, idx) => (
-                    <div key={idx} className="p-10 flex items-center justify-between group">
-                      <div className="flex items-center gap-8">
-                        <div className="h-16 w-16 bg-secondary/5 rounded-2xl flex flex-col items-center justify-center font-black text-secondary">
-                          <span className="text-[9px] uppercase">{format(new Date(item.data.date), "MMM")}</span>
-                          <span className="text-2xl">{format(new Date(item.data.date), "dd")}</span>
+                <div className="md:col-span-8 p-0 flex flex-col min-h-[400px]">
+                  {filteredSchedule.length > 0 ? (
+                    <div className="divide-y divide-secondary/5">
+                      {filteredSchedule.map((item, idx) => (
+                        <div key={idx} className="p-10 flex items-center justify-between group">
+                          <div className="flex items-center gap-8">
+                            <div className="h-16 w-16 bg-secondary/5 rounded-2xl flex flex-col items-center justify-center font-black text-secondary">
+                              <span className="text-[9px] uppercase">{format(new Date(item.data.date), "MMM")}</span>
+                              <span className="text-2xl">{format(new Date(item.data.date), "dd")}</span>
+                            </div>
+                            <div>
+                              <h4 className="text-xl font-black">{item.type === 'appt' ? (item.data.guestName || item.data.clientName) : item.data.title}</h4>
+                              <p className="text-[10px] font-bold text-muted-foreground uppercase">{item.time} • {item.type === 'appt' ? 'Office Visit' : item.data.location}</p>
+                            </div>
+                          </div>
+                          {item.type === 'appt' && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-10 w-10"><MoreVertical className="h-5 w-5" /></Button></DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="rounded-xl">
+                                <DropdownMenuItem onClick={() => setActiveConsultation(item.data)} className="font-bold">Start Assessment</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleMarkStatus(item.data, 'No Show')} className="text-red-600 font-bold">Record No Show</DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
                         </div>
-                        <div>
-                          <h4 className="text-xl font-black">{item.type === 'appt' ? (item.data.guestName || item.data.clientName) : item.data.title}</h4>
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase">{item.time} • {item.type === 'appt' ? 'Office Visit' : item.data.location}</p>
-                        </div>
-                      </div>
-                      {item.type === 'appt' && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-10 w-10"><MoreVertical className="h-5 w-5" /></Button></DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="rounded-xl">
-                            <DropdownMenuItem onClick={() => setActiveConsultation(item.data)} className="font-bold">Start Assessment</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleMarkStatus(item.data, 'No Show')} className="text-red-600 font-bold">Record No Show</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
+                      ))}
                     </div>
-                  )) : <div className="py-32 text-center text-muted-foreground font-black uppercase text-[10px]">No entries for this date</div>}
+                  ) : (
+                    <div className="flex-1 flex flex-col items-center justify-center py-20 px-10 text-center space-y-4">
+                      <Inbox className="h-12 w-12 text-secondary/10" />
+                      <p className="text-xs font-black uppercase tracking-widest text-muted-foreground/40">No entries for this date</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <div className="col-span-1">
+        <div className="lg:col-span-1">
           <Card className="border-none shadow-2xl bg-white rounded-[2.5rem] overflow-hidden flex flex-col h-[calc(100vh-12rem)] sticky top-24">
             <CardHeader className="bg-secondary p-8 text-white"><CardTitle className="text-xl font-black flex items-center gap-2"><Bell className="h-5 w-5" /> Workstation Alerts</CardTitle></CardHeader>
             <CardContent className="p-0 overflow-y-auto divide-y divide-secondary/5">
@@ -351,11 +371,11 @@ export default function LawyerDashboard() {
       </div>
 
       <Dialog open={!!activeConsultation} onOpenChange={() => setActiveConsultation(null)}>
-        <DialogContent className="rounded-[3rem] max-w-4xl p-0 overflow-hidden border-none shadow-2xl">
-          <DialogHeader className="p-8 bg-secondary text-white">
+        <DialogContent className="rounded-[3rem] max-w-4xl p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[90vh]">
+          <DialogHeader className="p-8 bg-secondary text-white shrink-0">
             <DialogTitle className="text-2xl font-black">Intake Assessment: {activeConsultation?.guestName || activeConsultation?.clientName}</DialogTitle>
           </DialogHeader>
-          <div className="p-10 space-y-8">
+          <div className="p-10 space-y-8 flex-1 overflow-y-auto">
             <div className="grid md:grid-cols-2 gap-8">
               <div className="space-y-4">
                 <Label className="text-[10px] font-black uppercase">Statutory Category</Label>
@@ -377,7 +397,7 @@ export default function LawyerDashboard() {
               <Textarea value={consultationForm.assessment} onChange={e => setConsultationForm({...consultationForm, assessment: e.target.value})} className="rounded-2xl min-h-[120px]" />
             </div>
           </div>
-          <DialogFooter className="p-8 bg-muted/30">
+          <DialogFooter className="p-8 bg-muted/30 shrink-0">
             <Button variant="outline" onClick={() => setActiveConsultation(null)} className="h-14 font-bold">Cancel</Button>
             <Button onClick={handleCompleteConsultation} disabled={isSubmitting || !consultationForm.outcome} className="h-14 bg-secondary text-white font-black px-10 rounded-xl shadow-lg">Finalize Record</Button>
           </DialogFooter>
