@@ -129,15 +129,22 @@ export default function LawyerDashboard() {
     return query(collection(db, "cases"), where("lawyerId", "==", user.uid), where("lawyerNotified", "==", false));
   }, [db, user, role]);
 
+  const unreadDutiesQuery = useMemoFirebase(() => {
+    if (!db || !user || role !== 'lawyer') return null;
+    return query(collection(db, "lawyerDuties"), where("lawyerId", "==", user.uid), where("notified", "==", false));
+  }, [db, user, role]);
+
   const { data: unreadAppts } = useCollection(unreadApptsQuery);
   const { data: unreadCases } = useCollection(unreadCasesQuery);
+  const { data: unreadDuties } = useCollection(unreadDutiesQuery);
 
   const workstationAlerts = useMemo(() => {
     const alerts: any[] = [];
     if (unreadAppts) unreadAppts.forEach(a => alerts.push({ ...a, alertType: 'appointment' }));
     if (unreadCases) unreadCases.forEach(c => alerts.push({ ...c, alertType: 'case' }));
+    if (unreadDuties) unreadDuties.forEach(d => alerts.push({ ...d, alertType: 'duty' }));
     return alerts.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-  }, [unreadAppts, unreadCases]);
+  }, [unreadAppts, unreadCases, unreadDuties]);
 
   const filteredSchedule = useMemo(() => {
     if (!selectedDate) return [];
@@ -174,8 +181,18 @@ export default function LawyerDashboard() {
 
   const handleAcknowledge = (id: string, type: string) => {
     if (!db) return;
-    const ref = doc(db, type === 'case' ? "cases" : "appointments", id);
-    updateDocumentNonBlocking(ref, { lawyerNotified: true, updatedAt: new Date().toISOString() });
+    let collectionName = "appointments";
+    let fieldName = "lawyerNotified";
+    
+    if (type === 'case') {
+      collectionName = "cases";
+    } else if (type === 'duty') {
+      collectionName = "lawyerDuties";
+      fieldName = "notified";
+    }
+
+    const ref = doc(db, collectionName, id);
+    updateDocumentNonBlocking(ref, { [fieldName]: true, updatedAt: new Date().toISOString() });
     toast({ title: "Acknowledge", description: "Record verified." });
   };
 
@@ -418,7 +435,11 @@ export default function LawyerDashboard() {
               {workstationAlerts.length > 0 ? workstationAlerts.map(alert => (
                 <div key={alert.id} className="p-6 bg-amber-50/30 relative group">
                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500" />
-                  <p className="text-xs font-bold text-secondary">{alert.alertType === 'case' ? `New Case Assigned: ${alert.caseType}` : `Intake Booked: ${alert.caseType}`}</p>
+                  <p className="text-xs font-bold text-secondary">
+                    {alert.alertType === 'case' ? `New Case Assigned: ${alert.caseType}` : 
+                     alert.alertType === 'duty' ? `New Duty Assignment: ${alert.category}` :
+                     `Intake Booked: ${alert.caseType}`}
+                  </p>
                   <div className="mt-4 flex flex-col gap-2">
                     <Button size="sm" variant="ghost" onClick={() => handleAcknowledge(alert.id, alert.alertType)} className="h-8 rounded-xl font-black text-[9px] uppercase bg-emerald-100 text-emerald-700">Acknowledge</Button>
                     {alert.alertType === 'appointment' && <Button size="sm" variant="ghost" onClick={() => { setApptToCancel(alert); setIsCancelDialogOpen(true); }} className="h-8 rounded-xl font-black text-[9px] uppercase bg-rose-100 text-rose-700">Cancel Visit</Button>}

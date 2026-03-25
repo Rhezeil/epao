@@ -269,7 +269,7 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
 
     setDocumentNonBlocking(dutyRef, data, { merge: true });
 
-    // High-fidelity requirement: Objective audit log
+    // High-fidelity requirement: Objective audit log with target user isolation
     const notifId = crypto.randomUUID();
     setDocumentNonBlocking(doc(db, "notifications", notifId), {
       id: notifId,
@@ -277,6 +277,7 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
       userRole: "admin",
       description: `New duty assignment (${dutyForm.category}) created for Atty. ${lawyer?.lastName}.`,
       referenceId: dutyId,
+      targetUserId: lawyerId,
       status: "unread",
       createdAt: new Date().toISOString()
     }, { merge: true });
