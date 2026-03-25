@@ -132,7 +132,7 @@ export default function ManageAppointmentPage() {
         const timeString = `${displayHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
         const slotDate = rescheduleDate ? setMinutes(setHours(new Date(rescheduleDate), h), m) : null;
         
-        // High-fidelity requirement: One-hour leeway rule
+        // One-hour preparation leeway
         const isPast = slotDate ? isBefore(slotDate, addHours(now, 1)) : false;
         const isBooked = dayAppts?.some(a => a.time === timeString && a.status !== 'cancelled');
         slots.push({ time: timeString, isBooked, isPast });
@@ -260,7 +260,7 @@ export default function ManageAppointmentPage() {
             </DialogHeader>
             <div className="p-10 grid md:grid-cols-2 gap-12">
               <div className="space-y-4">
-                <Label className="text-[10px] font-black uppercase text-primary/40">1. New Date</Label>
+                <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">1. New Date</Label>
                 <div className="p-4 bg-primary/5 rounded-3xl border border-primary/10 overflow-hidden">
                   <Calendar
                     mode="single"
@@ -276,9 +276,9 @@ export default function ManageAppointmentPage() {
                 </div>
               </div>
               <div className="space-y-6">
-                <Label className="text-[10px] font-black uppercase text-primary/40">2. Available Slots</Label>
+                <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">2. Available Slots</Label>
                 {!rescheduleDate ? (
-                  <div className="h-[300px] flex items-center justify-center bg-muted/20 rounded-[2rem] border-2 border-dashed font-bold text-muted-foreground/40">Pick a date first</div>
+                  <div className="h-[300px] flex items-center justify-center bg-muted/20 rounded-[2rem] border-2 border-dashed font-bold text-muted-foreground/40 text-center px-8 uppercase text-[10px] tracking-widest leading-relaxed">Please pick a date<br/>to view availability</div>
                 ) : (
                   <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto p-1 border border-primary/5 rounded-3xl bg-primary/[0.02] p-4">
                     {timeSlots.map(slot => (

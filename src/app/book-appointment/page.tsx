@@ -381,7 +381,7 @@ function BookAppointmentContent() {
                 <div className="flex gap-4 pt-4">
                   <Button variant="outline" className="h-14 px-8 rounded-2xl font-bold border-2" onClick={() => setStep(1)}>
                     <ChevronLeft className="mr-2 h-4 w-4" /> Back
-                  </Button>
+                  </ChevronLeft>
                   <Button 
                     className="flex-1 h-14 rounded-2xl text-lg font-black bg-primary text-white shadow-xl"
                     onClick={() => {
