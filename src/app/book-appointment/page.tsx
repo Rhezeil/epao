@@ -94,19 +94,17 @@ function BookAppointmentContent() {
     const slots = [];
     const now = new Date();
 
-    // Updated Office Hours: 7 AM - 6 PM (Monday to Thursday)
+    // Office Hours: 7 AM - 6 PM (Monday to Thursday)
     for (let h = 7; h <= 17; h++) {
       for (let m = 0; m < 60; m += 30) {
-        if (h === 12) continue; // Lunch Break
-        if (h === 17 && m > 30) continue; // Last slot 17:30 ends at 18:00
+        if (h === 12) continue; 
+        if (h === 17 && m > 30) continue; 
 
         const ampm = h >= 12 ? 'PM' : 'AM';
         const displayHour = h % 12 || 12;
         const timeString = `${displayHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
         
         const slotDate = selectedDate ? setMinutes(setHours(new Date(selectedDate), h), m) : null;
-        
-        // High-fidelity requirement: Same-day booking must have at least 1 hour leeway
         const isPast = slotDate ? isBefore(slotDate, addHours(now, 1)) : false;
         const isBooked = existingAppts?.some(a => a.time === timeString && a.status !== 'cancelled');
         
@@ -126,12 +124,6 @@ function BookAppointmentContent() {
       toast({ variant: "destructive", title: "Missing Information", description: "Please fill out all required fields." });
       return false;
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      toast({ variant: "destructive", title: "Invalid Email", description: "Please enter a valid email address." });
-      return false;
-    }
-    // High-fidelity requirement: Strict 11-digit mobile rule
     if (!/^\d{11}$/.test(mobile)) {
       toast({ variant: "destructive", title: "Invalid Mobile", description: "Mobile number must be exactly 11 numeric digits (e.g., 09123456789)." });
       return false;
@@ -149,7 +141,7 @@ function BookAppointmentContent() {
         toast({ title: "Mock SMS Received", description: result.message });
       }
     } catch (error) {
-      toast({ variant: "destructive", title: "SMS Service Error", description: "Could not send verification code. Please try again." });
+      toast({ variant: "destructive", title: "SMS Service Error", description: "Could not send verification code." });
     } finally {
       setIsSmsSending(false);
     }
@@ -188,7 +180,6 @@ function BookAppointmentContent() {
 
     setDocumentNonBlocking(apptRef, data, { merge: true });
 
-    // High-fidelity requirement: Objective audit log
     const notifId = crypto.randomUUID();
     setDocumentNonBlocking(doc(db, "notifications", notifId), {
       id: notifId,
@@ -207,7 +198,7 @@ function BookAppointmentContent() {
       setIsSubmitting(false);
       toast({
         title: "Screening Scheduled",
-        description: "The initial eligibility interview for citizen " + guestInfo.name + " has been officially scheduled."
+        description: "Intake assessment for " + guestInfo.name + " has been synchronized."
       });
     }, 1500);
   };
@@ -229,9 +220,6 @@ function BookAppointmentContent() {
             <div className="bg-primary/5 p-8 rounded-[2rem] space-y-2 border-2 border-dashed border-primary/20">
               <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Screening Reference Code</p>
               <p className="text-5xl font-black text-primary tracking-tighter">{refCode}</p>
-            </div>
-            <div className="text-sm text-muted-foreground italic bg-amber-50 p-4 rounded-xl border border-amber-100">
-              Please present this code and your valid ID upon arrival at the office for your eligibility screening.
             </div>
             <Button className="w-full h-14 rounded-2xl font-bold text-lg bg-primary hover:bg-[#1A3B6B] text-white shadow-lg" onClick={() => router.push("/case-navigator")}>
               Return to Navigator
@@ -262,7 +250,6 @@ function BookAppointmentContent() {
                         mode="single"
                         selected={selectedDate}
                         onSelect={(date) => {
-                          // High-fidelity requirement: Monday to Thursday only (0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat)
                           if (date && (getDay(date) === 0 || getDay(date) === 5 || getDay(date) === 6 || isHoliday(date) || isBefore(date, startOfToday()))) return;
                           setSelectedDate(date);
                           setSelectedTime("");
@@ -297,19 +284,15 @@ function BookAppointmentContent() {
                   <div className="space-y-4">
                     <div className="flex justify-between items-end">
                       <Label className="text-xs font-black text-primary/60 uppercase tracking-widest">3. Select Interview Slot</Label>
-                      <div className="flex gap-2 text-[8px] font-bold uppercase">
-                        <span className="flex items-center gap-1"><div className="w-2 h-2 bg-green-500 rounded-full" /> Available</span>
-                        <span className="flex items-center gap-1"><div className="w-2 h-2 bg-red-500 rounded-full" /> Full / Passed</span>
-                      </div>
                     </div>
                     
                     {!selectedDate ? (
                       <div className="h-[300px] flex flex-col items-center justify-center text-muted-foreground bg-primary/5 rounded-3xl border border-dashed">
                         <Clock className="h-10 w-10 mb-2 opacity-20" />
-                        <p className="text-sm font-bold text-center">Please pick a date from the calendar<br/>to view daily availability.</p>
+                        <p className="text-sm font-bold text-center">Please pick a date from the calendar.</p>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-2 gap-2 max-h-[350px] overflow-y-auto p-2 scrollbar-hide border border-primary/5 rounded-3xl bg-primary/[0.02]">
+                      <div className="grid grid-cols-2 gap-2 max-h-[350px] overflow-y-auto p-2 border border-primary/5 rounded-3xl bg-primary/[0.02]">
                         {timeSlots.map(slot => (
                           <Button
                             key={slot.time}
@@ -318,10 +301,8 @@ function BookAppointmentContent() {
                             className={cn(
                               "h-12 rounded-xl font-bold transition-all border-2",
                               selectedTime === slot.time 
-                                ? "bg-yellow-400 text-black border-yellow-500 scale-105 shadow-md" 
-                                : slot.isBooked || slot.isPast
-                                ? "bg-red-500 text-white border-red-600 opacity-80 cursor-not-allowed" 
-                                : "bg-green-500 text-white border-green-600 hover:bg-green-600 shadow-sm"
+                                ? "bg-primary text-white border-primary shadow-md scale-105" 
+                                : "bg-white text-primary border-primary/10"
                             )}
                             onClick={() => setSelectedTime(slot.time)}
                           >
@@ -335,9 +316,9 @@ function BookAppointmentContent() {
                   <Button 
                     disabled={!selectedDate || !selectedTime} 
                     onClick={() => setStep(2)} 
-                    className="w-full h-16 rounded-2xl text-lg font-black bg-primary hover:bg-[#1A3B6B] shadow-lg text-white"
+                    className="w-full h-16 rounded-2xl text-lg font-black bg-primary text-white shadow-lg"
                   >
-                    Continue to Personal Info <ArrowRight className="ml-2 h-5 w-5" />
+                    Continue <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </div>
               </div>
@@ -347,63 +328,50 @@ function BookAppointmentContent() {
               <div className="max-w-3xl mx-auto space-y-8 animate-in slide-in-from-right-8 duration-500">
                 <div className="space-y-1">
                   <h3 className="text-xl font-bold text-primary">Personal Information</h3>
-                  <p className="text-sm text-muted-foreground">Please provide your official contact details for coordination.</p>
+                  <p className="text-sm text-muted-foreground">Please provide official contact details for coordination.</p>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="text-xs font-black text-primary/60 uppercase tracking-widest ml-1">Full Name</Label>
-                    <div className="relative">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-40" />
-                      <Input 
-                        placeholder="Juan Dela Cruz"
-                        className="h-14 pl-12 rounded-2xl border-primary/20 bg-white font-bold"
-                        value={guestInfo.name}
-                        onChange={(e) => setGuestInfo({...guestInfo, name: e.target.value})}
-                      />
-                    </div>
+                    <Input 
+                      placeholder="Juan Dela Cruz"
+                      className="h-14 rounded-2xl border-primary/20 bg-white font-bold"
+                      value={guestInfo.name}
+                      onChange={(e) => setGuestInfo({...guestInfo, name: e.target.value})}
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs font-black text-primary/60 uppercase tracking-widest ml-1">Mobile Number</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-40" />
-                      <Input 
-                        placeholder="09123456789"
-                        className="h-14 pl-12 rounded-2xl border-primary/20 bg-white font-bold"
-                        value={guestInfo.mobile}
-                        maxLength={11}
-                        onChange={(e) => {
-                          // High-fidelity requirement: No alphabet, exactly 11 digits
-                          const val = e.target.value.replace(/\D/g, "");
-                          setGuestInfo({...guestInfo, mobile: val.slice(0, 11)});
-                        }}
-                      />
-                    </div>
+                    <Label className="text-xs font-black text-primary/60 uppercase tracking-widest ml-1">Mobile Number (Exactly 11 Digits)</Label>
+                    <Input 
+                      placeholder="09123456789"
+                      className="h-14 rounded-2xl border-primary/20 bg-white font-bold"
+                      value={guestInfo.mobile}
+                      maxLength={11}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, "");
+                        setGuestInfo({...guestInfo, mobile: val.slice(0, 11)});
+                      }}
+                    />
                   </div>
                   <div className="space-y-2 md:col-span-2">
                     <Label className="text-xs font-black text-primary/60 uppercase tracking-widest ml-1">Email Address</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-40" />
-                      <Input 
-                        type="email"
-                        placeholder="juan.delacruz@example.com"
-                        className="h-14 pl-12 rounded-2xl border-primary/20 bg-white font-bold"
-                        value={guestInfo.email}
-                        onChange={(e) => setGuestInfo({...guestInfo, email: e.target.value})}
-                      />
-                    </div>
+                    <Input 
+                      type="email"
+                      placeholder="juan.delacruz@example.com"
+                      className="h-14 rounded-2xl border-primary/20 bg-white font-bold"
+                      value={guestInfo.email}
+                      onChange={(e) => setGuestInfo({...guestInfo, email: e.target.value})}
+                    />
                   </div>
                   <div className="space-y-2 md:col-span-2">
-                    <Label className="text-xs font-black text-primary/60 uppercase tracking-widest ml-1">Complete Home Address</Label>
-                    <div className="relative">
-                      <MapPin className="absolute left-4 top-4 h-5 w-5 text-primary opacity-40" />
-                      <Textarea 
-                        placeholder="House No, Street, Barangay, City/Municipality, Province"
-                        className="min-h-[100px] pl-12 rounded-2xl border-primary/20 bg-white font-bold pt-4"
-                        value={guestInfo.address}
-                        onChange={(e) => setGuestInfo({...guestInfo, address: e.target.value})}
-                      />
-                    </div>
+                    <Label className="text-xs font-black text-primary/60 uppercase tracking-widest ml-1">Home Address</Label>
+                    <Textarea 
+                      placeholder="Street, Barangay, City, Province"
+                      className="min-h-[100px] rounded-2xl border-primary/20 bg-white font-bold pt-4"
+                      value={guestInfo.address}
+                      onChange={(e) => setGuestInfo({...guestInfo, address: e.target.value})}
+                    />
                   </div>
                 </div>
 
@@ -426,72 +394,24 @@ function BookAppointmentContent() {
             {step === 3 && (
               <div className="max-w-3xl mx-auto space-y-8 animate-in zoom-in-95 duration-500">
                 <div className="text-center space-y-2">
-                  <div className="inline-flex p-3 bg-amber-100 text-amber-900 rounded-full mb-2">
-                    <Info className="h-8 w-8" />
-                  </div>
                   <h3 className="text-2xl font-black text-primary font-headline">Review Screening Appointment</h3>
-                  <p className="text-muted-foreground font-medium">Please verify all information below before identity verification.</p>
+                  <p className="text-muted-foreground font-medium">Please verify all information below.</p>
                 </div>
 
                 <div className="grid gap-6">
                   <Card className="border-none bg-primary/5 rounded-[2rem]">
-                    <CardHeader className="pb-2 border-b border-primary/10">
-                      <CardTitle className="text-xs font-black uppercase text-primary tracking-widest">Applicant Information</CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-12">
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Full Name</p>
-                        <p className="font-bold text-primary">{guestInfo.name}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Mobile Number</p>
-                        <p className="font-bold text-primary">{guestInfo.mobile}</p>
-                      </div>
-                      <div className="space-y-1 md:col-span-2">
-                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Email Address</p>
-                        <p className="font-bold text-primary">{guestInfo.email}</p>
-                      </div>
-                      <div className="space-y-1 md:col-span-2">
-                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Home Address</p>
-                        <p className="font-bold text-primary leading-relaxed">{guestInfo.address}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-none bg-secondary/5 rounded-[2rem]">
-                    <CardHeader className="pb-2 border-b border-secondary/10">
-                      <CardTitle className="text-xs font-black uppercase text-secondary tracking-widest">Screening Schedule</CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-12">
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Interview Date</p>
-                        <p className="font-bold text-secondary">{selectedDate ? format(selectedDate, "PPPP") : ""}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Time Slot</p>
-                        <p className="font-bold text-secondary">{selectedTime}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Case Category</p>
-                        <p className="font-bold text-secondary">{caseTypeParam}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Service Type</p>
-                        <p className="font-bold text-secondary">{getServiceLabel(purpose)}</p>
-                      </div>
+                    <CardHeader><CardTitle className="text-xs font-black uppercase text-primary tracking-widest">Applicant Information</CardTitle></CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1"><p className="text-[10px] font-black uppercase text-muted-foreground">Full Name</p><p className="font-bold text-primary">{guestInfo.name}</p></div>
+                      <div className="space-y-1"><p className="text-[10px] font-black uppercase text-muted-foreground">Mobile Number</p><p className="font-bold text-primary">{guestInfo.mobile}</p></div>
+                      <div className="space-y-1 md:col-span-2"><p className="text-[10px] font-black uppercase text-muted-foreground">Home Address</p><p className="font-bold text-primary">{guestInfo.address}</p></div>
                     </CardContent>
                   </Card>
                 </div>
 
                 <div className="flex gap-4 pt-4">
-                  <Button variant="outline" className="h-14 px-8 rounded-2xl font-bold border-2 border-primary text-primary hover:bg-primary/5" onClick={() => setStep(2)}>
-                    <Edit3 className="mr-2 h-4 w-4" /> Edit Details
-                  </Button>
-                  <Button 
-                    className="flex-1 h-14 rounded-2xl text-lg font-black bg-primary text-white shadow-xl hover:bg-[#1A3B6B]"
-                    disabled={isSmsSending}
-                    onClick={handleTriggerOtp}
-                  >
+                  <Button variant="outline" className="h-14 px-8 rounded-2xl font-bold border-2" onClick={() => setStep(2)}>Edit Details</Button>
+                  <Button className="flex-1 h-14 rounded-2xl text-lg font-black bg-primary text-white shadow-xl" onClick={handleTriggerOtp}>
                     {isSmsSending ? <Loader2 className="animate-spin h-6 w-6" /> : "Proceed to Verification"}
                   </Button>
                 </div>
@@ -499,21 +419,15 @@ function BookAppointmentContent() {
             )}
 
             {step === 4 && (
-              <div className="max-w-lg mx-auto space-y-8 animate-in fade-in zoom-in-95 duration-500">
+              <div className="max-w-lg mx-auto space-y-8 animate-in zoom-in-95 duration-500">
                 <div className="text-center space-y-4">
-                  <div className="inline-flex p-4 bg-secondary/10 text-secondary rounded-full">
-                    <Lock className="h-8 w-8" />
-                  </div>
                   <h3 className="text-2xl font-black text-primary font-headline">Verify Identity</h3>
-                  <p className="text-sm text-muted-foreground font-medium">
-                    A 6-digit verification code was sent to <span className="font-bold text-primary">{guestInfo.mobile}</span>. 
-                    Please enter it below to finalize your booking.
-                  </p>
+                  <p className="text-sm text-muted-foreground font-medium">A 6-digit verification code was sent to <span className="font-bold text-primary">{guestInfo.mobile}</span>.</p>
                 </div>
 
                 <div className="space-y-6">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary/60 ml-1">Access Code</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">Access Code</Label>
                     <Input 
                       className="h-20 text-center text-5xl font-black tracking-[0.5em] rounded-3xl border-secondary/30 text-secondary bg-secondary/5 focus-visible:ring-secondary/20"
                       maxLength={6}
@@ -523,28 +437,13 @@ function BookAppointmentContent() {
                     />
                   </div>
 
-                  <div className="flex flex-col gap-3">
-                    <Button 
-                      className="w-full h-16 rounded-2xl text-lg font-black bg-secondary hover:bg-[#006666] text-white shadow-xl"
-                      disabled={isSubmitting || otpValue.length < 6}
-                      onClick={handleFinalBooking}
-                    >
-                      {isSubmitting ? <Loader2 className="animate-spin h-6 w-6" /> : "Verify & Finalize Booking"}
-                    </Button>
-                    <div className="flex justify-between items-center px-2">
-                       <Button variant="link" className="text-xs font-bold text-muted-foreground" onClick={() => setStep(3)}>
-                         Back to Review
-                       </Button>
-                       <Button 
-                         variant="link" 
-                         className="text-xs font-bold text-secondary" 
-                         disabled={isSmsSending}
-                         onClick={handleTriggerOtp}
-                       >
-                         {isSmsSending ? "Resending..." : "Resend Code"}
-                       </Button>
-                    </div>
-                  </div>
+                  <Button 
+                    className="w-full h-16 rounded-2xl text-lg font-black bg-secondary hover:bg-[#006666] text-white shadow-xl"
+                    disabled={isSubmitting || otpValue.length < 6}
+                    onClick={handleFinalBooking}
+                  >
+                    {isSubmitting ? <Loader2 className="animate-spin h-6 w-6" /> : "Verify & Finalize Booking"}
+                  </Button>
                 </div>
               </div>
             )}

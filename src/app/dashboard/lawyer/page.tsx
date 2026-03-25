@@ -453,7 +453,6 @@ export default function LawyerDashboard() {
         </div>
       </div>
 
-      {/* --- INTAKE ASSESSMENT DIALOG --- */}
       <Dialog open={!!activeConsultation} onOpenChange={() => setActiveConsultation(null)}>
         <DialogContent className="rounded-[3rem] max-w-4xl p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[90vh]">
           <DialogHeader className="p-8 bg-secondary text-white shrink-0">
@@ -494,7 +493,6 @@ export default function LawyerDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* --- CANCELLATION DIALOG --- */}
       <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
         <DialogContent className="rounded-[3rem] max-w-md p-0 overflow-hidden border-none shadow-2xl">
           <DialogHeader className="p-8 bg-rose-600 text-white">
