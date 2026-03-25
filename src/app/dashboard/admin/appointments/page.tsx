@@ -28,7 +28,7 @@ import {
   ArrowRight,
   AlertTriangle
 } from "lucide-react";
-import { format, isWeekend, startOfToday, isBefore, setHours, setMinutes, addHours } from "date-fns";
+import { format, isWeekend, startOfToday, isBefore, setHours, setMinutes, addHours, getDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -92,10 +92,11 @@ export default function AdminAppointmentsRegistry() {
   const timeSlots = useMemo(() => {
     const slots = [];
     const now = new Date();
-    for (let h = 8; h <= 16; h++) {
+    // Office Hours: 7 AM - 6 PM
+    for (let h = 7; h <= 17; h++) {
       for (let m = 0; m < 60; m += 30) {
-        if (h === 12) continue;
-        if (h === 16 && m > 30) continue;
+        if (h === 12) continue; // Lunch Break
+        if (h === 17 && m > 30) continue; // Last slot 5:30 PM
         const ampm = h >= 12 ? 'PM' : 'AM';
         const displayHour = h % 12 || 12;
         const timeString = `${displayHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
@@ -136,7 +137,7 @@ export default function AdminAppointmentsRegistry() {
       id: notifId,
       type: "appointment",
       userRole: "admin",
-      description: `Admin updated status of Visit ${ref} for ${clientName} to ${status}.`,
+      description: `Office Update: Visit ${ref} for ${clientName} recorded as ${status}.`,
       referenceId: id,
       referenceCode: ref,
       status: "unread",
@@ -164,7 +165,7 @@ export default function AdminAppointmentsRegistry() {
       id: notifId,
       type: "appointment",
       userRole: "admin",
-      description: `Admin rescheduled Visit ${selectedAppt.referenceCode} for ${clientName} to ${format(resDate, "MMM dd")} @ ${resTime}.`,
+      description: `Office Update: Visit ${selectedAppt.referenceCode} for ${clientName} rescheduled to ${format(resDate, "MMM dd")} @ ${resTime}.`,
       referenceId: selectedAppt.id,
       referenceCode: selectedAppt.referenceCode,
       status: "unread",
@@ -316,12 +317,12 @@ export default function AdminAppointmentsRegistry() {
             <div className="p-10 grid lg:grid-cols-2 gap-12 max-h-[70vh] overflow-y-auto">
               <div className="space-y-4">
                 <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">1. Select New Date</Label>
-                <div className="p-4 bg-primary/5 rounded-3xl border border-primary/10">
+                <div className="p-4 bg-primary/5 rounded-3xl border border-primary/10 overflow-hidden">
                   <Calendar
                     mode="single"
                     selected={resDate}
-                    onSelect={(d) => { if (d && !isWeekend(d) && !isHoliday(d) && !isBefore(d, startOfToday())) setResDate(d); setResTime(""); }}
-                    disabled={[{ before: startOfToday() }, { dayOfWeek: [0, 6] }, (date) => isHoliday(date)]}
+                    onSelect={(d) => { if (d && (getDay(d) === 0 || getDay(d) === 5 || getDay(d) === 6 || isHoliday(d) || isBefore(d, startOfToday()))) return; setResDate(d); setResTime(""); }}
+                    disabled={[{ before: startOfToday() }, { dayOfWeek: [0, 5, 6] }, (date) => isHoliday(date)]}
                     className="mx-auto"
                   />
                 </div>
@@ -335,7 +336,7 @@ export default function AdminAppointmentsRegistry() {
                       <p className="text-[10px] font-black uppercase text-muted-foreground/40">Select date first</p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 gap-2 mt-4 max-h-[300px] overflow-y-auto p-1 scrollbar-hide">
+                    <div className="grid grid-cols-2 gap-2 mt-4 max-h-[300px] overflow-y-auto p-1 scrollbar-hide border border-primary/5 rounded-3xl bg-primary/[0.02] p-4">
                       {timeSlots.map(slot => (
                         <Button
                           key={slot.time}

@@ -11,7 +11,7 @@ import { collection, query, where, doc, getDoc, DocumentData } from "firebase/fi
 import { Search, Calendar as CalendarIcon, XCircle, Loader2, CheckCircle2, AlertCircle, Lock, ShieldCheck, User, Clock, Edit3, ChevronRight, ArrowRight, ShieldAlert, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { format, isWeekend, startOfToday, setHours, setMinutes, isBefore, addHours } from "date-fns";
+import { format, isWeekend, startOfToday, setHours, setMinutes, isBefore, addHours, getDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import { sendOtpSms } from "@/ai/flows/sms-service";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -89,7 +89,7 @@ export default function ManageAppointmentPage() {
       id: auditId,
       type: "appointment",
       userRole: "guest",
-      description: `Visit ${appointment.referenceCode} for ${clientName} was cancelled via public portal.`,
+      description: `Office Update: Visit ${appointment.referenceCode} for ${clientName} was cancelled via public portal.`,
       referenceId: appointment.id,
       referenceCode: appointment.referenceCode,
       status: "unread",
@@ -109,10 +109,11 @@ export default function ManageAppointmentPage() {
   const timeSlots = useMemo(() => {
     const slots = [];
     const now = new Date();
-    for (let h = 8; h <= 16; h++) {
+    // Office Hours: 7 AM - 6 PM
+    for (let h = 7; h <= 17; h++) {
       for (let m = 0; m < 60; m += 30) {
-        if (h === 12) continue;
-        if (h === 16 && m > 30) continue;
+        if (h === 12) continue; // Lunch
+        if (h === 17 && m > 30) continue; // Last slot 5:30 PM
         const ampm = h >= 12 ? 'PM' : 'AM';
         const displayHour = h % 12 || 12;
         const timeString = `${displayHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
@@ -144,7 +145,7 @@ export default function ManageAppointmentPage() {
       id: auditId,
       type: "appointment",
       userRole: "guest",
-      description: `Visit ${appointment.referenceCode} for ${clientName} rescheduled to ${format(rescheduleDate, "MMM dd")} @ ${rescheduleTime} via public portal.`,
+      description: `Office Update: Visit ${appointment.referenceCode} for ${clientName} rescheduled to ${format(rescheduleDate, "MMM dd")} @ ${rescheduleTime} via public portal.`,
       referenceId: appointment.id,
       referenceCode: appointment.referenceCode,
       status: "unread",
@@ -195,12 +196,12 @@ export default function ManageAppointmentPage() {
             <div className="p-10 grid md:grid-cols-2 gap-12">
               <div className="space-y-4">
                 <Label className="text-[10px] font-black uppercase text-primary/40">1. New Date</Label>
-                <div className="p-4 bg-primary/5 rounded-3xl border border-primary/10">
+                <div className="p-4 bg-primary/5 rounded-3xl border border-primary/10 overflow-hidden">
                   <Calendar
                     mode="single"
                     selected={rescheduleDate}
-                    onSelect={(d) => { if (d && !isWeekend(d) && !isHoliday(d) && !isBefore(d, startOfToday())) setRescheduleDate(d); setRescheduleTime(""); }}
-                    disabled={[{ before: startOfToday() }, { dayOfWeek: [0, 6] }, (date) => isHoliday(date)]}
+                    onSelect={(d) => { if (d && (getDay(d) === 0 || getDay(d) === 5 || getDay(d) === 6 || isHoliday(d) || isBefore(d, startOfToday()))) return; setRescheduleDate(d); setRescheduleTime(""); }}
+                    disabled={[{ before: startOfToday() }, { dayOfWeek: [0, 5, 6] }, (date) => isHoliday(date)]}
                     className="mx-auto"
                   />
                 </div>
@@ -210,7 +211,7 @@ export default function ManageAppointmentPage() {
                 {!rescheduleDate ? (
                   <div className="h-[300px] flex items-center justify-center bg-muted/20 rounded-[2rem] border-2 border-dashed font-bold text-muted-foreground/40">Pick a date first</div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto p-1">
+                  <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto p-1 border border-primary/5 rounded-3xl bg-primary/[0.02] p-4">
                     {timeSlots.map(slot => (
                       <Button
                         key={slot.time}

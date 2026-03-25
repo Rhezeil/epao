@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState, useMemo } from "react";
-import { format, isBefore, startOfToday, isWeekend, setHours, setMinutes, parseISO } from "date-fns";
+import { format, isBefore, startOfToday, isWeekend, setHours, setMinutes, parseISO, addHours, getDay } from "date-fns";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -130,7 +130,7 @@ export default function ClientDashboard() {
     return allLawyerAvail
       .filter(a => a.availabilityType === 'FullDayLeave' || a.availabilityType === 'PartialLeave')
       .map(a => parseISO(a.date));
-  }, [allLawyerAvail]);
+  }, [allLawail]);
 
   // Lawyer status for selected reschedule date
   const reschedDateStr = rescheduleDate ? format(rescheduleDate, "yyyy-MM-dd") : null;
@@ -186,15 +186,18 @@ export default function ClientDashboard() {
   const timeSlots = useMemo(() => {
     const slots = [];
     const now = new Date();
-    for (let h = 8; h <= 16; h++) {
+    // Office Hours: 7 AM - 6 PM
+    for (let h = 7; h <= 17; h++) {
       for (let m = 0; m < 60; m += 30) {
         if (h === 12) continue; // Lunch
-        if (h === 16 && m > 30) continue;
+        if (h === 17 && m > 30) continue; // Last slot 5:30 PM
         const ampm = h >= 12 ? 'PM' : 'AM';
         const displayHour = h % 12 || 12;
         const timeString = `${displayHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
         const slotDate = rescheduleDate ? setMinutes(setHours(new Date(rescheduleDate), h), m) : null;
-        const isPast = slotDate ? isBefore(slotDate, now) : false;
+        
+        // 1 hour leeway for same-day
+        const isPast = slotDate ? isBefore(slotDate, addHours(now, 1)) : false;
         
         const isLawyerBusy = globalAppts?.some(a => 
           a.lawyerId === activeCase?.lawyerId && 
@@ -233,7 +236,7 @@ export default function ClientDashboard() {
       id: notifId,
       type: "appointment",
       userRole: "client",
-      description: `Client ${profile?.firstName} cancelled appointment ${appt?.referenceCode}.`,
+      description: `Client ${profile?.firstName} cancelled visit ${appt?.referenceCode}.`,
       referenceId: apptId,
       referenceCode: appt?.referenceCode,
       status: "unread",
@@ -260,7 +263,7 @@ export default function ClientDashboard() {
       id: notifId,
       type: "appointment",
       userRole: "client",
-      description: `Client ${profile?.firstName} rescheduled appointment ${selectedApptToReschedule.referenceCode} to ${format(rescheduleDate, "MMM dd")}.`,
+      description: `Client ${profile?.firstName} rescheduled visit ${selectedApptToReschedule.referenceCode} to ${format(rescheduleDate, "MMM dd")} @ ${rescheduleTime}.`,
       referenceId: selectedApptToReschedule.id,
       referenceCode: selectedApptToReschedule.referenceCode,
       status: "unread",
@@ -344,14 +347,14 @@ export default function ClientDashboard() {
                       <div className="text-sm font-bold text-muted-foreground mt-1 space-y-2">
                         <p>
                           {n.status === 'No Show' 
-                            ? "Your absence for the scheduled visit has been recorded." 
+                            ? "Citizen absence for the scheduled visit has been recorded." 
                             : n.status === 'cancelled'
-                            ? `Your appointment was cancelled by the office.`
+                            ? `Appointment was cancelled by the office.`
                             : n.status?.includes('Accept') 
                             ? "Congratulations! Your legal aid application has been accepted." 
                             : n.status?.includes('Denial') 
-                            ? "The office has completed its assessment and denied your request for legal aid." 
-                            : "The office has modified your session schedule:"}
+                            ? "The office has completed its assessment and denied the request for legal aid." 
+                            : "The office has modified the visit schedule:"}
                         </p>
                         {n.status === 'cancelled' && n.cancellationReason && (
                           <div className="p-3 bg-white/50 rounded-xl border border-red-100 mt-2">
@@ -454,12 +457,18 @@ export default function ClientDashboard() {
             <div className="p-10 grid lg:grid-cols-2 gap-12 flex-1 overflow-y-auto min-h-0">
               <div className="space-y-4">
                 <p className="text-[10px] font-black uppercase text-primary/40">1. New Date</p>
-                <div className="p-4 bg-primary/5 rounded-[2rem] border border-primary/10">
+                <div className="p-4 bg-primary/5 rounded-[2rem] border border-primary/10 overflow-hidden">
                   <CalendarComponent 
                     mode="single" 
                     selected={rescheduleDate} 
-                    onSelect={(d) => { if (d && !isWeekend(d) && !isHoliday(d) && !isBefore(d, startOfToday())) { setRescheduleDate(d); setRescheduleTime(""); } }} 
-                    disabled={[{ before: startOfToday() }, { dayOfWeek: [0, 6] }, (d) => isHoliday(d)]} 
+                    onSelect={(d) => { 
+                      if (d && (getDay(d) === 0 || getDay(d) === 5 || getDay(d) === 6 || isHoliday(d) || isBefore(d, startOfToday()))) { 
+                        return;
+                      } 
+                      setRescheduleDate(d); 
+                      setRescheduleTime(""); 
+                    }} 
+                    disabled={[{ before: startOfToday() }, { dayOfWeek: [0, 5, 6] }, (d) => isHoliday(d)]} 
                     modifiers={{ leave: leaveDates }}
                     modifiersClassNames={{
                       leave: "bg-red-500 text-white rounded-xl shadow-md border-red-600"
@@ -491,7 +500,7 @@ export default function ClientDashboard() {
               <div className="space-y-4">
                 <p className="text-[10px] font-black uppercase text-primary/40">2. Select Time</p>
                 {rescheduleDate ? (
-                  <div className="grid grid-cols-2 gap-2 h-fit max-h-[300px] overflow-y-auto p-1">{timeSlots.map(slot => (<Button key={slot.time} disabled={slot.isBooked || slot.isPast} variant={rescheduleTime === slot.time ? "default" : "outline"} className={cn("h-11 rounded-xl font-bold", rescheduleTime === slot.time ? "bg-primary text-white" : "bg-white text-primary border-primary/10")} onClick={() => setRescheduleTime(slot.time)}>{slot.time}</Button>))}</div>
+                  <div className="grid grid-cols-2 gap-2 h-fit max-h-[300px] overflow-y-auto p-1 border border-primary/5 rounded-3xl bg-primary/[0.02] p-4">{timeSlots.map(slot => (<Button key={slot.time} disabled={slot.isBooked || slot.isPast} variant={rescheduleTime === slot.time ? "default" : "outline"} className={cn("h-11 rounded-xl font-bold", rescheduleTime === slot.time ? "bg-primary text-white" : "bg-white text-primary border-primary/10")} onClick={() => setRescheduleTime(slot.time)}>{slot.time}</Button>))}</div>
                 ) : <div className="h-full flex items-center justify-center text-muted-foreground font-medium">Pick a date first</div>}
               </div>
             </div>

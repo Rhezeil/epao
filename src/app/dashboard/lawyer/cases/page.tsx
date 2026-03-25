@@ -6,7 +6,7 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking, useDoc } from "@/firebase";
 import { collection, query, where, doc, orderBy } from "firebase/firestore";
-import { format, startOfToday, setHours, setMinutes, isBefore, isAfter, addHours } from "date-fns";
+import { format, startOfToday, setHours, setMinutes, isBefore, isAfter, addHours, getDay } from "date-fns";
 import { 
   Scale, 
   Search,
@@ -163,10 +163,11 @@ export default function LawyerCasesPage() {
   const timeSlots = useMemo(() => {
     const slots = [];
     const now = new Date();
-    for (let h = 8; h <= 16; h++) {
+    // Office Hours: 7 AM - 6 PM
+    for (let h = 7; h <= 17; h++) {
       for (let m = 0; m < 60; m += 30) {
         if (h === 12) continue; // Lunch
-        if (h === 16 && m > 30) continue;
+        if (h === 17 && m > 30) continue; // Last slot 5:30 PM
         const ampm = h >= 12 ? 'PM' : 'AM';
         const displayHour = h % 12 || 12;
         const timeString = `${displayHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
@@ -239,7 +240,7 @@ export default function LawyerCasesPage() {
         id: notifId,
         type: "appointment",
         userRole: "lawyer",
-        description: `Atty. ${user.email?.split('@')[0]} scheduled follow-up Visit ${refCode} for ${clientName}.`,
+        description: `Atty. ${user.email?.split('@')[0]} scheduled follow-up visit ${refCode} for ${clientName}.`,
         referenceId: apptId,
         referenceCode: refCode,
         status: "unread",
@@ -618,13 +619,18 @@ export default function LawyerCasesPage() {
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-primary/40 tracking-widest ml-1">Select Visit Date</Label>
-                        <div className="p-2 bg-primary/5 rounded-3xl border border-primary/10 shadow-inner">
+                        <div className="p-2 bg-primary/5 rounded-3xl border border-primary/10 shadow-inner overflow-hidden">
                           <CalendarComponent
                             mode="single"
                             selected={bookingForm.date}
-                            onSelect={(d) => setBookingForm({...bookingForm, date: d, time: ""})}
+                            onSelect={(d) => {
+                              if (d && (getDay(d) === 0 || getDay(d) === 5 || getDay(d) === 6 || isHoliday(d) || isBefore(d, startOfToday()))) {
+                                return;
+                              }
+                              setBookingForm({...bookingForm, date: d, time: ""});
+                            }}
                             className="rounded-md border-none mx-auto"
-                            disabled={[{ before: startOfToday() }, { dayOfWeek: [0, 6] }, (date) => isHoliday(date)]}
+                            disabled={[{ before: startOfToday() }, { dayOfWeek: [0, 5, 6] }, (date) => isHoliday(date)]}
                           />
                         </div>
                       </div>
@@ -639,7 +645,7 @@ export default function LawyerCasesPage() {
                             <p className="text-[10px] font-black uppercase tracking-widest text-primary/30">Pick a date first</p>
                           </div>
                         ) : (
-                          <div className="grid grid-cols-2 gap-2 max-h-[350px] overflow-y-auto p-1 scrollbar-hide">
+                          <div className="grid grid-cols-2 gap-2 max-h-[350px] overflow-y-auto p-1 scrollbar-hide border border-primary/5 rounded-3xl bg-primary/[0.02] p-4">
                             {timeSlots.map(slot => (
                               <Button
                                 key={slot.time}

@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { useFirestore, setDocumentNonBlocking, useCollection, useMemoFirebase } from "@/firebase";
 import { doc, collection, query, where } from "firebase/firestore";
-import { format, isWeekend, startOfToday, setHours, setMinutes, isBefore, addHours } from "date-fns";
+import { format, isWeekend, startOfToday, setHours, setMinutes, isBefore, addHours, getDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { sendOtpSms } from "@/ai/flows/sms-service";
@@ -94,10 +94,11 @@ function BookAppointmentContent() {
     const slots = [];
     const now = new Date();
 
-    for (let h = 8; h <= 16; h++) {
+    // Office Hours: 7 AM - 6 PM
+    for (let h = 7; h <= 17; h++) {
       for (let m = 0; m < 60; m += 30) {
-        if (h === 12) continue;
-        if (h === 16 && m > 30) continue;
+        if (h === 12) continue; // Lunch Break
+        if (h === 17 && m > 30) continue; // Last slot 17:30 ends at 18:00
 
         const ampm = h >= 12 ? 'PM' : 'AM';
         const displayHour = h % 12 || 12;
@@ -131,7 +132,7 @@ function BookAppointmentContent() {
       return false;
     }
     if (!/^\d{11}$/.test(mobile)) {
-      toast({ variant: "destructive", title: "Invalid Mobile", description: "Mobile number must be exactly 11 digits (e.g., 09123456789)." });
+      toast({ variant: "destructive", title: "Invalid Mobile", description: "Mobile number must be exactly 11 numeric digits (e.g., 09123456789)." });
       return false;
     }
     return true;
@@ -192,7 +193,7 @@ function BookAppointmentContent() {
       id: notifId,
       type: "appointment",
       userRole: "guest",
-      description: `New screening appointment booked for citizen ${guestInfo.name} for ${format(selectedDate, "MMM dd")} @ ${selectedTime} (Ref: ${code}).`,
+      description: `New screening appointment booked for citizen ${guestInfo.name} for ${format(selectedDate, "MMM dd")} @ ${selectedTime} (Reference: ${code}).`,
       referenceId: id,
       referenceCode: code,
       status: "unread",
@@ -245,28 +246,28 @@ function BookAppointmentContent() {
       <div className="max-w-6xl mx-auto space-y-8 py-4 px-4">
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Schedule Screening Appointment</h1>
-          <p className="text-sm text-muted-foreground font-medium">All legal assistance requires an initial in-office eligibility interview.</p>
+          <p className="text-sm text-muted-foreground font-medium">Office Hours: Mon-Thu, 07:00 AM - 06:00 PM</p>
         </div>
 
         <Card className="border-none shadow-xl bg-white/90 backdrop-blur-md rounded-[3rem] overflow-hidden">
           <CardContent className="p-10">
             {step === 1 && (
-              <div className="grid lg:grid-cols-2 gap-12 animate-in fade-in duration-500">
+              <div className="grid lg:grid-cols-2 gap-12 animate-in fade-in duration-500 items-start min-h-[500px]">
                 <div className="space-y-6">
                   <div className="space-y-4">
                     <Label className="text-xs font-black text-primary/60 uppercase tracking-widest">1. Select Interview Date</Label>
-                    <div className="p-4 bg-white rounded-3xl border border-primary/10 shadow-sm flex justify-center">
+                    <div className="p-4 bg-white rounded-3xl border border-primary/10 shadow-sm flex justify-center overflow-hidden">
                       <Calendar
                         mode="single"
                         selected={selectedDate}
                         onSelect={(date) => {
-                          if (date && (isWeekend(date) || isHoliday(date) || isBefore(date, startOfToday()))) return;
+                          if (date && (getDay(date) === 0 || getDay(date) === 5 || getDay(date) === 6 || isHoliday(date) || isBefore(date, startOfToday()))) return;
                           setSelectedDate(date);
                           setSelectedTime("");
                         }}
                         disabled={[
                           { before: startOfToday() },
-                          { dayOfWeek: [0, 6] },
+                          { dayOfWeek: [0, 5, 6] },
                           (date) => isHoliday(date)
                         ]}
                         className="w-full rounded-md border-none"
@@ -306,7 +307,7 @@ function BookAppointmentContent() {
                         <p className="text-sm font-bold text-center">Please pick a date from the calendar<br/>to view daily availability.</p>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-2 gap-2 max-h-[350px] overflow-y-auto p-2 scrollbar-hide">
+                      <div className="grid grid-cols-2 gap-2 max-h-[350px] overflow-y-auto p-2 scrollbar-hide border border-primary/5 rounded-3xl bg-primary/[0.02]">
                         {timeSlots.map(slot => (
                           <Button
                             key={slot.time}

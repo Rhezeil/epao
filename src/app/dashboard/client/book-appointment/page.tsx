@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { useFirestore, setDocumentNonBlocking, useCollection, useMemoFirebase, useDoc } from "@/firebase";
 import { doc, collection, query, where, onSnapshot } from "firebase/firestore";
-import { format, isWeekend, startOfToday, setHours, setMinutes, isBefore, parseISO } from "date-fns";
+import { format, isWeekend, startOfToday, setHours, setMinutes, isBefore, parseISO, addHours, getDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { sendOtpSms } from "@/ai/flows/sms-service";
@@ -130,15 +130,18 @@ function BookAppointmentContent() {
   const timeSlots = useMemo(() => {
     const slots = [];
     const now = new Date();
-    for (let h = 8; h <= 16; h++) {
+    // Office Hours: 7 AM - 6 PM
+    for (let h = 7; h <= 17; h++) {
       for (let m = 0; m < 60; m += 30) {
-        if (h === 12) continue;
-        if (h === 16 && m > 30) continue;
+        if (h === 12) continue; // Lunch break
+        if (h === 17 && m > 30) continue; // Last slot 5:30 PM
         const ampm = h >= 12 ? 'PM' : 'AM';
         const displayHour = h % 12 || 12;
         const timeString = `${displayHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
         const slotDate = selectedDate ? setMinutes(setHours(new Date(selectedDate), h), m) : null;
-        const isPast = slotDate ? isBefore(slotDate, now) : false;
+        
+        // 1 hour leeway for same-day
+        const isPast = slotDate ? isBefore(slotDate, addHours(now, 1)) : false;
         
         const isLawyerAssignedToThisSlot = existingAppts?.some(a => a.time === timeString && a.status !== 'cancelled' && a.lawyerId === activeCase?.lawyerId);
         
@@ -162,8 +165,8 @@ function BookAppointmentContent() {
 
   const handleTriggerOtp = async () => {
     const mobile = userData?.mobileNumber || profile?.phoneNumber || userData?.guestMobile;
-    if (!mobile || !/^\d{10,11}$/.test(mobile)) {
-      toast({ variant: "destructive", title: "Registration Incomplete", description: "Your registered mobile number is missing. Please update your profile settings first." });
+    if (!mobile || !/^\d{11}$/.test(mobile)) {
+      toast({ variant: "destructive", title: "Registration Incomplete", description: "Your registered mobile number is missing or invalid. Please update your profile settings first with an 11-digit number." });
       return;
     }
 
@@ -224,7 +227,7 @@ function BookAppointmentContent() {
       id: notifId,
       type: "appointment",
       userRole: "client",
-      description: `Client ${clientName} booked a follow-up consultation for ${format(selectedDate, "MMM dd")} @ ${selectedTime}.`,
+      description: `Client ${clientName} booked a follow-up consultation for ${format(selectedDate, "MMM dd")} @ ${selectedTime} (Reference: ${refCode}).`,
       referenceId: appointmentId,
       referenceCode: refCode,
       status: "unread",
@@ -237,7 +240,7 @@ function BookAppointmentContent() {
         id: lawyerNotifId,
         type: "appointment",
         userRole: "client",
-        description: `Existing Client ${clientName} booked a Follow-up Consultation for ${format(selectedDate, "MMM dd")}.`,
+        description: `Existing Client ${clientName} booked a Follow-up Consultation for ${format(selectedDate, "MMM dd")} (Reference: ${refCode}).`,
         referenceId: appointmentId,
         referenceCode: refCode,
         targetUserId: activeCase.lawyerId,
@@ -273,27 +276,28 @@ function BookAppointmentContent() {
       <div className="max-w-6xl mx-auto space-y-8 px-4">
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-black text-primary font-headline tracking-tight">Schedule Follow-up</h1>
-          <p className="text-sm text-muted-foreground font-medium uppercase tracking-widest">Atty. {assignedLawyer?.lastName || 'Counsel'} Case Management</p>
+          <p className="text-sm text-muted-foreground font-medium uppercase tracking-widest">Office Hours: Mon-Thu, 07:00 AM - 06:00 PM</p>
         </div>
 
         <Card className="border-none shadow-xl bg-white/80 backdrop-blur-md rounded-[3rem] overflow-hidden">
           <CardContent className="p-10">
             {step === 1 && (
-              <div className="grid lg:grid-cols-2 gap-12 animate-in fade-in duration-500">
+              <div className="grid lg:grid-cols-2 gap-12 animate-in fade-in duration-500 items-start min-h-[500px]">
                 <div className="space-y-6">
                   <div className="space-y-4">
                     <Label className="text-xs font-black text-primary/60 uppercase tracking-widest">1. Preferred Date</Label>
-                    <div className="p-4 bg-white rounded-3xl border border-primary/10 shadow-sm">
+                    <div className="p-4 bg-white rounded-3xl border border-primary/10 shadow-sm overflow-hidden">
                       <CalendarComponent 
                         mode="single" 
                         selected={selectedDate} 
                         onSelect={(date) => { 
-                          if (date && !isWeekend(date) && !isHoliday(date) && !isBefore(date, startOfToday())) { 
-                            setSelectedDate(date); 
-                            setSelectedTime(""); 
+                          if (date && (getDay(date) === 0 || getDay(date) === 5 || getDay(date) === 6 || isHoliday(date) || isBefore(date, startOfToday()))) { 
+                            return;
                           } 
+                          setSelectedDate(date); 
+                          setSelectedTime(""); 
                         }} 
-                        disabled={[{ before: startOfToday() }, { dayOfWeek: [0, 6] }, (date) => isHoliday(date)]} 
+                        disabled={[{ before: startOfToday() }, { dayOfWeek: [0, 5, 6] }, (date) => isHoliday(date)]} 
                         modifiers={{ leave: leaveDates }}
                         modifiersClassNames={{
                           leave: "bg-red-500 text-white rounded-xl shadow-md border-red-600"
@@ -327,7 +331,7 @@ function BookAppointmentContent() {
                   <div className="space-y-4">
                     <Label className="text-xs font-black text-primary/60 uppercase tracking-widest">2. Available Slots</Label>
                     {selectedDate ? (
-                      <div className="grid grid-cols-2 gap-2 max-h-[350px] overflow-y-auto pr-2">
+                      <div className="grid grid-cols-2 gap-2 max-h-[350px] overflow-y-auto pr-2 border border-primary/5 rounded-3xl bg-primary/[0.02] p-4">
                         {timeSlots.map(slot => (
                           <Button 
                             key={slot.time} 

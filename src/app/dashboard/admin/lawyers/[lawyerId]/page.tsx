@@ -32,7 +32,7 @@ import {
   ShieldAlert
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { format, startOfToday, isBefore, isWeekend, setHours, setMinutes, parseISO } from "date-fns";
+import { format, startOfToday, isBefore, isWeekend, setHours, setMinutes, parseISO, getDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -65,7 +65,7 @@ const LOCATIONS = {
 };
 
 const AVAILABILITY_TYPES = [
-  { value: "Available", label: "Office Standard (08:00 - 17:00)" },
+  { value: "Available", label: "Office Standard (07:00 - 18:00)" },
   { value: "FullDayLeave", label: "Official Leave (Full Day)" },
   { value: "PartialLeave", label: "Unavailable During Specific Hours" },
 ];
@@ -85,15 +85,15 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
     category: DUTY_CATEGORIES[0],
     title: "",
     description: "",
-    startTime: "08:00",
-    endTime: "10:00",
+    startTime: "07:00",
+    endTime: "09:00",
     location: LOCATIONS[DUTY_CATEGORIES[0] as keyof typeof LOCATIONS]
   });
 
   const [availForm, setAvailForm] = useState({
     availabilityType: "Available",
-    startTime: "08:00",
-    endTime: "17:00",
+    startTime: "07:00",
+    endTime: "18:00",
     notes: "",
     leaveReason: "Court Hearing / Litigation"
   });
@@ -143,16 +143,16 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
     if (availData) {
       setAvailForm({
         availabilityType: availData.availabilityType || "Available",
-        startTime: availData.startTime || "08:00",
-        endTime: availData.endTime || "17:00",
+        startTime: availData.startTime || "07:00",
+        endTime: availData.endTime || "18:00",
         notes: availData.notes || "",
         leaveReason: availData.leaveReason || "Court Hearing / Litigation"
       });
     } else {
       setAvailForm({
         availabilityType: "Available",
-        startTime: "08:00",
-        endTime: "17:00",
+        startTime: "07:00",
+        endTime: "18:00",
         notes: "",
         leaveReason: "Court Hearing / Litigation"
       });
@@ -207,8 +207,9 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
     const endH = parseInt(endParts[0]);
     const endM = parseInt(endParts[1]);
 
-    if (startH < 8 || (endH > 17 || (endH === 17 && endM > 0))) {
-      toast({ variant: "destructive", title: "Outside Office Hours", description: "Statutory office hours are restricted to 8:00 AM - 5:00 PM." });
+    // Office Hours: 07:00 AM - 06:00 PM
+    if (startH < 7 || (endH > 18 || (endH === 18 && endM > 0))) {
+      toast({ variant: "destructive", title: "Outside Office Hours", description: "Statutory office hours are restricted to 07:00 AM - 06:00 PM." });
       return;
     }
 
@@ -263,7 +264,7 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
       setIsSubmitting(false);
       setIsAssignOpen(false);
       setDutyForm({ ...dutyForm, title: "", description: "" });
-      toast({ title: "Duty Assigned", description: "The schedule has been synchronized with the lawyer's dashboard." });
+      toast({ title: "Duty Assigned", description: "The schedule has been synchronized with the lawyer's workstation." });
     }, 1000);
   };
 
@@ -331,12 +332,12 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
                   mode="single" 
                   selected={selectedDate} 
                   onSelect={(date) => {
-                    if (date && (isWeekend(date) || isHoliday(date) || isBefore(date, startOfToday()))) return;
+                    if (date && (getDay(date) === 0 || getDay(date) === 5 || getDay(date) === 6 || isHoliday(date) || isBefore(date, startOfToday()))) return;
                     setSelectedDate(date);
                   }} 
                   disabled={[
                     { before: startOfToday() },
-                    { dayOfWeek: [0, 6] },
+                    { dayOfWeek: [0, 5, 6] },
                     (date) => isHoliday(date)
                   ]}
                   modifiers={{ leave: leaveDates }}
@@ -468,7 +469,7 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
                             <Input type="time" value={availForm.startTime} onChange={e => setAvailForm({...availForm, startTime: e.target.value})} className="h-12 rounded-xl" />
                           </div>
                           <div className="space-y-2">
-                            <Label className="text-[10px) font-black uppercase text-primary/40 ml-1">End Time</Label>
+                            <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">End Time</Label>
                             <Input type="time" value={availForm.endTime} onChange={e => setAvailForm({...availForm, endTime: e.target.value})} className="h-12 rounded-xl" />
                           </div>
                         </div>
@@ -500,7 +501,7 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
               <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-3 mb-2">
                 <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                 <p className="text-[11px] text-amber-800 font-bold leading-relaxed">
-                  Reminder: Statutory office hours are 08:00 AM to 05:00 PM. Assignments must be chronological and within this window.
+                  Reminder: Statutory office hours are 07:00 AM to 06:00 PM. Assignments must be chronological and within this window.
                 </p>
               </div>
               <div className="grid md:grid-cols-2 gap-6">
@@ -515,11 +516,11 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
               </div>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">Start Time (Min 08:00)</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">Start Time (Min 07:00)</Label>
                   <Input type="time" value={dutyForm.startTime} onChange={e => setDutyForm({...dutyForm, startTime: e.target.value})} className="h-12 rounded-xl" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">End Time (Max 17:00)</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">End Time (Max 18:00)</Label>
                   <Input type="time" value={dutyForm.endTime} onChange={e => setDutyForm({...dutyForm, endTime: e.target.value})} className="h-12 rounded-xl" />
                 </div>
               </div>

@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { format, startOfToday, isWeekend, isBefore, parseISO } from "date-fns";
+import { format, startOfToday, isWeekend, isBefore, parseISO, getDay } from "date-fns";
 import { Clock, CalendarDays, Loader2, Save, AlertCircle, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -31,7 +31,7 @@ const isHoliday = (date: Date) => {
 };
 
 const AVAILABILITY_TYPES = [
-  { value: "Available", label: "Office Standard (08:00 - 17:00)", color: "text-green-600 bg-green-50 border-green-100" },
+  { value: "Available", label: "Office Standard (07:00 - 18:00)", color: "text-green-600 bg-green-50 border-green-100" },
   { value: "FullDayLeave", label: "Official Leave (Full Day)", color: "text-red-600 bg-red-50 border-red-100" },
   { value: "PartialLeave", label: "Unavailable During Specific Hours", color: "text-amber-600 bg-amber-50 border-amber-100" },
 ];
@@ -85,8 +85,8 @@ export default function LawyerAvailabilityPage() {
 
   const [formData, setFormData] = useState({
     availabilityType: "Available",
-    startTime: "08:00",
-    endTime: "17:00",
+    startTime: "07:00",
+    endTime: "18:00",
     leaveReason: "Court Hearing / Litigation",
     notes: ""
   });
@@ -104,16 +104,16 @@ export default function LawyerAvailabilityPage() {
     if (availData && selectedDates?.length === 1) {
       setFormData({
         availabilityType: availData.availabilityType || "Available",
-        startTime: availData.startTime || "08:00",
-        endTime: availData.endTime || "17:00",
+        startTime: availData.startTime || "07:00",
+        endTime: availData.endTime || "18:00",
         leaveReason: availData.leaveReason || "Court Hearing / Litigation",
         notes: availData.notes || ""
       });
     } else if (!availData && selectedDates?.length === 1) {
       setFormData({
         availabilityType: "Available",
-        startTime: "08:00",
-        endTime: "17:00",
+        startTime: "07:00",
+        endTime: "18:00",
         leaveReason: "Court Hearing / Litigation",
         notes: ""
       });
@@ -194,7 +194,9 @@ export default function LawyerAvailabilityPage() {
                     return;
                   }
                   const filtered = dates.filter(d => 
-                    !isWeekend(d) && 
+                    getDay(d) !== 0 && 
+                    getDay(d) !== 5 && 
+                    getDay(d) !== 6 && 
                     !isHoliday(d) && 
                     !isBefore(d, startOfToday())
                   );
@@ -202,7 +204,7 @@ export default function LawyerAvailabilityPage() {
                 }}
                 disabled={[
                   { before: startOfToday() },
-                  { dayOfWeek: [0, 6] },
+                  { dayOfWeek: [0, 5, 6] },
                   (date) => isHoliday(date)
                 ]}
                 modifiers={{ leave: leaveDates }}
@@ -219,7 +221,7 @@ export default function LawyerAvailabilityPage() {
                 <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-3">
                   <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                   <p className="text-[10px] text-amber-800 font-bold leading-relaxed">
-                    Bulk updates are permitted for official working days (Monday-Friday). Click multiple dates to select a range.
+                    Bulk updates are permitted for official working days (Monday-Thursday). Click multiple dates to select a range.
                   </p>
                 </div>
               </div>
