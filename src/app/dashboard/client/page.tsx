@@ -130,7 +130,7 @@ export default function ClientDashboard() {
     return allLawyerAvail
       .filter(a => a.availabilityType === 'FullDayLeave' || a.availabilityType === 'PartialLeave')
       .map(a => parseISO(a.date));
-  }, [allLawail]);
+  }, [allLawyerAvail]);
 
   // Lawyer status for selected reschedule date
   const reschedDateStr = rescheduleDate ? format(rescheduleDate, "yyyy-MM-dd") : null;

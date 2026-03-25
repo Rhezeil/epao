@@ -95,7 +95,7 @@ export default function LawyerDashboard() {
 
   const lawyerRef = useMemoFirebase(() => {
     if (!db || !user || role !== 'lawyer') return null;
-    return doc(db, "roleLayer", user.uid);
+    return doc(db, "roleLawyer", user.uid);
   }, [db, user, role]);
 
   const { data: lawyerData } = useDoc(lawyerRef);
