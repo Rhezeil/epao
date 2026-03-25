@@ -72,7 +72,7 @@ export default function ManageAppointmentPage() {
       if (result.success) {
         setGeneratedOtp(result.code);
         setIsOtpOpen(true);
-        toast({ title: "Verification Code Sent", description: result.message });
+        toast({ title: "Mock SMS Received", description: result.message });
       }
     } finally {
       setIsSmsSending(false);
@@ -132,7 +132,7 @@ export default function ManageAppointmentPage() {
         const timeString = `${displayHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
         const slotDate = rescheduleDate ? setMinutes(setHours(new Date(rescheduleDate), h), m) : null;
         
-        // 1-hour leeway for prep
+        // One-hour leeway rule
         const isPast = slotDate ? isBefore(slotDate, addHours(now, 1)) : false;
         const isBooked = dayAppts?.some(a => a.time === timeString && a.status !== 'cancelled');
         slots.push({ time: timeString, isBooked, isPast });

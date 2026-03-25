@@ -93,6 +93,7 @@ export default function LawyerDashboard() {
   const [cancellationReason, setCancellationReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Firestore Standardization: roleLawyer
   const lawyerRef = useMemoFirebase(() => {
     if (!db || !user || role !== 'lawyer') return null;
     return doc(db, "roleLawyer", user.uid);
@@ -192,8 +193,6 @@ export default function LawyerDashboard() {
     setIsSubmitting(true);
     try {
       const apptId = apptToCancel.referenceId;
-      const refCode = apptToCancel.referenceCode || "N/A";
-      
       updateDocumentNonBlocking(doc(db, "appointments", apptId), {
         status: "cancelled",
         cancellationReason,
@@ -351,7 +350,7 @@ export default function LawyerDashboard() {
                   ) : (
                     <div className="flex-1 flex flex-col items-center justify-center py-24 px-10 text-center space-y-4">
                       <Inbox className="h-12 w-12 text-secondary/10" />
-                      <p className="text-xs font-black uppercase tracking-widest text-muted-foreground/40">No registry entries for this date</p>
+                      <p className="text-xs font-black uppercase tracking-widest text-muted-foreground/40">No entries for this date</p>
                     </div>
                   )}
                 </div>

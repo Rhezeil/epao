@@ -106,7 +106,7 @@ function BookAppointmentContent() {
         
         const slotDate = selectedDate ? setMinutes(setHours(new Date(selectedDate), h), m) : null;
         
-        // High-fidelity requirement: 1 hour leeway for same-day
+        // Preparation Leeway: 1 hour for same-day
         const isPast = slotDate ? isBefore(slotDate, addHours(now, 1)) : false;
         const isBooked = existingAppts?.some(a => a.time === timeString && a.status !== 'cancelled');
         
@@ -126,7 +126,7 @@ function BookAppointmentContent() {
       toast({ variant: "destructive", title: "Missing Information", description: "Please fill out all required fields." });
       return false;
     }
-    // High-fidelity requirement: Exactly 11 numeric digits
+    // Strict 11-digit numeric rule
     if (!/^\d{11}$/.test(mobile)) {
       toast({ variant: "destructive", title: "Invalid Mobile", description: "Mobile number must be exactly 11 numeric digits (e.g., 09123456789)." });
       return false;
@@ -141,7 +141,7 @@ function BookAppointmentContent() {
       if (result.success) {
         setGeneratedOtp(result.code);
         setStep(4);
-        toast({ title: "Verification Code Sent", description: result.message });
+        toast({ title: "Mock SMS Received", description: result.message });
       }
     } catch (error) {
       toast({ variant: "destructive", title: "SMS Service Error", description: "Could not send verification code." });
@@ -352,7 +352,6 @@ function BookAppointmentContent() {
                       value={guestInfo.mobile}
                       maxLength={11}
                       onChange={(e) => {
-                        // High-fidelity requirement: Numeric only, max 11
                         const val = e.target.value.replace(/\D/g, "");
                         setGuestInfo({...guestInfo, mobile: val.slice(0, 11)});
                       }}
