@@ -2,7 +2,7 @@
 "use client";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAuth } from "@/components/auth-provider";
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc, setDocumentNonBlocking } from "@/firebase";
 import { collection, query, where, doc, orderBy, limit } from "firebase/firestore";
@@ -191,9 +191,8 @@ export default function LawyerDashboard() {
     if (!db || !apptToCancel || !cancellationReason) return;
     setIsSubmitting(true);
     try {
-      const apptId = apptToCancel.id || apptToCancel.referenceId;
+      const apptId = apptToCancel.referenceId;
       const refCode = apptToCancel.referenceCode || "N/A";
-      const clientName = apptToCancel.guestName || apptToCancel.clientName || "Citizen";
       
       updateDocumentNonBlocking(doc(db, "appointments", apptId), {
         status: "cancelled",
@@ -204,19 +203,7 @@ export default function LawyerDashboard() {
         updatedAt: new Date().toISOString()
       });
 
-      const auditId = crypto.randomUUID();
-      setDocumentNonBlocking(doc(db, "notifications", auditId), {
-        id: auditId,
-        type: "appointment",
-        userRole: "lawyer",
-        description: `Atty. ${lawyerData?.lastName || 'Counsel'} cancelled Visit ${refCode} for ${clientName}. Reason: ${cancellationReason}`,
-        referenceId: apptId,
-        referenceCode: refCode,
-        status: "unread",
-        createdAt: new Date().toISOString()
-      }, { merge: true });
-
-      toast({ title: "Visit Cancelled", description: "Audit trail synchronized." });
+      toast({ title: "Visit Cancelled", description: "Registry updated." });
       setIsCancelDialogOpen(false);
       setApptToCancel(null);
     } finally {
@@ -226,21 +213,7 @@ export default function LawyerDashboard() {
 
   const handleMarkStatus = (appt: any, status: string) => {
     if (!db) return;
-    const clientName = appt.guestName || appt.clientName || "Citizen";
     updateDocumentNonBlocking(doc(db, "appointments", appt.id), { status, updatedAt: new Date().toISOString() });
-    
-    const auditId = crypto.randomUUID();
-    setDocumentNonBlocking(doc(db, "notifications", auditId), {
-      id: auditId,
-      type: "appointment",
-      userRole: "lawyer",
-      description: `Office Update: Visit ${appt.referenceCode} for ${clientName} recorded as ${status}.`,
-      referenceId: appt.id,
-      referenceCode: appt.referenceCode,
-      status: "unread",
-      createdAt: new Date().toISOString()
-    }, { merge: true });
-    
     toast({ title: "Status Set", description: `Record updated to ${status}.` });
   };
 
@@ -248,29 +221,14 @@ export default function LawyerDashboard() {
     if (!db || !activeConsultation || !consultationForm.outcome) return;
     setIsSubmitting(true);
     try {
-      const isAccepted = consultationForm.outcome === OUTCOME_OPTIONS[0];
-      const clientName = activeConsultation.guestName || activeConsultation.clientName || "Citizen";
       updateDocumentNonBlocking(doc(db, "appointments", activeConsultation.id), {
         status: consultationForm.outcome,
         assessment: consultationForm.assessment,
         outcome: consultationForm.outcome,
-        denialReason: isAccepted ? null : consultationForm.denialReason,
+        denialReason: consultationForm.outcome === OUTCOME_OPTIONS[0] ? null : consultationForm.denialReason,
         completedAt: new Date().toISOString(),
         clientNotified: false
       });
-
-      const auditId = crypto.randomUUID();
-      setDocumentNonBlocking(doc(db, "notifications", auditId), {
-        id: auditId,
-        type: "appointment",
-        userRole: "lawyer",
-        description: `Intake Assessment: Visit ${activeConsultation.referenceCode} for ${clientName} finalized as ${isAccepted ? 'Accepted' : 'Denied'}.`,
-        referenceId: activeConsultation.id,
-        referenceCode: activeConsultation.referenceCode,
-        status: "unread",
-        createdAt: new Date().toISOString()
-      }, { merge: true });
-
       toast({ title: "Intake Finalized", description: "Registry updated." });
       setActiveConsultation(null);
     } finally {
@@ -381,7 +339,7 @@ export default function LawyerDashboard() {
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-10 w-10"><MoreVertical className="h-5 w-5" /></Button></DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="rounded-xl">
-                                <DropdownMenuLabel className="text-[10px] font-black uppercase text-secondary/40 px-2 pb-2">Actions</DropdownMenuLabel>
+                                <DropdownMenuLabel className="text-[10px] font-black uppercase text-secondary/40 px-2 pb-2 border-b mb-2">Registry Actions</DropdownMenuLabel>
                                 <DropdownMenuItem onClick={() => setActiveConsultation(item.data)} className="font-bold">Start Assessment</DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleMarkStatus(item.data, 'No Show')} className="text-red-600 font-bold">Record No Show</DropdownMenuItem>
                               </DropdownMenuContent>

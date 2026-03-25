@@ -1,18 +1,18 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc, setDocumentNonBlocking } from "@/firebase";
-import { collection, query, where, doc, getDoc, DocumentData } from "firebase/firestore";
-import { Search, Calendar as CalendarIcon, XCircle, Loader2, CheckCircle2, AlertCircle, Lock, ShieldCheck, User, Clock, Edit3, ChevronRight, ArrowRight, ShieldAlert, Info } from "lucide-react";
+import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase";
+import { collection, query, where, doc } from "firebase/firestore";
+import { Search, Calendar as CalendarIcon, Loader2, User, Clock, ShieldCheck, AlertCircle, Lock, ShieldAlert, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { format, isWeekend, startOfToday, setHours, setMinutes, isBefore, addHours, getDay } from "date-fns";
+import { format, startOfToday, setHours, setMinutes, isBefore, addHours, getDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import { sendOtpSms } from "@/ai/flows/sms-service";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -86,7 +86,11 @@ export default function ManageAppointmentPage() {
     }
     if (!db || !appointment) return;
     setIsCancelling(true);
-    updateDocumentNonBlocking(doc(db, "appointments", appointment.id), { status: "cancelled", updatedAt: new Date().toISOString() });
+    updateDocumentNonBlocking(doc(db, "appointments", appointment.id), { 
+      status: "cancelled", 
+      cancellationReason: "Cancelled via public portal",
+      updatedAt: new Date().toISOString() 
+    });
 
     const clientName = appointment.guestName || appointment.clientName || "Citizen";
     const auditId = crypto.randomUUID();
@@ -101,7 +105,11 @@ export default function ManageAppointmentPage() {
       createdAt: new Date().toISOString()
     }, { merge: true });
 
-    setTimeout(() => { setIsCancelling(false); setIsOtpOpen(false); toast({ title: "Success", description: "Visit cancelled." }); }, 1000);
+    setTimeout(() => { 
+      setIsCancelling(false); 
+      setIsOtpOpen(false); 
+      toast({ title: "Success", description: "Visit cancelled." }); 
+    }, 1000);
   };
 
   const dateStr = rescheduleDate ? format(rescheduleDate, "yyyy-MM-dd") : null;
@@ -114,17 +122,17 @@ export default function ManageAppointmentPage() {
   const timeSlots = useMemo(() => {
     const slots = [];
     const now = new Date();
-    // Office Hours: 7 AM - 6 PM
+    // Office Hours: 7 AM - 6 PM (Mon-Thu)
     for (let h = 7; h <= 17; h++) {
       for (let m = 0; m < 60; m += 30) {
-        if (h === 12) continue; // Lunch
-        if (h === 17 && m > 30) continue; // Last slot 5:30 PM
+        if (h === 12) continue; 
+        if (h === 17 && m > 30) continue; 
         const ampm = h >= 12 ? 'PM' : 'AM';
         const displayHour = h % 12 || 12;
         const timeString = `${displayHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
         const slotDate = rescheduleDate ? setMinutes(setHours(new Date(rescheduleDate), h), m) : null;
         
-        // 1-hour leeway for public portal same-day reschedule
+        // 1-hour leeway for prep
         const isPast = slotDate ? isBefore(slotDate, addHours(now, 1)) : false;
         const isBooked = dayAppts?.some(a => a.time === timeString && a.status !== 'cancelled');
         slots.push({ time: timeString, isBooked, isPast });
@@ -157,24 +165,61 @@ export default function ManageAppointmentPage() {
       createdAt: new Date().toISOString()
     }, { merge: true });
 
-    setTimeout(() => { setIsRescheduling(false); setIsRescheduleOpen(false); toast({ title: "Success", description: "Schedule updated." }); }, 1000);
+    setTimeout(() => { 
+      setIsRescheduling(false); 
+      setIsRescheduleOpen(false); 
+      toast({ title: "Success", description: "Schedule updated." }); 
+    }, 1000);
   };
 
   return (
     <DashboardLayout role={null}>
       <div className="max-w-4xl mx-auto py-8 space-y-8">
-        <div className="text-center space-y-2"><div className="inline-flex p-3 bg-primary/10 rounded-2xl mb-2"><CalendarIcon className="h-10 w-10 text-primary" /></div><h1 className="text-3xl font-black text-primary">Visit Management</h1></div>
-        <Card className="border-none shadow-xl bg-white/90 backdrop-blur-md rounded-[2.5rem]"><CardContent className="p-10"><form onSubmit={handleSearch} className="flex gap-4"><Input placeholder="Enter Code (e.g., PAO-123456)" value={refCode} onChange={e => setRefCode(e.target.value)} className="h-14 text-center text-lg font-black uppercase" /><Button type="submit" size="lg" className="h-14 bg-primary px-10 font-black shadow-lg">Verify Intake</Button></form></CardContent></Card>
+        <div className="text-center space-y-2">
+          <div className="inline-flex p-3 bg-primary/10 rounded-2xl mb-2"><CalendarIcon className="h-10 w-10 text-primary" /></div>
+          <h1 className="text-3xl font-black text-primary">Visit Management</h1>
+        </div>
+        <Card className="border-none shadow-xl bg-white/90 backdrop-blur-md rounded-[2.5rem]">
+          <CardContent className="p-10">
+            <form onSubmit={handleSearch} className="flex gap-4">
+              <Input 
+                placeholder="Enter Code (e.g., PAO-123456)" 
+                value={refCode} 
+                onChange={e => setRefCode(e.target.value)} 
+                className="h-14 text-center text-lg font-black uppercase" 
+              />
+              <Button type="submit" size="lg" className="h-14 bg-primary px-10 font-black shadow-lg">Verify Intake</Button>
+            </form>
+          </CardContent>
+        </Card>
 
         {isLoading && <div className="flex justify-center py-12"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div>}
 
         {appointment && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in slide-in-from-bottom-6">
             <Card className="md:col-span-2 border-none shadow-2xl bg-white rounded-[3rem] overflow-hidden">
-              <div className="bg-primary p-10 text-white flex justify-between items-center"><div><p className="text-[10px] font-black uppercase opacity-60">Filing Ref</p><h3 className="text-4xl font-black">{appointment.referenceCode}</h3></div><Badge className="bg-amber-400 text-amber-900 px-6 py-3 rounded-full font-black uppercase text-[10px]">{appointment.status}</Badge></div>
+              <div className="bg-primary p-10 text-white flex justify-between items-center">
+                <div>
+                  <p className="text-[10px] font-black uppercase opacity-60">Filing Ref</p>
+                  <h3 className="text-4xl font-black">{appointment.referenceCode}</h3>
+                </div>
+                <Badge className="bg-amber-400 text-amber-900 px-6 py-3 rounded-full font-black uppercase text-[10px]">{appointment.status}</Badge>
+              </div>
               <CardContent className="p-10 space-y-8">
-                <div className="grid grid-cols-2 gap-10"><div><p className="text-[10px] font-black uppercase text-primary/40 mb-1">Schedule</p><p className="text-xl font-black text-[#1A3B6B]">{format(new Date(appointment.date), "PPPP")} @ {appointment.time}</p></div><div><p className="text-[10px] font-black uppercase text-primary/40 mb-1">Matter</p><p className="text-xl font-black text-[#1A3B6B]">{appointment.caseType}</p></div></div>
-                <div className="flex gap-4 pt-4 border-t border-primary/5"><Button onClick={() => setIsRescheduleOpen(true)} className="flex-1 h-16 bg-[#F0F4F8] text-primary font-black text-lg rounded-2xl">Reschedule</Button><Button variant="outline" className="flex-1 h-16 text-red-600 border-red-100 rounded-2xl font-black text-lg" onClick={initiateCancellation}>Cancel</Button></div>
+                <div className="grid grid-cols-2 gap-10">
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-primary/40 mb-1">Schedule</p>
+                    <p className="text-xl font-black text-[#1A3B6B]">{format(new Date(appointment.date), "PPPP")} @ {appointment.time}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-primary/40 mb-1">Matter</p>
+                    <p className="text-xl font-black text-[#1A3B6B]">{appointment.caseType}</p>
+                  </div>
+                </div>
+                <div className="flex gap-4 pt-4 border-t border-primary/5">
+                  <Button onClick={() => setIsRescheduleOpen(true)} className="flex-1 h-16 bg-[#F0F4F8] text-primary font-black text-lg rounded-2xl">Reschedule</Button>
+                  <Button variant="outline" className="flex-1 h-16 text-red-600 border-red-100 rounded-2xl font-black text-lg" onClick={initiateCancellation}>Cancel</Button>
+                </div>
               </CardContent>
             </Card>
             <Card className="border-none shadow-xl bg-primary/5 rounded-[3rem] p-8 flex flex-col justify-center text-center space-y-4">
@@ -189,15 +234,30 @@ export default function ManageAppointmentPage() {
 
         <Dialog open={isOtpOpen} onOpenChange={setIsOtpOpen}>
           <DialogContent className="rounded-[3rem] max-w-md p-10">
-            <DialogHeader className="text-center"><DialogTitle className="text-2xl font-black">Authorize Cancellation</DialogTitle><DialogDescription className="font-bold">Enter code sent to registered mobile.</DialogDescription></DialogHeader>
-            <div className="py-8"><Input className="h-20 text-center text-5xl font-black tracking-[0.5em] bg-primary/5" maxLength={6} value={otpValue} onChange={e => setOtpValue(e.target.value)} /></div>
-            <DialogFooter className="flex gap-4"><Button variant="outline" className="flex-1 h-14 rounded-2xl" onClick={() => setIsOtpOpen(false)}>Back</Button><Button className="flex-1 h-14 bg-red-600 text-white font-black rounded-2xl shadow-xl" disabled={isCancelling || otpValue.length < 6} onClick={handleVerifyAndCancel}>Confirm</Button></DialogFooter>
+            <DialogHeader className="text-center">
+              <DialogTitle className="text-2xl font-black">Authorize Cancellation</DialogTitle>
+              <DialogDescription className="font-bold">Enter code sent to registered mobile.</DialogDescription>
+            </DialogHeader>
+            <div className="py-8">
+              <Input 
+                className="h-20 text-center text-5xl font-black tracking-[0.5em] bg-primary/5" 
+                maxLength={6} 
+                value={otpValue} 
+                onChange={e => setOtpValue(e.target.value)} 
+              />
+            </div>
+            <DialogFooter className="flex gap-4">
+              <Button variant="outline" className="flex-1 h-14 rounded-2xl" onClick={() => setIsOtpOpen(false)}>Back</Button>
+              <Button className="flex-1 h-14 bg-red-600 text-white font-black rounded-2xl shadow-xl" disabled={isCancelling || otpValue.length < 6} onClick={handleVerifyAndCancel}>Confirm</Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
 
         <Dialog open={isRescheduleOpen} onOpenChange={setIsRescheduleOpen}>
           <DialogContent className="rounded-[3rem] max-w-4xl p-0 overflow-hidden border-none shadow-2xl">
-            <DialogHeader className="p-8 bg-primary text-white"><DialogTitle className="text-3xl font-black">Reschedule Visit</DialogTitle></DialogHeader>
+            <DialogHeader className="p-8 bg-primary text-white">
+              <DialogTitle className="text-3xl font-black">Reschedule Visit</DialogTitle>
+            </DialogHeader>
             <div className="p-10 grid md:grid-cols-2 gap-12">
               <div className="space-y-4">
                 <Label className="text-[10px] font-black uppercase text-primary/40">1. New Date</Label>
@@ -205,7 +265,11 @@ export default function ManageAppointmentPage() {
                   <Calendar
                     mode="single"
                     selected={rescheduleDate}
-                    onSelect={(d) => { if (d && (getDay(d) === 0 || getDay(d) === 5 || getDay(d) === 6 || isHoliday(d) || isBefore(d, startOfToday()))) return; setRescheduleDate(d); setRescheduleTime(""); }}
+                    onSelect={(d) => { 
+                      if (d && (getDay(d) === 0 || getDay(d) === 5 || getDay(d) === 6 || isHoliday(d) || isBefore(d, startOfToday()))) return; 
+                      setRescheduleDate(d); 
+                      setRescheduleTime(""); 
+                    }}
                     disabled={[{ before: startOfToday() }, { dayOfWeek: [0, 5, 6] }, (date) => isHoliday(date)]}
                     className="mx-auto"
                   />
@@ -232,7 +296,12 @@ export default function ManageAppointmentPage() {
                 )}
               </div>
             </div>
-            <DialogFooter className="p-8 bg-muted/30 gap-3"><Button variant="outline" onClick={() => setIsRescheduleOpen(false)} className="flex-1 h-14 rounded-xl font-bold">Cancel</Button><Button onClick={handleReschedule} disabled={!rescheduleDate || !rescheduleTime || isRescheduling} className="flex-1 h-14 bg-primary text-white font-black rounded-xl shadow-xl">{isRescheduling ? <Loader2 className="animate-spin h-6 w-6 mr-2" /> : "Update Visit"}</Button></DialogFooter>
+            <DialogFooter className="p-8 bg-muted/30 gap-3">
+              <Button variant="outline" onClick={() => setIsRescheduleOpen(false)} className="flex-1 h-14 rounded-xl font-bold">Cancel</Button>
+              <Button onClick={handleReschedule} disabled={!rescheduleDate || !rescheduleTime || isRescheduling} className="flex-1 h-14 bg-primary text-white font-black rounded-xl shadow-xl">
+                {isRescheduling ? <Loader2 className="animate-spin h-6 w-6 mr-2" /> : "Update Visit"}
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
