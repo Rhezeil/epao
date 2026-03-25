@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/components/auth-provider";
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc, setDocumentNonBlocking } from "@/firebase";
 import { collection, query, where, doc, orderBy, limit } from "firebase/firestore";
-import { format, isWeekend, parseISO, getDay, isBefore, startOfToday } from "date-fns";
+import { format, isWeekend, parseISO, getDay, isBefore, startOfToday, addHours, setHours, setMinutes } from "date-fns";
 import { 
   Calendar as CalendarIcon, 
   Clock, 
@@ -299,8 +299,8 @@ export default function LawyerDashboard() {
           <Card className="border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden">
             <CardHeader className="bg-secondary/5 p-10"><CardTitle className="text-xl font-bold flex items-center gap-3"><CalendarIcon className="h-6 w-6" /> Office Workstation Schedule</CardTitle></CardHeader>
             <CardContent className="p-0">
-              <div className="grid grid-cols-1 md:grid-cols-12">
-                <div className="md:col-span-4 p-10 border-r border-secondary/5 bg-secondary/[0.02]">
+              <div className="flex flex-col">
+                <div className="p-10 border-b border-secondary/5 bg-secondary/[0.02]">
                   <Calendar 
                     mode="single" 
                     selected={selectedDate} 
@@ -312,7 +312,7 @@ export default function LawyerDashboard() {
                     className="mx-auto" 
                   />
                 </div>
-                <div className="md:col-span-8 p-0 flex flex-col min-h-[400px]">
+                <div className="p-0 flex flex-col min-h-[300px]">
                   {filteredSchedule.length > 0 ? (
                     <div className="divide-y divide-secondary/5">
                       {filteredSchedule.map((item, idx) => (
@@ -370,6 +370,7 @@ export default function LawyerDashboard() {
         </div>
       </div>
 
+      {/* --- INTAKE ASSESSMENT DIALOG --- */}
       <Dialog open={!!activeConsultation} onOpenChange={() => setActiveConsultation(null)}>
         <DialogContent className="rounded-[3rem] max-w-4xl p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[90vh]">
           <DialogHeader className="p-8 bg-secondary text-white shrink-0">
@@ -404,6 +405,7 @@ export default function LawyerDashboard() {
         </DialogContent>
       </Dialog>
 
+      {/* --- CANCELLATION DIALOG --- */}
       <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
         <DialogContent className="rounded-[3rem] max-w-md p-0 overflow-hidden border-none shadow-2xl">
           <DialogHeader className="p-8 bg-rose-600 text-white"><DialogTitle className="text-2xl font-black">Cancel Visit</DialogTitle></DialogHeader>

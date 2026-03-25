@@ -94,7 +94,7 @@ function BookAppointmentContent() {
     const slots = [];
     const now = new Date();
 
-    // Office Hours: 7 AM - 6 PM
+    // Office Hours: 7 AM - 6 PM (Monday to Thursday)
     for (let h = 7; h <= 17; h++) {
       for (let m = 0; m < 60; m += 30) {
         if (h === 12) continue; // Lunch Break
@@ -205,7 +205,7 @@ function BookAppointmentContent() {
       setIsSubmitting(false);
       toast({
         title: "Screening Scheduled",
-        description: "Your eligibility screening has been officially scheduled."
+        description: "The initial eligibility interview for citizen " + guestInfo.name + " has been officially scheduled."
       });
     }, 1500);
   };
