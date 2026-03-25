@@ -98,7 +98,6 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
     leaveReason: "Court Hearing / Litigation"
   });
 
-  // Queries
   const lawyerRef = useMemoFirebase(() => db ? doc(db, "roleLawyer", lawyerId) : null, [db, lawyerId]);
   const apptsQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -138,7 +137,6 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
       .map(a => parseISO(a.date));
   }, [allAvail]);
 
-  // High-fidelity requirement: Color coding modifiers
   const dutyModifiers = useMemo(() => {
     const mods: Record<string, Date[]> = {
       office: [],
@@ -149,7 +147,7 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
 
     duties?.forEach(d => {
       try {
-        const date = parseISO(d.date);
+        const date = d.date.includes('T') ? parseISO(d.date) : new Date(d.date);
         if (d.category === "Office Work") mods.office.push(date);
         else if (d.category === "Field Work") mods.field.push(date);
         else if (d.category === "Court Work") mods.court.push(date);
@@ -185,7 +183,14 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
     const ds = format(selectedDate, "yyyy-MM-dd");
     
     const dayAppts = appts?.filter(a => a.dateString === ds && a.status !== 'cancelled') || [];
-    const dayDuties = duties?.filter(d => d.date.startsWith(ds)) || [];
+    const dayDuties = duties?.filter(d => {
+      try {
+        const dDate = d.date.includes('T') ? parseISO(d.date) : new Date(d.date);
+        return format(dDate, "yyyy-MM-dd") === ds;
+      } catch (e) {
+        return d.date.startsWith(ds);
+      }
+    }) || [];
 
     const items = [
       ...dayAppts.map(a => ({ type: 'appt', data: a, time: a.time })),
@@ -208,7 +213,13 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
     const endVal = parseInt(end.replace(':', ''));
 
     const conflictDuty = duties?.find(d => {
-      if (!d.date.startsWith(date)) return false;
+      let dStr = "";
+      try {
+        const dDate = d.date.includes('T') ? parseISO(d.date) : new Date(d.date);
+        dStr = format(dDate, "yyyy-MM-dd");
+      } catch (e) { dStr = d.date.split('T')[0]; }
+      
+      if (dStr !== date) return false;
       const dStart = parseInt(d.startTime.replace(':', ''));
       const dEnd = parseInt(d.endTime.replace(':', ''));
       return (startVal < dEnd && endVal > dStart);
@@ -227,7 +238,6 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
     const endH = parseInt(endParts[0]);
     const endM = parseInt(endParts[1]);
 
-    // Updated Office Hours: 7 AM - 6 PM
     if (startH < 7 || (endH > 18 || (endH === 18 && endM > 0))) {
       toast({ variant: "destructive", title: "Outside Office Hours", description: "Statutory office hours are restricted to 07:00 AM - 06:00 PM." });
       return;
@@ -269,7 +279,6 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
 
     setDocumentNonBlocking(dutyRef, data, { merge: true });
 
-    // High-fidelity requirement: Objective audit log with target user isolation
     const notifId = crypto.randomUUID();
     setDocumentNonBlocking(doc(db, "notifications", notifId), {
       id: notifId,
@@ -354,7 +363,6 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
                   mode="single" 
                   selected={selectedDate} 
                   onSelect={(date) => {
-                    // High-fidelity rule: Mon-Thu only
                     if (date && (getDay(date) === 0 || getDay(date) === 5 || getDay(date) === 6 || isHoliday(date) || isBefore(date, startOfToday()))) return;
                     setSelectedDate(date);
                   }} 
@@ -451,8 +459,8 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
                                 "h-12 w-1 rounded-full transition-colors",
                                 item.type === 'leave' ? "bg-amber-500" : "bg-primary/10 group-hover:bg-primary"
                               )} />
-                              <div>
-                                <div className="flex items-center gap-3 mb-1">
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-3 mb-1 flex-wrap">
                                   <h4 className="text-lg font-black text-primary">
                                     {item.type === 'appt' ? (item.data.guestName || item.data.clientName) : 
                                      item.type === 'leave' ? `Filed Leave: ${item.data.leaveReason}` : item.data.title}
@@ -492,7 +500,7 @@ export default function LawyerScheduleWorkstation({ params }: { params: Promise<
                       </div>
                     ) : (
                       <div className="py-32 text-center space-y-4">
-                        <History className="h-16 w-16 text-primary/10 mx-auto" />
+                        <Inbox className="h-16 w-16 text-primary/10 mx-auto" />
                         <p className="text-muted-foreground font-medium italic">No assignments recorded for this date.</p>
                       </div>
                     )}
