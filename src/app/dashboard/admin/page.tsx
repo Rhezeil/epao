@@ -220,7 +220,7 @@ export default function AdminDashboard() {
 
   const lawyersList = useMemo(() => {
     if (!lawyers) return [];
-    return lawyers.filter(l => `${l.firstName} ${l.lastName}`.toLowerCase().includes(lawyerSearch.toLowerCase()));
+    return lawyers.filter(l => `${l.firstName || ''} ${l.lastName || ''}`.toLowerCase().includes(lawyerSearch.toLowerCase()));
   }, [lawyers, lawyerSearch]);
 
   const markNotifRead = (id: string) => {

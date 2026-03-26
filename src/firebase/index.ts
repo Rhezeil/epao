@@ -30,7 +30,7 @@ export function getSdks(firebaseApp: FirebaseApp) {
   // Initialize the Vertex AI Gemini API backend service
   const ai = getAI(firebaseApp, { backend: new VertexAIBackend() });
   
-  // Create a `GenerativeModel` instance (Using gemini-1.5-flash for compatibility)
+  // Create a `GenerativeModel` instance
   const aiModel = getGenerativeModel(ai, { model: "gemini-1.5-flash" });
 
   return {
