@@ -48,3 +48,4 @@ LexConnect operates as a centralized platform powered by **Next.js 15**, **Fireb
 *   **Confidentiality**: Professional profiles and client details are shielded via strict Security Rules.
 *   **Traceability**: The "System Audit" provides a permanent record of all professional and administrative actions, preventing unauthorized record modification.
 # epao.cloud
+# epao
