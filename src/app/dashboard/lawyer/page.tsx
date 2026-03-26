@@ -40,7 +40,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { 
@@ -54,9 +54,7 @@ import {
 import { 
   Select, 
   SelectContent, 
-  SelectGroup, 
   SelectItem, 
-  SelectLabel, 
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
@@ -92,7 +90,7 @@ export default function LawyerDashboard() {
   const { toast } = useToast();
   const router = useRouter();
   
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [activeConsultation, setActiveConsultation] = useState<any>(null);
   const [consultationForm, setConsultationForm] = useState({
     notes: "",
@@ -108,7 +106,10 @@ export default function LawyerDashboard() {
   const [cancellationReason, setCancellationReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Firestore Standardization
+  useEffect(() => {
+    setSelectedDate(new Date());
+  }, []);
+
   const lawyerRef = useMemoFirebase(() => {
     if (!db || !user || role !== 'lawyer') return null;
     return doc(db, "roleLawyer", user.uid);
@@ -147,6 +148,11 @@ export default function LawyerDashboard() {
   }, [db, user, role]);
 
   const { data: workstationAlerts } = useCollection(workstationAlertsQuery);
+
+  const activeConsultations = useMemo(() => {
+    if (!apptsData) return [];
+    return apptsData.filter(a => a.status === "Consultation in Progress");
+  }, [apptsData]);
 
   const filteredSchedule = useMemo(() => {
     if (!selectedDate) return [];
@@ -263,13 +269,13 @@ export default function LawyerDashboard() {
               <AvatarFallback className="bg-secondary/10 text-secondary font-black">{lawyerData?.firstName?.[0]}</AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-3xl font-black text-secondary">Atty. {lawyerData?.firstName} {lawyerData?.lastName}</h1>
+              <h1 className="text-3xl font-black text-secondary font-headline">Atty. {lawyerData?.firstName} {lawyerData?.lastName}</h1>
               <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mt-1">Professional Workstation Registry</p>
             </div>
           </div>
 
           <div className="space-y-6">
-            {apptsData?.filter(a => a.status === "Consultation in Progress").map(appt => (
+            {activeConsultations.map(appt => (
               <Card key={appt.id} className="border-none shadow-xl rounded-[2.5rem] bg-white border-l-8 border-red-500 overflow-hidden">
                 <CardContent className="p-8 flex items-center justify-between">
                   <div className="flex items-center gap-6">
@@ -279,21 +285,23 @@ export default function LawyerDashboard() {
                       <p className="text-[9px] font-black uppercase text-muted-foreground">REF: {appt.referenceCode}</p>
                     </div>
                   </div>
-                  <Button onClick={() => setActiveConsultation(appt)} className="h-14 bg-secondary text-white font-black px-10 rounded-2xl shadow-xl">Complete Intake <ArrowRight className="ml-2 h-5 w-5" /></Button>
+                  <Button onClick={() => setActiveConsultation(appt)} className="h-14 bg-secondary text-white font-black px-10 rounded-2xl shadow-xl hover:scale-105 transition-transform">Complete Intake <ArrowRight className="ml-2 h-5 w-5" /></Button>
                 </CardContent>
               </Card>
             ))}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-            <Card className="border-none shadow-xl rounded-[2.5rem] bg-secondary text-white">
-              <CardContent className="p-10">
+            <Card className="border-none shadow-xl rounded-[2.5rem] bg-secondary text-white overflow-hidden group">
+              <CardContent className="p-10 relative">
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform"><Briefcase className="h-20 w-20" /></div>
                 <p className="text-[10px] font-black uppercase opacity-60">Active Cases</p>
                 <p className="text-6xl font-black">{activeCases?.length || 0}</p>
               </CardContent>
             </Card>
-            <Card className="border-none shadow-xl rounded-[2.5rem] bg-white border-2 border-secondary/5">
-              <CardContent className="p-10">
+            <Card className="border-none shadow-xl rounded-[2.5rem] bg-white border-2 border-secondary/5 overflow-hidden group">
+              <CardContent className="p-10 relative">
+                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform"><CalendarIcon className="h-20 w-20" /></div>
                 <p className="text-[10px] font-black uppercase text-muted-foreground">Daily Load</p>
                 <p className="text-6xl font-black text-secondary">{filteredSchedule.length}</p>
               </CardContent>
@@ -341,8 +349,8 @@ export default function LawyerDashboard() {
                         <div key={idx} className="p-10 flex items-center justify-between group hover:bg-secondary/[0.02] transition-colors">
                           <div className="flex items-center gap-8">
                             <div className="h-16 w-16 bg-secondary/5 rounded-2xl flex flex-col items-center justify-center font-black text-secondary">
-                              <span className="text-[9px] uppercase">{format(new Date(item.data.date), "MMM")}</span>
-                              <span className="text-2xl">{format(new Date(item.data.date), "dd")}</span>
+                              <span className="text-[9px] uppercase">{item.data.date ? format(new Date(item.data.date), "MMM") : "---"}</span>
+                              <span className="text-2xl">{item.data.date ? format(new Date(item.data.date), "dd") : "--"}</span>
                             </div>
                             <div>
                               <h4 className="text-xl font-black">{item.type === 'appt' ? (item.data.guestName || item.data.clientName) : item.data.title}</h4>
@@ -352,10 +360,10 @@ export default function LawyerDashboard() {
                           {item.type === 'appt' && (
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-10 w-10"><MoreVertical className="h-5 w-5" /></Button></DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="rounded-xl">
+                              <DropdownMenuContent align="end" className="rounded-xl w-56 p-2">
                                 <DropdownMenuLabel className="text-[10px] font-black uppercase text-secondary/40 px-2 pb-2 border-b mb-2">Registry Actions</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => setActiveConsultation(item.data)} className="font-bold">Start Assessment</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleMarkStatus(item.data, 'No Show')} className="text-red-600 font-bold">Record No Show</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setActiveConsultation(item.data)} className="font-bold rounded-xl">Start Assessment</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleMarkStatus(item.data, 'No Show')} className="text-red-600 font-bold rounded-xl">Record No Show</DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           )}
@@ -387,7 +395,7 @@ export default function LawyerDashboard() {
                     {alert.type === 'appointment' && <Button size="sm" variant="ghost" onClick={() => { setApptToCancel(alert); setIsCancelDialogOpen(true); }} className="h-8 rounded-xl font-black text-[9px] uppercase bg-rose-100 text-rose-700">Cancel Visit</Button>}
                   </div>
                 </div>
-              )) : <div className="py-20 text-center text-muted-foreground font-black uppercase text-[10px]">No unread alerts</div>}
+              )) : <div className="py-20 text-center text-muted-foreground font-black uppercase text-[10px] opacity-40">No unread alerts</div>}
             </CardContent>
           </Card>
         </div>
@@ -397,21 +405,21 @@ export default function LawyerDashboard() {
         <DialogContent className="rounded-[3rem] max-w-4xl p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[90vh]">
           <DialogHeader className="p-8 bg-secondary text-white shrink-0">
             <DialogTitle className="text-2xl font-black">Intake Assessment: {activeConsultation?.guestName || activeConsultation?.clientName}</DialogTitle>
-            <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest">REF: {activeConsultation?.referenceCode}</DialogDescription>
+            <DialogDescription className="text-white/60 font-bold uppercase text-[10px] tracking-widest mt-1">Registry Reference: {activeConsultation?.referenceCode}</DialogDescription>
           </DialogHeader>
           <div className="p-10 space-y-8 flex-1 overflow-y-auto">
             <div className="grid md:grid-cols-2 gap-8">
               <div className="space-y-4">
                 <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Statutory Category</Label>
                 <Select value={consultationForm.caseType} onValueChange={v => setConsultationForm({...consultationForm, caseType: v})}>
-                  <SelectTrigger className="h-12 rounded-xl border-secondary/10"><SelectValue placeholder="Category" /></SelectTrigger>
+                  <SelectTrigger className="h-12 rounded-xl border-secondary/10 bg-white font-bold"><SelectValue placeholder="Category" /></SelectTrigger>
                   <SelectContent>{Object.keys(caseCategories).map(cat => <SelectItem key={cat} value={cat} className="font-bold">{cat}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-4">
                 <Label className="text-[10px] font-black uppercase text-secondary/40 ml-1">Registry Outcome</Label>
                 <Select value={consultationForm.outcome} onValueChange={v => setConsultationForm({...consultationForm, outcome: v})}>
-                  <SelectTrigger className="h-12 rounded-xl border-secondary/10"><SelectValue placeholder="Outcome" /></SelectTrigger>
+                  <SelectTrigger className="h-12 rounded-xl border-secondary/10 bg-white font-bold"><SelectValue placeholder="Outcome" /></SelectTrigger>
                   <SelectContent>{OUTCOME_OPTIONS.map(opt => <SelectItem key={opt} value={opt} className="font-bold">{opt}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
@@ -421,14 +429,14 @@ export default function LawyerDashboard() {
               <Textarea 
                 value={consultationForm.assessment} 
                 onChange={e => setConsultationForm({...consultationForm, assessment: e.target.value})} 
-                className="rounded-2xl min-h-[120px] focus-visible:ring-secondary/20" 
+                className="rounded-2xl min-h-[120px] focus-visible:ring-secondary/20 bg-white" 
                 placeholder="Official evaluation for office records..."
               />
             </div>
           </div>
-          <DialogFooter className="p-8 bg-muted/30 shrink-0">
+          <DialogFooter className="p-8 bg-muted/30 shrink-0 flex gap-3">
             <Button variant="outline" onClick={() => setActiveConsultation(null)} className="h-14 px-8 rounded-2xl font-bold border-2">Cancel</Button>
-            <Button onClick={handleCompleteConsultation} disabled={isSubmitting || !consultationForm.outcome} className="h-14 bg-secondary text-white font-black px-10 rounded-2xl shadow-xl">Finalize Record</Button>
+            <Button onClick={handleCompleteConsultation} disabled={isSubmitting || !consultationForm.outcome} className="h-14 bg-secondary text-white font-black px-10 rounded-2xl shadow-xl flex-1">Finalize Record</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -437,7 +445,7 @@ export default function LawyerDashboard() {
         <DialogContent className="rounded-[3rem] max-w-md p-0 overflow-hidden border-none shadow-2xl">
           <DialogHeader className="p-8 bg-rose-600 text-white">
             <DialogTitle className="text-2xl font-black">Cancel Visit</DialogTitle>
-            <DialogDescription className="text-white/60 font-bold uppercase text-[10px]">Reference: {apptToCancel?.referenceCode}</DialogDescription>
+            <DialogDescription className="text-white/60 font-bold uppercase text-[10px] mt-1">Reference: {apptToCancel?.referenceCode}</DialogDescription>
           </DialogHeader>
           <div className="p-10 space-y-6">
             <div className="space-y-2">

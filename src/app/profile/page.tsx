@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useAuth, useFirestore, useUser, useDoc, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
@@ -68,13 +67,12 @@ export default function ProfilePage() {
         updateDocumentNonBlocking(profileDocRef, { ...formState, updatedAt: new Date().toISOString() });
       }
 
-      // --- NOTIFICATION ---
       const notifId = crypto.randomUUID();
       setDocumentNonBlocking(doc(db, "notifications", notifId), {
         id: notifId,
         type: role === 'client' ? 'client' : 'lawyer',
         userRole: role,
-        description: `${role.toUpperCase()} profile information updated for ${formState.firstName} ${formState.lastName}.`,
+        description: `Profile update synchronized for ${role.toUpperCase()} User: ${formState.firstName} ${formState.lastName}.`,
         referenceId: user.uid,
         status: "unread",
         createdAt: new Date().toISOString()
@@ -93,7 +91,7 @@ export default function ProfilePage() {
       <DashboardLayout role={role}>
         <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
           <Loader2 className="h-10 w-10 animate-spin text-primary" />
-          <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Loading Profile...</p>
+          <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Loading Profile Registry...</p>
         </div>
       </DashboardLayout>
     );
@@ -107,7 +105,7 @@ export default function ProfilePage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-black text-primary font-headline tracking-tight">{role === 'client' ? "Citizen Account" : "Professional Profile"}</h1>
-            <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest mt-1">Manage your identity within LexConnect</p>
+            <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest mt-1">Registry settings for your LexConnect identity</p>
           </div>
           <Avatar className="h-20 w-20 border-4 border-white shadow-xl"><AvatarImage src={formState.photoUrl} className="object-cover" /><AvatarFallback className="bg-primary/10 text-2xl font-black text-primary">{formState.firstName?.[0] || "?"}</AvatarFallback></Avatar>
         </div>
@@ -117,15 +115,15 @@ export default function ProfilePage() {
           <CardContent className="p-10">
             <form onSubmit={handleUpdate} className="grid gap-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">First Name</Label><Input className="h-12 rounded-xl" value={formState.firstName} onChange={(e) => setFormState({...formState, firstName: e.target.value})} /></div>
-                <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Last Name</Label><Input className="h-12 rounded-xl" value={formState.lastName} onChange={(e) => setFormState({...formState, lastName: e.target.value})} /></div>
-                <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Mobile (Exactly 11 Digits)</Label><Input className="h-12 rounded-xl" maxLength={11} value={formState.phoneNumber} onChange={(e) => {
+                <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">First Name</Label><Input className="h-12 rounded-xl border-primary/10" value={formState.firstName} onChange={(e) => setFormState({...formState, firstName: e.target.value})} /></div>
+                <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Last Name</Label><Input className="h-12 rounded-xl border-primary/10" value={formState.lastName} onChange={(e) => setFormState({...formState, lastName: e.target.value})} /></div>
+                <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Mobile (Exactly 11 Digits)</Label><Input className="h-12 rounded-xl border-primary/10" maxLength={11} value={formState.phoneNumber} onChange={(e) => {
                   const val = e.target.value.replace(/\D/g, "");
                   setFormState({...formState, phoneNumber: val.slice(0, 11)});
                 }} /></div>
-                <div className="col-span-2 space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Address</Label><Input className="h-12 rounded-xl" value={formState.address} onChange={(e) => setFormState({...formState, address: e.target.value})} /></div>
+                <div className="col-span-2 space-y-2"><Label className="text-[10px] font-black uppercase text-primary/40 ml-1">Address</Label><Input className="h-12 rounded-xl border-primary/10" value={formState.address} onChange={(e) => setFormState({...formState, address: e.target.value})} /></div>
               </div>
-              <Button type="submit" disabled={isSaving} className="h-12 px-10 rounded-2xl bg-primary text-white font-black shadow-lg">Commit Updates</Button>
+              <Button type="submit" disabled={isSaving} className="h-14 px-10 rounded-2xl bg-primary text-white font-black shadow-lg hover:scale-105 transition-transform">Commit Updates to Registry</Button>
             </form>
           </CardContent>
         </Card>

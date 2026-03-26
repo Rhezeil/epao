@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { useAuth } from "@/components/auth-provider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -88,6 +88,11 @@ export default function AdminDashboard() {
   const [selectedInsight, setSelectedInsight] = useState<any>(null);
   const [isInsightOpen, setIsInsightOpen] = useState(false);
   const [viewingAuditLog, setViewingAuditLog] = useState<any>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const casesQuery = useMemoFirebase(() => {
     if (!db || !user || role !== 'admin') return null;
@@ -174,7 +179,7 @@ export default function AdminDashboard() {
     appointments.forEach(a => {
       if (!a.lawyerId) return;
       try {
-        if (isAfter(new Date(a.date), performanceRangeStart)) {
+        if (a.date && isAfter(new Date(a.date), performanceRangeStart)) {
           apptCountByLawyer[a.lawyerId] = (apptCountByLawyer[a.lawyerId] || 0) + 1;
         }
       } catch (e) {}
@@ -213,6 +218,11 @@ export default function AdminDashboard() {
     return notifications.filter(n => n.type === notifFilter);
   }, [notifications, notifFilter]);
 
+  const lawyersList = useMemo(() => {
+    if (!lawyers) return [];
+    return lawyers.filter(l => `${l.firstName} ${l.lastName}`.toLowerCase().includes(lawyerSearch.toLowerCase()));
+  }, [lawyers, lawyerSearch]);
+
   const markNotifRead = (id: string) => {
     if (!db) return;
     updateDocumentNonBlocking(doc(db, "notifications", id), { status: "read" });
@@ -247,7 +257,6 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* High-fidelity requirement: Dedicated audit isolation */}
         <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); setViewingAuditLog(null); }} className="w-full">
           <TabsList className="grid w-full grid-cols-3 max-w-2xl bg-white/50 p-1 rounded-2xl border-2 border-primary/5 h-14 mb-8">
             <TabsTrigger value="analysis" className="rounded-xl font-bold">Intake Analysis</TabsTrigger>
@@ -269,7 +278,7 @@ export default function AdminDashboard() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-8 flex flex-col items-center justify-center flex-1">
-                  {!analyticsData ? <div className="py-20"><Loader2 className="animate-spin h-10 w-10 text-primary/20" /></div> : (
+                  {!analyticsData || !mounted ? <div className="py-20"><Loader2 className="animate-spin h-10 w-10 text-primary/20" /></div> : (
                     <>
                       <div className="h-[250px] w-full cursor-pointer">
                         <ResponsiveContainer width="100%" height="100%">
@@ -331,7 +340,7 @@ export default function AdminDashboard() {
                   </div>
                 </CardHeader>
                 <CardContent className="p-10 flex flex-col justify-center flex-1">
-                  {!analyticsData ? <div className="py-20 flex justify-center"><Loader2 className="animate-spin h-10 w-10 text-primary/20" /></div> : (
+                  {!analyticsData || !mounted ? <div className="py-20 flex justify-center"><Loader2 className="animate-spin h-10 w-10 text-primary/20" /></div> : (
                     <div className="h-[300px] w-full">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart 
@@ -393,7 +402,7 @@ export default function AdminDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {lawyers?.filter(l => `${l.firstName} ${l.lastName}`.toLowerCase().includes(lawyerSearch.toLowerCase())).map((lawyer) => {
+                    {lawyersList.map((lawyer) => {
                       const apptCount = analyticsData?.workload.appts[lawyer.id] || 0;
                       const caseCount = analyticsData?.workload.cases[lawyer.id] || 0;
                       return (
