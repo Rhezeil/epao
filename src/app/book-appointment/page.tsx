@@ -337,18 +337,18 @@ function BookAppointmentContent() {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="text-xs font-black text-primary/60 uppercase tracking-widest ml-1">Full Name</Label>
-                    <Input 
+                    <input 
                       placeholder="Juan Dela Cruz"
-                      className="h-14 rounded-2xl border-primary/20 bg-white font-bold"
+                      className="flex h-14 w-full rounded-2xl border border-primary/20 bg-white px-3 py-2 font-bold ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       value={guestInfo.name}
                       onChange={(e) => setGuestInfo({...guestInfo, name: e.target.value})}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-xs font-black text-primary/60 uppercase tracking-widest ml-1">Mobile Number (Exactly 11 Digits)</Label>
-                    <Input 
+                    <input 
                       placeholder="09123456789"
-                      className="h-14 rounded-2xl border-primary/20 bg-white font-bold"
+                      className="flex h-14 w-full rounded-2xl border border-primary/20 bg-white px-3 py-2 font-bold ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       value={guestInfo.mobile}
                       maxLength={11}
                       onChange={(e) => {
@@ -359,10 +359,10 @@ function BookAppointmentContent() {
                   </div>
                   <div className="space-y-2 md:col-span-2">
                     <Label className="text-xs font-black text-primary/60 uppercase tracking-widest ml-1">Email Address</Label>
-                    <Input 
+                    <input 
                       type="email"
                       placeholder="juan.delacruz@example.com"
-                      className="h-14 rounded-2xl border-primary/20 bg-white font-bold"
+                      className="flex h-14 w-full rounded-2xl border border-primary/20 bg-white px-3 py-2 font-bold ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       value={guestInfo.email}
                       onChange={(e) => setGuestInfo({...guestInfo, email: e.target.value})}
                     />
@@ -381,7 +381,7 @@ function BookAppointmentContent() {
                 <div className="flex gap-4 pt-4">
                   <Button variant="outline" className="h-14 px-8 rounded-2xl font-bold border-2" onClick={() => setStep(1)}>
                     <ChevronLeft className="mr-2 h-4 w-4" /> Back
-                  </ChevronLeft>
+                  </Button>
                   <Button 
                     className="flex-1 h-14 rounded-2xl text-lg font-black bg-primary text-white shadow-xl"
                     onClick={() => {
@@ -404,7 +404,7 @@ function BookAppointmentContent() {
                 <div className="grid gap-6">
                   <Card className="border-none bg-primary/5 rounded-[2rem]">
                     <CardHeader><CardTitle className="text-xs font-black uppercase text-primary tracking-widest">Applicant Information</CardTitle></CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <CardContent className="p-8 grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1"><p className="text-[10px] font-black uppercase text-muted-foreground">Full Name</p><p className="font-bold text-primary">{guestInfo.name}</p></div>
                       <div className="space-y-1"><p className="text-[10px] font-black uppercase text-muted-foreground">Mobile Number</p><p className="font-bold text-primary">{guestInfo.mobile}</p></div>
                       <div className="space-y-1 md:col-span-2"><p className="text-[10px] font-black uppercase text-muted-foreground">Home Address</p><p className="font-bold text-primary">{guestInfo.address}</p></div>

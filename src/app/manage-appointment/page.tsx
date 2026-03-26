@@ -261,7 +261,7 @@ export default function ManageAppointmentPage() {
             </DialogHeader>
             <div className="p-10 grid md:grid-cols-2 gap-12 overflow-y-auto">
               <div className="space-y-4">
-                <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">1. Select New Date</Label>
+                <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">1. New Date</Label>
                 <div className="p-4 bg-primary/5 rounded-3xl border border-primary/10 overflow-hidden">
                   <Calendar
                     mode="single"
