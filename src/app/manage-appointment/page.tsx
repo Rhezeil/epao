@@ -261,7 +261,7 @@ export default function ManageAppointmentPage() {
             </DialogHeader>
             <div className="p-10 grid md:grid-cols-2 gap-12 overflow-y-auto">
               <div className="space-y-4">
-                <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">1. New Date</Label>
+                <Label className="text-[10px] font-black uppercase text-primary/40">1. New Date</Label>
                 <div className="p-4 bg-primary/5 rounded-3xl border border-primary/10 overflow-hidden">
                   <Calendar
                     mode="single"
@@ -277,7 +277,7 @@ export default function ManageAppointmentPage() {
                 </div>
               </div>
               <div className="space-y-6">
-                <Label className="text-[10px] font-black uppercase text-primary/40 ml-1">2. Select Available Slot</Label>
+                <Label className="text-[10px] font-black uppercase text-primary/40">2. Select Available Slot</Label>
                 {!rescheduleDate ? (
                   <div className="h-[300px] flex flex-col items-center justify-center bg-muted/20 rounded-[2rem] border-2 border-dashed font-bold text-muted-foreground/40 text-center px-8 uppercase text-[10px] tracking-widest leading-relaxed">
                     <Clock className="h-10 w-10 mb-2 opacity-20" />
