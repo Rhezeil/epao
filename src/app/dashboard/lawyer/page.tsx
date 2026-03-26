@@ -30,7 +30,8 @@ import {
   CheckCheck,
   AlertTriangle,
   Info,
-  ShieldAlert
+  ShieldAlert,
+  BrainCircuit
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -170,7 +171,7 @@ export default function LawyerDashboard() {
     return [
       ...dayAppts.map(a => ({ type: 'appt', data: a, time: a.time })),
       ...dayDuties.map(d => ({ type: 'duty', data: d, time: d.startTime }))
-    ].sort((a, b) => a.time.localeCompare(b.time));
+    ].sort((a, b) => (a.time || '').localeCompare(b.time || ''));
   }, [apptsData, dutiesData, selectedDate]);
 
   const dutyModifiers = useMemo(() => {
@@ -349,12 +350,12 @@ export default function LawyerDashboard() {
                         <div key={idx} className="p-10 flex items-center justify-between group hover:bg-secondary/[0.02] transition-colors">
                           <div className="flex items-center gap-8">
                             <div className="h-16 w-16 bg-secondary/5 rounded-2xl flex flex-col items-center justify-center font-black text-secondary">
-                              <span className="text-[9px] uppercase">{item.data.date ? format(new Date(item.data.date), "MMM") : "---"}</span>
-                              <span className="text-2xl">{item.data.date ? format(new Date(item.data.date), "dd") : "--"}</span>
+                              <span className="text-[9px] uppercase">{item.data?.date ? format(new Date(item.data.date), "MMM") : "---"}</span>
+                              <span className="text-2xl">{item.data?.date ? format(new Date(item.data.date), "dd") : "--"}</span>
                             </div>
                             <div>
-                              <h4 className="text-xl font-black">{item.type === 'appt' ? (item.data.guestName || item.data.clientName) : item.data.title}</h4>
-                              <p className="text-[10px] font-bold text-muted-foreground uppercase">{item.time} • {item.type === 'appt' ? 'Office Visit' : item.data.location}</p>
+                              <h4 className="text-xl font-black">{item.type === 'appt' ? (item.data?.guestName || item.data?.clientName) : item.data?.title}</h4>
+                              <p className="text-[10px] font-bold text-muted-foreground uppercase">{item.time} • {item.type === 'appt' ? 'Office Visit' : item.data?.location}</p>
                             </div>
                           </div>
                           {item.type === 'appt' && (

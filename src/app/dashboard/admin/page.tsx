@@ -130,17 +130,17 @@ export default function AdminDashboard() {
     if (!appointments || !cases || !lawyers) return null;
 
     const intakeResults = appointments.filter(a => 
-      ['Eligible', 'Not Eligible', 'Consultation in Progress', 'Completed Consultation – Accept Legal Assistance', 'Completed Consultation – Denial of Legal Assistance', 'completed', 'For Screening'].includes(a.status) || 
+      ['Eligible', 'Not Eligible', 'Consultation in Progress', 'Completed Consultation – Accept Legal Assistance', 'Completed Consultation – Denial of Legal Assistance', 'completed', 'For Screening'].includes(a.status || '') || 
       a.caseId
     );
     
     const eligible = intakeResults.filter(a => 
-      ['Eligible', 'Consultation in Progress', 'Completed Consultation – Accept Legal Assistance', 'completed'].includes(a.status) || 
+      ['Eligible', 'Consultation in Progress', 'Completed Consultation – Accept Legal Assistance', 'completed'].includes(a.status || '') || 
       a.caseId
     );
     
     const ineligible = intakeResults.filter(a => 
-      ['Not Eligible', 'Completed Consultation – Denial of Legal Assistance'].includes(a.status)
+      ['Not Eligible', 'Completed Consultation – Denial of Legal Assistance'].includes(a.status || '')
     );
     
     const standardCategories = [
@@ -403,8 +403,8 @@ export default function AdminDashboard() {
                   </TableHeader>
                   <TableBody>
                     {lawyersList.map((lawyer) => {
-                      const apptCount = analyticsData?.workload.appts[lawyer.id] || 0;
-                      const caseCount = analyticsData?.workload.cases[lawyer.id] || 0;
+                      const apptCount = analyticsData?.workload?.appts?.[lawyer.id] || 0;
+                      const caseCount = analyticsData?.workload?.cases?.[lawyer.id] || 0;
                       return (
                         <TableRow key={lawyer.id} className="hover:bg-primary/5 transition-colors">
                           <TableCell className="px-10 py-6">
